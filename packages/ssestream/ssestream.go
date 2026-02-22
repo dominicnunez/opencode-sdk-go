@@ -108,11 +108,11 @@ func (s *eventStreamDecoder) Next() bool {
 		case "data":
 			_, s.err = data.Write(value)
 			if s.err != nil {
-				break
+				return false
 			}
 			_, s.err = data.WriteRune('\n')
 			if s.err != nil {
-				break
+				return false
 			}
 		}
 	}
@@ -177,7 +177,7 @@ func (s *Stream[T]) Next() bool {
 			return false
 		}
 		s.cur = nxt
-		return true
+		return true //nolint:staticcheck // SA4004: intentional iterator pattern - process one event per call
 	}
 
 	// decoder.Next() may be false because of an error

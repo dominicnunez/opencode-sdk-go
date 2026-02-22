@@ -159,7 +159,7 @@ func (e *encoder) newStructTypeEncoder(t reflect.Type) encoderFunc {
 	return func(key string, value reflect.Value) ([]Pair, error) {
 		var pairs []Pair
 		for _, ef := range encoderFields {
-			var subkey string = e.renderKeyPath(key, ef.tag.name)
+			var subkey = e.renderKeyPath(key, ef.tag.name)
 			if ef.tag.inline {
 				subkey = key
 			}
