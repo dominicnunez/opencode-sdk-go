@@ -544,12 +544,21 @@ func (cfg *RequestConfig) Execute() (err error) {
 	contents, err := io.ReadAll(res.Body)
 	_ = res.Body.Close()
 	if err != nil {
-		return fmt.Errorf("reading response body from %s %s: %w", cfg.Request.Method, cfg.Request.URL, err)
+		return fmt.Errorf("reading response body from %s %s (status %d): %w", cfg.Request.Method, cfg.Request.URL, res.StatusCode, err)
 	}
 
 	// If we are not json, return plaintext
 	contentType := res.Header.Get("content-type")
-	mediaType, _, _ := mime.ParseMediaType(contentType)
+	mediaType, _, parseErr := mime.ParseMediaType(contentType)
+	// If Content-Type parsing fails, check if the body looks like JSON as a fallback
+	if parseErr != nil {
+		trimmed := strings.TrimSpace(string(contents))
+		isJSONObject := strings.HasPrefix(trimmed, "{") && strings.HasSuffix(trimmed, "}")
+		isJSONArray := strings.HasPrefix(trimmed, "[") && strings.HasSuffix(trimmed, "]")
+		if isJSONObject || isJSONArray {
+			mediaType = ContentTypeJSON
+		}
+	}
 	isJSON := strings.Contains(mediaType, ContentTypeJSON) || strings.HasSuffix(mediaType, "+json")
 	if !isJSON {
 		switch dst := cfg.ResponseBodyInto.(type) {
@@ -573,7 +582,7 @@ func (cfg *RequestConfig) Execute() (err error) {
 	default:
 		err = json.NewDecoder(bytes.NewReader(contents)).Decode(cfg.ResponseBodyInto)
 		if err != nil {
-			return fmt.Errorf("parsing response JSON from %s %s: %w", cfg.Request.Method, cfg.Request.URL, err)
+			return fmt.Errorf("parsing response JSON from %s %s (status %d): %w", cfg.Request.Method, cfg.Request.URL, res.StatusCode, err)
 		}
 	}
 
