@@ -33,7 +33,7 @@ func WithBaseURL(base string) RequestOption {
 
 	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) error {
 		if err != nil {
-			return fmt.Errorf("requestoption: WithBaseURL failed to parse url %s", err)
+			return fmt.Errorf("requestoption: WithBaseURL failed to parse url: %w", err)
 		}
 
 		r.BaseURL = u
