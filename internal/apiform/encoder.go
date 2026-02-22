@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/anomalyco/opencode-sdk-go/internal/param"
+	"github.com/anomalyco/opencode-sdk-go/internal/timeformat"
 )
 
 var encoders sync.Map // map[encoderEntry]encoderFunc
@@ -228,7 +229,7 @@ func (e *encoder) newStructTypeEncoder(t reflect.Type) encoderFunc {
 				case "date-time":
 					e.dateFormat = time.RFC3339
 				case "date":
-					e.dateFormat = "2006-01-02"
+					e.dateFormat = timeformat.Date
 				}
 			}
 			encoderFields = append(encoderFields, encoderField{ptag, e.typeEncoder(field.Type), idx})
