@@ -33,7 +33,7 @@ type Client struct {
 // DefaultClientOptions read from the environment (OPENCODE_BASE_URL). This should
 // be used to initialize new clients.
 func DefaultClientOptions() []option.RequestOption {
-	defaults := []option.RequestOption{option.WithEnvironmentProduction()}
+	defaults := []option.RequestOption{option.WithEnvironmentLocal()}
 	if o, ok := os.LookupEnv("OPENCODE_BASE_URL"); ok {
 		defaults = append(defaults, option.WithBaseURL(o))
 	}

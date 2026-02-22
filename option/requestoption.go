@@ -100,6 +100,9 @@ func WithMaxRetries(retries int) RequestOption {
 	if retries < 0 {
 		panic("option: cannot have fewer than 0 retries")
 	}
+	if retries > 10 {
+		panic("option: cannot have more than 10 retries")
+	}
 	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) error {
 		r.MaxRetries = retries
 		return nil
@@ -265,6 +268,6 @@ func WithRequestTimeout(dur time.Duration) RequestOption {
 // WithEnvironmentProduction returns a RequestOption that sets the current
 // environment to be the "production" environment. An environment specifies which base URL
 // to use by default.
-func WithEnvironmentProduction() RequestOption {
+func WithEnvironmentLocal() RequestOption {
 	return requestconfig.WithDefaultBaseURL("http://localhost:54321/")
 }
