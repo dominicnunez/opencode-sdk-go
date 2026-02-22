@@ -474,7 +474,12 @@ func (cfg *RequestConfig) Execute() (err error) {
 			res.Body.Close()
 		}
 
-		time.Sleep(retryDelay(res, retryCount))
+		delay := retryDelay(res, retryCount)
+		select {
+		case <-time.After(delay):
+		case <-cfg.Request.Context().Done():
+			return cfg.Request.Context().Err()
+		}
 	}
 
 	// Save *http.Response if it is requested to, even if there was an error making the request. This is
