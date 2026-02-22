@@ -11,6 +11,8 @@ import (
 	"strings"
 )
 
+const sseBufferMultiplier = 9
+
 type Decoder interface {
 	Event() Event
 	Next() bool
@@ -29,7 +31,7 @@ func NewDecoder(res *http.Response) Decoder {
 		decoder = t(res.Body)
 	} else {
 		scn := bufio.NewScanner(res.Body)
-		scn.Buffer(nil, bufio.MaxScanTokenSize<<9)
+		scn.Buffer(nil, bufio.MaxScanTokenSize<<sseBufferMultiplier)
 		decoder = &eventStreamDecoder{rc: res.Body, scn: scn}
 	}
 	return decoder

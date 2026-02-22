@@ -84,7 +84,7 @@ func (d *decoderBuilder) unmarshal(raw []byte, to any) error {
 	value := reflect.ValueOf(to).Elem()
 	result := gjson.ParseBytes(raw)
 	if !value.IsValid() {
-		return fmt.Errorf("apijson: cannot marshal into invalid value")
+		return fmt.Errorf("apijson: cannot unmarshal into invalid value")
 	}
 	return d.typeDecoder(value.Type())(result, value, &decoderState{strict: false, exactness: exact})
 }
