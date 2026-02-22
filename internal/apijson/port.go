@@ -104,7 +104,7 @@ func Port(from any, to any) error {
 	}
 
 	// Finally, copy over the .JSON.raw and .JSON.ExtraFields
-	if toJSON.IsValid() {
+	if toJSON.IsValid() && fromJSON.IsValid() {
 		if raw := toJSON.FieldByName("raw"); raw.IsValid() {
 			setUnexportedField(raw, fromJSON.Interface().(interface{ RawJSON() string }).RawJSON())
 		}
