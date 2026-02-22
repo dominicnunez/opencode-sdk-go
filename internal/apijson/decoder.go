@@ -10,6 +10,7 @@ import (
 	"time"
 	"unsafe"
 
+	"github.com/anomalyco/opencode-sdk-go/internal/timeformat"
 	"github.com/tidwall/gjson"
 )
 
@@ -631,17 +632,7 @@ func (d *decoderBuilder) newTimeTypeDecoder(t reflect.Type) decoderFunc {
 			return err
 		}
 
-		layouts := []string{
-			"2006-01-02",
-			"2006-01-02T15:04:05Z07:00",
-			"2006-01-02T15:04:05Z0700",
-			"2006-01-02T15:04:05",
-			"2006-01-02 15:04:05Z07:00",
-			"2006-01-02 15:04:05Z0700",
-			"2006-01-02 15:04:05",
-		}
-
-		for _, layout := range layouts {
+		for _, layout := range timeformat.LenientLayouts {
 			parsed, err := time.ParseInLocation(layout, n.Str, time.UTC)
 			if err == nil {
 				v.Set(reflect.ValueOf(parsed).Convert(t))
@@ -654,6 +645,9 @@ func (d *decoderBuilder) newTimeTypeDecoder(t reflect.Type) decoderFunc {
 }
 
 func setUnexportedField(field reflect.Value, value interface{}) {
+	if !field.CanAddr() {
+		panic("apijson: cannot set unexported field: field is not addressable")
+	}
 	reflect.NewAt(field.Type(), unsafe.Pointer(field.UnsafeAddr())).Elem().Set(reflect.ValueOf(value))
 }
 
