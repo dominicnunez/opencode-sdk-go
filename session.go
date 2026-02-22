@@ -4,7 +4,6 @@ package opencode
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -53,7 +52,7 @@ func (r *SessionService) New(ctx context.Context, params SessionNewParams, opts 
 func (r *SessionService) Update(ctx context.Context, id string, params SessionUpdateParams, opts ...option.RequestOption) (res *Session, err error) {
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
-		err = errors.New("missing required id parameter")
+		err = fmt.Errorf("missing required parameter 'id' (received empty string)")
 		return
 	}
 	path := fmt.Sprintf("session/%s", id)
@@ -73,7 +72,7 @@ func (r *SessionService) List(ctx context.Context, query SessionListParams, opts
 func (r *SessionService) Delete(ctx context.Context, id string, body SessionDeleteParams, opts ...option.RequestOption) (res *bool, err error) {
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
-		err = errors.New("missing required id parameter")
+		err = fmt.Errorf("missing required parameter 'id' (received empty string)")
 		return
 	}
 	path := fmt.Sprintf("session/%s", id)
@@ -85,7 +84,7 @@ func (r *SessionService) Delete(ctx context.Context, id string, body SessionDele
 func (r *SessionService) Abort(ctx context.Context, id string, body SessionAbortParams, opts ...option.RequestOption) (res *bool, err error) {
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
-		err = errors.New("missing required id parameter")
+		err = fmt.Errorf("missing required parameter 'id' (received empty string)")
 		return
 	}
 	path := fmt.Sprintf("session/%s/abort", id)
@@ -97,7 +96,7 @@ func (r *SessionService) Abort(ctx context.Context, id string, body SessionAbort
 func (r *SessionService) Children(ctx context.Context, id string, query SessionChildrenParams, opts ...option.RequestOption) (res *[]Session, err error) {
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
-		err = errors.New("missing required id parameter")
+		err = fmt.Errorf("missing required parameter 'id' (received empty string)")
 		return
 	}
 	path := fmt.Sprintf("session/%s/children", id)
@@ -109,7 +108,7 @@ func (r *SessionService) Children(ctx context.Context, id string, query SessionC
 func (r *SessionService) Command(ctx context.Context, id string, params SessionCommandParams, opts ...option.RequestOption) (res *SessionCommandResponse, err error) {
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
-		err = errors.New("missing required id parameter")
+		err = fmt.Errorf("missing required parameter 'id' (received empty string)")
 		return
 	}
 	path := fmt.Sprintf("session/%s/command", id)
@@ -121,7 +120,7 @@ func (r *SessionService) Command(ctx context.Context, id string, params SessionC
 func (r *SessionService) Get(ctx context.Context, id string, query SessionGetParams, opts ...option.RequestOption) (res *Session, err error) {
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
-		err = errors.New("missing required id parameter")
+		err = fmt.Errorf("missing required parameter 'id' (received empty string)")
 		return
 	}
 	path := fmt.Sprintf("session/%s", id)
@@ -133,7 +132,7 @@ func (r *SessionService) Get(ctx context.Context, id string, query SessionGetPar
 func (r *SessionService) Init(ctx context.Context, id string, params SessionInitParams, opts ...option.RequestOption) (res *bool, err error) {
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
-		err = errors.New("missing required id parameter")
+		err = fmt.Errorf("missing required parameter 'id' (received empty string)")
 		return
 	}
 	path := fmt.Sprintf("session/%s/init", id)
@@ -145,11 +144,11 @@ func (r *SessionService) Init(ctx context.Context, id string, params SessionInit
 func (r *SessionService) Message(ctx context.Context, id string, messageID string, query SessionMessageParams, opts ...option.RequestOption) (res *SessionMessageResponse, err error) {
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
-		err = errors.New("missing required id parameter")
+		err = fmt.Errorf("missing required parameter 'id' (received empty string)")
 		return
 	}
 	if messageID == "" {
-		err = errors.New("missing required messageID parameter")
+		err = fmt.Errorf("missing required parameter 'messageID' (received empty string)")
 		return
 	}
 	path := fmt.Sprintf("session/%s/message/%s", id, messageID)
@@ -161,7 +160,7 @@ func (r *SessionService) Message(ctx context.Context, id string, messageID strin
 func (r *SessionService) Messages(ctx context.Context, id string, query SessionMessagesParams, opts ...option.RequestOption) (res *[]SessionMessagesResponse, err error) {
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
-		err = errors.New("missing required id parameter")
+		err = fmt.Errorf("missing required parameter 'id' (received empty string)")
 		return
 	}
 	path := fmt.Sprintf("session/%s/message", id)
@@ -173,7 +172,7 @@ func (r *SessionService) Messages(ctx context.Context, id string, query SessionM
 func (r *SessionService) Prompt(ctx context.Context, id string, params SessionPromptParams, opts ...option.RequestOption) (res *SessionPromptResponse, err error) {
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
-		err = errors.New("missing required id parameter")
+		err = fmt.Errorf("missing required parameter 'id' (received empty string)")
 		return
 	}
 	path := fmt.Sprintf("session/%s/message", id)
@@ -185,7 +184,7 @@ func (r *SessionService) Prompt(ctx context.Context, id string, params SessionPr
 func (r *SessionService) Revert(ctx context.Context, id string, params SessionRevertParams, opts ...option.RequestOption) (res *Session, err error) {
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
-		err = errors.New("missing required id parameter")
+		err = fmt.Errorf("missing required parameter 'id' (received empty string)")
 		return
 	}
 	path := fmt.Sprintf("session/%s/revert", id)
@@ -197,7 +196,7 @@ func (r *SessionService) Revert(ctx context.Context, id string, params SessionRe
 func (r *SessionService) Share(ctx context.Context, id string, body SessionShareParams, opts ...option.RequestOption) (res *Session, err error) {
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
-		err = errors.New("missing required id parameter")
+		err = fmt.Errorf("missing required parameter 'id' (received empty string)")
 		return
 	}
 	path := fmt.Sprintf("session/%s/share", id)
@@ -209,7 +208,7 @@ func (r *SessionService) Share(ctx context.Context, id string, body SessionShare
 func (r *SessionService) Shell(ctx context.Context, id string, params SessionShellParams, opts ...option.RequestOption) (res *AssistantMessage, err error) {
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
-		err = errors.New("missing required id parameter")
+		err = fmt.Errorf("missing required parameter 'id' (received empty string)")
 		return
 	}
 	path := fmt.Sprintf("session/%s/shell", id)
@@ -221,7 +220,7 @@ func (r *SessionService) Shell(ctx context.Context, id string, params SessionShe
 func (r *SessionService) Summarize(ctx context.Context, id string, params SessionSummarizeParams, opts ...option.RequestOption) (res *bool, err error) {
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
-		err = errors.New("missing required id parameter")
+		err = fmt.Errorf("missing required parameter 'id' (received empty string)")
 		return
 	}
 	path := fmt.Sprintf("session/%s/summarize", id)
@@ -233,7 +232,7 @@ func (r *SessionService) Summarize(ctx context.Context, id string, params Sessio
 func (r *SessionService) Unrevert(ctx context.Context, id string, body SessionUnrevertParams, opts ...option.RequestOption) (res *Session, err error) {
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
-		err = errors.New("missing required id parameter")
+		err = fmt.Errorf("missing required parameter 'id' (received empty string)")
 		return
 	}
 	path := fmt.Sprintf("session/%s/unrevert", id)
@@ -245,7 +244,7 @@ func (r *SessionService) Unrevert(ctx context.Context, id string, body SessionUn
 func (r *SessionService) Unshare(ctx context.Context, id string, body SessionUnshareParams, opts ...option.RequestOption) (res *Session, err error) {
 	opts = slices.Concat(r.Options, opts)
 	if id == "" {
-		err = errors.New("missing required id parameter")
+		err = fmt.Errorf("missing required parameter 'id' (received empty string)")
 		return
 	}
 	path := fmt.Sprintf("session/%s/share", id)
