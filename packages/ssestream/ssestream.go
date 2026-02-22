@@ -102,8 +102,7 @@ func (s *eventStreamDecoder) Next() bool {
 
 		switch string(name) {
 		case "":
-			// An empty line in the for ": something" is a comment and should be ignored.
-			continue
+			// SSE comment lines (starting with ":") are intentionally ignored.
 		case "event":
 			event = string(value)
 		case "data":
