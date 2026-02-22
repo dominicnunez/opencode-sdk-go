@@ -2,6 +2,7 @@ package apijson
 
 import (
 	"reflect"
+	"sync"
 
 	"github.com/tidwall/gjson"
 )
@@ -12,8 +13,11 @@ type UnionVariant struct {
 	Type               reflect.Type
 }
 
-var unionRegistry = map[reflect.Type]unionEntry{}
-var unionVariants = map[reflect.Type]interface{}{}
+var (
+	unionRegistry = map[reflect.Type]unionEntry{}
+	unionVariants = map[reflect.Type]interface{}{}
+	registryMu    sync.RWMutex
+)
 
 type unionEntry struct {
 	discriminatorKey string
@@ -21,6 +25,7 @@ type unionEntry struct {
 }
 
 func RegisterUnion(typ reflect.Type, discriminator string, variants ...UnionVariant) {
+	registryMu.Lock()
 	unionRegistry[typ] = unionEntry{
 		discriminatorKey: discriminator,
 		variants:         variants,
@@ -28,6 +33,7 @@ func RegisterUnion(typ reflect.Type, discriminator string, variants ...UnionVari
 	for _, variant := range variants {
 		unionVariants[variant.Type] = typ
 	}
+	registryMu.Unlock()
 }
 
 // Useful to wrap a union type to force it to use [apijson.UnmarshalJSON] since you cannot define an

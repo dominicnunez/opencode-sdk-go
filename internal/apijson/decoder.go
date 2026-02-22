@@ -143,13 +143,19 @@ func (d *decoderBuilder) newTypeDecoder(t reflect.Type) decoderFunc {
 		return unmarshalerDecoder
 	}
 	if !d.root && reflect.PointerTo(t).Implements(reflect.TypeOf((*json.Unmarshaler)(nil)).Elem()) {
-		if _, ok := unionVariants[t]; !ok {
+		registryMu.RLock()
+		_, inVariants := unionVariants[t]
+		registryMu.RUnlock()
+		if !inVariants {
 			return indirectUnmarshalerDecoder
 		}
 	}
 	d.root = false
 
-	if _, ok := unionRegistry[t]; ok {
+	registryMu.RLock()
+	_, inRegistry := unionRegistry[t]
+	registryMu.RUnlock()
+	if inRegistry {
 		return d.newUnionDecoder(t)
 	}
 
@@ -206,7 +212,9 @@ func (d *decoderBuilder) newTypeDecoder(t reflect.Type) decoderFunc {
 //
 // [smart algorithm]: https://docs.pydantic.dev/latest/concepts/unions/#smart-mode
 func (d *decoderBuilder) newUnionDecoder(t reflect.Type) decoderFunc {
+	registryMu.RLock()
 	unionEntry, ok := unionRegistry[t]
+	registryMu.RUnlock()
 	if !ok {
 		panic("apijson: couldn't find union of type " + t.String() + " in union registry")
 	}
@@ -613,7 +621,7 @@ func (d *decoderBuilder) newPrimitiveTypeDecoder(t reflect.Type) decoderFunc {
 func (d *decoderBuilder) newTimeTypeDecoder(t reflect.Type) decoderFunc {
 	format := d.dateFormat
 	return func(n gjson.Result, v reflect.Value, state *decoderState) error {
-		parsed, err := time.Parse(format, n.Str)
+		parsed, err := time.ParseInLocation(format, n.Str, time.UTC)
 		if err == nil {
 			v.Set(reflect.ValueOf(parsed).Convert(t))
 			return nil
@@ -634,7 +642,7 @@ func (d *decoderBuilder) newTimeTypeDecoder(t reflect.Type) decoderFunc {
 		}
 
 		for _, layout := range layouts {
-			parsed, err := time.Parse(layout, n.Str)
+			parsed, err := time.ParseInLocation(layout, n.Str, time.UTC)
 			if err == nil {
 				v.Set(reflect.ValueOf(parsed).Convert(t))
 				return nil
