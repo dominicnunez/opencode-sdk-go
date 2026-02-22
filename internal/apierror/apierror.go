@@ -50,7 +50,12 @@ func (r *Error) Error() string {
 		statusText = http.StatusText(r.Response.StatusCode)
 	}
 
-	return fmt.Sprintf("%s \"%s\": %d %s %s", method, url, statusCode, statusText, r.JSON.RawJSON())
+	raw := r.JSON.RawJSON()
+	if raw == "" {
+		raw = "(no response body)"
+	}
+
+	return fmt.Sprintf("%s \"%s\": %d %s %s", method, url, statusCode, statusText, raw)
 }
 
 func (r *Error) DumpRequest(body bool) []byte {

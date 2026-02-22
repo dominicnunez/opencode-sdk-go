@@ -38,6 +38,10 @@ func WithBaseURL(base string) RequestOption {
 			return fmt.Errorf("option: WithBaseURL failed to parse url: %w", err)
 		}
 
+		if u.Scheme != "http" && u.Scheme != "https" {
+			return fmt.Errorf("option: WithBaseURL requires http or https scheme, got %q", u.Scheme)
+		}
+
 		r.BaseURL = u
 		return nil
 	})

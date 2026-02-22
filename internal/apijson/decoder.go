@@ -645,7 +645,7 @@ func (d *decoderBuilder) newTimeTypeDecoder(t reflect.Type) decoderFunc {
 			}
 		}
 
-		return fmt.Errorf("unable to leniently parse date-time string: %s", n.Str)
+		return fmt.Errorf("unable to parse date-time string %q (expected RFC3339 format like \"2006-01-02T15:04:05Z07:00\")", n.Str)
 	}
 }
 
