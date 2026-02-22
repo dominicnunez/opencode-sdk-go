@@ -257,12 +257,17 @@ func (d *decoderBuilder) newUnionDecoder(t reflect.Type) decoderFunc {
 			}
 		}
 
+		inputSnippet := n.Raw
+		if len(inputSnippet) > 64 {
+			inputSnippet = inputSnippet[:64] + "..."
+		}
+
 		if bestExactness < loose {
-			return errors.New("apijson: was not able to coerce type as union")
+			return fmt.Errorf("apijson: could not coerce %q to union type %s", inputSnippet, t.String())
 		}
 
 		if guardStrict(state, bestExactness != exact) {
-			return errors.New("apijson: was not able to coerce type as union strictly")
+			return fmt.Errorf("apijson: could not strictly coerce %q to union type %s", inputSnippet, t.String())
 		}
 
 		return nil
