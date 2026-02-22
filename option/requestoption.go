@@ -33,7 +33,7 @@ func WithBaseURL(base string) RequestOption {
 
 	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) error {
 		if err != nil {
-			return fmt.Errorf("requestoption: WithBaseURL failed to parse url: %w", err)
+			return fmt.Errorf("option: WithBaseURL failed to parse url: %w", err)
 		}
 
 		r.BaseURL = u
@@ -58,7 +58,7 @@ type HTTPClient interface {
 func WithHTTPClient(client HTTPClient) RequestOption {
 	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) error {
 		if client == nil {
-			return fmt.Errorf("requestoption: custom http client cannot be nil")
+			return fmt.Errorf("option: custom http client cannot be nil")
 		}
 
 		if c, ok := client.(*http.Client); ok {
