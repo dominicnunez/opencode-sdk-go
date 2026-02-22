@@ -14,6 +14,7 @@ import (
 	"github.com/tidwall/sjson"
 
 	"github.com/anomalyco/opencode-sdk-go/internal/param"
+	"github.com/anomalyco/opencode-sdk-go/internal/timeformat"
 )
 
 var encoders sync.Map // map[encoderEntry]encoderFunc
@@ -185,17 +186,15 @@ func (e *encoder) newArrayTypeEncoder(t reflect.Type) encoderFunc {
 	return func(value reflect.Value) ([]byte, error) {
 		json := []byte("[]")
 		for i := 0; i < value.Len(); i++ {
-			var value, err = itemEncoder(value.Index(i))
+			encoded, err := itemEncoder(value.Index(i))
 			if err != nil {
 				return nil, err
 			}
-			if value == nil {
-				// Assume that empty items should be inserted as `null` so that the output array
-				// will be the same length as the input array
-				value = []byte("null")
+			if encoded == nil {
+				encoded = []byte("null")
 			}
 
-			json, err = sjson.SetRawBytes(json, "-1", value)
+			json, err = sjson.SetRawBytes(json, "-1", encoded)
 			if err != nil {
 				return nil, err
 			}
@@ -254,7 +253,7 @@ func (e *encoder) newStructTypeEncoder(t reflect.Type) encoderFunc {
 				case "date-time":
 					e.dateFormat = time.RFC3339
 				case "date":
-					e.dateFormat = "2006-01-02"
+					e.dateFormat = timeformat.Date
 				}
 			}
 			encoderFields = append(encoderFields, encoderField{ptag, e.typeEncoder(field.Type), idx})
