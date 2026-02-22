@@ -156,11 +156,11 @@ func (e *encoder) newPrimitiveTypeEncoder(t reflect.Type) encoderFunc {
 			}
 			return []byte("false"), nil
 		}
-	case reflect.Int, reflect.Int16, reflect.Int32, reflect.Int64:
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		return func(v reflect.Value) ([]byte, error) {
 			return []byte(strconv.FormatInt(v.Int(), 10)), nil
 		}
-	case reflect.Uint, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		return func(v reflect.Value) ([]byte, error) {
 			return []byte(strconv.FormatUint(v.Uint(), 10)), nil
 		}
