@@ -11,7 +11,7 @@ func Port(from any, to any) error {
 	fromVal := reflect.ValueOf(from)
 
 	if toVal.Kind() != reflect.Ptr || toVal.IsNil() {
-		return fmt.Errorf("destination must be a non-nil pointer")
+		return fmt.Errorf("apijson.Port: destination must be a non-nil pointer, got %T", to)
 	}
 
 	for toVal.Kind() == reflect.Ptr {
@@ -25,7 +25,7 @@ func Port(from any, to any) error {
 	fromType := fromVal.Type()
 
 	if toType.Kind() != reflect.Struct {
-		return fmt.Errorf("destination must be a non-nil pointer to a struct (%v %v)", toType, toType.Kind())
+		return fmt.Errorf("apijson.Port: destination must be a non-nil pointer to struct, got %T (kind: %s)", to, toType.Kind())
 	}
 
 	values := map[string]reflect.Value{}
