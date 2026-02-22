@@ -10,6 +10,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"sync"
 )
 
 // Multiplier for bufio.MaxScanTokenSize to handle large SSE events.
@@ -34,7 +35,10 @@ func NewDecoder(res *http.Response) Decoder {
 
 	var decoder Decoder
 	contentType := res.Header.Get("content-type")
-	if t, ok := decoderTypes[contentType]; ok {
+	decoderTypesMu.RLock()
+	t, ok := decoderTypes[contentType]
+	decoderTypesMu.RUnlock()
+	if ok {
 		decoder = t(res.Body)
 	} else {
 		scn := bufio.NewScanner(res.Body)
@@ -44,10 +48,15 @@ func NewDecoder(res *http.Response) Decoder {
 	return decoder
 }
 
-var decoderTypes = map[string](func(io.ReadCloser) Decoder){}
+var (
+	decoderTypes   = map[string](func(io.ReadCloser) Decoder){}
+	decoderTypesMu sync.RWMutex
+)
 
 func RegisterDecoder(contentType string, decoder func(io.ReadCloser) Decoder) {
+	decoderTypesMu.Lock()
 	decoderTypes[strings.ToLower(contentType)] = decoder
+	decoderTypesMu.Unlock()
 }
 
 type Event struct {
