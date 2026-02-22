@@ -27,7 +27,7 @@ func (j Field) Raw() string     { return j.raw }
 func getSubField(root reflect.Value, index []int, name string) reflect.Value {
 	strct := root.FieldByIndex(index[:len(index)-1])
 	if !strct.IsValid() {
-		panic("couldn't find encapsulating struct for field " + name)
+		return reflect.Value{}
 	}
 	meta := strct.FieldByName("JSON")
 	if !meta.IsValid() {
