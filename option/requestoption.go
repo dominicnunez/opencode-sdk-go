@@ -15,6 +15,8 @@ import (
 	"github.com/tidwall/sjson"
 )
 
+const maxMaxRetries = 10
+
 // RequestOption is an option for the requests made by the opencode API Client
 // which can be supplied to clients, services, and methods. You can read more about this functional
 // options pattern in our [README].
@@ -100,8 +102,8 @@ func WithMaxRetries(retries int) RequestOption {
 	if retries < 0 {
 		panic("option: cannot have fewer than 0 retries")
 	}
-	if retries > 10 {
-		panic("option: cannot have more than 10 retries")
+	if retries > maxMaxRetries {
+		panic(fmt.Sprintf("option: cannot have more than %d retries", maxMaxRetries))
 	}
 	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) error {
 		r.MaxRetries = retries
@@ -240,12 +242,12 @@ func WithRequestBody(contentType string, body any) RequestOption {
 	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) error {
 		if reader, ok := body.(io.Reader); ok {
 			r.Body = reader
-			return r.Apply(WithHeader("Content-Type", contentType))
+			return r.Apply(WithHeader(requestconfig.HeaderContentType, contentType))
 		}
 
 		if b, ok := body.([]byte); ok {
 			r.Body = bytes.NewBuffer(b)
-			return r.Apply(WithHeader("Content-Type", contentType))
+			return r.Apply(WithHeader(requestconfig.HeaderContentType, contentType))
 		}
 
 		return fmt.Errorf("body must be a byte slice or implement io.Reader")

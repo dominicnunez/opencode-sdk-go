@@ -26,10 +26,17 @@ import (
 )
 
 const (
-	defaultMaxRetries     = 2
-	maxRetryDelay         = 8 * time.Second
+	defaultMaxRetries      = 2
+	maxRetryDelay          = 8 * time.Second
 	initialDelayMultiplier = 0.5
-	jitterDivisor         = 4
+	jitterDivisor          = 4
+
+	ContentTypeJSON = "application/json"
+
+	HeaderAccept             = "Accept"
+	HeaderContentType        = "Content-Type"
+	HeaderXStainlessRetryCnt = "X-Stainless-Retry-Count"
+	HeaderXStainlessTimeout  = "X-Stainless-Timeout"
 )
 
 func getDefaultHeaders() map[string]string {
@@ -98,7 +105,7 @@ func (s PreRequestOptionFunc) Apply(r *RequestConfig) error { return s(r) }
 func NewRequestConfig(ctx context.Context, method string, u string, body interface{}, dst interface{}, opts ...RequestOption) (*RequestConfig, error) {
 	var reader io.Reader
 
-	contentType := "application/json"
+	contentType := ContentTypeJSON
 	hasSerializationFunc := false
 
 	if body, ok := body.(json.Marshaler); ok {
@@ -154,12 +161,12 @@ func NewRequestConfig(ctx context.Context, method string, u string, body interfa
 		return nil, err
 	}
 	if reader != nil {
-		req.Header.Set("Content-Type", contentType)
+		req.Header.Set(HeaderContentType, contentType)
 	}
 
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set("X-Stainless-Retry-Count", "0")
-	req.Header.Set("X-Stainless-Timeout", "0")
+	req.Header.Set(HeaderAccept, ContentTypeJSON)
+	req.Header.Set(HeaderXStainlessRetryCnt, "0")
+	req.Header.Set(HeaderXStainlessTimeout, "0")
 	for k, v := range getDefaultHeaders() {
 		req.Header.Add(k, v)
 	}
@@ -183,11 +190,11 @@ func NewRequestConfig(ctx context.Context, method string, u string, body interfa
 	// This must run after `cfg.Apply(...)` above in case the request timeout gets modified. We also only
 	// apply our own logic for it if it's still "0" from above. If it's not, then it was deleted or modified
 	// by the user and we should respect that.
-	if req.Header.Get("X-Stainless-Timeout") == "0" {
+	if req.Header.Get(HeaderXStainlessTimeout) == "0" {
 		if cfg.RequestTimeout == time.Duration(0) {
-			req.Header.Del("X-Stainless-Timeout")
+			req.Header.Del(HeaderXStainlessTimeout)
 		} else {
-			req.Header.Set("X-Stainless-Timeout", strconv.Itoa(int(cfg.RequestTimeout.Seconds())))
+			req.Header.Set(HeaderXStainlessTimeout, strconv.Itoa(int(cfg.RequestTimeout.Seconds())))
 		}
 	}
 
@@ -427,7 +434,7 @@ func (cfg *RequestConfig) Execute() (err error) {
 	}
 
 	// Don't send the current retry count in the headers if the caller modified the header defaults.
-	shouldSendRetryCount := cfg.Request.Header.Get("X-Stainless-Retry-Count") == "0"
+	shouldSendRetryCount := cfg.Request.Header.Get(HeaderXStainlessRetryCnt) == "0"
 
 	var res *http.Response
 	var cancel context.CancelFunc
@@ -445,7 +452,7 @@ func (cfg *RequestConfig) Execute() (err error) {
 
 		req := cfg.Request.Clone(ctx)
 		if shouldSendRetryCount {
-			req.Header.Set("X-Stainless-Retry-Count", strconv.Itoa(retryCount))
+			req.Header.Set(HeaderXStainlessRetryCnt, strconv.Itoa(retryCount))
 		}
 
 		res, err = handler(req)
@@ -539,7 +546,7 @@ func (cfg *RequestConfig) Execute() (err error) {
 	// If we are not json, return plaintext
 	contentType := res.Header.Get("content-type")
 	mediaType, _, _ := mime.ParseMediaType(contentType)
-	isJSON := strings.Contains(mediaType, "application/json") || strings.HasSuffix(mediaType, "+json")
+	isJSON := strings.Contains(mediaType, ContentTypeJSON) || strings.HasSuffix(mediaType, "+json")
 	if !isJSON {
 		switch dst := cfg.ResponseBodyInto.(type) {
 		case *string:
@@ -550,7 +557,7 @@ func (cfg *RequestConfig) Execute() (err error) {
 		case *[]byte:
 			*dst = contents
 		default:
-			return fmt.Errorf("expected destination type of 'string' or '[]byte' for responses with content-type '%s' that is not 'application/json'", contentType)
+			return fmt.Errorf("expected destination type of 'string' or '[]byte' for responses with content-type '%s' that is not '%s'", contentType, ContentTypeJSON)
 		}
 		return nil
 	}
