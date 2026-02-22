@@ -384,7 +384,7 @@ func (cfg *RequestConfig) Execute() (err error) {
 		if cfg.DefaultBaseURL != nil {
 			cfg.BaseURL = cfg.DefaultBaseURL
 		} else {
-			return fmt.Errorf("requestconfig: base url is not set")
+			return fmt.Errorf("requestconfig: base url is not set for %s %s", cfg.Request.Method, cfg.Request.URL)
 		}
 	}
 
