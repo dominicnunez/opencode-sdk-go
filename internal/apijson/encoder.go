@@ -91,8 +91,10 @@ func (e *encoder) typeEncoder(t reflect.Type) encoderFunc {
 	}
 
 	// Compute the real encoder and replace the indirect func with it.
+	// Use defer to ensure wg.Done() is called even if newTypeEncoder panics,
+	// preventing deadlock for concurrent goroutines waiting on wg.Wait().
 	f = e.newTypeEncoder(t)
-	wg.Done()
+	defer wg.Done()
 	encoders.Store(entry, f)
 	return f
 }

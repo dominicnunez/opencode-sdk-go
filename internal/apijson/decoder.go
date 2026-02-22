@@ -118,8 +118,10 @@ func (d *decoderBuilder) typeDecoder(t reflect.Type) decoderFunc {
 	}
 
 	// Compute the real decoder and replace the indirect func with it.
+	// Use defer to ensure wg.Done() is called even if newTypeDecoder panics,
+	// preventing deadlock for concurrent goroutines waiting on wg.Wait().
 	f = d.newTypeDecoder(t)
-	wg.Done()
+	defer wg.Done()
 	decoders.Store(entry, f)
 	return f
 }
