@@ -6,12 +6,15 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"strings"
 )
 
 const sseBufferMultiplier = 9
+
+var ErrNilDecoder = errors.New("ssestream: decoder is nil")
 
 type Decoder interface {
 	Event() Event
@@ -147,6 +150,11 @@ func NewStream[T any](decoder Decoder, err error) *Stream[T] {
 //	 	}
 func (s *Stream[T]) Next() bool {
 	if s.err != nil {
+		return false
+	}
+
+	if s.decoder == nil {
+		s.err = ErrNilDecoder
 		return false
 	}
 
