@@ -307,7 +307,7 @@ func (r AppLogParams) MarshalJSON() (data []byte, err error) {
 }
 
 // URLQuery serializes [AppLogParams]'s query parameters as `url.Values`.
-func (r AppLogParams) URLQuery() (v url.Values) {
+func (r AppLogParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
@@ -337,7 +337,7 @@ type AppProvidersParams struct {
 }
 
 // URLQuery serializes [AppProvidersParams]'s query parameters as `url.Values`.
-func (r AppProvidersParams) URLQuery() (v url.Values) {
+func (r AppProvidersParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,

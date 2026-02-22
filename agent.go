@@ -197,7 +197,7 @@ type AgentListParams struct {
 }
 
 // URLQuery serializes [AgentListParams]'s query parameters as `url.Values`.
-func (r AgentListParams) URLQuery() (v url.Values) {
+func (r AgentListParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,

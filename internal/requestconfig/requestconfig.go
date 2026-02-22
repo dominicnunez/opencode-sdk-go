@@ -130,9 +130,13 @@ func NewRequestConfig(ctx context.Context, method string, u string, body interfa
 	}
 	if body, ok := body.(apiquery.Queryer); ok {
 		hasSerializationFunc = true
-		params := body.URLQuery().Encode()
-		if params != "" {
-			u = u + "?" + params
+		params, err := body.URLQuery()
+		if err != nil {
+			return nil, err
+		}
+		encoded := params.Encode()
+		if encoded != "" {
+			u = u + "?" + encoded
 		}
 	}
 	if body, ok := body.([]byte); ok {

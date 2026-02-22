@@ -146,7 +146,7 @@ func (r SessionPermissionRespondParams) MarshalJSON() (data []byte, err error) {
 
 // URLQuery serializes [SessionPermissionRespondParams]'s query parameters as
 // `url.Values`.
-func (r SessionPermissionRespondParams) URLQuery() (v url.Values) {
+func (r SessionPermissionRespondParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,

@@ -2138,7 +2138,7 @@ type ConfigGetParams struct {
 }
 
 // URLQuery serializes [ConfigGetParams]'s query parameters as `url.Values`.
-func (r ConfigGetParams) URLQuery() (v url.Values) {
+func (r ConfigGetParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,

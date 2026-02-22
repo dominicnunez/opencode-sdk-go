@@ -1630,7 +1630,7 @@ type EventListParams struct {
 }
 
 // URLQuery serializes [EventListParams]'s query parameters as `url.Values`.
-func (r EventListParams) URLQuery() (v url.Values) {
+func (r EventListParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,

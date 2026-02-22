@@ -73,7 +73,7 @@ type PathGetParams struct {
 }
 
 // URLQuery serializes [PathGetParams]'s query parameters as `url.Values`.
-func (r PathGetParams) URLQuery() (v url.Values) {
+func (r PathGetParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,

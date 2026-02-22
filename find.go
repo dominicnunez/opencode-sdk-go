@@ -296,7 +296,7 @@ type FindFilesParams struct {
 }
 
 // URLQuery serializes [FindFilesParams]'s query parameters as `url.Values`.
-func (r FindFilesParams) URLQuery() (v url.Values) {
+func (r FindFilesParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
@@ -309,7 +309,7 @@ type FindSymbolsParams struct {
 }
 
 // URLQuery serializes [FindSymbolsParams]'s query parameters as `url.Values`.
-func (r FindSymbolsParams) URLQuery() (v url.Values) {
+func (r FindSymbolsParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
@@ -322,7 +322,7 @@ type FindTextParams struct {
 }
 
 // URLQuery serializes [FindTextParams]'s query parameters as `url.Values`.
-func (r FindTextParams) URLQuery() (v url.Values) {
+func (r FindTextParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,

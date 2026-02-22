@@ -2733,7 +2733,7 @@ func (r SessionNewParams) MarshalJSON() (data []byte, err error) {
 }
 
 // URLQuery serializes [SessionNewParams]'s query parameters as `url.Values`.
-func (r SessionNewParams) URLQuery() (v url.Values) {
+func (r SessionNewParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
@@ -2750,7 +2750,7 @@ func (r SessionUpdateParams) MarshalJSON() (data []byte, err error) {
 }
 
 // URLQuery serializes [SessionUpdateParams]'s query parameters as `url.Values`.
-func (r SessionUpdateParams) URLQuery() (v url.Values) {
+func (r SessionUpdateParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
@@ -2762,7 +2762,7 @@ type SessionListParams struct {
 }
 
 // URLQuery serializes [SessionListParams]'s query parameters as `url.Values`.
-func (r SessionListParams) URLQuery() (v url.Values) {
+func (r SessionListParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
@@ -2774,7 +2774,7 @@ type SessionDeleteParams struct {
 }
 
 // URLQuery serializes [SessionDeleteParams]'s query parameters as `url.Values`.
-func (r SessionDeleteParams) URLQuery() (v url.Values) {
+func (r SessionDeleteParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
@@ -2786,7 +2786,7 @@ type SessionAbortParams struct {
 }
 
 // URLQuery serializes [SessionAbortParams]'s query parameters as `url.Values`.
-func (r SessionAbortParams) URLQuery() (v url.Values) {
+func (r SessionAbortParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
@@ -2798,7 +2798,7 @@ type SessionChildrenParams struct {
 }
 
 // URLQuery serializes [SessionChildrenParams]'s query parameters as `url.Values`.
-func (r SessionChildrenParams) URLQuery() (v url.Values) {
+func (r SessionChildrenParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
@@ -2819,7 +2819,7 @@ func (r SessionCommandParams) MarshalJSON() (data []byte, err error) {
 }
 
 // URLQuery serializes [SessionCommandParams]'s query parameters as `url.Values`.
-func (r SessionCommandParams) URLQuery() (v url.Values) {
+func (r SessionCommandParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
@@ -2831,7 +2831,7 @@ type SessionGetParams struct {
 }
 
 // URLQuery serializes [SessionGetParams]'s query parameters as `url.Values`.
-func (r SessionGetParams) URLQuery() (v url.Values) {
+func (r SessionGetParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
@@ -2850,7 +2850,7 @@ func (r SessionInitParams) MarshalJSON() (data []byte, err error) {
 }
 
 // URLQuery serializes [SessionInitParams]'s query parameters as `url.Values`.
-func (r SessionInitParams) URLQuery() (v url.Values) {
+func (r SessionInitParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
@@ -2862,7 +2862,7 @@ type SessionMessageParams struct {
 }
 
 // URLQuery serializes [SessionMessageParams]'s query parameters as `url.Values`.
-func (r SessionMessageParams) URLQuery() (v url.Values) {
+func (r SessionMessageParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
@@ -2874,7 +2874,7 @@ type SessionMessagesParams struct {
 }
 
 // URLQuery serializes [SessionMessagesParams]'s query parameters as `url.Values`.
-func (r SessionMessagesParams) URLQuery() (v url.Values) {
+func (r SessionMessagesParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
@@ -2897,7 +2897,7 @@ func (r SessionPromptParams) MarshalJSON() (data []byte, err error) {
 }
 
 // URLQuery serializes [SessionPromptParams]'s query parameters as `url.Values`.
-func (r SessionPromptParams) URLQuery() (v url.Values) {
+func (r SessionPromptParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
@@ -2966,7 +2966,7 @@ func (r SessionRevertParams) MarshalJSON() (data []byte, err error) {
 }
 
 // URLQuery serializes [SessionRevertParams]'s query parameters as `url.Values`.
-func (r SessionRevertParams) URLQuery() (v url.Values) {
+func (r SessionRevertParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
@@ -2978,7 +2978,7 @@ type SessionShareParams struct {
 }
 
 // URLQuery serializes [SessionShareParams]'s query parameters as `url.Values`.
-func (r SessionShareParams) URLQuery() (v url.Values) {
+func (r SessionShareParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
@@ -2996,7 +2996,7 @@ func (r SessionShellParams) MarshalJSON() (data []byte, err error) {
 }
 
 // URLQuery serializes [SessionShellParams]'s query parameters as `url.Values`.
-func (r SessionShellParams) URLQuery() (v url.Values) {
+func (r SessionShellParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
@@ -3014,7 +3014,7 @@ func (r SessionSummarizeParams) MarshalJSON() (data []byte, err error) {
 }
 
 // URLQuery serializes [SessionSummarizeParams]'s query parameters as `url.Values`.
-func (r SessionSummarizeParams) URLQuery() (v url.Values) {
+func (r SessionSummarizeParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
@@ -3026,7 +3026,7 @@ type SessionUnrevertParams struct {
 }
 
 // URLQuery serializes [SessionUnrevertParams]'s query parameters as `url.Values`.
-func (r SessionUnrevertParams) URLQuery() (v url.Values) {
+func (r SessionUnrevertParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
@@ -3038,7 +3038,7 @@ type SessionUnshareParams struct {
 }
 
 // URLQuery serializes [SessionUnshareParams]'s query parameters as `url.Values`.
-func (r SessionUnshareParams) URLQuery() (v url.Values) {
+func (r SessionUnshareParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,

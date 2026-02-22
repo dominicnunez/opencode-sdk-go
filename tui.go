@@ -116,7 +116,7 @@ func (r TuiAppendPromptParams) MarshalJSON() (data []byte, err error) {
 }
 
 // URLQuery serializes [TuiAppendPromptParams]'s query parameters as `url.Values`.
-func (r TuiAppendPromptParams) URLQuery() (v url.Values) {
+func (r TuiAppendPromptParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
@@ -128,7 +128,7 @@ type TuiClearPromptParams struct {
 }
 
 // URLQuery serializes [TuiClearPromptParams]'s query parameters as `url.Values`.
-func (r TuiClearPromptParams) URLQuery() (v url.Values) {
+func (r TuiClearPromptParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
@@ -146,7 +146,7 @@ func (r TuiExecuteCommandParams) MarshalJSON() (data []byte, err error) {
 
 // URLQuery serializes [TuiExecuteCommandParams]'s query parameters as
 // `url.Values`.
-func (r TuiExecuteCommandParams) URLQuery() (v url.Values) {
+func (r TuiExecuteCommandParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
@@ -158,7 +158,7 @@ type TuiOpenHelpParams struct {
 }
 
 // URLQuery serializes [TuiOpenHelpParams]'s query parameters as `url.Values`.
-func (r TuiOpenHelpParams) URLQuery() (v url.Values) {
+func (r TuiOpenHelpParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
@@ -170,7 +170,7 @@ type TuiOpenModelsParams struct {
 }
 
 // URLQuery serializes [TuiOpenModelsParams]'s query parameters as `url.Values`.
-func (r TuiOpenModelsParams) URLQuery() (v url.Values) {
+func (r TuiOpenModelsParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
@@ -182,7 +182,7 @@ type TuiOpenSessionsParams struct {
 }
 
 // URLQuery serializes [TuiOpenSessionsParams]'s query parameters as `url.Values`.
-func (r TuiOpenSessionsParams) URLQuery() (v url.Values) {
+func (r TuiOpenSessionsParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
@@ -194,7 +194,7 @@ type TuiOpenThemesParams struct {
 }
 
 // URLQuery serializes [TuiOpenThemesParams]'s query parameters as `url.Values`.
-func (r TuiOpenThemesParams) URLQuery() (v url.Values) {
+func (r TuiOpenThemesParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
@@ -213,7 +213,7 @@ func (r TuiShowToastParams) MarshalJSON() (data []byte, err error) {
 }
 
 // URLQuery serializes [TuiShowToastParams]'s query parameters as `url.Values`.
-func (r TuiShowToastParams) URLQuery() (v url.Values) {
+func (r TuiShowToastParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
@@ -242,7 +242,7 @@ type TuiSubmitPromptParams struct {
 }
 
 // URLQuery serializes [TuiSubmitPromptParams]'s query parameters as `url.Values`.
-func (r TuiSubmitPromptParams) URLQuery() (v url.Values) {
+func (r TuiSubmitPromptParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,

@@ -117,7 +117,7 @@ type ProjectListParams struct {
 }
 
 // URLQuery serializes [ProjectListParams]'s query parameters as `url.Values`.
-func (r ProjectListParams) URLQuery() (v url.Values) {
+func (r ProjectListParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
@@ -129,7 +129,7 @@ type ProjectCurrentParams struct {
 }
 
 // URLQuery serializes [ProjectCurrentParams]'s query parameters as `url.Values`.
-func (r ProjectCurrentParams) URLQuery() (v url.Values) {
+func (r ProjectCurrentParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,

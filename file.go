@@ -268,7 +268,7 @@ type FileListParams struct {
 }
 
 // URLQuery serializes [FileListParams]'s query parameters as `url.Values`.
-func (r FileListParams) URLQuery() (v url.Values) {
+func (r FileListParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
@@ -281,7 +281,7 @@ type FileReadParams struct {
 }
 
 // URLQuery serializes [FileReadParams]'s query parameters as `url.Values`.
-func (r FileReadParams) URLQuery() (v url.Values) {
+func (r FileReadParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
@@ -293,7 +293,7 @@ type FileStatusParams struct {
 }
 
 // URLQuery serializes [FileStatusParams]'s query parameters as `url.Values`.
-func (r FileStatusParams) URLQuery() (v url.Values) {
+func (r FileStatusParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
