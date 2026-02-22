@@ -13,6 +13,13 @@
 
 <!-- Findings where the audit misread the code or described behavior that doesn't occur -->
 
+### Inconsistent error message format for missing required parameters
+
+**Location:** `session.go:54-55,74-75,86-87,98-99` and other service files
+**Date:** 2026-02-22
+
+**Reason:** The audit claims error messages are "inconsistent with the pattern used elsewhere" and suggests "some use 'received empty string' while others might use different phrasing." However, all 17 error messages for missing required parameters in the codebase follow the exact same format: `missing required parameter 'X' (received empty string)`. The audit provides no evidence of actual inconsistency and cannot cite any examples of different phrasing because none exist.
+
 ### GetBody error explicitly ignored in request body setup
 
 **Location:** `internal/requestconfig/requestconfig.go:402,409`
@@ -79,10 +86,10 @@ The comparison to line 459 (where error is handled) is misleading because that's
 
 ### Panic in library code can crash applications
 
-**Location:** `internal/apijson/decoder.go:211`, `internal/apiquery/encoder.go:190,235,246`, `option/requestoption.go:101,109`
+**Location:** `internal/apijson/decoder.go:211`, `internal/apiquery/encoder.go:83,194,239,250`, `option/requestoption.go:103,111`
 **Date:** 2026-02-22
 
-**Reason:** This SDK is auto-generated from an OpenAPI spec by Stainless. The panics in generated code occur in edge cases that should never happen in normal usage (union type not in registry, invalid map keys, unsupported array formats). Replacing these panics with error returns would require modifying the Stainless generator, which is an external tool. The `WithMaxRetries` panics are documented in the function's docstring and enforce reasonable limits.
+**Reason:** This SDK is auto-generated from an OpenAPI spec by Stainless. The panics in generated code occur in edge cases that should never happen in normal usage (MarshalJSON failure, invalid map keys, unsupported array formats, unknown ArrayFormat). Replacing these panics with error returns would require modifying the Stainless generator, which is an external tool. The `WithMaxRetries` panics are documented in the function's docstring and enforce reasonable limits.
 
 ### Deprecated config fields still parsed
 
@@ -97,6 +104,13 @@ The comparison to line 459 (where error is handled) is misleading because that's
 **Date:** 2026-02-22
 
 **Reason:** This is a standard caching pattern for reflection-based serialization. The cache is bounded by the number of distinct types used, which in practice is limited and stable for a given application. Memory profiling would be needed to demonstrate an actual problem before adding complexity like LRU eviction.
+
+### Bytes buffer allocation in SSE hot path
+
+**Location:** `packages/ssestream/ssestream.go:81`
+**Date:** 2026-02-22
+
+**Reason:** The `bytes.NewBuffer(nil)` call per event is a minor allocation in a streaming context. For typical usage patterns, the GC overhead is negligible. Using `sync.Pool` would add complexity for an optimization that would only benefit extremely high-throughput scenarios. No performance issue has been reported or measured.
 
 ## Intentional Design Decisions
 
