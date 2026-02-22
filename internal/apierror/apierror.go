@@ -35,8 +35,22 @@ func (r errorJSON) RawJSON() string {
 }
 
 func (r *Error) Error() string {
-	// Attempt to re-populate the response body
-	return fmt.Sprintf("%s \"%s\": %d %s %s", r.Request.Method, r.Request.URL, r.Response.StatusCode, http.StatusText(r.Response.StatusCode), r.JSON.RawJSON())
+	var method, url string
+	var statusCode int
+	var statusText string
+
+	if r.Request != nil {
+		method = r.Request.Method
+		if r.Request.URL != nil {
+			url = r.Request.URL.String()
+		}
+	}
+	if r.Response != nil {
+		statusCode = r.Response.StatusCode
+		statusText = http.StatusText(r.Response.StatusCode)
+	}
+
+	return fmt.Sprintf("%s \"%s\": %d %s %s", method, url, statusCode, statusText, r.JSON.RawJSON())
 }
 
 func (r *Error) DumpRequest(body bool) []byte {
