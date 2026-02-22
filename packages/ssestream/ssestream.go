@@ -12,6 +12,8 @@ import (
 	"strings"
 )
 
+// Multiplier for bufio.MaxScanTokenSize to handle large SSE events.
+// At 9x the default (64KB), provides ~576KB buffer for event data.
 const sseBufferMultiplier = 9
 
 // ErrNilDecoder is returned by Stream.Next when the SSE decoder is nil,
