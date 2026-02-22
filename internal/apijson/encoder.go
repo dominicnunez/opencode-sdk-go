@@ -175,7 +175,7 @@ func (e *encoder) newPrimitiveTypeEncoder(t reflect.Type) encoderFunc {
 		}
 	default:
 		return func(v reflect.Value) ([]byte, error) {
-			return nil, fmt.Errorf("unknown type received at primitive encoder: %s", t.String())
+			return nil, fmt.Errorf("apijson: unsupported type %q for JSON serialization (kind: %s)", t.String(), t.Kind())
 		}
 	}
 }
@@ -274,7 +274,7 @@ func (e *encoder) newStructTypeEncoder(t reflect.Type) encoderFunc {
 			field := value.FieldByIndex(ef.idx)
 			encoded, err := ef.fn(field)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("field %q: %w", ef.tag.name, err)
 			}
 			if encoded == nil {
 				continue

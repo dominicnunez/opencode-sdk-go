@@ -450,7 +450,10 @@ func (d *decoderBuilder) newStructTypeDecoder(t reflect.Type) decoderFunc {
 			if metadata := getSubField(value, inlineDecoder.idx, inlineDecoder.goname); metadata.IsValid() {
 				metadata.Set(reflect.ValueOf(meta))
 			}
-			return err
+			if err != nil {
+				return fmt.Errorf("inline field: %w", err)
+			}
+			return nil
 		}
 
 		typedExtraType := reflect.Type(nil)
@@ -614,7 +617,7 @@ func (d *decoderBuilder) newPrimitiveTypeDecoder(t reflect.Type) decoderFunc {
 		}
 	default:
 		return func(node gjson.Result, v reflect.Value, state *decoderState) error {
-			return fmt.Errorf("unknown type received at primitive decoder: %s", t.String())
+			return fmt.Errorf("apijson: unsupported type %q for JSON deserialization (kind: %s)", t.String(), t.Kind())
 		}
 	}
 }
