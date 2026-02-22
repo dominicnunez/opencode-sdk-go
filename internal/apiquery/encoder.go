@@ -308,7 +308,6 @@ func (e *encoder) newFieldTypeEncoder(t reflect.Type) encoderFunc {
 		}
 		null := value.FieldByName("Null")
 		if null.Bool() {
-			// TODO: Error?
 			return nil
 		}
 		raw := value.FieldByName("Raw")
