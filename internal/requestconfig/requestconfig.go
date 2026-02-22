@@ -583,13 +583,18 @@ func (cfg *RequestConfig) Clone(ctx context.Context) *RequestConfig {
 		return nil
 	}
 	new := &RequestConfig{
-		MaxRetries:     cfg.MaxRetries,
-		RequestTimeout: cfg.RequestTimeout,
-		Context:        ctx,
-		Request:        req,
-		BaseURL:        cfg.BaseURL,
-		HTTPClient:     cfg.HTTPClient,
-		Middlewares:    cfg.Middlewares,
+		MaxRetries:       cfg.MaxRetries,
+		RequestTimeout:   cfg.RequestTimeout,
+		Context:          ctx,
+		Request:          req,
+		BaseURL:          cfg.BaseURL,
+		DefaultBaseURL:   cfg.DefaultBaseURL,
+		HTTPClient:       cfg.HTTPClient,
+		CustomHTTPDoer:   cfg.CustomHTTPDoer,
+		Middlewares:      cfg.Middlewares,
+		ResponseBodyInto: cfg.ResponseBodyInto,
+		ResponseInto:     cfg.ResponseInto,
+		Body:             cfg.Body,
 	}
 
 	return new
