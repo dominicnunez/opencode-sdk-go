@@ -325,7 +325,10 @@ var tests = map[string]struct {
 func TestEncode(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			values := MarshalWithSettings(test.val, test.settings)
+			values, err := MarshalWithSettings(test.val, test.settings)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
 			str, _ := url.QueryUnescape(values.Encode())
 			if str != test.enc {
 				t.Fatalf("expected %+#v to serialize to %s but got %s", test.val, test.enc, str)
