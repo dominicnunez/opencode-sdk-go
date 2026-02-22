@@ -13,6 +13,13 @@
 
 <!-- Findings where the audit misread the code or described behavior that doesn't occur -->
 
+### Response body read lacks timeout protection after request completes
+
+**Location:** `internal/requestconfig/requestconfig.go:509,540`
+**Date:** 2026-02-22
+
+**Reason:** The audit claims body reads at lines 509 and 540 lack timeout protection, but this is incorrect. When `RequestTimeout` is set, a context with deadline is created (line 444) and passed to the cloned request (line 453). Go's HTTP transport sets a connection deadline based on this context deadline. Reading from `res.Body` uses the same connection and respects this deadline — if the deadline is exceeded during body read, the operation fails with a timeout error. The body read IS protected by the transport-level deadline mechanism.
+
 ### Inconsistent error message format for missing required parameters
 
 **Location:** `session.go:54-55,74-75,86-87,98-99` and other service files
@@ -84,12 +91,16 @@ The comparison to line 459 (where error is handled) is misleading because that's
 
 **Reason:** The SDK intentionally uses http.DefaultClient as the default to give users full control over timeout behavior. Setting a default timeout could break existing code that relies on indefinite waits for long-running operations. Users can set a timeout via WithRequestTimeout(), WithHTTPClient(), or by passing a context with deadline. Documenting this is preferable to changing the default.
 
-### Panic in library code can crash applications
+### Panics in library code for input validation and internal invariants
 
-**Location:** `internal/apijson/decoder.go:211`, `internal/apiquery/encoder.go:83,194,239,250`, `option/requestoption.go:103,111`
+**Location:** `option/requestoption.go:103,106,262`, `internal/apiquery/encoder.go:265`, `internal/apijson/decoder.go:220`
 **Date:** 2026-02-22
 
-**Reason:** This SDK is auto-generated from an OpenAPI spec by Stainless. The panics in generated code occur in edge cases that should never happen in normal usage (MarshalJSON failure, invalid map keys, unsupported array formats, unknown ArrayFormat). Replacing these panics with error returns would require modifying the Stainless generator, which is an external tool. The `WithMaxRetries` panics are documented in the function's docstring and enforce reasonable limits.
+**Reason:** The remaining panics fall into two categories:
+
+1. **Input validation** (`option/requestoption.go`): Panics for invalid `WithMaxRetries`/`WithTimeout` arguments. This is idiomatic Go for configuration functions where the caller has violated a documented contract. Similar to `regexp.MustCompile`.
+
+2. **Internal invariants** (`apiquery/encoder.go:265`, `apijson/decoder.go:220`): These panics catch SDK maintainer errors during development (unknown ArrayFormat enum values, unregistered union types). They indicate bugs in the SDK itself, not user code. Failing fast helps catch these issues during development.
 
 ### Deprecated config fields still parsed
 
