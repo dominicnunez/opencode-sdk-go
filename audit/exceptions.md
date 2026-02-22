@@ -123,6 +123,13 @@ The comparison to line 459 (where error is handled) is misleading because that's
 
 **Reason:** The `bytes.NewBuffer(nil)` call per event is a minor allocation in a streaming context. For typical usage patterns, the GC overhead is negligible. Using `sync.Pool` would add complexity for an optimization that would only benefit extremely high-throughput scenarios. No performance issue has been reported or measured.
 
+### No limit on buffered request body size
+
+**Location:** `internal/requestconfig/requestconfig.go:111-157`
+**Date:** 2026-02-22
+
+**Reason:** When a request body is serialized, it is buffered in memory via `bytes.NewBuffer`. This is the same behavior as the standard library's `json.Marshal`, which also has no size limit. Adding a max body size configuration would add complexity for a hypothetical issue. Callers are responsible for not creating excessively large request bodies, just as they are when using `json.Marshal` directly. Memory exhaustion would indicate a bug in the caller's code, not the SDK.
+
 ## Intentional Design Decisions
 
 <!-- Findings that describe behavior which is correct by design -->
