@@ -25,6 +25,13 @@ import (
 	"github.com/anomalyco/opencode-sdk-go/internal/param"
 )
 
+const (
+	defaultMaxRetries     = 2
+	maxRetryDelay         = 8 * time.Second
+	initialDelayMultiplier = 0.5
+	jitterDivisor         = 4
+)
+
 func getDefaultHeaders() map[string]string {
 	return map[string]string{
 		"User-Agent": fmt.Sprintf("Opencode/Go %s", internal.PackageVersion),
@@ -39,7 +46,7 @@ func getNormalizedOS() string {
 		return "Android"
 	case "darwin":
 		return "MacOS"
-	case "window":
+	case "windows":
 		return "Windows"
 	case "freebsd":
 		return "FreeBSD"
@@ -161,7 +168,7 @@ func NewRequestConfig(ctx context.Context, method string, u string, body interfa
 		req.Header.Add(k, v)
 	}
 	cfg := RequestConfig{
-		MaxRetries: 2,
+		MaxRetries: defaultMaxRetries,
 		Context:    ctx,
 		Request:    req,
 		HTTPClient: http.DefaultClient,
@@ -358,20 +365,16 @@ func (b *bodyWithTimeout) Close() error {
 }
 
 func retryDelay(res *http.Response, retryCount int) time.Duration {
-	// If the API asks us to wait a certain amount of time (and it's a reasonable amount),
-	// just do what it says.
-
 	if retryAfterDelay, ok := parseRetryAfterHeader(res); ok && 0 <= retryAfterDelay && retryAfterDelay < time.Minute {
 		return retryAfterDelay
 	}
 
-	maxDelay := 8 * time.Second
-	delay := time.Duration(0.5 * float64(time.Second) * math.Pow(2, float64(retryCount)))
-	if delay > maxDelay {
-		delay = maxDelay
+	delay := time.Duration(initialDelayMultiplier * float64(time.Second) * math.Pow(2, float64(retryCount)))
+	if delay > maxRetryDelay {
+		delay = maxRetryDelay
 	}
 
-	jitter := rand.Int63n(int64(delay / 4))
+	jitter := rand.Int63n(int64(delay / jitterDivisor))
 	delay -= time.Duration(jitter)
 	return delay
 }
@@ -523,7 +526,7 @@ func (cfg *RequestConfig) Execute() (err error) {
 	contents, err := io.ReadAll(res.Body)
 	res.Body.Close()
 	if err != nil {
-		return fmt.Errorf("error reading response body: %w", err)
+		return fmt.Errorf("reading response body from %s %s: %w", cfg.Request.Method, cfg.Request.URL, err)
 	}
 
 	// If we are not json, return plaintext
@@ -552,7 +555,7 @@ func (cfg *RequestConfig) Execute() (err error) {
 	default:
 		err = json.NewDecoder(bytes.NewReader(contents)).Decode(cfg.ResponseBodyInto)
 		if err != nil {
-			return fmt.Errorf("error parsing response json: %w", err)
+			return fmt.Errorf("parsing response JSON from %s %s: %w", cfg.Request.Method, cfg.Request.URL, err)
 		}
 	}
 
