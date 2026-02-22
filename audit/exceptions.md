@@ -13,9 +13,48 @@
 
 <!-- Findings where the audit misread the code or described behavior that doesn't occur -->
 
+### GetBody error explicitly ignored in request body setup
+
+**Location:** `internal/requestconfig/requestconfig.go:402,409`
+**Date:** 2026-02-22
+
+**Reason:** The GetBody closures at lines 401 and 405 are defined inline and cannot fail:
+- Line 401 returns `io.NopCloser(bytes.NewReader(b)), nil` which always has nil error
+- Line 408 calls `body.Seek(0, 0)` on a `*bytes.Reader` which cannot fail
+
+The comparison to line 459 (where error is handled) is misleading because that's in the retry loop where GetBody could be any function, not the inline closures defined here.
+
+### Magic numbers in retry delay calculation
+
+**Location:** `internal/requestconfig/requestconfig.go:29-33`
+**Date:** 2026-02-22
+
+**Reason:** The values `maxRetryDelay = 8 * time.Second`, `initialDelayMultiplier = 0.5`, and `jitterDivisor = 4` are named constants with clear semantic names, not magic numbers. The audit conflates "lacks explanatory comment" with "magic number" - these are different concerns. Named constants are the standard solution for magic numbers.
+
+### Redundant nil check in interface type assertion
+
+**Location:** `option/requestoption.go:64-70`
+**Date:** 2026-02-22
+
+**Reason:** The audit title is factually incorrect - `if c, ok := client.(*http.Client); ok` is a type assertion, not a nil check. The "stale state" concern (else branch not clearing HTTPClient) doesn't affect behavior because `requestconfig.go:419-422` checks `if cfg.CustomHTTPDoer != nil` first, giving CustomHTTPDoer precedence. The code is consistent in practice.
+
 ## Won't Fix
 
 <!-- Real findings not worth fixing — architectural cost, external constraints, etc. -->
+
+### httputil dump errors ignored in debugging methods
+
+**Location:** `internal/apierror/apierror.go:44,46,51`
+**Date:** 2026-02-22
+
+**Reason:** The DumpRequest and DumpResponse methods are debugging utilities that return []byte. Adding error return values would be a breaking API change. For debugging purposes, returning empty output when the dump fails is acceptable behavior—the caller can inspect the returned bytes to determine if useful information was captured. Adding logging in library code is not idiomatic Go.
+
+### http.DefaultClient used without default timeout
+
+**Location:** `internal/requestconfig/requestconfig.go:174`
+**Date:** 2026-02-22
+
+**Reason:** The SDK intentionally uses http.DefaultClient as the default to give users full control over timeout behavior. Setting a default timeout could break existing code that relies on indefinite waits for long-running operations. Users can set a timeout via WithRequestTimeout(), WithHTTPClient(), or by passing a context with deadline. Documenting this is preferable to changing the default.
 
 ### Panic in library code can crash applications
 
