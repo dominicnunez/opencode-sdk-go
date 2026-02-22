@@ -13,7 +13,8 @@ func CheckTestServer(t *testing.T, url string) bool {
 		if str, ok := os.LookupEnv(SKIP_MOCK_TESTS); ok {
 			skip, err := strconv.ParseBool(str)
 			if err != nil {
-				t.Fatalf("strconv.ParseBool(os.LookupEnv(%s)) failed: %s", SKIP_MOCK_TESTS, err)
+				t.Errorf("strconv.ParseBool(os.LookupEnv(%s)) failed: %s", SKIP_MOCK_TESTS, err)
+				return false
 			}
 			if skip {
 				t.Skip("The test will not run without a mock Prism server running against your OpenAPI spec")
