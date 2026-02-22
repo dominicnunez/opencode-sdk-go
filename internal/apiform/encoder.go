@@ -139,11 +139,11 @@ func (e *encoder) newPrimitiveTypeEncoder(t reflect.Type) encoderFunc {
 			}
 			return writer.WriteField(key, "false")
 		}
-	case reflect.Int, reflect.Int16, reflect.Int32, reflect.Int64:
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		return func(key string, v reflect.Value, writer *multipart.Writer) error {
 			return writer.WriteField(key, strconv.FormatInt(v.Int(), 10))
 		}
-	case reflect.Uint, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		return func(key string, v reflect.Value, writer *multipart.Writer) error {
 			return writer.WriteField(key, strconv.FormatUint(v.Uint(), 10))
 		}
