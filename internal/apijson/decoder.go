@@ -2,7 +2,6 @@ package apijson
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -411,7 +410,9 @@ func (d *decoderBuilder) newStructTypeDecoder(t reflect.Type) decoderFunc {
 	return func(node gjson.Result, value reflect.Value, state *decoderState) (err error) {
 		if field := value.FieldByName("JSON"); field.IsValid() {
 			if raw := field.FieldByName("raw"); raw.IsValid() {
-				setUnexportedField(raw, node.Raw)
+				if err := setUnexportedField(raw, node.Raw); err != nil {
+					return err
+				}
 			}
 		}
 
@@ -647,11 +648,12 @@ func (d *decoderBuilder) newTimeTypeDecoder(t reflect.Type) decoderFunc {
 	}
 }
 
-func setUnexportedField(field reflect.Value, value interface{}) {
+func setUnexportedField(field reflect.Value, value interface{}) error {
 	if !field.CanAddr() {
-		panic("apijson: cannot set unexported field: field is not addressable")
+		return fmt.Errorf("apijson: cannot set unexported field: field is not addressable")
 	}
 	reflect.NewAt(field.Type(), unsafe.Pointer(field.UnsafeAddr())).Elem().Set(reflect.ValueOf(value))
+	return nil
 }
 
 func guardStrict(state *decoderState, cond bool) bool {
