@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/anomalyco/opencode-sdk-go/internal/param"
+	"github.com/anomalyco/opencode-sdk-go/internal/timeformat"
 )
 
 var encoders sync.Map // map[reflect.Type]encoderFunc
@@ -79,7 +80,7 @@ func (e *encoder) typeEncoder(t reflect.Type) encoderFunc {
 func marshalerEncoder(key string, value reflect.Value) []Pair {
 	s, err := value.Interface().(json.Marshaler).MarshalJSON()
 	if err != nil {
-		return []Pair{}
+		panic(fmt.Sprintf("apiquery: MarshalJSON failed for type %T: %v", value.Interface(), err))
 	}
 	return []Pair{{key, string(s)}}
 }
@@ -159,7 +160,7 @@ func (e *encoder) newStructTypeEncoder(t reflect.Type) encoderFunc {
 				case "date-time":
 					e.dateFormat = time.RFC3339
 				case "date":
-					e.dateFormat = "2006-01-02"
+					e.dateFormat = timeformat.Date
 				}
 			}
 			encoderFields = append(encoderFields, encoderField{ptag, e.typeEncoder(field.Type), idx})
