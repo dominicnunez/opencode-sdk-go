@@ -38,6 +38,13 @@ The comparison to line 459 (where error is handled) is misleading because that's
 
 **Reason:** The audit title is factually incorrect - `if c, ok := client.(*http.Client); ok` is a type assertion, not a nil check. The "stale state" concern (else branch not clearing HTTPClient) doesn't affect behavior because `requestconfig.go:419-422` checks `if cfg.CustomHTTPDoer != nil` first, giving CustomHTTPDoer precedence. The code is consistent in practice.
 
+### SSE buffer size integer overflow claim
+
+**Location:** `packages/ssestream/ssestream.go:45`
+**Date:** 2026-02-22
+
+**Reason:** The audit claims `bufio.MaxScanTokenSize<<sseBufferMultiplier` (64KB << 9 = ~32MB) "could theoretically overflow on 32-bit systems." This is mathematically incorrect. The result is 33,554,432 bytes (~32MB), which is well under the 32-bit signed int maximum of 2,147,483,647 (~2.1GB). No overflow is possible.
+
 ## Won't Fix
 
 <!-- Real findings not worth fixing — architectural cost, external constraints, etc. -->
@@ -72,10 +79,10 @@ The comparison to line 459 (where error is handled) is misleading because that's
 
 ### Panic in library code can crash applications
 
-**Location:** `internal/apijson/decoder.go:211`, `internal/apijson/field.go:30`, `internal/apiquery/encoder.go:190,235,246`, `option/requestoption.go:101`
+**Location:** `internal/apijson/decoder.go:211`, `internal/apiquery/encoder.go:190,235,246`, `option/requestoption.go:101,109`
 **Date:** 2026-02-22
 
-**Reason:** This SDK is auto-generated from an OpenAPI spec by Stainless. The panics in generated code occur in edge cases that should never happen in normal usage (union type not in registry, invalid map keys, unsupported array formats). Replacing these panics with error returns would require modifying the Stainless generator, which is an external tool. The `WithMaxRetries` panic is documented in the function's docstring.
+**Reason:** This SDK is auto-generated from an OpenAPI spec by Stainless. The panics in generated code occur in edge cases that should never happen in normal usage (union type not in registry, invalid map keys, unsupported array formats). Replacing these panics with error returns would require modifying the Stainless generator, which is an external tool. The `WithMaxRetries` panics are documented in the function's docstring and enforce reasonable limits.
 
 ### Deprecated config fields still parsed
 
@@ -94,13 +101,6 @@ The comparison to line 459 (where error is handled) is misleading because that's
 ## Intentional Design Decisions
 
 <!-- Findings that describe behavior which is correct by design -->
-
-### Hardcoded default base URL uses localhost
-
-**Location:** `option/requestoption.go:266`
-**Date:** 2026-02-22
-
-**Reason:** This SDK is designed for local development against the opencode CLI server which runs on localhost:54321 by default. Users targeting a production API should explicitly set the base URL using `WithBaseURL()`. The function name `WithEnvironmentProduction` is misleading (it should perhaps be `WithEnvironmentLocal`), but changing it now would be a breaking change.
 
 ### Debug middleware logs sensitive data
 
