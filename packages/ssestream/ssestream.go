@@ -14,6 +14,8 @@ import (
 
 const sseBufferMultiplier = 9
 
+// ErrNilDecoder is returned by Stream.Next when the SSE decoder is nil,
+// indicating the response body was not available.
 var ErrNilDecoder = errors.New("ssestream: decoder is nil")
 
 type Decoder interface {
