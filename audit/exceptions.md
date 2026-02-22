@@ -93,7 +93,7 @@ The comparison to line 459 (where error is handled) is misleading because that's
 
 ### Panics in library code for input validation and internal invariants
 
-**Location:** `option/requestoption.go:103,106,262`, `internal/apiquery/encoder.go:265`, `internal/apijson/decoder.go:220`
+**Location:** `option/requestoption.go:103,106,262`, `internal/apiquery/encoder.go:265`, `internal/apijson/decoder.go:219`
 **Date:** 2026-02-22
 
 **Reason:** The remaining panics fall into two categories:
