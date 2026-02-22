@@ -77,7 +77,10 @@ func (e *encoder) typeEncoder(t reflect.Type) encoderFunc {
 }
 
 func marshalerEncoder(key string, value reflect.Value) []Pair {
-	s, _ := value.Interface().(json.Marshaler).MarshalJSON()
+	s, err := value.Interface().(json.Marshaler).MarshalJSON()
+	if err != nil {
+		return []Pair{}
+	}
 	return []Pair{{key, string(s)}}
 }
 
