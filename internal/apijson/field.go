@@ -27,7 +27,7 @@ func (j Field) Raw() string     { return j.raw }
 func getSubField(root reflect.Value, index []int, name string) reflect.Value {
 	strct := root.FieldByIndex(index[:len(index)-1])
 	if !strct.IsValid() {
-		return reflect.Value{}
+		panic("apijson: invalid struct hierarchy in getSubField - this indicates a bug in the encoder/decoder construction")
 	}
 	meta := strct.FieldByName("JSON")
 	if !meta.IsValid() {

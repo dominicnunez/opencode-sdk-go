@@ -597,36 +597,6 @@ func ExecuteNewRequest(ctx context.Context, method string, u string, body interf
 	return cfg.Execute()
 }
 
-func (cfg *RequestConfig) Clone(ctx context.Context) (*RequestConfig, error) {
-	if cfg == nil {
-		return nil, nil
-	}
-	req := cfg.Request.Clone(ctx)
-	if req.Body != nil {
-		var err error
-		req.Body, err = req.GetBody()
-		if err != nil {
-			return nil, fmt.Errorf("requestconfig: failed to clone request body: %w", err)
-		}
-	}
-	new := &RequestConfig{
-		MaxRetries:       cfg.MaxRetries,
-		RequestTimeout:   cfg.RequestTimeout,
-		Context:          ctx,
-		Request:          req,
-		BaseURL:          cfg.BaseURL,
-		DefaultBaseURL:   cfg.DefaultBaseURL,
-		HTTPClient:       cfg.HTTPClient,
-		CustomHTTPDoer:   cfg.CustomHTTPDoer,
-		Middlewares:      cfg.Middlewares,
-		ResponseBodyInto: cfg.ResponseBodyInto,
-		ResponseInto:     cfg.ResponseInto,
-		Body:             cfg.Body,
-	}
-
-	return new, nil
-}
-
 func (cfg *RequestConfig) Apply(opts ...RequestOption) error {
 	for _, opt := range opts {
 		err := opt.Apply(cfg)
