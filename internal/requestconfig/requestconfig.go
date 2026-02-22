@@ -374,6 +374,8 @@ func retryDelay(res *http.Response, retryCount int) time.Duration {
 		delay = maxRetryDelay
 	}
 
+	// Non-cryptographic RNG is intentional here: jitter only needs to distribute
+	// retry attempts to avoid thundering herd, not provide security guarantees.
 	jitter := rand.Int63n(int64(delay / jitterDivisor))
 	delay -= time.Duration(jitter)
 	return delay
