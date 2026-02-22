@@ -253,6 +253,9 @@ func WithRequestBody(contentType string, body any) RequestOption {
 // each request attempt. This should be smaller than the timeout defined in
 // the context, which spans all retries.
 func WithRequestTimeout(dur time.Duration) RequestOption {
+	if dur < 0 {
+		panic("option: cannot have negative timeout duration")
+	}
 	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) error {
 		r.RequestTimeout = dur
 		return nil
