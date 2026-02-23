@@ -8,9 +8,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/anomalyco/opencode-sdk-go"
-	"github.com/anomalyco/opencode-sdk-go/internal/testutil"
-	"github.com/anomalyco/opencode-sdk-go/option"
+	"github.com/dominicnunez/opencode-sdk-go"
+	"github.com/dominicnunez/opencode-sdk-go/internal/testutil"
 )
 
 func TestAgentListWithOptionalParams(t *testing.T) {
@@ -22,10 +21,11 @@ func TestAgentListWithOptionalParams(t *testing.T) {
 	if !testutil.CheckTestServer(t, baseURL) {
 		return
 	}
-	client := opencode.NewClient(
-		option.WithBaseURL(baseURL),
-	)
-	_, err := client.Agent.List(context.TODO(), opencode.AgentListParams{
+	client, err := opencode.NewClient(opencode.WithBaseURL(baseURL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	_, err = client.Agent.List(context.TODO(), &opencode.AgentListParams{
 		Directory: opencode.F("directory"),
 	})
 	if err != nil {

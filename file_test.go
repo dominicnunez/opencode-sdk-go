@@ -1,5 +1,3 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
-
 package opencode_test
 
 import (
@@ -8,9 +6,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/anomalyco/opencode-sdk-go"
-	"github.com/anomalyco/opencode-sdk-go/internal/testutil"
-	"github.com/anomalyco/opencode-sdk-go/option"
+	"github.com/dominicnunez/opencode-sdk-go"
+	"github.com/dominicnunez/opencode-sdk-go/internal/testutil"
 )
 
 func TestFileListWithOptionalParams(t *testing.T) {
@@ -22,10 +19,11 @@ func TestFileListWithOptionalParams(t *testing.T) {
 	if !testutil.CheckTestServer(t, baseURL) {
 		return
 	}
-	client := opencode.NewClient(
-		option.WithBaseURL(baseURL),
-	)
-	_, err := client.File.List(context.TODO(), opencode.FileListParams{
+	client, err := opencode.NewClient(opencode.WithBaseURL(baseURL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	_, err = client.File.List(context.TODO(), &opencode.FileListParams{
 		Path:      opencode.F("path"),
 		Directory: opencode.F("directory"),
 	})
@@ -47,10 +45,11 @@ func TestFileReadWithOptionalParams(t *testing.T) {
 	if !testutil.CheckTestServer(t, baseURL) {
 		return
 	}
-	client := opencode.NewClient(
-		option.WithBaseURL(baseURL),
-	)
-	_, err := client.File.Read(context.TODO(), opencode.FileReadParams{
+	client, err := opencode.NewClient(opencode.WithBaseURL(baseURL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	_, err = client.File.Read(context.TODO(), &opencode.FileReadParams{
 		Path:      opencode.F("path"),
 		Directory: opencode.F("directory"),
 	})
@@ -72,10 +71,11 @@ func TestFileStatusWithOptionalParams(t *testing.T) {
 	if !testutil.CheckTestServer(t, baseURL) {
 		return
 	}
-	client := opencode.NewClient(
-		option.WithBaseURL(baseURL),
-	)
-	_, err := client.File.Status(context.TODO(), opencode.FileStatusParams{
+	client, err := opencode.NewClient(opencode.WithBaseURL(baseURL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	_, err = client.File.Status(context.TODO(), &opencode.FileStatusParams{
 		Directory: opencode.F("directory"),
 	})
 	if err != nil {

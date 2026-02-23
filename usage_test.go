@@ -1,5 +1,3 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
-
 package opencode_test
 
 import (
@@ -7,9 +5,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/anomalyco/opencode-sdk-go"
-	"github.com/anomalyco/opencode-sdk-go/internal/testutil"
-	"github.com/anomalyco/opencode-sdk-go/option"
+	"github.com/dominicnunez/opencode-sdk-go"
+	"github.com/dominicnunez/opencode-sdk-go/internal/testutil"
 )
 
 func TestUsage(t *testing.T) {
@@ -20,11 +17,11 @@ func TestUsage(t *testing.T) {
 	if !testutil.CheckTestServer(t, baseURL) {
 		return
 	}
-	client := opencode.NewClient(
-		option.WithBaseURL(baseURL),
-	)
-	t.Skip("Prism tests are disabled")
-	sessions, err := client.Session.List(context.TODO(), opencode.SessionListParams{})
+	client, err := opencode.NewClient(opencode.WithBaseURL(baseURL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	sessions, err := client.Session.List(context.TODO(), &opencode.SessionListParams{})
 	if err != nil {
 		t.Error(err)
 		return

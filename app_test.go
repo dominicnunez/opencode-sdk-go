@@ -8,9 +8,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/anomalyco/opencode-sdk-go"
-	"github.com/anomalyco/opencode-sdk-go/internal/testutil"
-	"github.com/anomalyco/opencode-sdk-go/option"
+	"github.com/dominicnunez/opencode-sdk-go"
+	"github.com/dominicnunez/opencode-sdk-go/internal/testutil"
 )
 
 func TestAppLogWithOptionalParams(t *testing.T) {
@@ -22,10 +21,11 @@ func TestAppLogWithOptionalParams(t *testing.T) {
 	if !testutil.CheckTestServer(t, baseURL) {
 		return
 	}
-	client := opencode.NewClient(
-		option.WithBaseURL(baseURL),
-	)
-	_, err := client.App.Log(context.TODO(), opencode.AppLogParams{
+	client, err := opencode.NewClient(opencode.WithBaseURL(baseURL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	_, err = client.App.Log(context.TODO(), &opencode.AppLogParams{
 		Level:     opencode.F(opencode.AppLogParamsLevelDebug),
 		Message:   opencode.F("message"),
 		Service:   opencode.F("service"),
@@ -52,10 +52,11 @@ func TestAppProvidersWithOptionalParams(t *testing.T) {
 	if !testutil.CheckTestServer(t, baseURL) {
 		return
 	}
-	client := opencode.NewClient(
-		option.WithBaseURL(baseURL),
-	)
-	_, err := client.App.Providers(context.TODO(), opencode.AppProvidersParams{
+	client, err := opencode.NewClient(opencode.WithBaseURL(baseURL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	_, err = client.App.Providers(context.TODO(), &opencode.AppProvidersParams{
 		Directory: opencode.F("directory"),
 	})
 	if err != nil {

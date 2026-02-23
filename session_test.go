@@ -1,5 +1,3 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
-
 package opencode_test
 
 import (
@@ -8,9 +6,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/anomalyco/opencode-sdk-go"
-	"github.com/anomalyco/opencode-sdk-go/internal/testutil"
-	"github.com/anomalyco/opencode-sdk-go/option"
+	"github.com/dominicnunez/opencode-sdk-go"
+	"github.com/dominicnunez/opencode-sdk-go/internal/testutil"
 )
 
 func TestSessionNewWithOptionalParams(t *testing.T) {
@@ -22,10 +19,11 @@ func TestSessionNewWithOptionalParams(t *testing.T) {
 	if !testutil.CheckTestServer(t, baseURL) {
 		return
 	}
-	client := opencode.NewClient(
-		option.WithBaseURL(baseURL),
-	)
-	_, err := client.Session.New(context.TODO(), opencode.SessionNewParams{
+	client, err := opencode.NewClient(opencode.WithBaseURL(baseURL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	_, err = client.Session.Create(context.TODO(), &opencode.SessionNewParams{
 		Directory: opencode.F("directory"),
 		ParentID:  opencode.F("sesJ!"),
 		Title:     opencode.F("title"),
@@ -48,13 +46,14 @@ func TestSessionUpdateWithOptionalParams(t *testing.T) {
 	if !testutil.CheckTestServer(t, baseURL) {
 		return
 	}
-	client := opencode.NewClient(
-		option.WithBaseURL(baseURL),
-	)
-	_, err := client.Session.Update(
+	client, err := opencode.NewClient(opencode.WithBaseURL(baseURL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	_, err = client.Session.Update(
 		context.TODO(),
 		"id",
-		opencode.SessionUpdateParams{
+		&opencode.SessionUpdateParams{
 			Directory: opencode.F("directory"),
 			Title:     opencode.F("title"),
 		},
@@ -77,10 +76,11 @@ func TestSessionListWithOptionalParams(t *testing.T) {
 	if !testutil.CheckTestServer(t, baseURL) {
 		return
 	}
-	client := opencode.NewClient(
-		option.WithBaseURL(baseURL),
-	)
-	_, err := client.Session.List(context.TODO(), opencode.SessionListParams{
+	client, err := opencode.NewClient(opencode.WithBaseURL(baseURL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	_, err = client.Session.List(context.TODO(), &opencode.SessionListParams{
 		Directory: opencode.F("directory"),
 	})
 	if err != nil {
@@ -101,13 +101,14 @@ func TestSessionDeleteWithOptionalParams(t *testing.T) {
 	if !testutil.CheckTestServer(t, baseURL) {
 		return
 	}
-	client := opencode.NewClient(
-		option.WithBaseURL(baseURL),
-	)
-	_, err := client.Session.Delete(
+	client, err := opencode.NewClient(opencode.WithBaseURL(baseURL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	err = client.Session.Delete(
 		context.TODO(),
 		"sesJ!",
-		opencode.SessionDeleteParams{
+		&opencode.SessionDeleteParams{
 			Directory: opencode.F("directory"),
 		},
 	)
@@ -129,13 +130,14 @@ func TestSessionAbortWithOptionalParams(t *testing.T) {
 	if !testutil.CheckTestServer(t, baseURL) {
 		return
 	}
-	client := opencode.NewClient(
-		option.WithBaseURL(baseURL),
-	)
-	_, err := client.Session.Abort(
+	client, err := opencode.NewClient(opencode.WithBaseURL(baseURL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	err = client.Session.Abort(
 		context.TODO(),
 		"id",
-		opencode.SessionAbortParams{
+		&opencode.SessionAbortParams{
 			Directory: opencode.F("directory"),
 		},
 	)
@@ -157,13 +159,14 @@ func TestSessionChildrenWithOptionalParams(t *testing.T) {
 	if !testutil.CheckTestServer(t, baseURL) {
 		return
 	}
-	client := opencode.NewClient(
-		option.WithBaseURL(baseURL),
-	)
-	_, err := client.Session.Children(
+	client, err := opencode.NewClient(opencode.WithBaseURL(baseURL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	_, err = client.Session.Children(
 		context.TODO(),
 		"sesJ!",
-		opencode.SessionChildrenParams{
+		&opencode.SessionChildrenParams{
 			Directory: opencode.F("directory"),
 		},
 	)
@@ -185,13 +188,14 @@ func TestSessionCommandWithOptionalParams(t *testing.T) {
 	if !testutil.CheckTestServer(t, baseURL) {
 		return
 	}
-	client := opencode.NewClient(
-		option.WithBaseURL(baseURL),
-	)
-	_, err := client.Session.Command(
+	client, err := opencode.NewClient(opencode.WithBaseURL(baseURL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	_, err = client.Session.Command(
 		context.TODO(),
 		"id",
-		opencode.SessionCommandParams{
+		&opencode.SessionCommandParams{
 			Arguments: opencode.F("arguments"),
 			Command:   opencode.F("command"),
 			Directory: opencode.F("directory"),
@@ -218,13 +222,14 @@ func TestSessionGetWithOptionalParams(t *testing.T) {
 	if !testutil.CheckTestServer(t, baseURL) {
 		return
 	}
-	client := opencode.NewClient(
-		option.WithBaseURL(baseURL),
-	)
-	_, err := client.Session.Get(
+	client, err := opencode.NewClient(opencode.WithBaseURL(baseURL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	_, err = client.Session.Get(
 		context.TODO(),
 		"sesJ!",
-		opencode.SessionGetParams{
+		&opencode.SessionGetParams{
 			Directory: opencode.F("directory"),
 		},
 	)
@@ -246,13 +251,14 @@ func TestSessionInitWithOptionalParams(t *testing.T) {
 	if !testutil.CheckTestServer(t, baseURL) {
 		return
 	}
-	client := opencode.NewClient(
-		option.WithBaseURL(baseURL),
-	)
-	_, err := client.Session.Init(
+	client, err := opencode.NewClient(opencode.WithBaseURL(baseURL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	_, err = client.Session.Init(
 		context.TODO(),
 		"id",
-		opencode.SessionInitParams{
+		&opencode.SessionInitParams{
 			MessageID:  opencode.F("msgJ!"),
 			ModelID:    opencode.F("modelID"),
 			ProviderID: opencode.F("providerID"),
@@ -277,14 +283,15 @@ func TestSessionMessageWithOptionalParams(t *testing.T) {
 	if !testutil.CheckTestServer(t, baseURL) {
 		return
 	}
-	client := opencode.NewClient(
-		option.WithBaseURL(baseURL),
-	)
-	_, err := client.Session.Message(
+	client, err := opencode.NewClient(opencode.WithBaseURL(baseURL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	_, err = client.Session.Message(
 		context.TODO(),
 		"id",
 		"messageID",
-		opencode.SessionMessageParams{
+		&opencode.SessionMessageParams{
 			Directory: opencode.F("directory"),
 		},
 	)
@@ -306,13 +313,14 @@ func TestSessionMessagesWithOptionalParams(t *testing.T) {
 	if !testutil.CheckTestServer(t, baseURL) {
 		return
 	}
-	client := opencode.NewClient(
-		option.WithBaseURL(baseURL),
-	)
-	_, err := client.Session.Messages(
+	client, err := opencode.NewClient(opencode.WithBaseURL(baseURL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	_, err = client.Session.Messages(
 		context.TODO(),
 		"id",
-		opencode.SessionMessagesParams{
+		&opencode.SessionMessagesParams{
 			Directory: opencode.F("directory"),
 		},
 	)
@@ -334,13 +342,14 @@ func TestSessionPromptWithOptionalParams(t *testing.T) {
 	if !testutil.CheckTestServer(t, baseURL) {
 		return
 	}
-	client := opencode.NewClient(
-		option.WithBaseURL(baseURL),
-	)
-	_, err := client.Session.Prompt(
+	client, err := opencode.NewClient(opencode.WithBaseURL(baseURL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	_, err = client.Session.Prompt(
 		context.TODO(),
 		"id",
-		opencode.SessionPromptParams{
+		&opencode.SessionPromptParams{
 			Parts: opencode.F([]opencode.SessionPromptParamsPartUnion{opencode.TextPartInputParam{
 				Text: opencode.F("text"),
 				Type: opencode.F(opencode.TextPartInputTypeText),
@@ -386,13 +395,14 @@ func TestSessionRevertWithOptionalParams(t *testing.T) {
 	if !testutil.CheckTestServer(t, baseURL) {
 		return
 	}
-	client := opencode.NewClient(
-		option.WithBaseURL(baseURL),
-	)
-	_, err := client.Session.Revert(
+	client, err := opencode.NewClient(opencode.WithBaseURL(baseURL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	_, err = client.Session.Revert(
 		context.TODO(),
 		"id",
-		opencode.SessionRevertParams{
+		&opencode.SessionRevertParams{
 			MessageID: opencode.F("msgJ!"),
 			Directory: opencode.F("directory"),
 			PartID:    opencode.F("prtJ!"),
@@ -416,129 +426,14 @@ func TestSessionShareWithOptionalParams(t *testing.T) {
 	if !testutil.CheckTestServer(t, baseURL) {
 		return
 	}
-	client := opencode.NewClient(
-		option.WithBaseURL(baseURL),
-	)
-	_, err := client.Session.Share(
+	client, err := opencode.NewClient(opencode.WithBaseURL(baseURL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	_, err = client.Session.Share(
 		context.TODO(),
 		"id",
-		opencode.SessionShareParams{
-			Directory: opencode.F("directory"),
-		},
-	)
-	if err != nil {
-		var apierr *opencode.Error
-		if errors.As(err, &apierr) {
-			t.Log(string(apierr.DumpRequest(true)))
-		}
-		t.Fatalf("err should be nil: %s", err.Error())
-	}
-}
-
-func TestSessionShellWithOptionalParams(t *testing.T) {
-	t.Skip("Prism tests are disabled")
-	baseURL := "http://localhost:4010"
-	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
-		baseURL = envURL
-	}
-	if !testutil.CheckTestServer(t, baseURL) {
-		return
-	}
-	client := opencode.NewClient(
-		option.WithBaseURL(baseURL),
-	)
-	_, err := client.Session.Shell(
-		context.TODO(),
-		"id",
-		opencode.SessionShellParams{
-			Agent:     opencode.F("agent"),
-			Command:   opencode.F("command"),
-			Directory: opencode.F("directory"),
-		},
-	)
-	if err != nil {
-		var apierr *opencode.Error
-		if errors.As(err, &apierr) {
-			t.Log(string(apierr.DumpRequest(true)))
-		}
-		t.Fatalf("err should be nil: %s", err.Error())
-	}
-}
-
-func TestSessionSummarizeWithOptionalParams(t *testing.T) {
-	t.Skip("Prism tests are disabled")
-	baseURL := "http://localhost:4010"
-	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
-		baseURL = envURL
-	}
-	if !testutil.CheckTestServer(t, baseURL) {
-		return
-	}
-	client := opencode.NewClient(
-		option.WithBaseURL(baseURL),
-	)
-	_, err := client.Session.Summarize(
-		context.TODO(),
-		"id",
-		opencode.SessionSummarizeParams{
-			ModelID:    opencode.F("modelID"),
-			ProviderID: opencode.F("providerID"),
-			Directory:  opencode.F("directory"),
-		},
-	)
-	if err != nil {
-		var apierr *opencode.Error
-		if errors.As(err, &apierr) {
-			t.Log(string(apierr.DumpRequest(true)))
-		}
-		t.Fatalf("err should be nil: %s", err.Error())
-	}
-}
-
-func TestSessionUnrevertWithOptionalParams(t *testing.T) {
-	t.Skip("Prism tests are disabled")
-	baseURL := "http://localhost:4010"
-	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
-		baseURL = envURL
-	}
-	if !testutil.CheckTestServer(t, baseURL) {
-		return
-	}
-	client := opencode.NewClient(
-		option.WithBaseURL(baseURL),
-	)
-	_, err := client.Session.Unrevert(
-		context.TODO(),
-		"id",
-		opencode.SessionUnrevertParams{
-			Directory: opencode.F("directory"),
-		},
-	)
-	if err != nil {
-		var apierr *opencode.Error
-		if errors.As(err, &apierr) {
-			t.Log(string(apierr.DumpRequest(true)))
-		}
-		t.Fatalf("err should be nil: %s", err.Error())
-	}
-}
-
-func TestSessionUnshareWithOptionalParams(t *testing.T) {
-	t.Skip("Prism tests are disabled")
-	baseURL := "http://localhost:4010"
-	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
-		baseURL = envURL
-	}
-	if !testutil.CheckTestServer(t, baseURL) {
-		return
-	}
-	client := opencode.NewClient(
-		option.WithBaseURL(baseURL),
-	)
-	_, err := client.Session.Unshare(
-		context.TODO(),
-		"sesJ!",
-		opencode.SessionUnshareParams{
+		&opencode.SessionShareParams{
 			Directory: opencode.F("directory"),
 		},
 	)

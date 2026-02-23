@@ -11,9 +11,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/anomalyco/opencode-sdk-go"
-	"github.com/anomalyco/opencode-sdk-go/internal"
-	"github.com/anomalyco/opencode-sdk-go/option"
+	"github.com/dominicnunez/opencode-sdk-go"
+	"github.com/dominicnunez/opencode-sdk-go/internal"
+	"github.com/dominicnunez/opencode-sdk-go/option"
 )
 
 type closureTransport struct {
@@ -26,8 +26,8 @@ func (t *closureTransport) RoundTrip(req *http.Request) (*http.Response, error) 
 
 func TestUserAgentHeader(t *testing.T) {
 	var userAgent string
-	client := opencode.NewClient(
-		option.WithHTTPClient(&http.Client{
+	client, err := opencode.NewClient(
+		opencode.WithHTTPClient(&http.Client{
 			Transport: &closureTransport{
 				fn: func(req *http.Request) (*http.Response, error) {
 					userAgent = req.Header.Get("User-Agent")
@@ -38,7 +38,13 @@ func TestUserAgentHeader(t *testing.T) {
 			},
 		}),
 	)
-	client.Session.List(context.Background(), opencode.SessionListParams{})
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	_, err = client.Session.List(context.Background(), &opencode.SessionListParams{})
+	if err != nil {
+		t.Logf("Session.List error: %v", err)
+	}
 	if userAgent != fmt.Sprintf("Opencode/Go %s", internal.PackageVersion) {
 		t.Errorf("Expected User-Agent to be correct, but got: %#v", userAgent)
 	}
@@ -46,8 +52,8 @@ func TestUserAgentHeader(t *testing.T) {
 
 func TestRetryAfter(t *testing.T) {
 	retryCountHeaders := make([]string, 0)
-	client := opencode.NewClient(
-		option.WithHTTPClient(&http.Client{
+	client, err := opencode.NewClient(
+		opencode.WithHTTPClient(&http.Client{
 			Transport: &closureTransport{
 				fn: func(req *http.Request) (*http.Response, error) {
 					retryCountHeaders = append(retryCountHeaders, req.Header.Get("X-Stainless-Retry-Count"))
@@ -61,7 +67,10 @@ func TestRetryAfter(t *testing.T) {
 			},
 		}),
 	)
-	_, err := client.Session.List(context.Background(), opencode.SessionListParams{})
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	_, err = client.Session.List(context.Background(), &opencode.SessionListParams{})
 	if err == nil {
 		t.Error("Expected there to be a cancel error")
 	}
@@ -79,8 +88,8 @@ func TestRetryAfter(t *testing.T) {
 
 func TestDeleteRetryCountHeader(t *testing.T) {
 	retryCountHeaders := make([]string, 0)
-	client := opencode.NewClient(
-		option.WithHTTPClient(&http.Client{
+	client, err := opencode.NewClient(
+		opencode.WithHTTPClient(&http.Client{
 			Transport: &closureTransport{
 				fn: func(req *http.Request) (*http.Response, error) {
 					retryCountHeaders = append(retryCountHeaders, req.Header.Get("X-Stainless-Retry-Count"))
@@ -93,9 +102,12 @@ func TestDeleteRetryCountHeader(t *testing.T) {
 				},
 			},
 		}),
-		option.WithHeaderDel("X-Stainless-Retry-Count"),
+		opencode.WithRequestOption(option.WithHeaderDel("X-Stainless-Retry-Count")),
 	)
-	_, err := client.Session.List(context.Background(), opencode.SessionListParams{})
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	_, err = client.Session.List(context.Background(), &opencode.SessionListParams{})
 	if err == nil {
 		t.Error("Expected there to be a cancel error")
 	}
@@ -108,8 +120,8 @@ func TestDeleteRetryCountHeader(t *testing.T) {
 
 func TestOverwriteRetryCountHeader(t *testing.T) {
 	retryCountHeaders := make([]string, 0)
-	client := opencode.NewClient(
-		option.WithHTTPClient(&http.Client{
+	client, err := opencode.NewClient(
+		opencode.WithHTTPClient(&http.Client{
 			Transport: &closureTransport{
 				fn: func(req *http.Request) (*http.Response, error) {
 					retryCountHeaders = append(retryCountHeaders, req.Header.Get("X-Stainless-Retry-Count"))
@@ -122,9 +134,12 @@ func TestOverwriteRetryCountHeader(t *testing.T) {
 				},
 			},
 		}),
-		option.WithHeader("X-Stainless-Retry-Count", "42"),
+		opencode.WithRequestOption(option.WithHeader("X-Stainless-Retry-Count", "42")),
 	)
-	_, err := client.Session.List(context.Background(), opencode.SessionListParams{})
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	_, err = client.Session.List(context.Background(), &opencode.SessionListParams{})
 	if err == nil {
 		t.Error("Expected there to be a cancel error")
 	}
@@ -137,8 +152,8 @@ func TestOverwriteRetryCountHeader(t *testing.T) {
 
 func TestRetryAfterMs(t *testing.T) {
 	attempts := 0
-	client := opencode.NewClient(
-		option.WithHTTPClient(&http.Client{
+	client, err := opencode.NewClient(
+		opencode.WithHTTPClient(&http.Client{
 			Transport: &closureTransport{
 				fn: func(req *http.Request) (*http.Response, error) {
 					attempts++
@@ -152,7 +167,10 @@ func TestRetryAfterMs(t *testing.T) {
 			},
 		}),
 	)
-	_, err := client.Session.List(context.Background(), opencode.SessionListParams{})
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	_, err = client.Session.List(context.Background(), &opencode.SessionListParams{})
 	if err == nil {
 		t.Error("Expected there to be a cancel error")
 	}
@@ -162,8 +180,8 @@ func TestRetryAfterMs(t *testing.T) {
 }
 
 func TestContextCancel(t *testing.T) {
-	client := opencode.NewClient(
-		option.WithHTTPClient(&http.Client{
+	client, err := opencode.NewClient(
+		opencode.WithHTTPClient(&http.Client{
 			Transport: &closureTransport{
 				fn: func(req *http.Request) (*http.Response, error) {
 					<-req.Context().Done()
@@ -172,17 +190,20 @@ func TestContextCancel(t *testing.T) {
 			},
 		}),
 	)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
 	cancelCtx, cancel := context.WithCancel(context.Background())
 	cancel()
-	_, err := client.Session.List(cancelCtx, opencode.SessionListParams{})
+	_, err = client.Session.List(cancelCtx, &opencode.SessionListParams{})
 	if err == nil {
 		t.Error("Expected there to be a cancel error")
 	}
 }
 
 func TestContextCancelDelay(t *testing.T) {
-	client := opencode.NewClient(
-		option.WithHTTPClient(&http.Client{
+	client, err := opencode.NewClient(
+		opencode.WithHTTPClient(&http.Client{
 			Transport: &closureTransport{
 				fn: func(req *http.Request) (*http.Response, error) {
 					<-req.Context().Done()
@@ -191,9 +212,12 @@ func TestContextCancelDelay(t *testing.T) {
 			},
 		}),
 	)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
 	cancelCtx, cancel := context.WithTimeout(context.Background(), 2*time.Millisecond)
 	defer cancel()
-	_, err := client.Session.List(cancelCtx, opencode.SessionListParams{})
+	_, err = client.Session.List(cancelCtx, &opencode.SessionListParams{})
 	if err == nil {
 		t.Error("expected there to be a cancel error")
 	}
@@ -208,8 +232,8 @@ func TestContextDeadline(t *testing.T) {
 	defer cancel()
 
 	go func() {
-		client := opencode.NewClient(
-			option.WithHTTPClient(&http.Client{
+		client, err := opencode.NewClient(
+			opencode.WithHTTPClient(&http.Client{
 				Transport: &closureTransport{
 					fn: func(req *http.Request) (*http.Response, error) {
 						<-req.Context().Done()
@@ -218,7 +242,12 @@ func TestContextDeadline(t *testing.T) {
 				},
 			}),
 		)
-		_, err := client.Session.List(deadlineCtx, opencode.SessionListParams{})
+		if err != nil {
+			t.Errorf("failed to create client: %v", err)
+			close(testDone)
+			return
+		}
+		_, err = client.Session.List(deadlineCtx, &opencode.SessionListParams{})
 		if err == nil {
 			t.Error("expected there to be a deadline error")
 		}
@@ -244,8 +273,8 @@ func TestContextDeadlineStreaming(t *testing.T) {
 	defer cancel()
 
 	go func() {
-		client := opencode.NewClient(
-			option.WithHTTPClient(&http.Client{
+		client, err := opencode.NewClient(
+			opencode.WithHTTPClient(&http.Client{
 				Transport: &closureTransport{
 					fn: func(req *http.Request) (*http.Response, error) {
 						return &http.Response{
@@ -262,7 +291,12 @@ func TestContextDeadlineStreaming(t *testing.T) {
 				},
 			}),
 		)
-		stream := client.Event.ListStreaming(deadlineCtx, opencode.EventListParams{})
+		if err != nil {
+			t.Errorf("failed to create client: %v", err)
+			close(testDone)
+			return
+		}
+		stream := client.Event.ListStreaming(deadlineCtx, &opencode.EventListParams{})
 		for stream.Next() {
 			_ = stream.Current()
 		}
@@ -288,8 +322,8 @@ func TestContextDeadlineStreamingWithRequestTimeout(t *testing.T) {
 	deadline := time.Now().Add(100 * time.Millisecond)
 
 	go func() {
-		client := opencode.NewClient(
-			option.WithHTTPClient(&http.Client{
+		client, err := opencode.NewClient(
+			opencode.WithHTTPClient(&http.Client{
 				Transport: &closureTransport{
 					fn: func(req *http.Request) (*http.Response, error) {
 						return &http.Response{
@@ -306,9 +340,14 @@ func TestContextDeadlineStreamingWithRequestTimeout(t *testing.T) {
 				},
 			}),
 		)
+		if err != nil {
+			t.Errorf("failed to create client: %v", err)
+			close(testDone)
+			return
+		}
 		stream := client.Event.ListStreaming(
 			context.Background(),
-			opencode.EventListParams{},
+			&opencode.EventListParams{},
 			option.WithRequestTimeout((100 * time.Millisecond)),
 		)
 		for stream.Next() {

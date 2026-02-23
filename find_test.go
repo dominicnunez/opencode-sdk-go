@@ -1,5 +1,3 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
-
 package opencode_test
 
 import (
@@ -8,9 +6,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/anomalyco/opencode-sdk-go"
-	"github.com/anomalyco/opencode-sdk-go/internal/testutil"
-	"github.com/anomalyco/opencode-sdk-go/option"
+	"github.com/dominicnunez/opencode-sdk-go"
+	"github.com/dominicnunez/opencode-sdk-go/internal/testutil"
 )
 
 func TestFindFilesWithOptionalParams(t *testing.T) {
@@ -22,10 +19,11 @@ func TestFindFilesWithOptionalParams(t *testing.T) {
 	if !testutil.CheckTestServer(t, baseURL) {
 		return
 	}
-	client := opencode.NewClient(
-		option.WithBaseURL(baseURL),
-	)
-	_, err := client.Find.Files(context.TODO(), opencode.FindFilesParams{
+	client, err := opencode.NewClient(opencode.WithBaseURL(baseURL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	_, err = client.Find.Files(context.TODO(), &opencode.FindFilesParams{
 		Query:     opencode.F("query"),
 		Directory: opencode.F("directory"),
 	})
@@ -47,10 +45,11 @@ func TestFindSymbolsWithOptionalParams(t *testing.T) {
 	if !testutil.CheckTestServer(t, baseURL) {
 		return
 	}
-	client := opencode.NewClient(
-		option.WithBaseURL(baseURL),
-	)
-	_, err := client.Find.Symbols(context.TODO(), opencode.FindSymbolsParams{
+	client, err := opencode.NewClient(opencode.WithBaseURL(baseURL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	_, err = client.Find.Symbols(context.TODO(), &opencode.FindSymbolsParams{
 		Query:     opencode.F("query"),
 		Directory: opencode.F("directory"),
 	})
@@ -72,10 +71,11 @@ func TestFindTextWithOptionalParams(t *testing.T) {
 	if !testutil.CheckTestServer(t, baseURL) {
 		return
 	}
-	client := opencode.NewClient(
-		option.WithBaseURL(baseURL),
-	)
-	_, err := client.Find.Text(context.TODO(), opencode.FindTextParams{
+	client, err := opencode.NewClient(opencode.WithBaseURL(baseURL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	_, err = client.Find.Text(context.TODO(), &opencode.FindTextParams{
 		Pattern:   opencode.F("pattern"),
 		Directory: opencode.F("directory"),
 	})

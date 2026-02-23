@@ -1,5 +1,3 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
-
 package opencode_test
 
 import (
@@ -8,9 +6,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/anomalyco/opencode-sdk-go"
-	"github.com/anomalyco/opencode-sdk-go/internal/testutil"
-	"github.com/anomalyco/opencode-sdk-go/option"
+	"github.com/dominicnunez/opencode-sdk-go"
+	"github.com/dominicnunez/opencode-sdk-go/internal/testutil"
 )
 
 func TestTuiAppendPromptWithOptionalParams(t *testing.T) {
@@ -22,10 +19,11 @@ func TestTuiAppendPromptWithOptionalParams(t *testing.T) {
 	if !testutil.CheckTestServer(t, baseURL) {
 		return
 	}
-	client := opencode.NewClient(
-		option.WithBaseURL(baseURL),
-	)
-	_, err := client.Tui.AppendPrompt(context.TODO(), opencode.TuiAppendPromptParams{
+	client, err := opencode.NewClient(opencode.WithBaseURL(baseURL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	_, err = client.Tui.AppendPrompt(context.TODO(), &opencode.TuiAppendPromptParams{
 		Text:      opencode.F("text"),
 		Directory: opencode.F("directory"),
 	})
@@ -47,10 +45,11 @@ func TestTuiClearPromptWithOptionalParams(t *testing.T) {
 	if !testutil.CheckTestServer(t, baseURL) {
 		return
 	}
-	client := opencode.NewClient(
-		option.WithBaseURL(baseURL),
-	)
-	_, err := client.Tui.ClearPrompt(context.TODO(), opencode.TuiClearPromptParams{
+	client, err := opencode.NewClient(opencode.WithBaseURL(baseURL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	_, err = client.Tui.ClearPrompt(context.TODO(), &opencode.TuiClearPromptParams{
 		Directory: opencode.F("directory"),
 	})
 	if err != nil {
@@ -71,10 +70,11 @@ func TestTuiExecuteCommandWithOptionalParams(t *testing.T) {
 	if !testutil.CheckTestServer(t, baseURL) {
 		return
 	}
-	client := opencode.NewClient(
-		option.WithBaseURL(baseURL),
-	)
-	_, err := client.Tui.ExecuteCommand(context.TODO(), opencode.TuiExecuteCommandParams{
+	client, err := opencode.NewClient(opencode.WithBaseURL(baseURL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	_, err = client.Tui.ExecuteCommand(context.TODO(), &opencode.TuiExecuteCommandParams{
 		Command:   opencode.F("command"),
 		Directory: opencode.F("directory"),
 	})
@@ -96,10 +96,11 @@ func TestTuiOpenHelpWithOptionalParams(t *testing.T) {
 	if !testutil.CheckTestServer(t, baseURL) {
 		return
 	}
-	client := opencode.NewClient(
-		option.WithBaseURL(baseURL),
-	)
-	_, err := client.Tui.OpenHelp(context.TODO(), opencode.TuiOpenHelpParams{
+	client, err := opencode.NewClient(opencode.WithBaseURL(baseURL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	_, err = client.Tui.OpenHelp(context.TODO(), &opencode.TuiOpenHelpParams{
 		Directory: opencode.F("directory"),
 	})
 	if err != nil {
@@ -120,10 +121,11 @@ func TestTuiOpenModelsWithOptionalParams(t *testing.T) {
 	if !testutil.CheckTestServer(t, baseURL) {
 		return
 	}
-	client := opencode.NewClient(
-		option.WithBaseURL(baseURL),
-	)
-	_, err := client.Tui.OpenModels(context.TODO(), opencode.TuiOpenModelsParams{
+	client, err := opencode.NewClient(opencode.WithBaseURL(baseURL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	_, err = client.Tui.OpenModels(context.TODO(), &opencode.TuiOpenModelsParams{
 		Directory: opencode.F("directory"),
 	})
 	if err != nil {
@@ -144,10 +146,11 @@ func TestTuiOpenSessionsWithOptionalParams(t *testing.T) {
 	if !testutil.CheckTestServer(t, baseURL) {
 		return
 	}
-	client := opencode.NewClient(
-		option.WithBaseURL(baseURL),
-	)
-	_, err := client.Tui.OpenSessions(context.TODO(), opencode.TuiOpenSessionsParams{
+	client, err := opencode.NewClient(opencode.WithBaseURL(baseURL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	_, err = client.Tui.OpenSessions(context.TODO(), &opencode.TuiOpenSessionsParams{
 		Directory: opencode.F("directory"),
 	})
 	if err != nil {
@@ -168,10 +171,11 @@ func TestTuiOpenThemesWithOptionalParams(t *testing.T) {
 	if !testutil.CheckTestServer(t, baseURL) {
 		return
 	}
-	client := opencode.NewClient(
-		option.WithBaseURL(baseURL),
-	)
-	_, err := client.Tui.OpenThemes(context.TODO(), opencode.TuiOpenThemesParams{
+	client, err := opencode.NewClient(opencode.WithBaseURL(baseURL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	_, err = client.Tui.OpenThemes(context.TODO(), &opencode.TuiOpenThemesParams{
 		Directory: opencode.F("directory"),
 	})
 	if err != nil {
@@ -192,10 +196,11 @@ func TestTuiShowToastWithOptionalParams(t *testing.T) {
 	if !testutil.CheckTestServer(t, baseURL) {
 		return
 	}
-	client := opencode.NewClient(
-		option.WithBaseURL(baseURL),
-	)
-	_, err := client.Tui.ShowToast(context.TODO(), opencode.TuiShowToastParams{
+	client, err := opencode.NewClient(opencode.WithBaseURL(baseURL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	_, err = client.Tui.ShowToast(context.TODO(), &opencode.TuiShowToastParams{
 		Message:   opencode.F("message"),
 		Variant:   opencode.F(opencode.TuiShowToastParamsVariantInfo),
 		Directory: opencode.F("directory"),
@@ -219,10 +224,11 @@ func TestTuiSubmitPromptWithOptionalParams(t *testing.T) {
 	if !testutil.CheckTestServer(t, baseURL) {
 		return
 	}
-	client := opencode.NewClient(
-		option.WithBaseURL(baseURL),
-	)
-	_, err := client.Tui.SubmitPrompt(context.TODO(), opencode.TuiSubmitPromptParams{
+	client, err := opencode.NewClient(opencode.WithBaseURL(baseURL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	_, err = client.Tui.SubmitPrompt(context.TODO(), &opencode.TuiSubmitPromptParams{
 		Directory: opencode.F("directory"),
 	})
 	if err != nil {
