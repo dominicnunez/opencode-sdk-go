@@ -7,42 +7,28 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
-	"slices"
 
-	"github.com/anomalyco/opencode-sdk-go/internal/apijson"
-	"github.com/anomalyco/opencode-sdk-go/internal/apiquery"
-	"github.com/anomalyco/opencode-sdk-go/internal/param"
-	"github.com/anomalyco/opencode-sdk-go/internal/requestconfig"
-	"github.com/anomalyco/opencode-sdk-go/option"
-	"github.com/anomalyco/opencode-sdk-go/shared"
+	"github.com/dominicnunez/opencode-sdk-go/internal/apijson"
+	"github.com/dominicnunez/opencode-sdk-go/internal/apiquery"
+	"github.com/dominicnunez/opencode-sdk-go/internal/param"
+	"github.com/dominicnunez/opencode-sdk-go/shared"
 	"github.com/tidwall/gjson"
 )
 
-// ConfigService contains methods and other services that help with interacting
-// with the opencode API.
-//
-// Note, unlike clients, this service does not read variables from the environment
-// automatically. You should not instantiate this service directly, and instead use
-// the [NewConfigService] method instead.
 type ConfigService struct {
-	Options []option.RequestOption
+	client *Client
 }
 
-// NewConfigService generates a new service that applies the given options to each
-// request. These options are applied after the parent client's options (if there
-// is one), and before any request-specific options.
-func NewConfigService(opts ...option.RequestOption) (r *ConfigService) {
-	r = &ConfigService{}
-	r.Options = opts
-	return
-}
-
-// Get config info
-func (r *ConfigService) Get(ctx context.Context, query ConfigGetParams, opts ...option.RequestOption) (res *Config, err error) {
-	opts = slices.Concat(r.Options, opts)
-	path := "config"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
-	return
+func (s *ConfigService) Get(ctx context.Context, params *ConfigGetParams) (*Config, error) {
+	if params == nil {
+		params = &ConfigGetParams{}
+	}
+	var result Config
+	err := s.client.do(ctx, http.MethodGet, "config", params, &result)
+	if err != nil {
+		return nil, err
+	}
+	return &result, nil
 }
 
 type Config struct {

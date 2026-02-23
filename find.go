@@ -6,56 +6,50 @@ import (
 	"context"
 	"net/http"
 	"net/url"
-	"slices"
 
-	"github.com/anomalyco/opencode-sdk-go/internal/apijson"
-	"github.com/anomalyco/opencode-sdk-go/internal/apiquery"
-	"github.com/anomalyco/opencode-sdk-go/internal/param"
-	"github.com/anomalyco/opencode-sdk-go/internal/requestconfig"
-	"github.com/anomalyco/opencode-sdk-go/option"
+	"github.com/dominicnunez/opencode-sdk-go/internal/apijson"
+	"github.com/dominicnunez/opencode-sdk-go/internal/apiquery"
+	"github.com/dominicnunez/opencode-sdk-go/internal/param"
 )
 
-// FindService contains methods and other services that help with interacting with
-// the opencode API.
-//
-// Note, unlike clients, this service does not read variables from the environment
-// automatically. You should not instantiate this service directly, and instead use
-// the [NewFindService] method instead.
 type FindService struct {
-	Options []option.RequestOption
+	client *Client
 }
 
-// NewFindService generates a new service that applies the given options to each
-// request. These options are applied after the parent client's options (if there
-// is one), and before any request-specific options.
-func NewFindService(opts ...option.RequestOption) (r *FindService) {
-	r = &FindService{}
-	r.Options = opts
-	return
+func (s *FindService) Files(ctx context.Context, params *FindFilesParams) ([]string, error) {
+	if params == nil {
+		params = &FindFilesParams{}
+	}
+	var result []string
+	err := s.client.do(ctx, http.MethodGet, "find/file", params, &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
-// Find files
-func (r *FindService) Files(ctx context.Context, query FindFilesParams, opts ...option.RequestOption) (res *[]string, err error) {
-	opts = slices.Concat(r.Options, opts)
-	path := "find/file"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
-	return
+func (s *FindService) Symbols(ctx context.Context, params *FindSymbolsParams) ([]Symbol, error) {
+	if params == nil {
+		params = &FindSymbolsParams{}
+	}
+	var result []Symbol
+	err := s.client.do(ctx, http.MethodGet, "find/symbol", params, &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
-// Find workspace symbols
-func (r *FindService) Symbols(ctx context.Context, query FindSymbolsParams, opts ...option.RequestOption) (res *[]Symbol, err error) {
-	opts = slices.Concat(r.Options, opts)
-	path := "find/symbol"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
-	return
-}
-
-// Find text in files
-func (r *FindService) Text(ctx context.Context, query FindTextParams, opts ...option.RequestOption) (res *[]FindTextResponse, err error) {
-	opts = slices.Concat(r.Options, opts)
-	path := "find"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
-	return
+func (s *FindService) Text(ctx context.Context, params *FindTextParams) ([]FindTextResponse, error) {
+	if params == nil {
+		params = &FindTextParams{}
+	}
+	var result []FindTextResponse
+	err := s.client.do(ctx, http.MethodGet, "find", params, &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
 type Symbol struct {
@@ -65,7 +59,6 @@ type Symbol struct {
 	JSON     symbolJSON     `json:"-"`
 }
 
-// symbolJSON contains the JSON metadata for the struct [Symbol]
 type symbolJSON struct {
 	Kind        apijson.Field
 	Location    apijson.Field
@@ -88,7 +81,6 @@ type SymbolLocation struct {
 	JSON  symbolLocationJSON  `json:"-"`
 }
 
-// symbolLocationJSON contains the JSON metadata for the struct [SymbolLocation]
 type symbolLocationJSON struct {
 	Range       apijson.Field
 	Uri         apijson.Field
@@ -110,8 +102,6 @@ type SymbolLocationRange struct {
 	JSON  symbolLocationRangeJSON  `json:"-"`
 }
 
-// symbolLocationRangeJSON contains the JSON metadata for the struct
-// [SymbolLocationRange]
 type symbolLocationRangeJSON struct {
 	End         apijson.Field
 	Start       apijson.Field
@@ -133,8 +123,6 @@ type SymbolLocationRangeEnd struct {
 	JSON      symbolLocationRangeEndJSON `json:"-"`
 }
 
-// symbolLocationRangeEndJSON contains the JSON metadata for the struct
-// [SymbolLocationRangeEnd]
 type symbolLocationRangeEndJSON struct {
 	Character   apijson.Field
 	Line        apijson.Field
@@ -156,8 +144,6 @@ type SymbolLocationRangeStart struct {
 	JSON      symbolLocationRangeStartJSON `json:"-"`
 }
 
-// symbolLocationRangeStartJSON contains the JSON metadata for the struct
-// [SymbolLocationRangeStart]
 type symbolLocationRangeStartJSON struct {
 	Character   apijson.Field
 	Line        apijson.Field
@@ -182,8 +168,6 @@ type FindTextResponse struct {
 	JSON           findTextResponseJSON       `json:"-"`
 }
 
-// findTextResponseJSON contains the JSON metadata for the struct
-// [FindTextResponse]
 type findTextResponseJSON struct {
 	AbsoluteOffset apijson.Field
 	LineNumber     apijson.Field
@@ -207,8 +191,6 @@ type FindTextResponseLines struct {
 	JSON findTextResponseLinesJSON `json:"-"`
 }
 
-// findTextResponseLinesJSON contains the JSON metadata for the struct
-// [FindTextResponseLines]
 type findTextResponseLinesJSON struct {
 	Text        apijson.Field
 	raw         string
@@ -228,8 +210,6 @@ type FindTextResponsePath struct {
 	JSON findTextResponsePathJSON `json:"-"`
 }
 
-// findTextResponsePathJSON contains the JSON metadata for the struct
-// [FindTextResponsePath]
 type findTextResponsePathJSON struct {
 	Text        apijson.Field
 	raw         string
@@ -251,8 +231,6 @@ type FindTextResponseSubmatch struct {
 	JSON  findTextResponseSubmatchJSON    `json:"-"`
 }
 
-// findTextResponseSubmatchJSON contains the JSON metadata for the struct
-// [FindTextResponseSubmatch]
 type findTextResponseSubmatchJSON struct {
 	End         apijson.Field
 	Match       apijson.Field
@@ -274,8 +252,6 @@ type FindTextResponseSubmatchesMatch struct {
 	JSON findTextResponseSubmatchesMatchJSON `json:"-"`
 }
 
-// findTextResponseSubmatchesMatchJSON contains the JSON metadata for the struct
-// [FindTextResponseSubmatchesMatch]
 type findTextResponseSubmatchesMatchJSON struct {
 	Text        apijson.Field
 	raw         string
@@ -295,7 +271,6 @@ type FindFilesParams struct {
 	Directory param.Field[string] `query:"directory"`
 }
 
-// URLQuery serializes [FindFilesParams]'s query parameters as `url.Values`.
 func (r FindFilesParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
@@ -308,7 +283,6 @@ type FindSymbolsParams struct {
 	Directory param.Field[string] `query:"directory"`
 }
 
-// URLQuery serializes [FindSymbolsParams]'s query parameters as `url.Values`.
 func (r FindSymbolsParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
@@ -321,7 +295,6 @@ type FindTextParams struct {
 	Directory param.Field[string] `query:"directory"`
 }
 
-// URLQuery serializes [FindTextParams]'s query parameters as `url.Values`.
 func (r FindTextParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,

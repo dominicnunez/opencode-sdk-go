@@ -6,56 +6,50 @@ import (
 	"context"
 	"net/http"
 	"net/url"
-	"slices"
 
-	"github.com/anomalyco/opencode-sdk-go/internal/apijson"
-	"github.com/anomalyco/opencode-sdk-go/internal/apiquery"
-	"github.com/anomalyco/opencode-sdk-go/internal/param"
-	"github.com/anomalyco/opencode-sdk-go/internal/requestconfig"
-	"github.com/anomalyco/opencode-sdk-go/option"
+	"github.com/dominicnunez/opencode-sdk-go/internal/apijson"
+	"github.com/dominicnunez/opencode-sdk-go/internal/apiquery"
+	"github.com/dominicnunez/opencode-sdk-go/internal/param"
 )
 
-// FileService contains methods and other services that help with interacting with
-// the opencode API.
-//
-// Note, unlike clients, this service does not read variables from the environment
-// automatically. You should not instantiate this service directly, and instead use
-// the [NewFileService] method instead.
 type FileService struct {
-	Options []option.RequestOption
+	client *Client
 }
 
-// NewFileService generates a new service that applies the given options to each
-// request. These options are applied after the parent client's options (if there
-// is one), and before any request-specific options.
-func NewFileService(opts ...option.RequestOption) (r *FileService) {
-	r = &FileService{}
-	r.Options = opts
-	return
+func (s *FileService) List(ctx context.Context, params *FileListParams) ([]FileNode, error) {
+	if params == nil {
+		params = &FileListParams{}
+	}
+	var result []FileNode
+	err := s.client.do(ctx, http.MethodGet, "file", params, &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
-// List files and directories
-func (r *FileService) List(ctx context.Context, query FileListParams, opts ...option.RequestOption) (res *[]FileNode, err error) {
-	opts = slices.Concat(r.Options, opts)
-	path := "file"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
-	return
+func (s *FileService) Read(ctx context.Context, params *FileReadParams) (*FileReadResponse, error) {
+	if params == nil {
+		params = &FileReadParams{}
+	}
+	var result FileReadResponse
+	err := s.client.do(ctx, http.MethodGet, "file/content", params, &result)
+	if err != nil {
+		return nil, err
+	}
+	return &result, nil
 }
 
-// Read a file
-func (r *FileService) Read(ctx context.Context, query FileReadParams, opts ...option.RequestOption) (res *FileReadResponse, err error) {
-	opts = slices.Concat(r.Options, opts)
-	path := "file/content"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
-	return
-}
-
-// Get file status
-func (r *FileService) Status(ctx context.Context, query FileStatusParams, opts ...option.RequestOption) (res *[]File, err error) {
-	opts = slices.Concat(r.Options, opts)
-	path := "file/status"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
-	return
+func (s *FileService) Status(ctx context.Context, params *FileStatusParams) ([]File, error) {
+	if params == nil {
+		params = &FileStatusParams{}
+	}
+	var result []File
+	err := s.client.do(ctx, http.MethodGet, "file/status", params, &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
 type File struct {
@@ -66,7 +60,6 @@ type File struct {
 	JSON    fileJSON   `json:"-"`
 }
 
-// fileJSON contains the JSON metadata for the struct [File]
 type fileJSON struct {
 	Added       apijson.Field
 	Path        apijson.Field
@@ -109,7 +102,6 @@ type FileNode struct {
 	JSON     fileNodeJSON `json:"-"`
 }
 
-// fileNodeJSON contains the JSON metadata for the struct [FileNode]
 type fileNodeJSON struct {
 	Absolute    apijson.Field
 	Ignored     apijson.Field
@@ -153,8 +145,6 @@ type FileReadResponse struct {
 	JSON     fileReadResponseJSON     `json:"-"`
 }
 
-// fileReadResponseJSON contains the JSON metadata for the struct
-// [FileReadResponse]
 type fileReadResponseJSON struct {
 	Content     apijson.Field
 	Type        apijson.Field
@@ -212,8 +202,6 @@ type FileReadResponsePatch struct {
 	JSON        fileReadResponsePatchJSON   `json:"-"`
 }
 
-// fileReadResponsePatchJSON contains the JSON metadata for the struct
-// [FileReadResponsePatch]
 type fileReadResponsePatchJSON struct {
 	Hunks       apijson.Field
 	NewFileName apijson.Field
@@ -242,8 +230,6 @@ type FileReadResponsePatchHunk struct {
 	JSON     fileReadResponsePatchHunkJSON `json:"-"`
 }
 
-// fileReadResponsePatchHunkJSON contains the JSON metadata for the struct
-// [FileReadResponsePatchHunk]
 type fileReadResponsePatchHunkJSON struct {
 	Lines       apijson.Field
 	NewLines    apijson.Field
@@ -267,7 +253,6 @@ type FileListParams struct {
 	Directory param.Field[string] `query:"directory"`
 }
 
-// URLQuery serializes [FileListParams]'s query parameters as `url.Values`.
 func (r FileListParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
@@ -280,7 +265,6 @@ type FileReadParams struct {
 	Directory param.Field[string] `query:"directory"`
 }
 
-// URLQuery serializes [FileReadParams]'s query parameters as `url.Values`.
 func (r FileReadParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
@@ -292,7 +276,6 @@ type FileStatusParams struct {
 	Directory param.Field[string] `query:"directory"`
 }
 
-// URLQuery serializes [FileStatusParams]'s query parameters as `url.Values`.
 func (r FileStatusParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,

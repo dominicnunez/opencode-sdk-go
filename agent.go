@@ -6,40 +6,26 @@ import (
 	"context"
 	"net/http"
 	"net/url"
-	"slices"
 
-	"github.com/anomalyco/opencode-sdk-go/internal/apijson"
-	"github.com/anomalyco/opencode-sdk-go/internal/apiquery"
-	"github.com/anomalyco/opencode-sdk-go/internal/param"
-	"github.com/anomalyco/opencode-sdk-go/internal/requestconfig"
-	"github.com/anomalyco/opencode-sdk-go/option"
+	"github.com/dominicnunez/opencode-sdk-go/internal/apijson"
+	"github.com/dominicnunez/opencode-sdk-go/internal/apiquery"
+	"github.com/dominicnunez/opencode-sdk-go/internal/param"
 )
 
-// AgentService contains methods and other services that help with interacting with
-// the opencode API.
-//
-// Note, unlike clients, this service does not read variables from the environment
-// automatically. You should not instantiate this service directly, and instead use
-// the [NewAgentService] method instead.
 type AgentService struct {
-	Options []option.RequestOption
+	client *Client
 }
 
-// NewAgentService generates a new service that applies the given options to each
-// request. These options are applied after the parent client's options (if there
-// is one), and before any request-specific options.
-func NewAgentService(opts ...option.RequestOption) (r *AgentService) {
-	r = &AgentService{}
-	r.Options = opts
-	return
-}
-
-// List all agents
-func (r *AgentService) List(ctx context.Context, query AgentListParams, opts ...option.RequestOption) (res *[]Agent, err error) {
-	opts = slices.Concat(r.Options, opts)
-	path := "agent"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
-	return
+func (s *AgentService) List(ctx context.Context, params *AgentListParams) ([]Agent, error) {
+	if params == nil {
+		params = &AgentListParams{}
+	}
+	var result []Agent
+	err := s.client.do(ctx, http.MethodGet, "agent", params, &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
 type Agent struct {
@@ -57,7 +43,6 @@ type Agent struct {
 	JSON        agentJSON              `json:"-"`
 }
 
-// agentJSON contains the JSON metadata for the struct [Agent]
 type agentJSON struct {
 	BuiltIn     apijson.Field
 	Mode        apijson.Field
@@ -105,7 +90,6 @@ type AgentPermission struct {
 	JSON     agentPermissionJSON            `json:"-"`
 }
 
-// agentPermissionJSON contains the JSON metadata for the struct [AgentPermission]
 type agentPermissionJSON struct {
 	Bash        apijson.Field
 	Edit        apijson.Field
@@ -176,7 +160,6 @@ type AgentModel struct {
 	JSON       agentModelJSON `json:"-"`
 }
 
-// agentModelJSON contains the JSON metadata for the struct [AgentModel]
 type agentModelJSON struct {
 	ModelID     apijson.Field
 	ProviderID  apijson.Field
@@ -196,7 +179,6 @@ type AgentListParams struct {
 	Directory param.Field[string] `query:"directory"`
 }
 
-// URLQuery serializes [AgentListParams]'s query parameters as `url.Values`.
 func (r AgentListParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,

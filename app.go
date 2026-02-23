@@ -6,48 +6,38 @@ import (
 	"context"
 	"net/http"
 	"net/url"
-	"slices"
 
-	"github.com/anomalyco/opencode-sdk-go/internal/apijson"
-	"github.com/anomalyco/opencode-sdk-go/internal/apiquery"
-	"github.com/anomalyco/opencode-sdk-go/internal/param"
-	"github.com/anomalyco/opencode-sdk-go/internal/requestconfig"
-	"github.com/anomalyco/opencode-sdk-go/option"
+	"github.com/dominicnunez/opencode-sdk-go/internal/apijson"
+	"github.com/dominicnunez/opencode-sdk-go/internal/apiquery"
+	"github.com/dominicnunez/opencode-sdk-go/internal/param"
 )
 
-// AppService contains methods and other services that help with interacting with
-// the opencode API.
-//
-// Note, unlike clients, this service does not read variables from the environment
-// automatically. You should not instantiate this service directly, and instead use
-// the [NewAppService] method instead.
 type AppService struct {
-	Options []option.RequestOption
+	client *Client
 }
 
-// NewAppService generates a new service that applies the given options to each
-// request. These options are applied after the parent client's options (if there
-// is one), and before any request-specific options.
-func NewAppService(opts ...option.RequestOption) (r *AppService) {
-	r = &AppService{}
-	r.Options = opts
-	return
+func (s *AppService) Log(ctx context.Context, params *AppLogParams) (bool, error) {
+	if params == nil {
+		params = &AppLogParams{}
+	}
+	var result bool
+	err := s.client.do(ctx, http.MethodPost, "log", params, &result)
+	if err != nil {
+		return false, err
+	}
+	return result, nil
 }
 
-// Write a log entry to the server logs
-func (r *AppService) Log(ctx context.Context, params AppLogParams, opts ...option.RequestOption) (res *bool, err error) {
-	opts = slices.Concat(r.Options, opts)
-	path := "log"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
-	return
-}
-
-// List all providers
-func (r *AppService) Providers(ctx context.Context, query AppProvidersParams, opts ...option.RequestOption) (res *AppProvidersResponse, err error) {
-	opts = slices.Concat(r.Options, opts)
-	path := "config/providers"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
-	return
+func (s *AppService) Providers(ctx context.Context, params *AppProvidersParams) (*AppProvidersResponse, error) {
+	if params == nil {
+		params = &AppProvidersParams{}
+	}
+	var result AppProvidersResponse
+	err := s.client.do(ctx, http.MethodGet, "config/providers", params, &result)
+	if err != nil {
+		return nil, err
+	}
+	return &result, nil
 }
 
 type Model struct {
@@ -68,7 +58,6 @@ type Model struct {
 	JSON         modelJSON              `json:"-"`
 }
 
-// modelJSON contains the JSON metadata for the struct [Model]
 type modelJSON struct {
 	ID           apijson.Field
 	Attachment   apijson.Field
@@ -104,7 +93,6 @@ type ModelCost struct {
 	JSON       modelCostJSON `json:"-"`
 }
 
-// modelCostJSON contains the JSON metadata for the struct [ModelCost]
 type modelCostJSON struct {
 	Input       apijson.Field
 	Output      apijson.Field
@@ -128,7 +116,6 @@ type ModelLimit struct {
 	JSON    modelLimitJSON `json:"-"`
 }
 
-// modelLimitJSON contains the JSON metadata for the struct [ModelLimit]
 type modelLimitJSON struct {
 	Context     apijson.Field
 	Output      apijson.Field
@@ -150,7 +137,6 @@ type ModelModalities struct {
 	JSON   modelModalitiesJSON     `json:"-"`
 }
 
-// modelModalitiesJSON contains the JSON metadata for the struct [ModelModalities]
 type modelModalitiesJSON struct {
 	Input       apijson.Field
 	Output      apijson.Field
@@ -207,7 +193,6 @@ type ModelProvider struct {
 	JSON modelProviderJSON `json:"-"`
 }
 
-// modelProviderJSON contains the JSON metadata for the struct [ModelProvider]
 type modelProviderJSON struct {
 	Npm         apijson.Field
 	raw         string
@@ -247,7 +232,6 @@ type Provider struct {
 	JSON   providerJSON     `json:"-"`
 }
 
-// providerJSON contains the JSON metadata for the struct [Provider]
 type providerJSON struct {
 	ID          apijson.Field
 	Env         apijson.Field
@@ -273,8 +257,6 @@ type AppProvidersResponse struct {
 	JSON      appProvidersResponseJSON `json:"-"`
 }
 
-// appProvidersResponseJSON contains the JSON metadata for the struct
-// [AppProvidersResponse]
 type appProvidersResponseJSON struct {
 	Default     apijson.Field
 	Providers   apijson.Field
@@ -291,22 +273,17 @@ func (r appProvidersResponseJSON) RawJSON() string {
 }
 
 type AppLogParams struct {
-	// Log level
-	Level param.Field[AppLogParamsLevel] `json:"level,required"`
-	// Log message
-	Message param.Field[string] `json:"message,required"`
-	// Service name for the log entry
-	Service   param.Field[string] `json:"service,required"`
-	Directory param.Field[string] `query:"directory"`
-	// Additional metadata for the log entry
-	Extra param.Field[map[string]interface{}] `json:"extra"`
+	Level     param.Field[AppLogParamsLevel] `json:"level,required"`
+	Message   param.Field[string]            `json:"message,required"`
+	Service   param.Field[string]            `json:"service,required"`
+	Directory param.Field[string]            `query:"directory"`
+	Extra     param.Field[map[string]interface{}] `json:"extra"`
 }
 
 func (r AppLogParams) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
 }
 
-// URLQuery serializes [AppLogParams]'s query parameters as `url.Values`.
 func (r AppLogParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
@@ -314,7 +291,6 @@ func (r AppLogParams) URLQuery() (url.Values, error) {
 	})
 }
 
-// Log level
 type AppLogParamsLevel string
 
 const (
@@ -336,7 +312,6 @@ type AppProvidersParams struct {
 	Directory param.Field[string] `query:"directory"`
 }
 
-// URLQuery serializes [AppProvidersParams]'s query parameters as `url.Values`.
 func (r AppProvidersParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,

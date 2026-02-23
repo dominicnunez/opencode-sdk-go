@@ -4,252 +4,219 @@ package opencode
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 	"reflect"
-	"slices"
 
-	"github.com/anomalyco/opencode-sdk-go/internal/apijson"
-	"github.com/anomalyco/opencode-sdk-go/internal/apiquery"
-	"github.com/anomalyco/opencode-sdk-go/internal/param"
-	"github.com/anomalyco/opencode-sdk-go/internal/requestconfig"
-	"github.com/anomalyco/opencode-sdk-go/option"
-	"github.com/anomalyco/opencode-sdk-go/shared"
+	"github.com/dominicnunez/opencode-sdk-go/internal/apijson"
+	"github.com/dominicnunez/opencode-sdk-go/internal/apiquery"
+	"github.com/dominicnunez/opencode-sdk-go/internal/param"
+	"github.com/dominicnunez/opencode-sdk-go/shared"
 	"github.com/tidwall/gjson"
 )
 
-// SessionService contains methods and other services that help with interacting
-// with the opencode API.
-//
-// Note, unlike clients, this service does not read variables from the environment
-// automatically. You should not instantiate this service directly, and instead use
-// the [NewSessionService] method instead.
 type SessionService struct {
-	Options     []option.RequestOption
+	client      *Client
 	Permissions *SessionPermissionService
 }
 
-// NewSessionService generates a new service that applies the given options to each
-// request. These options are applied after the parent client's options (if there
-// is one), and before any request-specific options.
-func NewSessionService(opts ...option.RequestOption) (r *SessionService) {
-	r = &SessionService{}
-	r.Options = opts
-	r.Permissions = NewSessionPermissionService(opts...)
-	return
-}
-
-// Create a new session
-func (r *SessionService) New(ctx context.Context, params SessionNewParams, opts ...option.RequestOption) (res *Session, err error) {
-	opts = slices.Concat(r.Options, opts)
-	path := "session"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
-	return
-}
-
-// Update session properties
-func (r *SessionService) Update(ctx context.Context, id string, params SessionUpdateParams, opts ...option.RequestOption) (res *Session, err error) {
-	opts = slices.Concat(r.Options, opts)
-	if id == "" {
-		err = fmt.Errorf("missing required parameter 'id' (received empty string)")
-		return
+func (s *SessionService) Create(ctx context.Context, params *SessionNewParams) (*Session, error) {
+	if params == nil {
+		params = &SessionNewParams{}
 	}
-	path := fmt.Sprintf("session/%s", id)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPatch, path, params, &res, opts...)
-	return
-}
-
-// List all sessions
-func (r *SessionService) List(ctx context.Context, query SessionListParams, opts ...option.RequestOption) (res *[]Session, err error) {
-	opts = slices.Concat(r.Options, opts)
-	path := "session"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
-	return
-}
-
-// Delete a session and all its data
-func (r *SessionService) Delete(ctx context.Context, id string, body SessionDeleteParams, opts ...option.RequestOption) (res *bool, err error) {
-	opts = slices.Concat(r.Options, opts)
-	if id == "" {
-		err = fmt.Errorf("missing required parameter 'id' (received empty string)")
-		return
+	var result Session
+	err := s.client.do(ctx, http.MethodPost, "session", params, &result)
+	if err != nil {
+		return nil, err
 	}
-	path := fmt.Sprintf("session/%s", id)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, body, &res, opts...)
-	return
+	return &result, nil
 }
 
-// Abort a session
-func (r *SessionService) Abort(ctx context.Context, id string, body SessionAbortParams, opts ...option.RequestOption) (res *bool, err error) {
-	opts = slices.Concat(r.Options, opts)
+func (s *SessionService) Update(ctx context.Context, id string, params *SessionUpdateParams) (*Session, error) {
 	if id == "" {
-		err = fmt.Errorf("missing required parameter 'id' (received empty string)")
-		return
+		return nil, errors.New("missing required id parameter")
 	}
-	path := fmt.Sprintf("session/%s/abort", id)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
-}
-
-// Get a session's children
-func (r *SessionService) Children(ctx context.Context, id string, query SessionChildrenParams, opts ...option.RequestOption) (res *[]Session, err error) {
-	opts = slices.Concat(r.Options, opts)
-	if id == "" {
-		err = fmt.Errorf("missing required parameter 'id' (received empty string)")
-		return
+	if params == nil {
+		params = &SessionUpdateParams{}
 	}
-	path := fmt.Sprintf("session/%s/children", id)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
-	return
-}
-
-// Send a new command to a session
-func (r *SessionService) Command(ctx context.Context, id string, params SessionCommandParams, opts ...option.RequestOption) (res *SessionCommandResponse, err error) {
-	opts = slices.Concat(r.Options, opts)
-	if id == "" {
-		err = fmt.Errorf("missing required parameter 'id' (received empty string)")
-		return
+	var result Session
+	err := s.client.do(ctx, http.MethodPatch, "session/"+id, params, &result)
+	if err != nil {
+		return nil, err
 	}
-	path := fmt.Sprintf("session/%s/command", id)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
-	return
+	return &result, nil
 }
 
-// Get session
-func (r *SessionService) Get(ctx context.Context, id string, query SessionGetParams, opts ...option.RequestOption) (res *Session, err error) {
-	opts = slices.Concat(r.Options, opts)
-	if id == "" {
-		err = fmt.Errorf("missing required parameter 'id' (received empty string)")
-		return
+func (s *SessionService) List(ctx context.Context, params *SessionListParams) ([]Session, error) {
+	if params == nil {
+		params = &SessionListParams{}
 	}
-	path := fmt.Sprintf("session/%s", id)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
-	return
-}
-
-// Analyze the app and create an AGENTS.md file
-func (r *SessionService) Init(ctx context.Context, id string, params SessionInitParams, opts ...option.RequestOption) (res *bool, err error) {
-	opts = slices.Concat(r.Options, opts)
-	if id == "" {
-		err = fmt.Errorf("missing required parameter 'id' (received empty string)")
-		return
+	var result []Session
+	err := s.client.do(ctx, http.MethodGet, "session", params, &result)
+	if err != nil {
+		return nil, err
 	}
-	path := fmt.Sprintf("session/%s/init", id)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
-	return
+	return result, nil
 }
 
-// Get a message from a session
-func (r *SessionService) Message(ctx context.Context, id string, messageID string, query SessionMessageParams, opts ...option.RequestOption) (res *SessionMessageResponse, err error) {
-	opts = slices.Concat(r.Options, opts)
+func (s *SessionService) Get(ctx context.Context, id string, params *SessionGetParams) (*Session, error) {
 	if id == "" {
-		err = fmt.Errorf("missing required parameter 'id' (received empty string)")
-		return
+		return nil, errors.New("missing required id parameter")
+	}
+	if params == nil {
+		params = &SessionGetParams{}
+	}
+	var result Session
+	err := s.client.do(ctx, http.MethodGet, "session/"+id, params, &result)
+	if err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+func (s *SessionService) Delete(ctx context.Context, id string, params *SessionDeleteParams) error {
+	if id == "" {
+		return errors.New("missing required id parameter")
+	}
+	if params == nil {
+		params = &SessionDeleteParams{}
+	}
+	return s.client.do(ctx, http.MethodDelete, "session/"+id, params, nil)
+}
+
+func (s *SessionService) Abort(ctx context.Context, id string, params *SessionAbortParams) error {
+	if id == "" {
+		return errors.New("missing required id parameter")
+	}
+	if params == nil {
+		params = &SessionAbortParams{}
+	}
+	return s.client.do(ctx, http.MethodPost, "session/"+id+"/abort", params, nil)
+}
+
+func (s *SessionService) Children(ctx context.Context, id string, params *SessionChildrenParams) ([]Session, error) {
+	if id == "" {
+		return nil, errors.New("missing required id parameter")
+	}
+	if params == nil {
+		params = &SessionChildrenParams{}
+	}
+	var result []Session
+	err := s.client.do(ctx, http.MethodGet, "session/"+id+"/children", params, &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (s *SessionService) Command(ctx context.Context, id string, params *SessionCommandParams) (*SessionCommandResponse, error) {
+	if id == "" {
+		return nil, errors.New("missing required id parameter")
+	}
+	if params == nil {
+		params = &SessionCommandParams{}
+	}
+	var result SessionCommandResponse
+	err := s.client.do(ctx, http.MethodPost, "session/"+id+"/command", params, &result)
+	if err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+func (s *SessionService) Init(ctx context.Context, id string, params *SessionInitParams) (bool, error) {
+	if id == "" {
+		return false, errors.New("missing required id parameter")
+	}
+	if params == nil {
+		params = &SessionInitParams{}
+	}
+	var result bool
+	err := s.client.do(ctx, http.MethodPost, "session/"+id+"/init", params, &result)
+	if err != nil {
+		return false, err
+	}
+	return result, nil
+}
+
+func (s *SessionService) Message(ctx context.Context, id string, messageID string, params *SessionMessageParams) (*SessionMessageResponse, error) {
+	if id == "" {
+		return nil, errors.New("missing required id parameter")
 	}
 	if messageID == "" {
-		err = fmt.Errorf("missing required parameter 'messageID' (received empty string)")
-		return
+		return nil, errors.New("missing required messageID parameter")
 	}
-	path := fmt.Sprintf("session/%s/message/%s", id, messageID)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
-	return
+	if params == nil {
+		params = &SessionMessageParams{}
+	}
+	var result SessionMessageResponse
+	err := s.client.do(ctx, http.MethodGet, fmt.Sprintf("session/%s/message/%s", id, messageID), params, &result)
+	if err != nil {
+		return nil, err
+	}
+	return &result, nil
 }
 
-// List messages for a session
-func (r *SessionService) Messages(ctx context.Context, id string, query SessionMessagesParams, opts ...option.RequestOption) (res *[]SessionMessagesResponse, err error) {
-	opts = slices.Concat(r.Options, opts)
+func (s *SessionService) Messages(ctx context.Context, id string, params *SessionMessagesParams) ([]SessionMessagesResponse, error) {
 	if id == "" {
-		err = fmt.Errorf("missing required parameter 'id' (received empty string)")
-		return
+		return nil, errors.New("missing required id parameter")
 	}
-	path := fmt.Sprintf("session/%s/message", id)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
-	return
+	if params == nil {
+		params = &SessionMessagesParams{}
+	}
+	var result []SessionMessagesResponse
+	err := s.client.do(ctx, http.MethodGet, "session/"+id+"/message", params, &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
-// Create and send a new message to a session
-func (r *SessionService) Prompt(ctx context.Context, id string, params SessionPromptParams, opts ...option.RequestOption) (res *SessionPromptResponse, err error) {
-	opts = slices.Concat(r.Options, opts)
+func (s *SessionService) Prompt(ctx context.Context, id string, params *SessionPromptParams) (*SessionPromptResponse, error) {
 	if id == "" {
-		err = fmt.Errorf("missing required parameter 'id' (received empty string)")
-		return
+		return nil, errors.New("missing required id parameter")
 	}
-	path := fmt.Sprintf("session/%s/message", id)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
-	return
+	if params == nil {
+		params = &SessionPromptParams{}
+	}
+	var result SessionPromptResponse
+	err := s.client.do(ctx, http.MethodPost, "session/"+id+"/message", params, &result)
+	if err != nil {
+		return nil, err
+	}
+	return &result, nil
 }
 
-// Revert a message
-func (r *SessionService) Revert(ctx context.Context, id string, params SessionRevertParams, opts ...option.RequestOption) (res *Session, err error) {
-	opts = slices.Concat(r.Options, opts)
+func (s *SessionService) Revert(ctx context.Context, id string, params *SessionRevertParams) (*Session, error) {
 	if id == "" {
-		err = fmt.Errorf("missing required parameter 'id' (received empty string)")
-		return
+		return nil, errors.New("missing required id parameter")
 	}
-	path := fmt.Sprintf("session/%s/revert", id)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
-	return
+	if params == nil {
+		params = &SessionRevertParams{}
+	}
+	var result Session
+	err := s.client.do(ctx, http.MethodPost, "session/"+id+"/revert", params, &result)
+	if err != nil {
+		return nil, err
+	}
+	return &result, nil
 }
 
-// Share a session
-func (r *SessionService) Share(ctx context.Context, id string, body SessionShareParams, opts ...option.RequestOption) (res *Session, err error) {
-	opts = slices.Concat(r.Options, opts)
+func (s *SessionService) Share(ctx context.Context, id string, params *SessionShareParams) (*Session, error) {
 	if id == "" {
-		err = fmt.Errorf("missing required parameter 'id' (received empty string)")
-		return
+		return nil, errors.New("missing required id parameter")
 	}
-	path := fmt.Sprintf("session/%s/share", id)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
-}
-
-// Run a shell command
-func (r *SessionService) Shell(ctx context.Context, id string, params SessionShellParams, opts ...option.RequestOption) (res *AssistantMessage, err error) {
-	opts = slices.Concat(r.Options, opts)
-	if id == "" {
-		err = fmt.Errorf("missing required parameter 'id' (received empty string)")
-		return
+	if params == nil {
+		params = &SessionShareParams{}
 	}
-	path := fmt.Sprintf("session/%s/shell", id)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
-	return
-}
-
-// Summarize the session
-func (r *SessionService) Summarize(ctx context.Context, id string, params SessionSummarizeParams, opts ...option.RequestOption) (res *bool, err error) {
-	opts = slices.Concat(r.Options, opts)
-	if id == "" {
-		err = fmt.Errorf("missing required parameter 'id' (received empty string)")
-		return
+	var result Session
+	err := s.client.do(ctx, http.MethodPost, "session/"+id+"/share", params, &result)
+	if err != nil {
+		return nil, err
 	}
-	path := fmt.Sprintf("session/%s/summarize", id)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
-	return
-}
-
-// Restore all reverted messages
-func (r *SessionService) Unrevert(ctx context.Context, id string, body SessionUnrevertParams, opts ...option.RequestOption) (res *Session, err error) {
-	opts = slices.Concat(r.Options, opts)
-	if id == "" {
-		err = fmt.Errorf("missing required parameter 'id' (received empty string)")
-		return
-	}
-	path := fmt.Sprintf("session/%s/unrevert", id)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
-}
-
-// Unshare the session
-func (r *SessionService) Unshare(ctx context.Context, id string, body SessionUnshareParams, opts ...option.RequestOption) (res *Session, err error) {
-	opts = slices.Concat(r.Options, opts)
-	if id == "" {
-		err = fmt.Errorf("missing required parameter 'id' (received empty string)")
-		return
-	}
-	path := fmt.Sprintf("session/%s/share", id)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, body, &res, opts...)
-	return
+	return &result, nil
 }
 
 type AgentPart struct {

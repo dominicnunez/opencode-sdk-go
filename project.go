@@ -1,53 +1,41 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
-
 package opencode
 
 import (
 	"context"
 	"net/http"
 	"net/url"
-	"slices"
 
-	"github.com/anomalyco/opencode-sdk-go/internal/apijson"
-	"github.com/anomalyco/opencode-sdk-go/internal/apiquery"
-	"github.com/anomalyco/opencode-sdk-go/internal/param"
-	"github.com/anomalyco/opencode-sdk-go/internal/requestconfig"
-	"github.com/anomalyco/opencode-sdk-go/option"
+	"github.com/dominicnunez/opencode-sdk-go/internal/apijson"
+	"github.com/dominicnunez/opencode-sdk-go/internal/apiquery"
+	"github.com/dominicnunez/opencode-sdk-go/internal/param"
 )
 
-// ProjectService contains methods and other services that help with interacting
-// with the opencode API.
-//
-// Note, unlike clients, this service does not read variables from the environment
-// automatically. You should not instantiate this service directly, and instead use
-// the [NewProjectService] method instead.
 type ProjectService struct {
-	Options []option.RequestOption
+	client *Client
 }
 
-// NewProjectService generates a new service that applies the given options to each
-// request. These options are applied after the parent client's options (if there
-// is one), and before any request-specific options.
-func NewProjectService(opts ...option.RequestOption) (r *ProjectService) {
-	r = &ProjectService{}
-	r.Options = opts
-	return
+func (s *ProjectService) List(ctx context.Context, params *ProjectListParams) ([]Project, error) {
+	if params == nil {
+		params = &ProjectListParams{}
+	}
+	var result []Project
+	err := s.client.do(ctx, http.MethodGet, "project", params, &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
-// List all projects
-func (r *ProjectService) List(ctx context.Context, query ProjectListParams, opts ...option.RequestOption) (res *[]Project, err error) {
-	opts = slices.Concat(r.Options, opts)
-	path := "project"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
-	return
-}
-
-// Get the current project
-func (r *ProjectService) Current(ctx context.Context, query ProjectCurrentParams, opts ...option.RequestOption) (res *Project, err error) {
-	opts = slices.Concat(r.Options, opts)
-	path := "project/current"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
-	return
+func (s *ProjectService) Current(ctx context.Context, params *ProjectCurrentParams) (*Project, error) {
+	if params == nil {
+		params = &ProjectCurrentParams{}
+	}
+	var result Project
+	err := s.client.do(ctx, http.MethodGet, "project/current", params, &result)
+	if err != nil {
+		return nil, err
+	}
+	return &result, nil
 }
 
 type Project struct {
@@ -58,7 +46,6 @@ type Project struct {
 	JSON     projectJSON `json:"-"`
 }
 
-// projectJSON contains the JSON metadata for the struct [Project]
 type projectJSON struct {
 	ID          apijson.Field
 	Time        apijson.Field
@@ -82,7 +69,6 @@ type ProjectTime struct {
 	JSON        projectTimeJSON `json:"-"`
 }
 
-// projectTimeJSON contains the JSON metadata for the struct [ProjectTime]
 type projectTimeJSON struct {
 	Created     apijson.Field
 	Initialized apijson.Field
@@ -116,7 +102,6 @@ type ProjectListParams struct {
 	Directory param.Field[string] `query:"directory"`
 }
 
-// URLQuery serializes [ProjectListParams]'s query parameters as `url.Values`.
 func (r ProjectListParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
@@ -128,7 +113,6 @@ type ProjectCurrentParams struct {
 	Directory param.Field[string] `query:"directory"`
 }
 
-// URLQuery serializes [ProjectCurrentParams]'s query parameters as `url.Values`.
 func (r ProjectCurrentParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,

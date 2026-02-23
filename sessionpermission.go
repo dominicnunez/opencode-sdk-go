@@ -9,50 +9,34 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
-	"slices"
 
-	"github.com/anomalyco/opencode-sdk-go/internal/apijson"
-	"github.com/anomalyco/opencode-sdk-go/internal/apiquery"
-	"github.com/anomalyco/opencode-sdk-go/internal/param"
-	"github.com/anomalyco/opencode-sdk-go/internal/requestconfig"
-	"github.com/anomalyco/opencode-sdk-go/option"
-	"github.com/anomalyco/opencode-sdk-go/shared"
+	"github.com/dominicnunez/opencode-sdk-go/internal/apijson"
+	"github.com/dominicnunez/opencode-sdk-go/internal/apiquery"
+	"github.com/dominicnunez/opencode-sdk-go/internal/param"
+	"github.com/dominicnunez/opencode-sdk-go/shared"
 	"github.com/tidwall/gjson"
 )
 
-// SessionPermissionService contains methods and other services that help with
-// interacting with the opencode API.
-//
-// Note, unlike clients, this service does not read variables from the environment
-// automatically. You should not instantiate this service directly, and instead use
-// the [NewSessionPermissionService] method instead.
 type SessionPermissionService struct {
-	Options []option.RequestOption
+	client *Client
 }
 
-// NewSessionPermissionService generates a new service that applies the given
-// options to each request. These options are applied after the parent client's
-// options (if there is one), and before any request-specific options.
-func NewSessionPermissionService(opts ...option.RequestOption) (r *SessionPermissionService) {
-	r = &SessionPermissionService{}
-	r.Options = opts
-	return
-}
-
-// Respond to a permission request
-func (r *SessionPermissionService) Respond(ctx context.Context, id string, permissionID string, params SessionPermissionRespondParams, opts ...option.RequestOption) (res *bool, err error) {
-	opts = slices.Concat(r.Options, opts)
+func (s *SessionPermissionService) Respond(ctx context.Context, id string, permissionID string, params *SessionPermissionRespondParams) (bool, error) {
 	if id == "" {
-		err = errors.New("missing required id parameter")
-		return
+		return false, errors.New("missing required id parameter")
 	}
 	if permissionID == "" {
-		err = errors.New("missing required permissionID parameter")
-		return
+		return false, errors.New("missing required permissionID parameter")
 	}
-	path := fmt.Sprintf("session/%s/permissions/%s", id, permissionID)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
-	return
+	if params == nil {
+		params = &SessionPermissionRespondParams{}
+	}
+	var result bool
+	err := s.client.do(ctx, http.MethodPost, fmt.Sprintf("session/%s/permissions/%s", id, permissionID), params, &result)
+	if err != nil {
+		return false, err
+	}
+	return result, nil
 }
 
 type Permission struct {
