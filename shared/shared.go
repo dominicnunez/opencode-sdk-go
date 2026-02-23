@@ -3,7 +3,7 @@
 package shared
 
 import (
-	"github.com/anomalyco/opencode-sdk-go/internal/apijson"
+	"github.com/dominicnunez/opencode-sdk-go/internal/apijson"
 )
 
 type MessageAbortedError struct {
@@ -29,7 +29,7 @@ func (r messageAbortedErrorJSON) RawJSON() string {
 	return r.raw
 }
 
-func (r MessageAbortedError) ImplementsEventListResponseEventSessionErrorPropertiesError() {}
+func (r MessageAbortedError) ImplementsSessionError() {}
 
 func (r MessageAbortedError) ImplementsAssistantMessageError() {}
 
@@ -91,7 +91,7 @@ func (r providerAuthErrorJSON) RawJSON() string {
 	return r.raw
 }
 
-func (r ProviderAuthError) ImplementsEventListResponseEventSessionErrorPropertiesError() {}
+func (r ProviderAuthError) ImplementsSessionError() {}
 
 func (r ProviderAuthError) ImplementsAssistantMessageError() {}
 
@@ -154,7 +154,7 @@ func (r unknownErrorJSON) RawJSON() string {
 	return r.raw
 }
 
-func (r UnknownError) ImplementsEventListResponseEventSessionErrorPropertiesError() {}
+func (r UnknownError) ImplementsSessionError() {}
 
 func (r UnknownError) ImplementsAssistantMessageError() {}
 
