@@ -1,5 +1,3 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
-
 package opencode
 
 import (
@@ -10,7 +8,6 @@ import (
 
 	"github.com/dominicnunez/opencode-sdk-go/internal/apijson"
 	"github.com/dominicnunez/opencode-sdk-go/internal/apiquery"
-	"github.com/dominicnunez/opencode-sdk-go/internal/param"
 	"github.com/dominicnunez/opencode-sdk-go/internal/requestconfig"
 	"github.com/dominicnunez/opencode-sdk-go/option"
 	"github.com/dominicnunez/opencode-sdk-go/packages/ssestream"
@@ -40,86 +37,24 @@ func (s *EventService) ListStreaming(ctx context.Context, params *EventListParam
 }
 
 type Event struct {
-	// This field can have the runtime type of
-	// [EventInstallationUpdatedData],
-	// [EventLspClientDiagnosticsData],
-	// [EventMessageUpdatedData],
-	// [EventMessageRemovedData],
-	// [EventMessagePartUpdatedData],
-	// [EventMessagePartRemovedData],
-	// [EventSessionCompactedData], [Permission],
-	// [EventPermissionRepliedData],
-	// [EventFileEditedData],
-	// [EventFileWatcherUpdatedData],
-	// [EventTodoUpdatedData],
-	// [EventSessionIdleData],
-	// [EventSessionCreatedData],
-	// [EventSessionUpdatedData],
-	// [EventSessionDeletedData],
-	// [EventSessionErrorData], [interface{}],
-	// [EventIdeInstalledData].
-	Data interface{}           `json:"properties,required"`
-	Type       EventType `json:"type,required"`
-	JSON       eventJSON `json:"-"`
-	union      EventUnion
+	Data  interface{} `json:"properties"`
+	Type  EventType   `json:"type"`
+	union EventUnion
 }
 
-// eventJSON contains the JSON metadata for the struct
-// [Event]
-type eventJSON struct {
-	Data  apijson.Field
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r eventJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r *Event) UnmarshalJSON(data []byte) (err error) {
+func (r *Event) UnmarshalJSON(data []byte) error {
 	*r = Event{}
-	err = apijson.UnmarshalRoot(data, &r.union)
+	err := apijson.UnmarshalRoot(data, &r.union)
 	if err != nil {
 		return err
 	}
-	return apijson.Port(r.union, &r)
+	return apijson.Port(r.union, r)
 }
 
-// AsUnion returns a [EventUnion] interface which you can cast to the
-// specific types for more type safety.
-//
-// Possible runtime types of the union are
-// [EventInstallationUpdated],
-// [EventLspClientDiagnostics],
-// [EventMessageUpdated], [EventMessageRemoved],
-// [EventMessagePartUpdated],
-// [EventMessagePartRemoved],
-// [EventSessionCompacted],
-// [EventPermissionUpdated],
-// [EventPermissionReplied], [EventFileEdited],
-// [EventFileWatcherUpdated], [EventTodoUpdated],
-// [EventSessionIdle], [EventSessionCreated],
-// [EventSessionUpdated], [EventSessionDeleted],
-// [EventSessionError], [EventServerConnected],
-// [EventIdeInstalled].
 func (r Event) AsUnion() EventUnion {
 	return r.union
 }
 
-// Union satisfied by [EventInstallationUpdated],
-// [EventLspClientDiagnostics],
-// [EventMessageUpdated], [EventMessageRemoved],
-// [EventMessagePartUpdated],
-// [EventMessagePartRemoved],
-// [EventSessionCompacted],
-// [EventPermissionUpdated],
-// [EventPermissionReplied], [EventFileEdited],
-// [EventFileWatcherUpdated], [EventTodoUpdated],
-// [EventSessionIdle], [EventSessionCreated],
-// [EventSessionUpdated], [EventSessionDeleted],
-// [EventSessionError], [EventServerConnected] or
-// [EventIdeInstalled].
 type EventUnion interface {
 	implementsEvent()
 }
@@ -208,49 +143,14 @@ func init() {
 }
 
 type EventInstallationUpdated struct {
-	Data EventInstallationUpdatedData `json:"properties,required"`
-	Type       EventInstallationUpdatedType       `json:"type,required"`
-	JSON       eventInstallationUpdatedJSON       `json:"-"`
-}
-
-// eventInstallationUpdatedJSON contains the JSON metadata for the
-// struct [EventInstallationUpdated]
-type eventInstallationUpdatedJSON struct {
-	Data  apijson.Field
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *EventInstallationUpdated) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r eventInstallationUpdatedJSON) RawJSON() string {
-	return r.raw
+	Data EventInstallationUpdatedData   `json:"properties"`
+	Type EventInstallationUpdatedType   `json:"type"`
 }
 
 func (r EventInstallationUpdated) implementsEvent() {}
 
 type EventInstallationUpdatedData struct {
-	Version string                                                  `json:"version,required"`
-	JSON    eventInstallationUpdatedDataJSON `json:"-"`
-}
-
-// eventInstallationUpdatedDataJSON contains the JSON
-// metadata for the struct [EventInstallationUpdatedData]
-type eventInstallationUpdatedDataJSON struct {
-	Version     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *EventInstallationUpdatedData) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r eventInstallationUpdatedDataJSON) RawJSON() string {
-	return r.raw
+	Version string `json:"version"`
 }
 
 type EventInstallationUpdatedType string
@@ -268,51 +168,15 @@ func (r EventInstallationUpdatedType) IsKnown() bool {
 }
 
 type EventLspClientDiagnostics struct {
-	Data EventLspClientDiagnosticsData `json:"properties,required"`
-	Type       EventLspClientDiagnosticsType       `json:"type,required"`
-	JSON       eventLspClientDiagnosticsJSON       `json:"-"`
-}
-
-// eventLspClientDiagnosticsJSON contains the JSON metadata for
-// the struct [EventLspClientDiagnostics]
-type eventLspClientDiagnosticsJSON struct {
-	Data  apijson.Field
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *EventLspClientDiagnostics) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r eventLspClientDiagnosticsJSON) RawJSON() string {
-	return r.raw
+	Data EventLspClientDiagnosticsData  `json:"properties"`
+	Type EventLspClientDiagnosticsType  `json:"type"`
 }
 
 func (r EventLspClientDiagnostics) implementsEvent() {}
 
 type EventLspClientDiagnosticsData struct {
-	Path     string                                                   `json:"path,required"`
-	ServerID string                                                   `json:"serverID,required"`
-	JSON     eventLspClientDiagnosticsDataJSON `json:"-"`
-}
-
-// eventLspClientDiagnosticsDataJSON contains the JSON
-// metadata for the struct [EventLspClientDiagnosticsData]
-type eventLspClientDiagnosticsDataJSON struct {
-	Path        apijson.Field
-	ServerID    apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *EventLspClientDiagnosticsData) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r eventLspClientDiagnosticsDataJSON) RawJSON() string {
-	return r.raw
+	Path     string `json:"path"`
+	ServerID string `json:"serverID"`
 }
 
 type EventLspClientDiagnosticsType string
@@ -330,49 +194,14 @@ func (r EventLspClientDiagnosticsType) IsKnown() bool {
 }
 
 type EventMessageUpdated struct {
-	Data EventMessageUpdatedData `json:"properties,required"`
-	Type       EventMessageUpdatedType       `json:"type,required"`
-	JSON       eventMessageUpdatedJSON       `json:"-"`
-}
-
-// eventMessageUpdatedJSON contains the JSON metadata for the
-// struct [EventMessageUpdated]
-type eventMessageUpdatedJSON struct {
-	Data  apijson.Field
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *EventMessageUpdated) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r eventMessageUpdatedJSON) RawJSON() string {
-	return r.raw
+	Data EventMessageUpdatedData `json:"properties"`
+	Type EventMessageUpdatedType `json:"type"`
 }
 
 func (r EventMessageUpdated) implementsEvent() {}
 
 type EventMessageUpdatedData struct {
-	Info Message                                            `json:"info,required"`
-	JSON eventMessageUpdatedDataJSON `json:"-"`
-}
-
-// eventMessageUpdatedDataJSON contains the JSON metadata
-// for the struct [EventMessageUpdatedData]
-type eventMessageUpdatedDataJSON struct {
-	Info        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *EventMessageUpdatedData) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r eventMessageUpdatedDataJSON) RawJSON() string {
-	return r.raw
+	Info Message `json:"info"`
 }
 
 type EventMessageUpdatedType string
@@ -390,51 +219,15 @@ func (r EventMessageUpdatedType) IsKnown() bool {
 }
 
 type EventMessageRemoved struct {
-	Data EventMessageRemovedData `json:"properties,required"`
-	Type       EventMessageRemovedType       `json:"type,required"`
-	JSON       eventMessageRemovedJSON       `json:"-"`
-}
-
-// eventMessageRemovedJSON contains the JSON metadata for the
-// struct [EventMessageRemoved]
-type eventMessageRemovedJSON struct {
-	Data  apijson.Field
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *EventMessageRemoved) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r eventMessageRemovedJSON) RawJSON() string {
-	return r.raw
+	Data EventMessageRemovedData `json:"properties"`
+	Type EventMessageRemovedType `json:"type"`
 }
 
 func (r EventMessageRemoved) implementsEvent() {}
 
 type EventMessageRemovedData struct {
-	MessageID string                                             `json:"messageID,required"`
-	SessionID string                                             `json:"sessionID,required"`
-	JSON      eventMessageRemovedDataJSON `json:"-"`
-}
-
-// eventMessageRemovedDataJSON contains the JSON metadata
-// for the struct [EventMessageRemovedData]
-type eventMessageRemovedDataJSON struct {
-	MessageID   apijson.Field
-	SessionID   apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *EventMessageRemovedData) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r eventMessageRemovedDataJSON) RawJSON() string {
-	return r.raw
+	MessageID string `json:"messageID"`
+	SessionID string `json:"sessionID"`
 }
 
 type EventMessageRemovedType string
@@ -452,51 +245,15 @@ func (r EventMessageRemovedType) IsKnown() bool {
 }
 
 type EventMessagePartUpdated struct {
-	Data EventMessagePartUpdatedData `json:"properties,required"`
-	Type       EventMessagePartUpdatedType       `json:"type,required"`
-	JSON       eventMessagePartUpdatedJSON       `json:"-"`
-}
-
-// eventMessagePartUpdatedJSON contains the JSON metadata for the
-// struct [EventMessagePartUpdated]
-type eventMessagePartUpdatedJSON struct {
-	Data  apijson.Field
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *EventMessagePartUpdated) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r eventMessagePartUpdatedJSON) RawJSON() string {
-	return r.raw
+	Data EventMessagePartUpdatedData `json:"properties"`
+	Type EventMessagePartUpdatedType `json:"type"`
 }
 
 func (r EventMessagePartUpdated) implementsEvent() {}
 
 type EventMessagePartUpdatedData struct {
-	Part  Part                                                   `json:"part,required"`
-	Delta string                                                 `json:"delta"`
-	JSON  eventMessagePartUpdatedDataJSON `json:"-"`
-}
-
-// eventMessagePartUpdatedDataJSON contains the JSON
-// metadata for the struct [EventMessagePartUpdatedData]
-type eventMessagePartUpdatedDataJSON struct {
-	Part        apijson.Field
-	Delta       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *EventMessagePartUpdatedData) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r eventMessagePartUpdatedDataJSON) RawJSON() string {
-	return r.raw
+	Part  Part    `json:"part"`
+	Delta *string `json:"delta,omitempty"`
 }
 
 type EventMessagePartUpdatedType string
@@ -514,53 +271,16 @@ func (r EventMessagePartUpdatedType) IsKnown() bool {
 }
 
 type EventMessagePartRemoved struct {
-	Data EventMessagePartRemovedData `json:"properties,required"`
-	Type       EventMessagePartRemovedType       `json:"type,required"`
-	JSON       eventMessagePartRemovedJSON       `json:"-"`
-}
-
-// eventMessagePartRemovedJSON contains the JSON metadata for the
-// struct [EventMessagePartRemoved]
-type eventMessagePartRemovedJSON struct {
-	Data  apijson.Field
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *EventMessagePartRemoved) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r eventMessagePartRemovedJSON) RawJSON() string {
-	return r.raw
+	Data EventMessagePartRemovedData `json:"properties"`
+	Type EventMessagePartRemovedType `json:"type"`
 }
 
 func (r EventMessagePartRemoved) implementsEvent() {}
 
 type EventMessagePartRemovedData struct {
-	MessageID string                                                 `json:"messageID,required"`
-	PartID    string                                                 `json:"partID,required"`
-	SessionID string                                                 `json:"sessionID,required"`
-	JSON      eventMessagePartRemovedDataJSON `json:"-"`
-}
-
-// eventMessagePartRemovedDataJSON contains the JSON
-// metadata for the struct [EventMessagePartRemovedData]
-type eventMessagePartRemovedDataJSON struct {
-	MessageID   apijson.Field
-	PartID      apijson.Field
-	SessionID   apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *EventMessagePartRemovedData) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r eventMessagePartRemovedDataJSON) RawJSON() string {
-	return r.raw
+	MessageID string `json:"messageID"`
+	PartID    string `json:"partID"`
+	SessionID string `json:"sessionID"`
 }
 
 type EventMessagePartRemovedType string
@@ -578,49 +298,14 @@ func (r EventMessagePartRemovedType) IsKnown() bool {
 }
 
 type EventSessionCompacted struct {
-	Data EventSessionCompactedData `json:"properties,required"`
-	Type       EventSessionCompactedType       `json:"type,required"`
-	JSON       eventSessionCompactedJSON       `json:"-"`
-}
-
-// eventSessionCompactedJSON contains the JSON metadata for the
-// struct [EventSessionCompacted]
-type eventSessionCompactedJSON struct {
-	Data  apijson.Field
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *EventSessionCompacted) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r eventSessionCompactedJSON) RawJSON() string {
-	return r.raw
+	Data EventSessionCompactedData `json:"properties"`
+	Type EventSessionCompactedType `json:"type"`
 }
 
 func (r EventSessionCompacted) implementsEvent() {}
 
 type EventSessionCompactedData struct {
-	SessionID string                                               `json:"sessionID,required"`
-	JSON      eventSessionCompactedDataJSON `json:"-"`
-}
-
-// eventSessionCompactedDataJSON contains the JSON metadata
-// for the struct [EventSessionCompactedData]
-type eventSessionCompactedDataJSON struct {
-	SessionID   apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *EventSessionCompactedData) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r eventSessionCompactedDataJSON) RawJSON() string {
-	return r.raw
+	SessionID string `json:"sessionID"`
 }
 
 type EventSessionCompactedType string
@@ -638,26 +323,8 @@ func (r EventSessionCompactedType) IsKnown() bool {
 }
 
 type EventPermissionUpdated struct {
-	Data Permission                                  `json:"properties,required"`
-	Type       EventPermissionUpdatedType `json:"type,required"`
-	JSON       eventPermissionUpdatedJSON `json:"-"`
-}
-
-// eventPermissionUpdatedJSON contains the JSON metadata for the
-// struct [EventPermissionUpdated]
-type eventPermissionUpdatedJSON struct {
-	Data  apijson.Field
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *EventPermissionUpdated) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r eventPermissionUpdatedJSON) RawJSON() string {
-	return r.raw
+	Data Permission                `json:"properties"`
+	Type EventPermissionUpdatedType `json:"type"`
 }
 
 func (r EventPermissionUpdated) implementsEvent() {}
@@ -677,53 +344,16 @@ func (r EventPermissionUpdatedType) IsKnown() bool {
 }
 
 type EventPermissionReplied struct {
-	Data EventPermissionRepliedData `json:"properties,required"`
-	Type       EventPermissionRepliedType       `json:"type,required"`
-	JSON       eventPermissionRepliedJSON       `json:"-"`
-}
-
-// eventPermissionRepliedJSON contains the JSON metadata for the
-// struct [EventPermissionReplied]
-type eventPermissionRepliedJSON struct {
-	Data  apijson.Field
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *EventPermissionReplied) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r eventPermissionRepliedJSON) RawJSON() string {
-	return r.raw
+	Data EventPermissionRepliedData `json:"properties"`
+	Type EventPermissionRepliedType `json:"type"`
 }
 
 func (r EventPermissionReplied) implementsEvent() {}
 
 type EventPermissionRepliedData struct {
-	PermissionID string                                                `json:"permissionID,required"`
-	Response     string                                                `json:"response,required"`
-	SessionID    string                                                `json:"sessionID,required"`
-	JSON         eventPermissionRepliedDataJSON `json:"-"`
-}
-
-// eventPermissionRepliedDataJSON contains the JSON metadata
-// for the struct [EventPermissionRepliedData]
-type eventPermissionRepliedDataJSON struct {
-	PermissionID apijson.Field
-	Response     apijson.Field
-	SessionID    apijson.Field
-	raw          string
-	ExtraFields  map[string]apijson.Field
-}
-
-func (r *EventPermissionRepliedData) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r eventPermissionRepliedDataJSON) RawJSON() string {
-	return r.raw
+	PermissionID string `json:"permissionID"`
+	Response     string `json:"response"`
+	SessionID    string `json:"sessionID"`
 }
 
 type EventPermissionRepliedType string
@@ -741,49 +371,14 @@ func (r EventPermissionRepliedType) IsKnown() bool {
 }
 
 type EventFileEdited struct {
-	Data EventFileEditedData `json:"properties,required"`
-	Type       EventFileEditedType       `json:"type,required"`
-	JSON       eventFileEditedJSON       `json:"-"`
-}
-
-// eventFileEditedJSON contains the JSON metadata for the struct
-// [EventFileEdited]
-type eventFileEditedJSON struct {
-	Data  apijson.Field
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *EventFileEdited) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r eventFileEditedJSON) RawJSON() string {
-	return r.raw
+	Data EventFileEditedData `json:"properties"`
+	Type EventFileEditedType `json:"type"`
 }
 
 func (r EventFileEdited) implementsEvent() {}
 
 type EventFileEditedData struct {
-	File string                                         `json:"file,required"`
-	JSON eventFileEditedDataJSON `json:"-"`
-}
-
-// eventFileEditedDataJSON contains the JSON metadata for
-// the struct [EventFileEditedData]
-type eventFileEditedDataJSON struct {
-	File        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *EventFileEditedData) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r eventFileEditedDataJSON) RawJSON() string {
-	return r.raw
+	File string `json:"file"`
 }
 
 type EventFileEditedType string
@@ -801,51 +396,15 @@ func (r EventFileEditedType) IsKnown() bool {
 }
 
 type EventFileWatcherUpdated struct {
-	Data EventFileWatcherUpdatedData `json:"properties,required"`
-	Type       EventFileWatcherUpdatedType       `json:"type,required"`
-	JSON       eventFileWatcherUpdatedJSON       `json:"-"`
-}
-
-// eventFileWatcherUpdatedJSON contains the JSON metadata for the
-// struct [EventFileWatcherUpdated]
-type eventFileWatcherUpdatedJSON struct {
-	Data  apijson.Field
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *EventFileWatcherUpdated) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r eventFileWatcherUpdatedJSON) RawJSON() string {
-	return r.raw
+	Data EventFileWatcherUpdatedData `json:"properties"`
+	Type EventFileWatcherUpdatedType `json:"type"`
 }
 
 func (r EventFileWatcherUpdated) implementsEvent() {}
 
 type EventFileWatcherUpdatedData struct {
-	Event EventFileWatcherUpdatedDataEvent `json:"event,required"`
-	File  string                                                  `json:"file,required"`
-	JSON  eventFileWatcherUpdatedDataJSON  `json:"-"`
-}
-
-// eventFileWatcherUpdatedDataJSON contains the JSON
-// metadata for the struct [EventFileWatcherUpdatedData]
-type eventFileWatcherUpdatedDataJSON struct {
-	Event       apijson.Field
-	File        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *EventFileWatcherUpdatedData) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r eventFileWatcherUpdatedDataJSON) RawJSON() string {
-	return r.raw
+	Event EventFileWatcherUpdatedDataEvent `json:"event"`
+	File  string                           `json:"file"`
 }
 
 type EventFileWatcherUpdatedDataEvent string
@@ -879,82 +438,22 @@ func (r EventFileWatcherUpdatedType) IsKnown() bool {
 }
 
 type EventTodoUpdated struct {
-	Data EventTodoUpdatedData `json:"properties,required"`
-	Type       EventTodoUpdatedType       `json:"type,required"`
-	JSON       eventTodoUpdatedJSON       `json:"-"`
-}
-
-// eventTodoUpdatedJSON contains the JSON metadata for the struct
-// [EventTodoUpdated]
-type eventTodoUpdatedJSON struct {
-	Data  apijson.Field
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *EventTodoUpdated) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r eventTodoUpdatedJSON) RawJSON() string {
-	return r.raw
+	Data EventTodoUpdatedData `json:"properties"`
+	Type EventTodoUpdatedType `json:"type"`
 }
 
 func (r EventTodoUpdated) implementsEvent() {}
 
 type EventTodoUpdatedData struct {
-	SessionID string                                            `json:"sessionID,required"`
-	Todos     []Todo `json:"todos,required"`
-	JSON      eventTodoUpdatedDataJSON   `json:"-"`
-}
-
-// eventTodoUpdatedDataJSON contains the JSON metadata for
-// the struct [EventTodoUpdatedData]
-type eventTodoUpdatedDataJSON struct {
-	SessionID   apijson.Field
-	Todos       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *EventTodoUpdatedData) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r eventTodoUpdatedDataJSON) RawJSON() string {
-	return r.raw
+	SessionID string `json:"sessionID"`
+	Todos     []Todo `json:"todos"`
 }
 
 type Todo struct {
-	// Unique identifier for the todo item
-	ID string `json:"id,required"`
-	// Brief description of the task
-	Content string `json:"content,required"`
-	// Priority level of the task: high, medium, low
-	Priority string `json:"priority,required"`
-	// Current status of the task: pending, in_progress, completed, cancelled
-	Status string                                              `json:"status,required"`
-	JSON   todoJSON `json:"-"`
-}
-
-// todoJSON contains the JSON metadata
-// for the struct [Todo]
-type todoJSON struct {
-	ID          apijson.Field
-	Content     apijson.Field
-	Priority    apijson.Field
-	Status      apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *Todo) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r todoJSON) RawJSON() string {
-	return r.raw
+	ID       string `json:"id"`
+	Content  string `json:"content"`
+	Priority string `json:"priority"`
+	Status   string `json:"status"`
 }
 
 type EventTodoUpdatedType string
@@ -972,49 +471,14 @@ func (r EventTodoUpdatedType) IsKnown() bool {
 }
 
 type EventSessionIdle struct {
-	Data EventSessionIdleData `json:"properties,required"`
-	Type       EventSessionIdleType       `json:"type,required"`
-	JSON       eventSessionIdleJSON       `json:"-"`
-}
-
-// eventSessionIdleJSON contains the JSON metadata for the struct
-// [EventSessionIdle]
-type eventSessionIdleJSON struct {
-	Data  apijson.Field
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *EventSessionIdle) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r eventSessionIdleJSON) RawJSON() string {
-	return r.raw
+	Data EventSessionIdleData `json:"properties"`
+	Type EventSessionIdleType `json:"type"`
 }
 
 func (r EventSessionIdle) implementsEvent() {}
 
 type EventSessionIdleData struct {
-	SessionID string                                          `json:"sessionID,required"`
-	JSON      eventSessionIdleDataJSON `json:"-"`
-}
-
-// eventSessionIdleDataJSON contains the JSON metadata for
-// the struct [EventSessionIdleData]
-type eventSessionIdleDataJSON struct {
-	SessionID   apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *EventSessionIdleData) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r eventSessionIdleDataJSON) RawJSON() string {
-	return r.raw
+	SessionID string `json:"sessionID"`
 }
 
 type EventSessionIdleType string
@@ -1032,49 +496,14 @@ func (r EventSessionIdleType) IsKnown() bool {
 }
 
 type EventSessionCreated struct {
-	Data EventSessionCreatedData `json:"properties,required"`
-	Type       EventSessionCreatedType       `json:"type,required"`
-	JSON       eventSessionCreatedJSON       `json:"-"`
-}
-
-// eventSessionCreatedJSON contains the JSON metadata for the
-// struct [EventSessionCreated]
-type eventSessionCreatedJSON struct {
-	Data  apijson.Field
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *EventSessionCreated) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r eventSessionCreatedJSON) RawJSON() string {
-	return r.raw
+	Data EventSessionCreatedData `json:"properties"`
+	Type EventSessionCreatedType `json:"type"`
 }
 
 func (r EventSessionCreated) implementsEvent() {}
 
 type EventSessionCreatedData struct {
-	Info Session                                            `json:"info,required"`
-	JSON eventSessionCreatedDataJSON `json:"-"`
-}
-
-// eventSessionCreatedDataJSON contains the JSON metadata
-// for the struct [EventSessionCreatedData]
-type eventSessionCreatedDataJSON struct {
-	Info        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *EventSessionCreatedData) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r eventSessionCreatedDataJSON) RawJSON() string {
-	return r.raw
+	Info Session `json:"info"`
 }
 
 type EventSessionCreatedType string
@@ -1092,49 +521,14 @@ func (r EventSessionCreatedType) IsKnown() bool {
 }
 
 type EventSessionUpdated struct {
-	Data EventSessionUpdatedData `json:"properties,required"`
-	Type       EventSessionUpdatedType       `json:"type,required"`
-	JSON       eventSessionUpdatedJSON       `json:"-"`
-}
-
-// eventSessionUpdatedJSON contains the JSON metadata for the
-// struct [EventSessionUpdated]
-type eventSessionUpdatedJSON struct {
-	Data  apijson.Field
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *EventSessionUpdated) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r eventSessionUpdatedJSON) RawJSON() string {
-	return r.raw
+	Data EventSessionUpdatedData `json:"properties"`
+	Type EventSessionUpdatedType `json:"type"`
 }
 
 func (r EventSessionUpdated) implementsEvent() {}
 
 type EventSessionUpdatedData struct {
-	Info Session                                            `json:"info,required"`
-	JSON eventSessionUpdatedDataJSON `json:"-"`
-}
-
-// eventSessionUpdatedDataJSON contains the JSON metadata
-// for the struct [EventSessionUpdatedData]
-type eventSessionUpdatedDataJSON struct {
-	Info        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *EventSessionUpdatedData) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r eventSessionUpdatedDataJSON) RawJSON() string {
-	return r.raw
+	Info Session `json:"info"`
 }
 
 type EventSessionUpdatedType string
@@ -1152,49 +546,14 @@ func (r EventSessionUpdatedType) IsKnown() bool {
 }
 
 type EventSessionDeleted struct {
-	Data EventSessionDeletedData `json:"properties,required"`
-	Type       EventSessionDeletedType       `json:"type,required"`
-	JSON       eventSessionDeletedJSON       `json:"-"`
-}
-
-// eventSessionDeletedJSON contains the JSON metadata for the
-// struct [EventSessionDeleted]
-type eventSessionDeletedJSON struct {
-	Data  apijson.Field
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *EventSessionDeleted) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r eventSessionDeletedJSON) RawJSON() string {
-	return r.raw
+	Data EventSessionDeletedData `json:"properties"`
+	Type EventSessionDeletedType `json:"type"`
 }
 
 func (r EventSessionDeleted) implementsEvent() {}
 
 type EventSessionDeletedData struct {
-	Info Session                                            `json:"info,required"`
-	JSON eventSessionDeletedDataJSON `json:"-"`
-}
-
-// eventSessionDeletedDataJSON contains the JSON metadata
-// for the struct [EventSessionDeletedData]
-type eventSessionDeletedDataJSON struct {
-	Info        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *EventSessionDeletedData) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r eventSessionDeletedDataJSON) RawJSON() string {
-	return r.raw
+	Info Session `json:"info"`
 }
 
 type EventSessionDeletedType string
@@ -1212,101 +571,36 @@ func (r EventSessionDeletedType) IsKnown() bool {
 }
 
 type EventSessionError struct {
-	Data EventSessionErrorData `json:"properties,required"`
-	Type       EventSessionErrorType       `json:"type,required"`
-	JSON       eventSessionErrorJSON       `json:"-"`
-}
-
-// eventSessionErrorJSON contains the JSON metadata for the struct
-// [EventSessionError]
-type eventSessionErrorJSON struct {
-	Data  apijson.Field
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *EventSessionError) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r eventSessionErrorJSON) RawJSON() string {
-	return r.raw
+	Data EventSessionErrorData `json:"properties"`
+	Type EventSessionErrorType `json:"type"`
 }
 
 func (r EventSessionError) implementsEvent() {}
 
 type EventSessionErrorData struct {
-	Error     SessionError `json:"error"`
-	SessionID string                                            `json:"sessionID"`
-	JSON      eventSessionErrorDataJSON  `json:"-"`
-}
-
-// eventSessionErrorDataJSON contains the JSON metadata for
-// the struct [EventSessionErrorData]
-type eventSessionErrorDataJSON struct {
-	Error       apijson.Field
-	SessionID   apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *EventSessionErrorData) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r eventSessionErrorDataJSON) RawJSON() string {
-	return r.raw
+	Error     *SessionError `json:"error,omitempty"`
+	SessionID *string       `json:"sessionID,omitempty"`
 }
 
 type SessionError struct {
-	// This field can have the runtime type of [shared.ProviderAuthErrorData],
-	// [shared.UnknownErrorData], [interface{}], [shared.MessageAbortedErrorData],
-	// [SessionAPIErrorData].
-	Data  interface{}                                           `json:"data,required"`
-	Name  SessionErrorName `json:"name,required"`
-	JSON  sessionErrorJSON `json:"-"`
+	Data  interface{}        `json:"data"`
+	Name  SessionErrorName   `json:"name"`
 	union SessionErrorUnion
 }
 
-// sessionErrorJSON contains the JSON metadata
-// for the struct [SessionError]
-type sessionErrorJSON struct {
-	Data        apijson.Field
-	Name        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r sessionErrorJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r *SessionError) UnmarshalJSON(data []byte) (err error) {
+func (r *SessionError) UnmarshalJSON(data []byte) error {
 	*r = SessionError{}
-	err = apijson.UnmarshalRoot(data, &r.union)
+	err := apijson.UnmarshalRoot(data, &r.union)
 	if err != nil {
 		return err
 	}
-	return apijson.Port(r.union, &r)
+	return apijson.Port(r.union, r)
 }
 
-// AsUnion returns a [SessionErrorUnion]
-// interface which you can cast to the specific types for more type safety.
-//
-// Possible runtime types of the union are [shared.ProviderAuthError],
-// [shared.UnknownError],
-// [MessageOutputLengthError],
-// [shared.MessageAbortedError],
-// [SessionAPIError].
 func (r SessionError) AsUnion() SessionErrorUnion {
 	return r.union
 }
 
-// Union satisfied by [shared.ProviderAuthError], [shared.UnknownError],
-// [MessageOutputLengthError],
-// [shared.MessageAbortedError] or
-// [SessionAPIError].
 type SessionErrorUnion interface {
 	ImplementsSessionError()
 }
@@ -1339,31 +633,11 @@ func init() {
 }
 
 type MessageOutputLengthError struct {
-	Data interface{}                                                                   `json:"data,required"`
-	Name MessageOutputLengthErrorName `json:"name,required"`
-	JSON messageOutputLengthErrorJSON `json:"-"`
+	Data interface{}                  `json:"data"`
+	Name MessageOutputLengthErrorName `json:"name"`
 }
 
-// messageOutputLengthErrorJSON
-// contains the JSON metadata for the struct
-// [MessageOutputLengthError]
-type messageOutputLengthErrorJSON struct {
-	Data        apijson.Field
-	Name        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *MessageOutputLengthError) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r messageOutputLengthErrorJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r MessageOutputLengthError) ImplementsSessionError() {
-}
+func (r MessageOutputLengthError) ImplementsSessionError() {}
 
 type MessageOutputLengthErrorName string
 
@@ -1380,60 +654,18 @@ func (r MessageOutputLengthErrorName) IsKnown() bool {
 }
 
 type SessionAPIError struct {
-	Data SessionAPIErrorData `json:"data,required"`
-	Name SessionAPIErrorName `json:"name,required"`
-	JSON sessionAPIErrorJSON `json:"-"`
+	Data SessionAPIErrorData `json:"data"`
+	Name SessionAPIErrorName `json:"name"`
 }
 
-// sessionAPIErrorJSON contains the JSON
-// metadata for the struct
-// [SessionAPIError]
-type sessionAPIErrorJSON struct {
-	Data        apijson.Field
-	Name        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SessionAPIError) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sessionAPIErrorJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r SessionAPIError) ImplementsSessionError() {
-}
+func (r SessionAPIError) ImplementsSessionError() {}
 
 type SessionAPIErrorData struct {
-	IsRetryable     bool                                                              `json:"isRetryable,required"`
-	Message         string                                                            `json:"message,required"`
-	ResponseBody    string                                                            `json:"responseBody"`
-	ResponseHeaders map[string]string                                                 `json:"responseHeaders"`
-	StatusCode      float64                                                           `json:"statusCode"`
-	JSON            sessionAPIErrorDataJSON `json:"-"`
-}
-
-// sessionAPIErrorDataJSON contains the
-// JSON metadata for the struct
-// [SessionAPIErrorData]
-type sessionAPIErrorDataJSON struct {
-	IsRetryable     apijson.Field
-	Message         apijson.Field
-	ResponseBody    apijson.Field
-	ResponseHeaders apijson.Field
-	StatusCode      apijson.Field
-	raw             string
-	ExtraFields     map[string]apijson.Field
-}
-
-func (r *SessionAPIErrorData) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sessionAPIErrorDataJSON) RawJSON() string {
-	return r.raw
+	IsRetryable     bool              `json:"isRetryable"`
+	Message         string            `json:"message"`
+	ResponseBody    *string           `json:"responseBody,omitempty"`
+	ResponseHeaders map[string]string `json:"responseHeaders,omitempty"`
+	StatusCode      *float64          `json:"statusCode,omitempty"`
 }
 
 type SessionAPIErrorName string
@@ -1483,26 +715,8 @@ func (r EventSessionErrorType) IsKnown() bool {
 }
 
 type EventServerConnected struct {
-	Data interface{}                               `json:"properties,required"`
-	Type       EventServerConnectedType `json:"type,required"`
-	JSON       eventServerConnectedJSON `json:"-"`
-}
-
-// eventServerConnectedJSON contains the JSON metadata for the
-// struct [EventServerConnected]
-type eventServerConnectedJSON struct {
-	Data  apijson.Field
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *EventServerConnected) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r eventServerConnectedJSON) RawJSON() string {
-	return r.raw
+	Data interface{}              `json:"properties"`
+	Type EventServerConnectedType `json:"type"`
 }
 
 func (r EventServerConnected) implementsEvent() {}
@@ -1522,49 +736,14 @@ func (r EventServerConnectedType) IsKnown() bool {
 }
 
 type EventIdeInstalled struct {
-	Data EventIdeInstalledData `json:"properties,required"`
-	Type       EventIdeInstalledType       `json:"type,required"`
-	JSON       eventIdeInstalledJSON       `json:"-"`
-}
-
-// eventIdeInstalledJSON contains the JSON metadata for the struct
-// [EventIdeInstalled]
-type eventIdeInstalledJSON struct {
-	Data  apijson.Field
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *EventIdeInstalled) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r eventIdeInstalledJSON) RawJSON() string {
-	return r.raw
+	Data EventIdeInstalledData `json:"properties"`
+	Type EventIdeInstalledType `json:"type"`
 }
 
 func (r EventIdeInstalled) implementsEvent() {}
 
 type EventIdeInstalledData struct {
-	Ide  string                                           `json:"ide,required"`
-	JSON eventIdeInstalledDataJSON `json:"-"`
-}
-
-// eventIdeInstalledDataJSON contains the JSON metadata for
-// the struct [EventIdeInstalledData]
-type eventIdeInstalledDataJSON struct {
-	Ide         apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *EventIdeInstalledData) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r eventIdeInstalledDataJSON) RawJSON() string {
-	return r.raw
+	Ide string `json:"ide"`
 }
 
 type EventIdeInstalledType string
@@ -1614,10 +793,9 @@ func (r EventType) IsKnown() bool {
 }
 
 type EventListParams struct {
-	Directory param.Field[string] `query:"directory"`
+	Directory *string `query:"directory,omitempty"`
 }
 
-// URLQuery serializes [EventListParams]'s query parameters as `url.Values`.
 func (r EventListParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,

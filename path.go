@@ -7,7 +7,6 @@ import (
 
 	"github.com/dominicnunez/opencode-sdk-go/internal/apijson"
 	"github.com/dominicnunez/opencode-sdk-go/internal/apiquery"
-	"github.com/dominicnunez/opencode-sdk-go/internal/param"
 )
 
 type PathService struct {
@@ -27,32 +26,18 @@ func (s *PathService) Get(ctx context.Context, params *PathGetParams) (*Path, er
 }
 
 type Path struct {
-	Config    string   `json:"config,required"`
-	Directory string   `json:"directory,required"`
-	State     string   `json:"state,required"`
-	Worktree  string   `json:"worktree,required"`
-	JSON      pathJSON `json:"-"`
-}
-
-type pathJSON struct {
-	Config      apijson.Field
-	Directory   apijson.Field
-	State       apijson.Field
-	Worktree    apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+	Config    string `json:"config,required"`
+	Directory string `json:"directory,required"`
+	State     string `json:"state,required"`
+	Worktree  string `json:"worktree,required"`
 }
 
 func (r *Path) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r pathJSON) RawJSON() string {
-	return r.raw
-}
-
 type PathGetParams struct {
-	Directory param.Field[string] `query:"directory"`
+	Directory *string `query:"directory,omitempty"`
 }
 
 func (r PathGetParams) URLQuery() (url.Values, error) {

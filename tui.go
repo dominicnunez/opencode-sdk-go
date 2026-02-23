@@ -5,9 +5,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/dominicnunez/opencode-sdk-go/internal/apijson"
 	"github.com/dominicnunez/opencode-sdk-go/internal/apiquery"
-	"github.com/dominicnunez/opencode-sdk-go/internal/param"
 )
 
 type TuiService struct {
@@ -122,13 +120,18 @@ func (s *TuiService) SubmitPrompt(ctx context.Context, params *TuiSubmitPromptPa
 	return result, nil
 }
 
-type TuiAppendPromptParams struct {
-	Text      param.Field[string] `json:"text,required"`
-	Directory param.Field[string] `query:"directory"`
-}
+type ToastVariant string
 
-func (r TuiAppendPromptParams) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+const (
+	ToastVariantInfo    ToastVariant = "info"
+	ToastVariantSuccess ToastVariant = "success"
+	ToastVariantWarning ToastVariant = "warning"
+	ToastVariantError   ToastVariant = "error"
+)
+
+type TuiAppendPromptParams struct {
+	Text      string  `json:"text"`
+	Directory *string `query:"directory,omitempty"`
 }
 
 func (r TuiAppendPromptParams) URLQuery() (url.Values, error) {
@@ -139,7 +142,7 @@ func (r TuiAppendPromptParams) URLQuery() (url.Values, error) {
 }
 
 type TuiClearPromptParams struct {
-	Directory param.Field[string] `query:"directory"`
+	Directory *string `query:"directory,omitempty"`
 }
 
 func (r TuiClearPromptParams) URLQuery() (url.Values, error) {
@@ -150,12 +153,8 @@ func (r TuiClearPromptParams) URLQuery() (url.Values, error) {
 }
 
 type TuiExecuteCommandParams struct {
-	Command   param.Field[string] `json:"command,required"`
-	Directory param.Field[string] `query:"directory"`
-}
-
-func (r TuiExecuteCommandParams) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+	Command   string  `json:"command"`
+	Directory *string `query:"directory,omitempty"`
 }
 
 func (r TuiExecuteCommandParams) URLQuery() (url.Values, error) {
@@ -166,7 +165,7 @@ func (r TuiExecuteCommandParams) URLQuery() (url.Values, error) {
 }
 
 type TuiOpenHelpParams struct {
-	Directory param.Field[string] `query:"directory"`
+	Directory *string `query:"directory,omitempty"`
 }
 
 func (r TuiOpenHelpParams) URLQuery() (url.Values, error) {
@@ -177,7 +176,7 @@ func (r TuiOpenHelpParams) URLQuery() (url.Values, error) {
 }
 
 type TuiOpenModelsParams struct {
-	Directory param.Field[string] `query:"directory"`
+	Directory *string `query:"directory,omitempty"`
 }
 
 func (r TuiOpenModelsParams) URLQuery() (url.Values, error) {
@@ -188,7 +187,7 @@ func (r TuiOpenModelsParams) URLQuery() (url.Values, error) {
 }
 
 type TuiOpenSessionsParams struct {
-	Directory param.Field[string] `query:"directory"`
+	Directory *string `query:"directory,omitempty"`
 }
 
 func (r TuiOpenSessionsParams) URLQuery() (url.Values, error) {
@@ -199,7 +198,7 @@ func (r TuiOpenSessionsParams) URLQuery() (url.Values, error) {
 }
 
 type TuiOpenThemesParams struct {
-	Directory param.Field[string] `query:"directory"`
+	Directory *string `query:"directory,omitempty"`
 }
 
 func (r TuiOpenThemesParams) URLQuery() (url.Values, error) {
@@ -210,14 +209,10 @@ func (r TuiOpenThemesParams) URLQuery() (url.Values, error) {
 }
 
 type TuiShowToastParams struct {
-	Message   param.Field[string]                    `json:"message,required"`
-	Variant   param.Field[TuiShowToastParamsVariant] `json:"variant,required"`
-	Directory param.Field[string]                    `query:"directory"`
-	Title     param.Field[string]                    `json:"title"`
-}
-
-func (r TuiShowToastParams) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+	Message   string       `json:"message"`
+	Variant   ToastVariant `json:"variant"`
+	Title     string       `json:"title,omitempty"`
+	Directory *string      `query:"directory,omitempty"`
 }
 
 func (r TuiShowToastParams) URLQuery() (url.Values, error) {
@@ -227,25 +222,8 @@ func (r TuiShowToastParams) URLQuery() (url.Values, error) {
 	})
 }
 
-type TuiShowToastParamsVariant string
-
-const (
-	TuiShowToastParamsVariantInfo    TuiShowToastParamsVariant = "info"
-	TuiShowToastParamsVariantSuccess TuiShowToastParamsVariant = "success"
-	TuiShowToastParamsVariantWarning TuiShowToastParamsVariant = "warning"
-	TuiShowToastParamsVariantError   TuiShowToastParamsVariant = "error"
-)
-
-func (r TuiShowToastParamsVariant) IsKnown() bool {
-	switch r {
-	case TuiShowToastParamsVariantInfo, TuiShowToastParamsVariantSuccess, TuiShowToastParamsVariantWarning, TuiShowToastParamsVariantError:
-		return true
-	}
-	return false
-}
-
 type TuiSubmitPromptParams struct {
-	Directory param.Field[string] `query:"directory"`
+	Directory *string `query:"directory,omitempty"`
 }
 
 func (r TuiSubmitPromptParams) URLQuery() (url.Values, error) {

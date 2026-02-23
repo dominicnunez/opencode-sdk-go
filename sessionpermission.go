@@ -1,9 +1,8 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
-
 package opencode
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -12,7 +11,6 @@ import (
 
 	"github.com/dominicnunez/opencode-sdk-go/internal/apijson"
 	"github.com/dominicnunez/opencode-sdk-go/internal/apiquery"
-	"github.com/dominicnunez/opencode-sdk-go/internal/param"
 	"github.com/dominicnunez/opencode-sdk-go/shared"
 	"github.com/tidwall/gjson"
 )
@@ -39,63 +37,34 @@ func (s *SessionPermissionService) Respond(ctx context.Context, id string, permi
 	return result, nil
 }
 
+type PermissionResponse string
+
+const (
+	PermissionResponseOnce   PermissionResponse = "once"
+	PermissionResponseAlways PermissionResponse = "always"
+	PermissionResponseReject PermissionResponse = "reject"
+)
+
 type Permission struct {
-	ID        string                 `json:"id,required"`
-	MessageID string                 `json:"messageID,required"`
-	Metadata  map[string]interface{} `json:"metadata,required"`
-	SessionID string                 `json:"sessionID,required"`
-	Time      PermissionTime         `json:"time,required"`
-	Title     string                 `json:"title,required"`
-	Type      string                 `json:"type,required"`
-	CallID    string                 `json:"callID"`
-	Pattern   PermissionPatternUnion `json:"pattern"`
-	JSON      permissionJSON         `json:"-"`
+	ID        string                 `json:"id"`
+	MessageID string                 `json:"messageID"`
+	Metadata  map[string]interface{} `json:"metadata"`
+	SessionID string                 `json:"sessionID"`
+	Time      PermissionTime         `json:"time"`
+	Title     string                 `json:"title"`
+	Type      string                 `json:"type"`
+	CallID    string                 `json:"callID,omitempty"`
+	Pattern   PermissionPatternUnion `json:"pattern,omitempty"`
 }
 
-// permissionJSON contains the JSON metadata for the struct [Permission]
-type permissionJSON struct {
-	ID          apijson.Field
-	MessageID   apijson.Field
-	Metadata    apijson.Field
-	SessionID   apijson.Field
-	Time        apijson.Field
-	Title       apijson.Field
-	Type        apijson.Field
-	CallID      apijson.Field
-	Pattern     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *Permission) UnmarshalJSON(data []byte) (err error) {
+func (r *Permission) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r permissionJSON) RawJSON() string {
-	return r.raw
 }
 
 type PermissionTime struct {
-	Created float64            `json:"created,required"`
-	JSON    permissionTimeJSON `json:"-"`
+	Created float64 `json:"created"`
 }
 
-// permissionTimeJSON contains the JSON metadata for the struct [PermissionTime]
-type permissionTimeJSON struct {
-	Created     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *PermissionTime) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r permissionTimeJSON) RawJSON() string {
-	return r.raw
-}
-
-// Union satisfied by [shared.UnionString] or [PermissionPatternArray].
 type PermissionPatternUnion interface {
 	ImplementsPermissionPatternUnion()
 }
@@ -120,16 +89,10 @@ type PermissionPatternArray []string
 func (r PermissionPatternArray) ImplementsPermissionPatternUnion() {}
 
 type SessionPermissionRespondParams struct {
-	Response  param.Field[SessionPermissionRespondParamsResponse] `json:"response,required"`
-	Directory param.Field[string]                                 `query:"directory"`
+	Response  PermissionResponse `json:"response"`
+	Directory *string            `query:"directory,omitempty"`
 }
 
-func (r SessionPermissionRespondParams) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-// URLQuery serializes [SessionPermissionRespondParams]'s query parameters as
-// `url.Values`.
 func (r SessionPermissionRespondParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
@@ -137,18 +100,10 @@ func (r SessionPermissionRespondParams) URLQuery() (url.Values, error) {
 	})
 }
 
-type SessionPermissionRespondParamsResponse string
+var _ json.Marshaler = (*SessionPermissionRespondParams)(nil)
 
-const (
-	SessionPermissionRespondParamsResponseOnce   SessionPermissionRespondParamsResponse = "once"
-	SessionPermissionRespondParamsResponseAlways SessionPermissionRespondParamsResponse = "always"
-	SessionPermissionRespondParamsResponseReject SessionPermissionRespondParamsResponse = "reject"
-)
-
-func (r SessionPermissionRespondParamsResponse) IsKnown() bool {
-	switch r {
-	case SessionPermissionRespondParamsResponseOnce, SessionPermissionRespondParamsResponseAlways, SessionPermissionRespondParamsResponseReject:
-		return true
-	}
-	return false
+func (r SessionPermissionRespondParams) MarshalJSON() ([]byte, error) {
+	return json.Marshal(struct {
+		Response PermissionResponse `json:"response"`
+	}{Response: r.Response})
 }

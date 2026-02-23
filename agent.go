@@ -1,5 +1,3 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
-
 package opencode
 
 import (
@@ -9,7 +7,6 @@ import (
 
 	"github.com/dominicnunez/opencode-sdk-go/internal/apijson"
 	"github.com/dominicnunez/opencode-sdk-go/internal/apiquery"
-	"github.com/dominicnunez/opencode-sdk-go/internal/param"
 )
 
 type AgentService struct {
@@ -29,42 +26,21 @@ func (s *AgentService) List(ctx context.Context, params *AgentListParams) ([]Age
 }
 
 type Agent struct {
-	BuiltIn     bool                   `json:"builtIn,required"`
-	Mode        AgentMode              `json:"mode,required"`
-	Name        string                 `json:"name,required"`
-	Options     map[string]interface{} `json:"options,required"`
-	Permission  AgentPermission        `json:"permission,required"`
-	Tools       map[string]bool        `json:"tools,required"`
-	Description string                 `json:"description"`
-	Model       AgentModel             `json:"model"`
-	Prompt      string                 `json:"prompt"`
-	Temperature float64                `json:"temperature"`
-	TopP        float64                `json:"topP"`
-	JSON        agentJSON              `json:"-"`
-}
-
-type agentJSON struct {
-	BuiltIn     apijson.Field
-	Mode        apijson.Field
-	Name        apijson.Field
-	Options     apijson.Field
-	Permission  apijson.Field
-	Tools       apijson.Field
-	Description apijson.Field
-	Model       apijson.Field
-	Prompt      apijson.Field
-	Temperature apijson.Field
-	TopP        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+	BuiltIn     bool                   `json:"builtIn"`
+	Mode        AgentMode              `json:"mode"`
+	Name        string                 `json:"name"`
+	Options     map[string]interface{} `json:"options"`
+	Permission  AgentPermission        `json:"permission"`
+	Tools       map[string]bool        `json:"tools"`
+	Description string                 `json:"description,omitempty"`
+	Model       *AgentModel            `json:"model,omitempty"`
+	Prompt      string                 `json:"prompt,omitempty"`
+	Temperature float64                `json:"temperature,omitempty"`
+	TopP        float64                `json:"topP,omitempty"`
 }
 
 func (r *Agent) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r agentJSON) RawJSON() string {
-	return r.raw
 }
 
 type AgentMode string
@@ -84,26 +60,13 @@ func (r AgentMode) IsKnown() bool {
 }
 
 type AgentPermission struct {
-	Bash     map[string]AgentPermissionBash `json:"bash,required"`
-	Edit     AgentPermissionEdit            `json:"edit,required"`
-	Webfetch AgentPermissionWebfetch        `json:"webfetch"`
-	JSON     agentPermissionJSON            `json:"-"`
-}
-
-type agentPermissionJSON struct {
-	Bash        apijson.Field
-	Edit        apijson.Field
-	Webfetch    apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+	Bash     map[string]AgentPermissionBash `json:"bash"`
+	Edit     AgentPermissionEdit            `json:"edit"`
+	Webfetch *AgentPermissionWebfetch       `json:"webfetch,omitempty"`
 }
 
 func (r *AgentPermission) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r agentPermissionJSON) RawJSON() string {
-	return r.raw
 }
 
 type AgentPermissionBash string
@@ -155,28 +118,16 @@ func (r AgentPermissionWebfetch) IsKnown() bool {
 }
 
 type AgentModel struct {
-	ModelID    string         `json:"modelID,required"`
-	ProviderID string         `json:"providerID,required"`
-	JSON       agentModelJSON `json:"-"`
-}
-
-type agentModelJSON struct {
-	ModelID     apijson.Field
-	ProviderID  apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+	ModelID    string `json:"modelID"`
+	ProviderID string `json:"providerID"`
 }
 
 func (r *AgentModel) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r agentModelJSON) RawJSON() string {
-	return r.raw
-}
-
 type AgentListParams struct {
-	Directory param.Field[string] `query:"directory"`
+	Directory *string `query:"directory,omitempty"`
 }
 
 func (r AgentListParams) URLQuery() (url.Values, error) {

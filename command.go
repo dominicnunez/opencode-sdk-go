@@ -7,7 +7,6 @@ import (
 
 	"github.com/dominicnunez/opencode-sdk-go/internal/apijson"
 	"github.com/dominicnunez/opencode-sdk-go/internal/apiquery"
-	"github.com/dominicnunez/opencode-sdk-go/internal/param"
 )
 
 type CommandService struct {
@@ -27,36 +26,20 @@ func (s *CommandService) List(ctx context.Context, params *CommandListParams) ([
 }
 
 type Command struct {
-	Name        string      `json:"name,required"`
-	Template    string      `json:"template,required"`
-	Agent       string      `json:"agent"`
-	Description string      `json:"description"`
-	Model       string      `json:"model"`
-	Subtask     bool        `json:"subtask"`
-	JSON        commandJSON `json:"-"`
-}
-
-type commandJSON struct {
-	Name        apijson.Field
-	Template    apijson.Field
-	Agent       apijson.Field
-	Description apijson.Field
-	Model       apijson.Field
-	Subtask     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+	Name        string `json:"name,required"`
+	Template    string `json:"template,required"`
+	Agent       string `json:"agent"`
+	Description string `json:"description"`
+	Model       string `json:"model"`
+	Subtask     bool   `json:"subtask"`
 }
 
 func (r *Command) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r commandJSON) RawJSON() string {
-	return r.raw
-}
-
 type CommandListParams struct {
-	Directory param.Field[string] `query:"directory"`
+	Directory *string `query:"directory,omitempty"`
 }
 
 func (r CommandListParams) URLQuery() (url.Values, error) {

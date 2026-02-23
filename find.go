@@ -9,7 +9,6 @@ import (
 
 	"github.com/dominicnunez/opencode-sdk-go/internal/apijson"
 	"github.com/dominicnunez/opencode-sdk-go/internal/apiquery"
-	"github.com/dominicnunez/opencode-sdk-go/internal/param"
 )
 
 type FindService struct {
@@ -56,107 +55,46 @@ type Symbol struct {
 	Kind     float64        `json:"kind,required"`
 	Location SymbolLocation `json:"location,required"`
 	Name     string         `json:"name,required"`
-	JSON     symbolJSON     `json:"-"`
-}
-
-type symbolJSON struct {
-	Kind        apijson.Field
-	Location    apijson.Field
-	Name        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
 }
 
 func (r *Symbol) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r symbolJSON) RawJSON() string {
-	return r.raw
-}
-
 type SymbolLocation struct {
 	Range SymbolLocationRange `json:"range,required"`
 	Uri   string              `json:"uri,required"`
-	JSON  symbolLocationJSON  `json:"-"`
-}
-
-type symbolLocationJSON struct {
-	Range       apijson.Field
-	Uri         apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
 }
 
 func (r *SymbolLocation) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r symbolLocationJSON) RawJSON() string {
-	return r.raw
-}
-
 type SymbolLocationRange struct {
 	End   SymbolLocationRangeEnd   `json:"end,required"`
 	Start SymbolLocationRangeStart `json:"start,required"`
-	JSON  symbolLocationRangeJSON  `json:"-"`
-}
-
-type symbolLocationRangeJSON struct {
-	End         apijson.Field
-	Start       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
 }
 
 func (r *SymbolLocationRange) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r symbolLocationRangeJSON) RawJSON() string {
-	return r.raw
-}
-
 type SymbolLocationRangeEnd struct {
-	Character float64                    `json:"character,required"`
-	Line      float64                    `json:"line,required"`
-	JSON      symbolLocationRangeEndJSON `json:"-"`
-}
-
-type symbolLocationRangeEndJSON struct {
-	Character   apijson.Field
-	Line        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+	Character float64 `json:"character,required"`
+	Line      float64 `json:"line,required"`
 }
 
 func (r *SymbolLocationRangeEnd) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r symbolLocationRangeEndJSON) RawJSON() string {
-	return r.raw
-}
-
 type SymbolLocationRangeStart struct {
-	Character float64                      `json:"character,required"`
-	Line      float64                      `json:"line,required"`
-	JSON      symbolLocationRangeStartJSON `json:"-"`
-}
-
-type symbolLocationRangeStartJSON struct {
-	Character   apijson.Field
-	Line        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+	Character float64 `json:"character,required"`
+	Line      float64 `json:"line,required"`
 }
 
 func (r *SymbolLocationRangeStart) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r symbolLocationRangeStartJSON) RawJSON() string {
-	return r.raw
 }
 
 type FindTextResponse struct {
@@ -165,110 +103,49 @@ type FindTextResponse struct {
 	Lines          FindTextResponseLines      `json:"lines,required"`
 	Path           FindTextResponsePath       `json:"path,required"`
 	Submatches     []FindTextResponseSubmatch `json:"submatches,required"`
-	JSON           findTextResponseJSON       `json:"-"`
-}
-
-type findTextResponseJSON struct {
-	AbsoluteOffset apijson.Field
-	LineNumber     apijson.Field
-	Lines          apijson.Field
-	Path           apijson.Field
-	Submatches     apijson.Field
-	raw            string
-	ExtraFields    map[string]apijson.Field
 }
 
 func (r *FindTextResponse) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r findTextResponseJSON) RawJSON() string {
-	return r.raw
-}
-
 type FindTextResponseLines struct {
-	Text string                    `json:"text,required"`
-	JSON findTextResponseLinesJSON `json:"-"`
-}
-
-type findTextResponseLinesJSON struct {
-	Text        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+	Text string `json:"text,required"`
 }
 
 func (r *FindTextResponseLines) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r findTextResponseLinesJSON) RawJSON() string {
-	return r.raw
-}
-
 type FindTextResponsePath struct {
-	Text string                   `json:"text,required"`
-	JSON findTextResponsePathJSON `json:"-"`
-}
-
-type findTextResponsePathJSON struct {
-	Text        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+	Text string `json:"text,required"`
 }
 
 func (r *FindTextResponsePath) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r findTextResponsePathJSON) RawJSON() string {
-	return r.raw
-}
-
 type FindTextResponseSubmatch struct {
 	End   float64                         `json:"end,required"`
 	Match FindTextResponseSubmatchesMatch `json:"match,required"`
 	Start float64                         `json:"start,required"`
-	JSON  findTextResponseSubmatchJSON    `json:"-"`
-}
-
-type findTextResponseSubmatchJSON struct {
-	End         apijson.Field
-	Match       apijson.Field
-	Start       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
 }
 
 func (r *FindTextResponseSubmatch) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r findTextResponseSubmatchJSON) RawJSON() string {
-	return r.raw
-}
-
 type FindTextResponseSubmatchesMatch struct {
-	Text string                              `json:"text,required"`
-	JSON findTextResponseSubmatchesMatchJSON `json:"-"`
-}
-
-type findTextResponseSubmatchesMatchJSON struct {
-	Text        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+	Text string `json:"text,required"`
 }
 
 func (r *FindTextResponseSubmatchesMatch) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r findTextResponseSubmatchesMatchJSON) RawJSON() string {
-	return r.raw
-}
-
 type FindFilesParams struct {
-	Query     param.Field[string] `query:"query,required"`
-	Directory param.Field[string] `query:"directory"`
+	Query     string  `query:"query,required"`
+	Directory *string `query:"directory,omitempty"`
 }
 
 func (r FindFilesParams) URLQuery() (url.Values, error) {
@@ -279,8 +156,8 @@ func (r FindFilesParams) URLQuery() (url.Values, error) {
 }
 
 type FindSymbolsParams struct {
-	Query     param.Field[string] `query:"query,required"`
-	Directory param.Field[string] `query:"directory"`
+	Query     string  `query:"query,required"`
+	Directory *string `query:"directory,omitempty"`
 }
 
 func (r FindSymbolsParams) URLQuery() (url.Values, error) {
@@ -291,8 +168,8 @@ func (r FindSymbolsParams) URLQuery() (url.Values, error) {
 }
 
 type FindTextParams struct {
-	Pattern   param.Field[string] `query:"pattern,required"`
-	Directory param.Field[string] `query:"directory"`
+	Pattern   string  `query:"pattern,required"`
+	Directory *string `query:"directory,omitempty"`
 }
 
 func (r FindTextParams) URLQuery() (url.Values, error) {

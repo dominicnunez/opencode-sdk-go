@@ -1,5 +1,3 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
-
 package opencode
 
 import (
@@ -9,7 +7,6 @@ import (
 
 	"github.com/dominicnunez/opencode-sdk-go/internal/apijson"
 	"github.com/dominicnunez/opencode-sdk-go/internal/apiquery"
-	"github.com/dominicnunez/opencode-sdk-go/internal/param"
 )
 
 type AppService struct {
@@ -40,171 +37,91 @@ func (s *AppService) Providers(ctx context.Context, params *AppProvidersParams) 
 	return &result, nil
 }
 
-type Model struct {
-	ID           string                 `json:"id,required"`
-	Attachment   bool                   `json:"attachment,required"`
-	Cost         ModelCost              `json:"cost,required"`
-	Limit        ModelLimit             `json:"limit,required"`
-	Name         string                 `json:"name,required"`
-	Options      map[string]interface{} `json:"options,required"`
-	Reasoning    bool                   `json:"reasoning,required"`
-	ReleaseDate  string                 `json:"release_date,required"`
-	Temperature  bool                   `json:"temperature,required"`
-	ToolCall     bool                   `json:"tool_call,required"`
-	Experimental bool                   `json:"experimental"`
-	Modalities   ModelModalities        `json:"modalities"`
-	Provider     ModelProvider          `json:"provider"`
-	Status       ModelStatus            `json:"status"`
-	JSON         modelJSON              `json:"-"`
-}
+type LogLevel string
 
-type modelJSON struct {
-	ID           apijson.Field
-	Attachment   apijson.Field
-	Cost         apijson.Field
-	Limit        apijson.Field
-	Name         apijson.Field
-	Options      apijson.Field
-	Reasoning    apijson.Field
-	ReleaseDate  apijson.Field
-	Temperature  apijson.Field
-	ToolCall     apijson.Field
-	Experimental apijson.Field
-	Modalities   apijson.Field
-	Provider     apijson.Field
-	Status       apijson.Field
-	raw          string
-	ExtraFields  map[string]apijson.Field
+const (
+	LogLevelDebug LogLevel = "debug"
+	LogLevelInfo  LogLevel = "info"
+	LogLevelWarn  LogLevel = "warn"
+	LogLevelError LogLevel = "error"
+)
+
+type Model struct {
+	ID           string                 `json:"id"`
+	Attachment   bool                   `json:"attachment"`
+	Cost         ModelCost              `json:"cost"`
+	Experimental bool                   `json:"experimental,omitempty"`
+	Limit        ModelLimit             `json:"limit"`
+	Modalities   ModelModalities        `json:"modalities,omitempty"`
+	Name         string                 `json:"name"`
+	Options      map[string]interface{} `json:"options"`
+	Provider     ModelProvider          `json:"provider,omitempty"`
+	Reasoning    bool                   `json:"reasoning"`
+	ReleaseDate  string                 `json:"release_date"`
+	Status       ModelStatus            `json:"status,omitempty"`
+	Temperature  bool                   `json:"temperature"`
+	ToolCall     bool                   `json:"tool_call"`
 }
 
 func (r *Model) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r modelJSON) RawJSON() string {
-	return r.raw
-}
-
 type ModelCost struct {
-	Input      float64       `json:"input,required"`
-	Output     float64       `json:"output,required"`
-	CacheRead  float64       `json:"cache_read"`
-	CacheWrite float64       `json:"cache_write"`
-	JSON       modelCostJSON `json:"-"`
-}
-
-type modelCostJSON struct {
-	Input       apijson.Field
-	Output      apijson.Field
-	CacheRead   apijson.Field
-	CacheWrite  apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+	Input      float64 `json:"input"`
+	Output     float64 `json:"output"`
+	CacheRead  float64 `json:"cache_read,omitempty"`
+	CacheWrite float64 `json:"cache_write,omitempty"`
 }
 
 func (r *ModelCost) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r modelCostJSON) RawJSON() string {
-	return r.raw
-}
-
 type ModelLimit struct {
-	Context float64        `json:"context,required"`
-	Output  float64        `json:"output,required"`
-	JSON    modelLimitJSON `json:"-"`
-}
-
-type modelLimitJSON struct {
-	Context     apijson.Field
-	Output      apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+	Context float64 `json:"context"`
+	Output  float64 `json:"output"`
 }
 
 func (r *ModelLimit) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r modelLimitJSON) RawJSON() string {
-	return r.raw
-}
-
 type ModelModalities struct {
-	Input  []ModelModalitiesInput  `json:"input,required"`
-	Output []ModelModalitiesOutput `json:"output,required"`
-	JSON   modelModalitiesJSON     `json:"-"`
-}
-
-type modelModalitiesJSON struct {
-	Input       apijson.Field
-	Output      apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+	Input  []ModelModalityInput  `json:"input"`
+	Output []ModelModalityOutput `json:"output"`
 }
 
 func (r *ModelModalities) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r modelModalitiesJSON) RawJSON() string {
-	return r.raw
-}
-
-type ModelModalitiesInput string
+type ModelModalityInput string
 
 const (
-	ModelModalitiesInputText  ModelModalitiesInput = "text"
-	ModelModalitiesInputAudio ModelModalitiesInput = "audio"
-	ModelModalitiesInputImage ModelModalitiesInput = "image"
-	ModelModalitiesInputVideo ModelModalitiesInput = "video"
-	ModelModalitiesInputPdf   ModelModalitiesInput = "pdf"
+	ModelModalityInputText  ModelModalityInput = "text"
+	ModelModalityInputAudio ModelModalityInput = "audio"
+	ModelModalityInputImage ModelModalityInput = "image"
+	ModelModalityInputVideo ModelModalityInput = "video"
+	ModelModalityInputPdf   ModelModalityInput = "pdf"
 )
 
-func (r ModelModalitiesInput) IsKnown() bool {
-	switch r {
-	case ModelModalitiesInputText, ModelModalitiesInputAudio, ModelModalitiesInputImage, ModelModalitiesInputVideo, ModelModalitiesInputPdf:
-		return true
-	}
-	return false
-}
-
-type ModelModalitiesOutput string
+type ModelModalityOutput string
 
 const (
-	ModelModalitiesOutputText  ModelModalitiesOutput = "text"
-	ModelModalitiesOutputAudio ModelModalitiesOutput = "audio"
-	ModelModalitiesOutputImage ModelModalitiesOutput = "image"
-	ModelModalitiesOutputVideo ModelModalitiesOutput = "video"
-	ModelModalitiesOutputPdf   ModelModalitiesOutput = "pdf"
+	ModelModalityOutputText  ModelModalityOutput = "text"
+	ModelModalityOutputAudio ModelModalityOutput = "audio"
+	ModelModalityOutputImage ModelModalityOutput = "image"
+	ModelModalityOutputVideo ModelModalityOutput = "video"
+	ModelModalityOutputPdf   ModelModalityOutput = "pdf"
 )
-
-func (r ModelModalitiesOutput) IsKnown() bool {
-	switch r {
-	case ModelModalitiesOutputText, ModelModalitiesOutputAudio, ModelModalitiesOutputImage, ModelModalitiesOutputVideo, ModelModalitiesOutputPdf:
-		return true
-	}
-	return false
-}
 
 type ModelProvider struct {
-	Npm  string            `json:"npm,required"`
-	JSON modelProviderJSON `json:"-"`
-}
-
-type modelProviderJSON struct {
-	Npm         apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+	Npm string `json:"npm"`
 }
 
 func (r *ModelProvider) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r modelProviderJSON) RawJSON() string {
-	return r.raw
 }
 
 type ModelStatus string
@@ -214,70 +131,34 @@ const (
 	ModelStatusBeta  ModelStatus = "beta"
 )
 
-func (r ModelStatus) IsKnown() bool {
-	switch r {
-	case ModelStatusAlpha, ModelStatusBeta:
-		return true
-	}
-	return false
-}
-
 type Provider struct {
-	ID     string           `json:"id,required"`
-	Env    []string         `json:"env,required"`
-	Models map[string]Model `json:"models,required"`
-	Name   string           `json:"name,required"`
-	API    string           `json:"api"`
-	Npm    string           `json:"npm"`
-	JSON   providerJSON     `json:"-"`
-}
-
-type providerJSON struct {
-	ID          apijson.Field
-	Env         apijson.Field
-	Models      apijson.Field
-	Name        apijson.Field
-	API         apijson.Field
-	Npm         apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+	ID     string           `json:"id"`
+	API    string           `json:"api,omitempty"`
+	Env    []string         `json:"env"`
+	Models map[string]Model `json:"models"`
+	Name   string           `json:"name"`
+	Npm    string           `json:"npm,omitempty"`
 }
 
 func (r *Provider) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r providerJSON) RawJSON() string {
-	return r.raw
-}
-
 type AppProvidersResponse struct {
-	Default   map[string]string        `json:"default,required"`
-	Providers []Provider               `json:"providers,required"`
-	JSON      appProvidersResponseJSON `json:"-"`
-}
-
-type appProvidersResponseJSON struct {
-	Default     apijson.Field
-	Providers   apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+	Default   map[string]string `json:"default"`
+	Providers []Provider        `json:"providers"`
 }
 
 func (r *AppProvidersResponse) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r appProvidersResponseJSON) RawJSON() string {
-	return r.raw
-}
-
 type AppLogParams struct {
-	Level     param.Field[AppLogParamsLevel] `json:"level,required"`
-	Message   param.Field[string]            `json:"message,required"`
-	Service   param.Field[string]            `json:"service,required"`
-	Directory param.Field[string]            `query:"directory"`
-	Extra     param.Field[map[string]interface{}] `json:"extra"`
+	Level     LogLevel               `json:"level"`
+	Message   string                 `json:"message"`
+	Service   string                 `json:"service"`
+	Extra     map[string]interface{} `json:"extra,omitempty"`
+	Directory *string                `query:"directory,omitempty"`
 }
 
 func (r AppLogParams) MarshalJSON() (data []byte, err error) {
@@ -291,25 +172,8 @@ func (r AppLogParams) URLQuery() (url.Values, error) {
 	})
 }
 
-type AppLogParamsLevel string
-
-const (
-	AppLogParamsLevelDebug AppLogParamsLevel = "debug"
-	AppLogParamsLevelInfo  AppLogParamsLevel = "info"
-	AppLogParamsLevelError AppLogParamsLevel = "error"
-	AppLogParamsLevelWarn  AppLogParamsLevel = "warn"
-)
-
-func (r AppLogParamsLevel) IsKnown() bool {
-	switch r {
-	case AppLogParamsLevelDebug, AppLogParamsLevelInfo, AppLogParamsLevelError, AppLogParamsLevelWarn:
-		return true
-	}
-	return false
-}
-
 type AppProvidersParams struct {
-	Directory param.Field[string] `query:"directory"`
+	Directory *string `query:"directory,omitempty"`
 }
 
 func (r AppProvidersParams) URLQuery() (url.Values, error) {

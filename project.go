@@ -7,7 +7,6 @@ import (
 
 	"github.com/dominicnunez/opencode-sdk-go/internal/apijson"
 	"github.com/dominicnunez/opencode-sdk-go/internal/apiquery"
-	"github.com/dominicnunez/opencode-sdk-go/internal/param"
 )
 
 type ProjectService struct {
@@ -39,49 +38,23 @@ func (s *ProjectService) Current(ctx context.Context, params *ProjectCurrentPara
 }
 
 type Project struct {
-	ID       string      `json:"id,required"`
+	ID       string     `json:"id,required"`
 	Time     ProjectTime `json:"time,required"`
-	Worktree string      `json:"worktree,required"`
-	Vcs      ProjectVcs  `json:"vcs"`
-	JSON     projectJSON `json:"-"`
-}
-
-type projectJSON struct {
-	ID          apijson.Field
-	Time        apijson.Field
-	Worktree    apijson.Field
-	Vcs         apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+	Worktree string     `json:"worktree,required"`
+	Vcs      ProjectVcs `json:"vcs"`
 }
 
 func (r *Project) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r projectJSON) RawJSON() string {
-	return r.raw
-}
-
 type ProjectTime struct {
-	Created     float64         `json:"created,required"`
-	Initialized float64         `json:"initialized"`
-	JSON        projectTimeJSON `json:"-"`
-}
-
-type projectTimeJSON struct {
-	Created     apijson.Field
-	Initialized apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+	Created     float64 `json:"created,required"`
+	Initialized float64 `json:"initialized"`
 }
 
 func (r *ProjectTime) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r projectTimeJSON) RawJSON() string {
-	return r.raw
 }
 
 type ProjectVcs string
@@ -99,7 +72,7 @@ func (r ProjectVcs) IsKnown() bool {
 }
 
 type ProjectListParams struct {
-	Directory param.Field[string] `query:"directory"`
+	Directory *string `query:"directory,omitempty"`
 }
 
 func (r ProjectListParams) URLQuery() (url.Values, error) {
@@ -110,7 +83,7 @@ func (r ProjectListParams) URLQuery() (url.Values, error) {
 }
 
 type ProjectCurrentParams struct {
-	Directory param.Field[string] `query:"directory"`
+	Directory *string `query:"directory,omitempty"`
 }
 
 func (r ProjectCurrentParams) URLQuery() (url.Values, error) {

@@ -9,7 +9,6 @@ import (
 
 	"github.com/dominicnunez/opencode-sdk-go/internal/apijson"
 	"github.com/dominicnunez/opencode-sdk-go/internal/apiquery"
-	"github.com/dominicnunez/opencode-sdk-go/internal/param"
 )
 
 type FileService struct {
@@ -57,24 +56,10 @@ type File struct {
 	Path    string     `json:"path,required"`
 	Removed int64      `json:"removed,required"`
 	Status  FileStatus `json:"status,required"`
-	JSON    fileJSON   `json:"-"`
-}
-
-type fileJSON struct {
-	Added       apijson.Field
-	Path        apijson.Field
-	Removed     apijson.Field
-	Status      apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
 }
 
 func (r *File) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r fileJSON) RawJSON() string {
-	return r.raw
 }
 
 type FileStatus string
@@ -99,25 +84,10 @@ type FileNode struct {
 	Name     string       `json:"name,required"`
 	Path     string       `json:"path,required"`
 	Type     FileNodeType `json:"type,required"`
-	JSON     fileNodeJSON `json:"-"`
-}
-
-type fileNodeJSON struct {
-	Absolute    apijson.Field
-	Ignored     apijson.Field
-	Name        apijson.Field
-	Path        apijson.Field
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
 }
 
 func (r *FileNode) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r fileNodeJSON) RawJSON() string {
-	return r.raw
 }
 
 type FileNodeType string
@@ -138,30 +108,14 @@ func (r FileNodeType) IsKnown() bool {
 type FileReadResponse struct {
 	Content  string                   `json:"content,required"`
 	Type     FileReadResponseType     `json:"type,required"`
-	Diff     string                   `json:"diff"`
-	Encoding FileReadResponseEncoding `json:"encoding"`
-	MimeType string                   `json:"mimeType"`
-	Patch    FileReadResponsePatch    `json:"patch"`
-	JSON     fileReadResponseJSON     `json:"-"`
-}
-
-type fileReadResponseJSON struct {
-	Content     apijson.Field
-	Type        apijson.Field
-	Diff        apijson.Field
-	Encoding    apijson.Field
-	MimeType    apijson.Field
-	Patch       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+	Diff     string                   `json:"diff,omitempty"`
+	Encoding FileReadResponseEncoding `json:"encoding,omitempty"`
+	MimeType string                   `json:"mimeType,omitempty"`
+	Patch    FileReadResponsePatch    `json:"patch,omitempty"`
 }
 
 func (r *FileReadResponse) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r fileReadResponseJSON) RawJSON() string {
-	return r.raw
 }
 
 type FileReadResponseType string
@@ -196,61 +150,30 @@ type FileReadResponsePatch struct {
 	Hunks       []FileReadResponsePatchHunk `json:"hunks,required"`
 	NewFileName string                      `json:"newFileName,required"`
 	OldFileName string                      `json:"oldFileName,required"`
-	Index       string                      `json:"index"`
-	NewHeader   string                      `json:"newHeader"`
-	OldHeader   string                      `json:"oldHeader"`
-	JSON        fileReadResponsePatchJSON   `json:"-"`
-}
-
-type fileReadResponsePatchJSON struct {
-	Hunks       apijson.Field
-	NewFileName apijson.Field
-	OldFileName apijson.Field
-	Index       apijson.Field
-	NewHeader   apijson.Field
-	OldHeader   apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+	Index       string                      `json:"index,omitempty"`
+	NewHeader   string                      `json:"newHeader,omitempty"`
+	OldHeader   string                      `json:"oldHeader,omitempty"`
 }
 
 func (r *FileReadResponsePatch) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r fileReadResponsePatchJSON) RawJSON() string {
-	return r.raw
-}
-
 type FileReadResponsePatchHunk struct {
-	Lines    []string                      `json:"lines,required"`
-	NewLines float64                       `json:"newLines,required"`
-	NewStart float64                       `json:"newStart,required"`
-	OldLines float64                       `json:"oldLines,required"`
-	OldStart float64                       `json:"oldStart,required"`
-	JSON     fileReadResponsePatchHunkJSON `json:"-"`
-}
-
-type fileReadResponsePatchHunkJSON struct {
-	Lines       apijson.Field
-	NewLines    apijson.Field
-	NewStart    apijson.Field
-	OldLines    apijson.Field
-	OldStart    apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+	Lines    []string `json:"lines,required"`
+	NewLines float64  `json:"newLines,required"`
+	NewStart float64  `json:"newStart,required"`
+	OldLines float64  `json:"oldLines,required"`
+	OldStart float64  `json:"oldStart,required"`
 }
 
 func (r *FileReadResponsePatchHunk) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r fileReadResponsePatchHunkJSON) RawJSON() string {
-	return r.raw
-}
-
 type FileListParams struct {
-	Path      param.Field[string] `query:"path,required"`
-	Directory param.Field[string] `query:"directory"`
+	Path      string  `query:"path,required"`
+	Directory *string `query:"directory,omitempty"`
 }
 
 func (r FileListParams) URLQuery() (url.Values, error) {
@@ -261,8 +184,8 @@ func (r FileListParams) URLQuery() (url.Values, error) {
 }
 
 type FileReadParams struct {
-	Path      param.Field[string] `query:"path,required"`
-	Directory param.Field[string] `query:"directory"`
+	Path      string  `query:"path,required"`
+	Directory *string `query:"directory,omitempty"`
 }
 
 func (r FileReadParams) URLQuery() (url.Values, error) {
@@ -273,7 +196,7 @@ func (r FileReadParams) URLQuery() (url.Values, error) {
 }
 
 type FileStatusParams struct {
-	Directory param.Field[string] `query:"directory"`
+	Directory *string `query:"directory,omitempty"`
 }
 
 func (r FileStatusParams) URLQuery() (url.Values, error) {
