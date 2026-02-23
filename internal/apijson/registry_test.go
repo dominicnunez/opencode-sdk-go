@@ -8,13 +8,14 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-func TestRegisterUnionConcurrent(t *testing.T) {
-	type TestUnionA struct{ A string }
-	type TestUnionB struct{ B string }
-	type TestUnion interface{ testUnion() }
-	func(TestUnionA) testUnion() {}
-	func(TestUnionB) testUnion() {}
+type testUnionA struct{ A string }
+type testUnionB struct{ B string }
+type testUnion interface{ testUnion() }
 
+func (testUnionA) testUnion() {}
+func (testUnionB) testUnion() {}
+
+func TestRegisterUnionConcurrent(t *testing.T) {
 	var wg sync.WaitGroup
 	for i := 0; i < 100; i++ {
 		wg.Add(1)
@@ -22,12 +23,12 @@ func TestRegisterUnionConcurrent(t *testing.T) {
 			defer wg.Done()
 			variant := UnionVariant{
 				TypeFilter: gjson.JSON,
-				Type:       reflect.TypeOf(TestUnionA{}),
+				Type:       reflect.TypeOf(testUnionA{}),
 			}
 			if i%2 == 0 {
-				variant.Type = reflect.TypeOf(TestUnionB{})
+				variant.Type = reflect.TypeOf(testUnionB{})
 			}
-			RegisterUnion(reflect.TypeOf((*TestUnion)(nil)).Elem(), "", variant)
+			RegisterUnion(reflect.TypeOf((*testUnion)(nil)).Elem(), "", variant)
 		}(i)
 	}
 	wg.Wait()
