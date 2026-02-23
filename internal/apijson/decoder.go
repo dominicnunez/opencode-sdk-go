@@ -9,7 +9,7 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/anomalyco/opencode-sdk-go/internal/timeformat"
+	"github.com/dominicnunez/opencode-sdk-go/internal/timeformat"
 	"github.com/tidwall/gjson"
 )
 

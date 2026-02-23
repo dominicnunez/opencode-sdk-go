@@ -18,11 +18,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/anomalyco/opencode-sdk-go/internal"
-	"github.com/anomalyco/opencode-sdk-go/internal/apierror"
-	"github.com/anomalyco/opencode-sdk-go/internal/apiform"
-	"github.com/anomalyco/opencode-sdk-go/internal/apiquery"
-	"github.com/anomalyco/opencode-sdk-go/internal/param"
+	"github.com/dominicnunez/opencode-sdk-go/internal"
+	"github.com/dominicnunez/opencode-sdk-go/internal/apierror"
+	"github.com/dominicnunez/opencode-sdk-go/internal/apiform"
+	"github.com/dominicnunez/opencode-sdk-go/internal/apiquery"
+	"github.com/dominicnunez/opencode-sdk-go/internal/param"
 )
 
 const (

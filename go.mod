@@ -1,4 +1,4 @@
-module github.com/anomalyco/opencode-sdk-go
+module github.com/dominicnunez/opencode-sdk-go
 
 go 1.22
 
