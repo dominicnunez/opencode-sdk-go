@@ -79,7 +79,7 @@ func (m Message) AsAssistant() (*AssistantMessage, bool) {
 
 Apply this pattern to each union:
 
-- [ ] **Message** (discriminator: `role`) → `UserMessage`, `AssistantMessage`. Remove `MessageUnion` interface, `apijson.RegisterUnion` init block, `apijson.Port` call. Add `AsUser()`, `AsAssistant()` methods.
+- [x] **Message** (discriminator: `role`) → `UserMessage`, `AssistantMessage`. Remove `MessageUnion` interface, `apijson.RegisterUnion` init block, `apijson.Port` call. Add `AsUser()`, `AsAssistant()` methods.
 
 - [ ] **Part** (discriminator: `type`) → `TextPart`, `ReasoningPart`, `FilePart`, `ToolPart`, `StepStartPart`, `StepFinishPart`, `SnapshotPart`, `PatchPart`, `AgentPart`, `RetryPart`. Remove `PartUnion` interface and init block. Add `AsText()`, `AsReasoning()`, `AsFile()`, `AsTool()`, `AsStepStart()`, `AsStepFinish()`, `AsSnapshot()`, `AsPatch()`, `AsAgent()`, `AsRetry()` methods.
 

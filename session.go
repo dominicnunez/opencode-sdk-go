@@ -2,6 +2,7 @@ package opencode
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -300,8 +301,6 @@ type AssistantMessage struct {
 	Error      AssistantMessageError  `json:"error"`
 	Summary    bool                   `json:"summary"`
 }
-
-func (r AssistantMessage) implementsMessage() {}
 
 type AssistantMessagePath struct {
 	Cwd  string                   `json:"cwd,required"`
@@ -658,66 +657,54 @@ func (r FileSourceParam) MarshalJSON() (data []byte, err error) {
 
 func (r FileSourceParam) implementsFilePartSourceUnionParam() {}
 
+// Message is either UserMessage or AssistantMessage, discriminated by Role.
 type Message struct {
 	ID        string      `json:"id,required"`
 	Role      MessageRole `json:"role,required"`
 	SessionID string      `json:"sessionID,required"`
-	// This field can have the runtime type of [UserMessageTime],
-	// [AssistantMessageTime].
-	Time interface{} `json:"time,required"`
-	Cost float64     `json:"cost"`
-	// This field can have the runtime type of [AssistantMessageError].
-	Error    interface{} `json:"error"`
-	Mode     string      `json:"mode"`
-	ModelID  string      `json:"modelID"`
-	ParentID string      `json:"parentID"`
-	// This field can have the runtime type of [AssistantMessagePath].
-	Path       interface{} `json:"path"`
-	ProviderID string      `json:"providerID"`
-	// This field can have the runtime type of [UserMessageSummary], [bool].
-	Summary interface{} `json:"summary"`
-	// This field can have the runtime type of [[]string].
-	System interface{} `json:"system"`
-	// This field can have the runtime type of [AssistantMessageTokens].
-	Tokens interface{} `json:"tokens"`
-	union  MessageUnion
+	// Embed raw JSON for lazy decode
+	raw []byte `json:"-"`
 }
 
-func (r *Message) UnmarshalJSON(data []byte) (err error) {
-	*r = Message{}
-	err = apijson.UnmarshalRoot(data, &r.union)
-	if err != nil {
+func (r *Message) UnmarshalJSON(data []byte) error {
+	// Peek at common fields including discriminator
+	var peek struct {
+		ID        string      `json:"id"`
+		Role      MessageRole `json:"role"`
+		SessionID string      `json:"sessionID"`
+	}
+	if err := json.Unmarshal(data, &peek); err != nil {
 		return err
 	}
-	return apijson.Port(r.union, &r)
+	r.ID = peek.ID
+	r.Role = peek.Role
+	r.SessionID = peek.SessionID
+	r.raw = data
+	return nil
 }
 
-// AsUnion returns a [MessageUnion] interface which you can cast to the specific
-// types for more type safety.
-//
-// Possible runtime types of the union are [UserMessage], [AssistantMessage].
-func (r Message) AsUnion() MessageUnion {
-	return r.union
+// AsUser returns the UserMessage if the role is "user".
+func (r Message) AsUser() (*UserMessage, bool) {
+	if r.Role != MessageRoleUser {
+		return nil, false
+	}
+	var msg UserMessage
+	if err := json.Unmarshal(r.raw, &msg); err != nil {
+		return nil, false
+	}
+	return &msg, true
 }
 
-// Union satisfied by [UserMessage] or [AssistantMessage].
-type MessageUnion interface {
-	implementsMessage()
-}
-
-func init() {
-	apijson.RegisterUnion(
-		reflect.TypeOf((*MessageUnion)(nil)).Elem(),
-		"",
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(UserMessage{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(AssistantMessage{}),
-		},
-	)
+// AsAssistant returns the AssistantMessage if the role is "assistant".
+func (r Message) AsAssistant() (*AssistantMessage, bool) {
+	if r.Role != MessageRoleAssistant {
+		return nil, false
+	}
+	var msg AssistantMessage
+	if err := json.Unmarshal(r.raw, &msg); err != nil {
+		return nil, false
+	}
+	return &msg, true
 }
 
 type MessageRole string
@@ -1485,8 +1472,6 @@ type UserMessage struct {
 	Time      UserMessageTime    `json:"time,required"`
 	Summary   UserMessageSummary `json:"summary"`
 }
-
-func (r UserMessage) implementsMessage() {}
 
 type UserMessageRole string
 
