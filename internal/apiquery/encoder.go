@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/dominicnunez/opencode-sdk-go/internal/param"
 	"github.com/dominicnunez/opencode-sdk-go/internal/timeformat"
 )
 
@@ -113,7 +114,32 @@ func (e *encoder) newTypeEncoder(t reflect.Type) encoderFunc {
 	}
 }
 
+func (e *encoder) newFieldTypeEncoder(t reflect.Type) encoderFunc {
+	f, _ := t.FieldByName("Value")
+	enc := e.typeEncoder(f.Type)
+
+	return func(key string, value reflect.Value) ([]Pair, error) {
+		present := value.FieldByName("Present")
+		if !present.Bool() {
+			return nil, nil
+		}
+		null := value.FieldByName("Null")
+		if null.Bool() {
+			return nil, nil
+		}
+		raw := value.FieldByName("Raw")
+		if !raw.IsNil() {
+			return e.typeEncoder(raw.Type())(key, raw)
+		}
+		return enc(key, value.FieldByName("Value"))
+	}
+}
+
 func (e *encoder) newStructTypeEncoder(t reflect.Type) encoderFunc {
+	if t.Implements(reflect.TypeOf((*param.FieldLike)(nil)).Elem()) {
+		return e.newFieldTypeEncoder(t)
+	}
+
 	encoderFields := []encoderField{}
 
 	var collectEncoderFields func(r reflect.Type, index []int)
