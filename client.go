@@ -31,6 +31,7 @@ type Client struct {
 	Event   *EventService
 	Agent   *AgentService
 	App     *AppService
+	Auth    *AuthService
 	Config  *ConfigService
 	File    *FileService
 	Find    *FindService
@@ -64,6 +65,7 @@ func NewClient(opts ...ClientOption) (*Client, error) {
 	c.Event = &EventService{client: c}
 	c.Agent = &AgentService{client: c}
 	c.App = &AppService{client: c}
+	c.Auth = &AuthService{client: c}
 	c.Config = &ConfigService{client: c}
 	c.File = &FileService{client: c}
 	c.Find = &FindService{client: c}

@@ -131,9 +131,9 @@ Verify these already exist (my earlier scan found them but coverage script misse
 
 ### Auth service — create new `auth.go`:
 
-- [ ] Create `AuthService` struct on Client
-- [ ] `Set(ctx, id, params) → error` — `PUT /auth/{id}`. Params: Auth union (OAuth | ApiAuth | WellKnownAuth)
-- [ ] Wire into `Client` in `NewClient()`
+- [x] Create `AuthService` struct on Client
+- [x] `Set(ctx, id, params) → bool` — `PUT /auth/{id}`. Params: Auth union (OAuth | ApiAuth | WellKnownAuth)
+- [x] Wire into `Client` in `NewClient()`
 
 ### MCP service — create new `mcp.go`:
 
