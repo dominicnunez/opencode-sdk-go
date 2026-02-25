@@ -27,7 +27,7 @@ func TestClientDo_Success(t *testing.T) {
 		}
 
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(response{Message: "success", Count: 42})
+		_ = json.NewEncoder(w).Encode(response{Message: "success", Count: 42})
 	}))
 	defer server.Close()
 
@@ -52,11 +52,11 @@ func TestClientDo_Retry(t *testing.T) {
 		attempts++
 		if attempts < 3 {
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("server error"))
+			_, _ = w.Write([]byte("server error"))
 			return
 		}
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+		_ = json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 	}))
 	defer server.Close()
 
@@ -109,7 +109,7 @@ func TestClientDo_QueryParams(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		receivedQuery = r.URL.RawQuery
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode([]opencode.Session{})
+		_ = json.NewEncoder(w).Encode([]opencode.Session{})
 	}))
 	defer server.Close()
 
@@ -141,10 +141,10 @@ func TestClientDo_PostWithBody(t *testing.T) {
 		}
 
 		bodyBytes, _ := io.ReadAll(r.Body)
-		json.Unmarshal(bodyBytes, &receivedBody)
+		_ = json.Unmarshal(bodyBytes, &receivedBody)
 
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(opencode.Session{ID: "test-session"})
+		_ = json.NewEncoder(w).Encode(opencode.Session{ID: "test-session"})
 	}))
 	defer server.Close()
 
@@ -174,7 +174,7 @@ func TestClientDo_NoRetryOn4xx(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		attempts++
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("bad request"))
+		_, _ = w.Write([]byte("bad request"))
 	}))
 	defer server.Close()
 
@@ -216,7 +216,7 @@ func TestClientDo_ExponentialBackoff(t *testing.T) {
 		t.Fatalf("failed to create client: %v", err)
 	}
 
-	_, err = client.Session.List(context.Background(), &opencode.SessionListParams{})
+	_, _ = client.Session.List(context.Background(), &opencode.SessionListParams{})
 
 	if attempts != 3 {
 		t.Errorf("Expected 3 attempts, got %d", attempts)

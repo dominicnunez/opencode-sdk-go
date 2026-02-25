@@ -71,7 +71,7 @@ func TestSessionGet_WithDirectoryParam(t *testing.T) {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(response)
+		_ = json.NewEncoder(w).Encode(response)
 	}))
 	defer server.Close()
 
@@ -113,7 +113,7 @@ func TestSessionGet_MissingID(t *testing.T) {
 func TestSessionGet_ServerError(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(`{"error": "internal server error"}`))
+		_, _ = w.Write([]byte(`{"error": "internal server error"}`))
 	}))
 	defer server.Close()
 
@@ -155,7 +155,7 @@ func TestSessionUpdate_Success(t *testing.T) {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(response)
+		_ = json.NewEncoder(w).Encode(response)
 	}))
 	defer server.Close()
 
@@ -190,7 +190,7 @@ func TestSessionUpdate_WithDirectoryParam(t *testing.T) {
 
 		body, _ := io.ReadAll(r.Body)
 		var params SessionUpdateParams
-		json.Unmarshal(body, &params)
+		_ = json.Unmarshal(body, &params)
 
 		if params.Title == nil || *params.Title != "New Title" {
 			t.Errorf("Expected title 'New Title', got %v", params.Title)
@@ -203,7 +203,7 @@ func TestSessionUpdate_WithDirectoryParam(t *testing.T) {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(response)
+		_ = json.NewEncoder(w).Encode(response)
 	}))
 	defer server.Close()
 
@@ -254,7 +254,7 @@ func TestSessionUpdate_NilParams(t *testing.T) {
 			Title: "Unchanged",
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(response)
+		_ = json.NewEncoder(w).Encode(response)
 	}))
 	defer server.Close()
 
@@ -344,7 +344,7 @@ func TestSessionDelete_MissingID(t *testing.T) {
 func TestSessionDelete_ServerError(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(`{"error": "internal server error"}`))
+		_, _ = w.Write([]byte(`{"error": "internal server error"}`))
 	}))
 	defer server.Close()
 

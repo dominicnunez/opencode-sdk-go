@@ -1,13 +1,13 @@
 package shared
 
 type MessageAbortedError struct {
-	Data MessageAbortedErrorData `json:"data,required"`
-	Name MessageAbortedErrorName `json:"name,required"`
+	Data MessageAbortedErrorData `json:"data"`
+	Name MessageAbortedErrorName `json:"name"`
 }
 
 
 type MessageAbortedErrorData struct {
-	Message string `json:"message,required"`
+	Message string `json:"message"`
 }
 
 type MessageAbortedErrorName string
@@ -25,14 +25,14 @@ func (r MessageAbortedErrorName) IsKnown() bool {
 }
 
 type ProviderAuthError struct {
-	Data ProviderAuthErrorData `json:"data,required"`
-	Name ProviderAuthErrorName `json:"name,required"`
+	Data ProviderAuthErrorData `json:"data"`
+	Name ProviderAuthErrorName `json:"name"`
 }
 
 
 type ProviderAuthErrorData struct {
-	Message    string `json:"message,required"`
-	ProviderID string `json:"providerID,required"`
+	Message    string `json:"message"`
+	ProviderID string `json:"providerID"`
 }
 
 type ProviderAuthErrorName string
@@ -50,13 +50,13 @@ func (r ProviderAuthErrorName) IsKnown() bool {
 }
 
 type UnknownError struct {
-	Data UnknownErrorData `json:"data,required"`
-	Name UnknownErrorName `json:"name,required"`
+	Data UnknownErrorData `json:"data"`
+	Name UnknownErrorName `json:"name"`
 }
 
 
 type UnknownErrorData struct {
-	Message string `json:"message,required"`
+	Message string `json:"message"`
 }
 
 type UnknownErrorName string

@@ -31,7 +31,7 @@ func TestSessionFork_Success(t *testing.T) {
 		// Send response
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(Session{
+		_ = json.NewEncoder(w).Encode(Session{
 			ID:        "ses_789",
 			Directory: "/test",
 			ProjectID: "proj_1",
@@ -89,7 +89,7 @@ func TestSessionFork_WithDirectory(t *testing.T) {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(Session{
+		_ = json.NewEncoder(w).Encode(Session{
 			ID:        "ses_999",
 			Directory: "/custom/path",
 			ProjectID: "proj_2",
@@ -159,7 +159,7 @@ func TestSessionFork_MissingParams(t *testing.T) {
 func TestSessionFork_ServerError(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(`{"error": "server error"}`))
+		_, _ = w.Write([]byte(`{"error": "server error"}`))
 	}))
 	defer server.Close()
 
@@ -181,7 +181,7 @@ func TestSessionFork_InvalidJSON(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"id": "ses_123", "invalid json`))
+		_, _ = w.Write([]byte(`{"id": "ses_123", "invalid json`))
 	}))
 	defer server.Close()
 

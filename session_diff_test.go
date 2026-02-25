@@ -34,7 +34,7 @@ func TestSessionDiff_Success(t *testing.T) {
 			},
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(diffs)
+		_ = json.NewEncoder(w).Encode(diffs)
 	}))
 	defer server.Close()
 
@@ -88,7 +88,7 @@ func TestSessionDiff_WithMessageID(t *testing.T) {
 			},
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(diffs)
+		_ = json.NewEncoder(w).Encode(diffs)
 	}))
 	defer server.Close()
 
@@ -121,7 +121,7 @@ func TestSessionDiff_WithDirectory(t *testing.T) {
 
 		diffs := []FileDiff{}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(diffs)
+		_ = json.NewEncoder(w).Encode(diffs)
 	}))
 	defer server.Close()
 
@@ -144,7 +144,7 @@ func TestSessionDiff_WithDirectory(t *testing.T) {
 func TestSessionDiff_EmptyDiffs(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode([]FileDiff{})
+		_ = json.NewEncoder(w).Encode([]FileDiff{})
 	}))
 	defer server.Close()
 
@@ -177,7 +177,7 @@ func TestSessionDiff_MissingID(t *testing.T) {
 func TestSessionDiff_ServerError(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(`{"error": "internal server error"}`))
+		_, _ = w.Write([]byte(`{"error": "internal server error"}`))
 	}))
 	defer server.Close()
 
@@ -193,7 +193,7 @@ func TestSessionDiff_ServerError(t *testing.T) {
 func TestSessionDiff_InvalidJSON(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`invalid json`))
+		_, _ = w.Write([]byte(`invalid json`))
 	}))
 	defer server.Close()
 

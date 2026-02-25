@@ -18,7 +18,7 @@ func TestToolService_IDs_Success(t *testing.T) {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode([]string{"tool1", "tool2", "tool3"})
+		_ = json.NewEncoder(w).Encode([]string{"tool1", "tool2", "tool3"})
 	}))
 	defer server.Close()
 
@@ -56,7 +56,7 @@ func TestToolService_IDs_WithDirectory(t *testing.T) {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode([]string{"tool1"})
+		_ = json.NewEncoder(w).Encode([]string{"tool1"})
 	}))
 	defer server.Close()
 
@@ -81,7 +81,7 @@ func TestToolService_IDs_WithDirectory(t *testing.T) {
 func TestToolService_IDs_EmptyArray(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode([]string{})
+		_ = json.NewEncoder(w).Encode([]string{})
 	}))
 	defer server.Close()
 
@@ -107,7 +107,7 @@ func TestToolService_IDs_EmptyArray(t *testing.T) {
 func TestToolService_IDs_ServerError(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("internal server error"))
+		_, _ = w.Write([]byte("internal server error"))
 	}))
 	defer server.Close()
 
@@ -129,7 +129,7 @@ func TestToolService_IDs_ServerError(t *testing.T) {
 func TestToolService_IDs_InvalidJSON(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte("not valid json"))
+		_, _ = w.Write([]byte("not valid json"))
 	}))
 	defer server.Close()
 
@@ -167,7 +167,7 @@ func TestToolService_List_Success(t *testing.T) {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode([]ToolListItem{
+		_ = json.NewEncoder(w).Encode([]ToolListItem{
 			{
 				ID:          "Read",
 				Description: "Read a file from the filesystem",
@@ -271,7 +271,7 @@ func TestToolService_List_WithDirectory(t *testing.T) {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode([]ToolListItem{})
+		_ = json.NewEncoder(w).Encode([]ToolListItem{})
 	}))
 	defer server.Close()
 
@@ -314,7 +314,7 @@ func TestToolService_List_NilParams(t *testing.T) {
 func TestToolService_List_ServerError(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("bad request"))
+		_, _ = w.Write([]byte("bad request"))
 	}))
 	defer server.Close()
 
@@ -339,7 +339,7 @@ func TestToolService_List_ServerError(t *testing.T) {
 func TestToolService_List_InvalidJSON(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte("invalid json"))
+		_, _ = w.Write([]byte("invalid json"))
 	}))
 	defer server.Close()
 

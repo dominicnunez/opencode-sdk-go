@@ -32,7 +32,7 @@ func TestAuthService_Set_Success(t *testing.T) {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(true)
+		_ = json.NewEncoder(w).Encode(true)
 	}))
 	defer server.Close()
 
@@ -67,7 +67,7 @@ func TestAuthService_Set_WithDirectory(t *testing.T) {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(true)
+		_ = json.NewEncoder(w).Encode(true)
 	}))
 	defer server.Close()
 
@@ -127,7 +127,7 @@ func TestAuthService_Set_MissingParams(t *testing.T) {
 func TestAuthService_Set_ServerError(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("internal server error"))
+		_, _ = w.Write([]byte("internal server error"))
 	}))
 	defer server.Close()
 
@@ -149,7 +149,7 @@ func TestAuthService_Set_InvalidJSON(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("not json"))
+		_, _ = w.Write([]byte("not json"))
 	}))
 	defer server.Close()
 

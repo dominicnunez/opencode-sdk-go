@@ -93,7 +93,7 @@ type ConfigAgent struct {
 	Build       ConfigAgentBuild       `json:"build"`
 	General     ConfigAgentGeneral     `json:"general"`
 	Plan        ConfigAgentPlan        `json:"plan"`
-	ExtraFields map[string]ConfigAgent `json:"-,extras"`
+	ExtraFields map[string]ConfigAgent `json:"-"`
 }
 
 type ConfigAgentBuild struct {
@@ -107,7 +107,7 @@ type ConfigAgentBuild struct {
 	Temperature float64                    `json:"temperature"`
 	Tools       map[string]bool            `json:"tools"`
 	TopP        float64                    `json:"top_p"`
-	ExtraFields map[string]interface{}     `json:"-,extras"`
+	ExtraFields map[string]interface{}     `json:"-"`
 }
 
 type ConfigAgentBuildMode string
@@ -238,7 +238,7 @@ type ConfigAgentGeneral struct {
 	Temperature float64                      `json:"temperature"`
 	Tools       map[string]bool              `json:"tools"`
 	TopP        float64                      `json:"top_p"`
-	ExtraFields map[string]interface{}       `json:"-,extras"`
+	ExtraFields map[string]interface{}       `json:"-"`
 }
 
 type ConfigAgentGeneralMode string
@@ -369,7 +369,7 @@ type ConfigAgentPlan struct {
 	Temperature float64                   `json:"temperature"`
 	Tools       map[string]bool           `json:"tools"`
 	TopP        float64                   `json:"top_p"`
-	ExtraFields map[string]interface{}    `json:"-,extras"`
+	ExtraFields map[string]interface{}    `json:"-"`
 }
 
 type ConfigAgentPlanMode string
@@ -490,7 +490,7 @@ func (r ConfigAgentPlanPermissionWebfetch) IsKnown() bool {
 }
 
 type ConfigCommand struct {
-	Template    string            `json:"template,required"`
+	Template    string            `json:"template"`
 	Agent       string            `json:"agent"`
 	Description string            `json:"description"`
 	Model       string            `json:"model"`
@@ -508,12 +508,12 @@ type ConfigExperimentalHook struct {
 }
 
 type ConfigExperimentalHookFileEdited struct {
-	Command     []string                             `json:"command,required"`
+	Command     []string                             `json:"command"`
 	Environment map[string]string                    `json:"environment"`
 }
 
 type ConfigExperimentalHookSessionCompleted struct {
-	Command     []string                                   `json:"command,required"`
+	Command     []string                                   `json:"command"`
 	Environment map[string]string                          `json:"environment"`
 }
 
@@ -603,7 +603,7 @@ func (r ConfigLsp) AsObject() (*ConfigLspObject, bool) {
 }
 
 type ConfigLspDisabled struct {
-	Disabled ConfigLspDisabledDisabled `json:"disabled,required"`
+	Disabled ConfigLspDisabledDisabled `json:"disabled"`
 }
 
 type ConfigLspDisabledDisabled bool
@@ -621,7 +621,7 @@ func (r ConfigLspDisabledDisabled) IsKnown() bool {
 }
 
 type ConfigLspObject struct {
-	Command        []string               `json:"command,required"`
+	Command        []string               `json:"command"`
 	Disabled       bool                   `json:"disabled"`
 	Env            map[string]string      `json:"env"`
 	Extensions     []string               `json:"extensions"`
@@ -696,7 +696,7 @@ func (r ConfigMcpType) IsKnown() bool {
 type ConfigMode struct {
 	Build       ConfigModeBuild       `json:"build"`
 	Plan        ConfigModePlan        `json:"plan"`
-	ExtraFields map[string]ConfigMode `json:"-,extras"`
+	ExtraFields map[string]ConfigMode `json:"-"`
 }
 
 
@@ -713,7 +713,7 @@ type ConfigModeBuild struct {
 	Temperature float64                   `json:"temperature"`
 	Tools       map[string]bool           `json:"tools"`
 	TopP        float64                   `json:"top_p"`
-	ExtraFields map[string]interface{}    `json:"-,extras"`
+	ExtraFields map[string]interface{}    `json:"-"`
 }
 
 
@@ -850,7 +850,7 @@ type ConfigModePlan struct {
 	Temperature float64                  `json:"temperature"`
 	Tools       map[string]bool          `json:"tools"`
 	TopP        float64                  `json:"top_p"`
-	ExtraFields map[string]interface{}   `json:"-,extras"`
+	ExtraFields map[string]interface{}   `json:"-"`
 }
 
 
@@ -1114,8 +1114,8 @@ type ConfigProviderModel struct {
 
 
 type ConfigProviderModelsCost struct {
-	Input      float64                      `json:"input,required"`
-	Output     float64                      `json:"output,required"`
+	Input      float64                      `json:"input"`
+	Output     float64                      `json:"output"`
 	CacheRead  float64                      `json:"cache_read"`
 	CacheWrite float64                      `json:"cache_write"`
 }
@@ -1124,16 +1124,16 @@ type ConfigProviderModelsCost struct {
 
 
 type ConfigProviderModelsLimit struct {
-	Context float64                       `json:"context,required"`
-	Output  float64                       `json:"output,required"`
+	Context float64                       `json:"context"`
+	Output  float64                       `json:"output"`
 }
 
 
 
 
 type ConfigProviderModelsModalities struct {
-	Input  []ConfigProviderModelsModalitiesInput  `json:"input,required"`
-	Output []ConfigProviderModelsModalitiesOutput `json:"output,required"`
+	Input  []ConfigProviderModelsModalitiesInput  `json:"input"`
+	Output []ConfigProviderModelsModalitiesOutput `json:"output"`
 }
 
 
@@ -1176,7 +1176,7 @@ func (r ConfigProviderModelsModalitiesOutput) IsKnown() bool {
 }
 
 type ConfigProviderModelsProvider struct {
-	Npm  string                           `json:"npm,required"`
+	Npm  string                           `json:"npm"`
 }
 
 
@@ -1203,7 +1203,7 @@ type ConfigProviderOptions struct {
 	// Timeout in milliseconds for requests to this provider. Default is 300000 (5
 	// minutes). Set to false to disable timeout.
 	Timeout     ConfigProviderOptionsTimeoutUnion `json:"timeout"`
-	ExtraFields map[string]interface{}            `json:"-,extras"`
+	ExtraFields map[string]interface{}            `json:"-"`
 }
 
 
@@ -1379,9 +1379,9 @@ type KeybindsConfig struct {
 
 type McpLocalConfig struct {
 	// Command and arguments to run the MCP server
-	Command []string `json:"command,required"`
+	Command []string `json:"command"`
 	// Type of MCP server connection
-	Type McpLocalConfigType `json:"type,required"`
+	Type McpLocalConfigType `json:"type"`
 	// Enable or disable the MCP server on startup
 	Enabled bool `json:"enabled"`
 	// Environment variables to set when running the MCP server
@@ -1409,9 +1409,9 @@ func (r McpLocalConfigType) IsKnown() bool {
 
 type McpRemoteConfig struct {
 	// Type of MCP server connection
-	Type McpRemoteConfigType `json:"type,required"`
+	Type McpRemoteConfigType `json:"type"`
 	// URL of the remote MCP server
-	URL string `json:"url,required"`
+	URL string `json:"url"`
 	// Enable or disable the MCP server on startup
 	Enabled bool `json:"enabled"`
 	// Headers to send with the request

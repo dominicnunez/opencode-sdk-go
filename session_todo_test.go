@@ -36,7 +36,7 @@ func TestSessionService_Todo_Success(t *testing.T) {
 			},
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(todos)
+		_ = json.NewEncoder(w).Encode(todos)
 	}))
 	defer server.Close()
 
@@ -77,7 +77,7 @@ func TestSessionService_Todo_WithDirectory(t *testing.T) {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode([]opencode.Todo{})
+		_ = json.NewEncoder(w).Encode([]opencode.Todo{})
 	}))
 	defer server.Close()
 
@@ -99,7 +99,7 @@ func TestSessionService_Todo_EmptyArray(t *testing.T) {
 	// Mock server that returns empty array
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte("[]"))
+		_, _ = w.Write([]byte("[]"))
 	}))
 	defer server.Close()
 
@@ -136,7 +136,7 @@ func TestSessionService_Todo_NilParams(t *testing.T) {
 	// Mock server
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode([]opencode.Todo{})
+		_ = json.NewEncoder(w).Encode([]opencode.Todo{})
 	}))
 	defer server.Close()
 
@@ -156,7 +156,7 @@ func TestSessionService_Todo_ServerError(t *testing.T) {
 	// Mock server that returns 500 error
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(`{"error": "internal server error"}`))
+		_, _ = w.Write([]byte(`{"error": "internal server error"}`))
 	}))
 	defer server.Close()
 
@@ -175,7 +175,7 @@ func TestSessionService_Todo_InvalidJSON(t *testing.T) {
 	// Mock server that returns invalid JSON
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{invalid json`))
+		_, _ = w.Write([]byte(`{invalid json`))
 	}))
 	defer server.Close()
 

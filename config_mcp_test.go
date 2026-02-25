@@ -346,7 +346,7 @@ func TestConfigMcp_LocalMinimalFields(t *testing.T) {
 	if local.Enabled {
 		t.Error("Expected Enabled to be false (zero value)")
 	}
-	if local.Environment != nil && len(local.Environment) != 0 {
+	if len(local.Environment) != 0 {
 		t.Errorf("Expected nil or empty environment, got %d entries", len(local.Environment))
 	}
 }
@@ -377,7 +377,7 @@ func TestConfigMcp_RemoteMinimalFields(t *testing.T) {
 	if remote.Enabled {
 		t.Error("Expected Enabled to be false (zero value)")
 	}
-	if remote.Headers != nil && len(remote.Headers) != 0 {
+	if len(remote.Headers) != 0 {
 		t.Errorf("Expected nil or empty headers, got %d entries", len(remote.Headers))
 	}
 }

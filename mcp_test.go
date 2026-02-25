@@ -19,7 +19,7 @@ func TestMcpService_Status_Success(t *testing.T) {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"enabled": true,
 			"servers": map[string]interface{}{
 				"local-server": map[string]interface{}{
@@ -60,7 +60,7 @@ func TestMcpService_Status_WithDirectory(t *testing.T) {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"enabled": false,
 			"servers": map[string]interface{}{},
 		})
@@ -94,7 +94,7 @@ func TestMcpService_Status_EmptyResponse(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(map[string]interface{}{})
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{})
 	}))
 	defer server.Close()
 
@@ -120,7 +120,7 @@ func TestMcpService_Status_EmptyResponse(t *testing.T) {
 func TestMcpService_Status_ServerError(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("internal server error"))
+		_, _ = w.Write([]byte("internal server error"))
 	}))
 	defer server.Close()
 
@@ -142,7 +142,7 @@ func TestMcpService_Status_InvalidJSON(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("{invalid json"))
+		_, _ = w.Write([]byte("{invalid json"))
 	}))
 	defer server.Close()
 
@@ -164,7 +164,7 @@ func TestMcpService_Status_ComplexNestedResponse(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"enabled": true,
 			"servers": map[string]interface{}{
 				"server1": map[string]interface{}{

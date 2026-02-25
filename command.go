@@ -24,8 +24,8 @@ func (s *CommandService) List(ctx context.Context, params *CommandListParams) ([
 }
 
 type Command struct {
-	Name        string `json:"name,required"`
-	Template    string `json:"template,required"`
+	Name        string `json:"name"`
+	Template    string `json:"template"`
 	Agent       string `json:"agent"`
 	Description string `json:"description"`
 	Model       string `json:"model"`

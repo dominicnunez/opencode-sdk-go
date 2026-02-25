@@ -31,7 +31,7 @@ func TestSessionSummarize_Success(t *testing.T) {
 		}
 
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("true"))
+		_, _ = w.Write([]byte("true"))
 	}))
 	defer server.Close()
 
@@ -60,7 +60,7 @@ func TestSessionSummarize_WithDirectory(t *testing.T) {
 		}
 
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("false"))
+		_, _ = w.Write([]byte("false"))
 	}))
 	defer server.Close()
 
@@ -119,7 +119,7 @@ func TestSessionSummarize_MissingParams(t *testing.T) {
 func TestSessionSummarize_ServerError(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(`{"error": "internal server error"}`))
+		_, _ = w.Write([]byte(`{"error": "internal server error"}`))
 	}))
 	defer server.Close()
 
@@ -140,7 +140,7 @@ func TestSessionSummarize_ServerError(t *testing.T) {
 func TestSessionSummarize_InvalidJSON(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`invalid json`))
+		_, _ = w.Write([]byte(`invalid json`))
 	}))
 	defer server.Close()
 
@@ -244,7 +244,7 @@ func TestSessionSummarize_BothResponses(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusOK)
-				w.Write([]byte(tt.response))
+				_, _ = w.Write([]byte(tt.response))
 			}))
 			defer server.Close()
 
@@ -279,7 +279,7 @@ func TestSessionSummarize_URLEncoding(t *testing.T) {
 		}
 
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("true"))
+		_, _ = w.Write([]byte("true"))
 	}))
 	defer server.Close()
 

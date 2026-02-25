@@ -19,7 +19,7 @@ func TestSessionUnrevert_Success(t *testing.T) {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"id":        "sess_123",
 			"directory": "/test/path",
 			"projectID": "proj_456",
@@ -66,7 +66,7 @@ func TestSessionUnrevert_WithDirectoryQueryParam(t *testing.T) {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"id":        "sess_123",
 			"directory": "/custom/dir",
 			"projectID": "proj_456",
@@ -108,7 +108,7 @@ func TestSessionUnrevert_NilParams(t *testing.T) {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"id": "sess_123",
 		})
 	}))
@@ -147,7 +147,7 @@ func TestSessionUnrevert_MissingID(t *testing.T) {
 func TestSessionUnrevert_ServerError(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(`{"error": "internal server error"}`))
+		_, _ = w.Write([]byte(`{"error": "internal server error"}`))
 	}))
 	defer server.Close()
 
@@ -165,7 +165,7 @@ func TestSessionUnrevert_ServerError(t *testing.T) {
 func TestSessionUnrevert_InvalidJSON(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{"id": "sess_123", invalid json`))
+		_, _ = w.Write([]byte(`{"id": "sess_123", invalid json`))
 	}))
 	defer server.Close()
 

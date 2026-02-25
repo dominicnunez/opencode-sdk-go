@@ -50,10 +50,10 @@ func (s *FileService) Status(ctx context.Context, params *FileStatusParams) ([]F
 }
 
 type File struct {
-	Added   int64      `json:"added,required"`
-	Path    string     `json:"path,required"`
-	Removed int64      `json:"removed,required"`
-	Status  FileStatus `json:"status,required"`
+	Added   int64      `json:"added"`
+	Path    string     `json:"path"`
+	Removed int64      `json:"removed"`
+	Status  FileStatus `json:"status"`
 }
 
 type FileStatus string
@@ -73,11 +73,11 @@ func (r FileStatus) IsKnown() bool {
 }
 
 type FileNode struct {
-	Absolute string       `json:"absolute,required"`
-	Ignored  bool         `json:"ignored,required"`
-	Name     string       `json:"name,required"`
-	Path     string       `json:"path,required"`
-	Type     FileNodeType `json:"type,required"`
+	Absolute string       `json:"absolute"`
+	Ignored  bool         `json:"ignored"`
+	Name     string       `json:"name"`
+	Path     string       `json:"path"`
+	Type     FileNodeType `json:"type"`
 }
 
 type FileNodeType string
@@ -96,8 +96,8 @@ func (r FileNodeType) IsKnown() bool {
 }
 
 type FileReadResponse struct {
-	Content  string                   `json:"content,required"`
-	Type     FileReadResponseType     `json:"type,required"`
+	Content  string                   `json:"content"`
+	Type     FileReadResponseType     `json:"type"`
 	Diff     string                   `json:"diff,omitempty"`
 	Encoding FileReadResponseEncoding `json:"encoding,omitempty"`
 	MimeType string                   `json:"mimeType,omitempty"`
@@ -133,20 +133,20 @@ func (r FileReadResponseEncoding) IsKnown() bool {
 }
 
 type FileReadResponsePatch struct {
-	Hunks       []FileReadResponsePatchHunk `json:"hunks,required"`
-	NewFileName string                      `json:"newFileName,required"`
-	OldFileName string                      `json:"oldFileName,required"`
+	Hunks       []FileReadResponsePatchHunk `json:"hunks"`
+	NewFileName string                      `json:"newFileName"`
+	OldFileName string                      `json:"oldFileName"`
 	Index       string                      `json:"index,omitempty"`
 	NewHeader   string                      `json:"newHeader,omitempty"`
 	OldHeader   string                      `json:"oldHeader,omitempty"`
 }
 
 type FileReadResponsePatchHunk struct {
-	Lines    []string `json:"lines,required"`
-	NewLines float64  `json:"newLines,required"`
-	NewStart float64  `json:"newStart,required"`
-	OldLines float64  `json:"oldLines,required"`
-	OldStart float64  `json:"oldStart,required"`
+	Lines    []string `json:"lines"`
+	NewLines float64  `json:"newLines"`
+	NewStart float64  `json:"newStart"`
+	OldLines float64  `json:"oldLines"`
+	OldStart float64  `json:"oldStart"`
 }
 
 type FileListParams struct {

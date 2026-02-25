@@ -41,7 +41,7 @@ func TestSessionPermissionService_Respond_Success(t *testing.T) {
 		// Return success response
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(true)
+		_ = json.NewEncoder(w).Encode(true)
 	}))
 	defer server.Close()
 
@@ -103,7 +103,7 @@ func TestSessionPermissionService_Respond_WithDirectoryParam(t *testing.T) {
 		// Return success response
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(true)
+		_ = json.NewEncoder(w).Encode(true)
 	}))
 	defer server.Close()
 
@@ -151,7 +151,7 @@ func TestSessionPermissionService_Respond_RejectResponse(t *testing.T) {
 		// Return success response
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(true)
+		_ = json.NewEncoder(w).Encode(true)
 	}))
 	defer server.Close()
 
@@ -241,7 +241,7 @@ func TestSessionPermissionService_Respond_NilParams(t *testing.T) {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(true)
+		_ = json.NewEncoder(w).Encode(true)
 	}))
 	defer server.Close()
 
@@ -268,7 +268,7 @@ func TestSessionPermissionService_Respond_NilParams(t *testing.T) {
 func TestSessionPermissionService_Respond_ServerError(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("Internal server error"))
+		_, _ = w.Write([]byte("Internal server error"))
 	}))
 	defer server.Close()
 
@@ -294,7 +294,7 @@ func TestSessionPermissionService_Respond_InvalidJSON(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("invalid json"))
+		_, _ = w.Write([]byte("invalid json"))
 	}))
 	defer server.Close()
 

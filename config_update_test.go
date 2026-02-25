@@ -31,7 +31,7 @@ func TestConfigUpdate_Success(t *testing.T) {
 
 		// Return updated config
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(Config{
+		_ = json.NewEncoder(w).Encode(Config{
 			Model: "anthropic/claude-sonnet-4",
 			Theme: "dark",
 		})
@@ -84,7 +84,7 @@ func TestConfigUpdate_WithDirectoryQueryParam(t *testing.T) {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(Config{
+		_ = json.NewEncoder(w).Encode(Config{
 			Model: "openai/gpt-4",
 		})
 	}))
@@ -131,7 +131,7 @@ func TestConfigUpdate_NilParams(t *testing.T) {
 func TestConfigUpdate_ServerError(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(`{"error": "internal server error"}`))
+		_, _ = w.Write([]byte(`{"error": "internal server error"}`))
 	}))
 	defer server.Close()
 
@@ -155,7 +155,7 @@ func TestConfigUpdate_ServerError(t *testing.T) {
 func TestConfigUpdate_InvalidJSON(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{invalid json`))
+		_, _ = w.Write([]byte(`{invalid json`))
 	}))
 	defer server.Close()
 

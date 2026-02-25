@@ -51,55 +51,55 @@ func (s *FindService) Text(ctx context.Context, params *FindTextParams) ([]FindT
 }
 
 type Symbol struct {
-	Kind     float64        `json:"kind,required"`
-	Location SymbolLocation `json:"location,required"`
-	Name     string         `json:"name,required"`
+	Kind     float64        `json:"kind"`
+	Location SymbolLocation `json:"location"`
+	Name     string         `json:"name"`
 }
 
 type SymbolLocation struct {
-	Range SymbolLocationRange `json:"range,required"`
-	Uri   string              `json:"uri,required"`
+	Range SymbolLocationRange `json:"range"`
+	Uri   string              `json:"uri"`
 }
 
 type SymbolLocationRange struct {
-	End   SymbolLocationRangeEnd   `json:"end,required"`
-	Start SymbolLocationRangeStart `json:"start,required"`
+	End   SymbolLocationRangeEnd   `json:"end"`
+	Start SymbolLocationRangeStart `json:"start"`
 }
 
 type SymbolLocationRangeEnd struct {
-	Character float64 `json:"character,required"`
-	Line      float64 `json:"line,required"`
+	Character float64 `json:"character"`
+	Line      float64 `json:"line"`
 }
 
 type SymbolLocationRangeStart struct {
-	Character float64 `json:"character,required"`
-	Line      float64 `json:"line,required"`
+	Character float64 `json:"character"`
+	Line      float64 `json:"line"`
 }
 
 type FindTextResponse struct {
-	AbsoluteOffset float64                    `json:"absolute_offset,required"`
-	LineNumber     float64                    `json:"line_number,required"`
-	Lines          FindTextResponseLines      `json:"lines,required"`
-	Path           FindTextResponsePath       `json:"path,required"`
-	Submatches     []FindTextResponseSubmatch `json:"submatches,required"`
+	AbsoluteOffset float64                    `json:"absolute_offset"`
+	LineNumber     float64                    `json:"line_number"`
+	Lines          FindTextResponseLines      `json:"lines"`
+	Path           FindTextResponsePath       `json:"path"`
+	Submatches     []FindTextResponseSubmatch `json:"submatches"`
 }
 
 type FindTextResponseLines struct {
-	Text string `json:"text,required"`
+	Text string `json:"text"`
 }
 
 type FindTextResponsePath struct {
-	Text string `json:"text,required"`
+	Text string `json:"text"`
 }
 
 type FindTextResponseSubmatch struct {
-	End   float64                         `json:"end,required"`
-	Match FindTextResponseSubmatchesMatch `json:"match,required"`
-	Start float64                         `json:"start,required"`
+	End   float64                         `json:"end"`
+	Match FindTextResponseSubmatchesMatch `json:"match"`
+	Start float64                         `json:"start"`
 }
 
 type FindTextResponseSubmatchesMatch struct {
-	Text string `json:"text,required"`
+	Text string `json:"text"`
 }
 
 type FindFilesParams struct {

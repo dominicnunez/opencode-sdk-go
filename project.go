@@ -36,14 +36,14 @@ func (s *ProjectService) Current(ctx context.Context, params *ProjectCurrentPara
 }
 
 type Project struct {
-	ID       string     `json:"id,required"`
-	Time     ProjectTime `json:"time,required"`
-	Worktree string     `json:"worktree,required"`
+	ID       string     `json:"id"`
+	Time     ProjectTime `json:"time"`
+	Worktree string     `json:"worktree"`
 	Vcs      ProjectVcs `json:"vcs"`
 }
 
 type ProjectTime struct {
-	Created     float64 `json:"created,required"`
+	Created     float64 `json:"created"`
 	Initialized float64 `json:"initialized"`
 }
 

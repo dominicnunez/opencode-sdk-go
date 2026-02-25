@@ -24,10 +24,10 @@ func (s *PathService) Get(ctx context.Context, params *PathGetParams) (*Path, er
 }
 
 type Path struct {
-	Config    string `json:"config,required"`
-	Directory string `json:"directory,required"`
-	State     string `json:"state,required"`
-	Worktree  string `json:"worktree,required"`
+	Config    string `json:"config"`
+	Directory string `json:"directory"`
+	State     string `json:"state"`
+	Worktree  string `json:"worktree"`
 }
 
 type PathGetParams struct {
