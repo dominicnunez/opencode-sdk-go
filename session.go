@@ -10,7 +10,6 @@ import (
 
 	"github.com/dominicnunez/opencode-sdk-go/internal/apijson"
 	"github.com/dominicnunez/opencode-sdk-go/internal/apiquery"
-	"github.com/dominicnunez/opencode-sdk-go/internal/param"
 	"github.com/dominicnunez/opencode-sdk-go/shared"
 	"github.com/tidwall/gjson"
 )
@@ -249,10 +248,10 @@ type AgentPartSource struct {
 }
 
 type AgentPartInputParam struct {
-	Name   param.Field[string]                    `json:"name,required"`
-	Type   param.Field[AgentPartInputType]        `json:"type,required"`
-	ID     param.Field[string]                    `json:"id"`
-	Source param.Field[AgentPartInputSourceParam] `json:"source"`
+	Name string `json:"name,required"`
+	Type AgentPartInputType `json:"type,required"`
+	ID *string `json:"id,omitempty"`
+	Source *AgentPartInputSourceParam `json:"source,omitempty"`
 }
 
 func (r AgentPartInputParam) MarshalJSON() (data []byte, err error) {
@@ -276,9 +275,9 @@ func (r AgentPartInputType) IsKnown() bool {
 }
 
 type AgentPartInputSourceParam struct {
-	End   param.Field[int64]  `json:"end,required"`
-	Start param.Field[int64]  `json:"start,required"`
-	Value param.Field[string] `json:"value,required"`
+	End int64 `json:"end,required"`
+	Start int64 `json:"start,required"`
+	Value string `json:"value,required"`
 }
 
 func (r AgentPartInputSourceParam) MarshalJSON() (data []byte, err error) {
@@ -498,12 +497,12 @@ func (r FilePartType) IsKnown() bool {
 }
 
 type FilePartInputParam struct {
-	Mime     param.Field[string]                   `json:"mime,required"`
-	Type     param.Field[FilePartInputType]        `json:"type,required"`
-	URL      param.Field[string]                   `json:"url,required"`
-	ID       param.Field[string]                   `json:"id"`
-	Filename param.Field[string]                   `json:"filename"`
-	Source   param.Field[FilePartSourceUnionParam] `json:"source"`
+	Mime string `json:"mime,required"`
+	Type FilePartInputType `json:"type,required"`
+	URL string `json:"url,required"`
+	ID *string `json:"id,omitempty"`
+	Filename *string `json:"filename,omitempty"`
+	Source *FilePartSourceUnionParam `json:"source,omitempty"`
 }
 
 func (r FilePartInputParam) MarshalJSON() (data []byte, err error) {
@@ -590,12 +589,12 @@ func (r FilePartSourceType) IsKnown() bool {
 }
 
 type FilePartSourceParam struct {
-	Path  param.Field[string]                  `json:"path,required"`
-	Text  param.Field[FilePartSourceTextParam] `json:"text,required"`
-	Type  param.Field[FilePartSourceType]      `json:"type,required"`
-	Kind  param.Field[int64]                   `json:"kind"`
-	Name  param.Field[string]                  `json:"name"`
-	Range param.Field[interface{}]             `json:"range"`
+	Path string `json:"path,required"`
+	Text FilePartSourceTextParam `json:"text,required"`
+	Type FilePartSourceType `json:"type,required"`
+	Kind *int64 `json:"kind,omitempty"`
+	Name *string `json:"name,omitempty"`
+	Range any `json:"range,omitempty"`
 }
 
 func (r FilePartSourceParam) MarshalJSON() (data []byte, err error) {
@@ -616,9 +615,9 @@ type FilePartSourceText struct {
 }
 
 type FilePartSourceTextParam struct {
-	End   param.Field[int64]  `json:"end,required"`
-	Start param.Field[int64]  `json:"start,required"`
-	Value param.Field[string] `json:"value,required"`
+	End int64 `json:"end,required"`
+	Start int64 `json:"start,required"`
+	Value string `json:"value,required"`
 }
 
 func (r FilePartSourceTextParam) MarshalJSON() (data []byte, err error) {
@@ -648,9 +647,9 @@ func (r FileSourceType) IsKnown() bool {
 }
 
 type FileSourceParam struct {
-	Path param.Field[string]                  `json:"path,required"`
-	Text param.Field[FilePartSourceTextParam] `json:"text,required"`
-	Type param.Field[FileSourceType]          `json:"type,required"`
+	Path string `json:"path,required"`
+	Text FilePartSourceTextParam `json:"text,required"`
+	Type FileSourceType `json:"type,required"`
 }
 
 func (r FileSourceParam) MarshalJSON() (data []byte, err error) {
@@ -1151,12 +1150,12 @@ func (r SymbolSourceType) IsKnown() bool {
 }
 
 type SymbolSourceParam struct {
-	Kind  param.Field[int64]                   `json:"kind,required"`
-	Name  param.Field[string]                  `json:"name,required"`
-	Path  param.Field[string]                  `json:"path,required"`
-	Range param.Field[SymbolSourceRangeParam]  `json:"range,required"`
-	Text  param.Field[FilePartSourceTextParam] `json:"text,required"`
-	Type  param.Field[SymbolSourceType]        `json:"type,required"`
+	Kind int64 `json:"kind,required"`
+	Name string `json:"name,required"`
+	Path string `json:"path,required"`
+	Range SymbolSourceRangeParam `json:"range,required"`
+	Text FilePartSourceTextParam `json:"text,required"`
+	Type SymbolSourceType `json:"type,required"`
 }
 
 func (r SymbolSourceParam) MarshalJSON() (data []byte, err error) {
@@ -1166,8 +1165,8 @@ func (r SymbolSourceParam) MarshalJSON() (data []byte, err error) {
 func (r SymbolSourceParam) implementsFilePartSourceUnionParam() {}
 
 type SymbolSourceRangeParam struct {
-	End   param.Field[SymbolSourceRangeEndParam]   `json:"end,required"`
-	Start param.Field[SymbolSourceRangeStartParam] `json:"start,required"`
+	End SymbolSourceRangeEndParam `json:"end,required"`
+	Start SymbolSourceRangeStartParam `json:"start,required"`
 }
 
 func (r SymbolSourceRangeParam) MarshalJSON() (data []byte, err error) {
@@ -1175,8 +1174,8 @@ func (r SymbolSourceRangeParam) MarshalJSON() (data []byte, err error) {
 }
 
 type SymbolSourceRangeEndParam struct {
-	Character param.Field[float64] `json:"character,required"`
-	Line      param.Field[float64] `json:"line,required"`
+	Character float64 `json:"character,required"`
+	Line float64 `json:"line,required"`
 }
 
 func (r SymbolSourceRangeEndParam) MarshalJSON() (data []byte, err error) {
@@ -1184,8 +1183,8 @@ func (r SymbolSourceRangeEndParam) MarshalJSON() (data []byte, err error) {
 }
 
 type SymbolSourceRangeStartParam struct {
-	Character param.Field[float64] `json:"character,required"`
-	Line      param.Field[float64] `json:"line,required"`
+	Character float64 `json:"character,required"`
+	Line float64 `json:"line,required"`
 }
 
 func (r SymbolSourceRangeStartParam) MarshalJSON() (data []byte, err error) {
@@ -1225,12 +1224,12 @@ type TextPartTime struct {
 }
 
 type TextPartInputParam struct {
-	Text      param.Field[string]                 `json:"text,required"`
-	Type      param.Field[TextPartInputType]      `json:"type,required"`
-	ID        param.Field[string]                 `json:"id"`
-	Metadata  param.Field[map[string]interface{}] `json:"metadata"`
-	Synthetic param.Field[bool]                   `json:"synthetic"`
-	Time      param.Field[TextPartInputTimeParam] `json:"time"`
+	Text string `json:"text,required"`
+	Type TextPartInputType `json:"type,required"`
+	ID *string `json:"id,omitempty"`
+	Metadata *map[string]interface{} `json:"metadata,omitempty"`
+	Synthetic *bool `json:"synthetic,omitempty"`
+	Time *TextPartInputTimeParam `json:"time,omitempty"`
 }
 
 func (r TextPartInputParam) MarshalJSON() (data []byte, err error) {
@@ -1254,8 +1253,8 @@ func (r TextPartInputType) IsKnown() bool {
 }
 
 type TextPartInputTimeParam struct {
-	Start param.Field[float64] `json:"start,required"`
-	End   param.Field[float64] `json:"end"`
+	Start float64 `json:"start,required"`
+	End *float64 `json:"end,omitempty"`
 }
 
 func (r TextPartInputTimeParam) MarshalJSON() (data []byte, err error) {
@@ -1542,9 +1541,9 @@ type SessionPromptResponse struct {
 }
 
 type SessionNewParams struct {
-	Directory param.Field[string] `query:"directory"`
-	ParentID  param.Field[string] `json:"parentID"`
-	Title     param.Field[string] `json:"title"`
+	Directory *string `query:"directory,omitempty"`
+	ParentID *string `json:"parentID,omitempty"`
+	Title *string `json:"title,omitempty"`
 }
 
 func (r SessionNewParams) MarshalJSON() (data []byte, err error) {
@@ -1560,8 +1559,8 @@ func (r SessionNewParams) URLQuery() (url.Values, error) {
 }
 
 type SessionUpdateParams struct {
-	Directory param.Field[string] `query:"directory"`
-	Title     param.Field[string] `json:"title"`
+	Directory *string `query:"directory,omitempty"`
+	Title *string `json:"title,omitempty"`
 }
 
 func (r SessionUpdateParams) MarshalJSON() (data []byte, err error) {
@@ -1577,7 +1576,7 @@ func (r SessionUpdateParams) URLQuery() (url.Values, error) {
 }
 
 type SessionListParams struct {
-	Directory param.Field[string] `query:"directory"`
+	Directory *string `query:"directory,omitempty"`
 }
 
 // URLQuery serializes [SessionListParams]'s query parameters as `url.Values`.
@@ -1589,7 +1588,7 @@ func (r SessionListParams) URLQuery() (url.Values, error) {
 }
 
 type SessionDeleteParams struct {
-	Directory param.Field[string] `query:"directory"`
+	Directory *string `query:"directory,omitempty"`
 }
 
 // URLQuery serializes [SessionDeleteParams]'s query parameters as `url.Values`.
@@ -1601,7 +1600,7 @@ func (r SessionDeleteParams) URLQuery() (url.Values, error) {
 }
 
 type SessionAbortParams struct {
-	Directory param.Field[string] `query:"directory"`
+	Directory *string `query:"directory,omitempty"`
 }
 
 // URLQuery serializes [SessionAbortParams]'s query parameters as `url.Values`.
@@ -1613,7 +1612,7 @@ func (r SessionAbortParams) URLQuery() (url.Values, error) {
 }
 
 type SessionChildrenParams struct {
-	Directory param.Field[string] `query:"directory"`
+	Directory *string `query:"directory,omitempty"`
 }
 
 // URLQuery serializes [SessionChildrenParams]'s query parameters as `url.Values`.
@@ -1625,12 +1624,12 @@ func (r SessionChildrenParams) URLQuery() (url.Values, error) {
 }
 
 type SessionCommandParams struct {
-	Arguments param.Field[string] `json:"arguments,required"`
-	Command   param.Field[string] `json:"command,required"`
-	Directory param.Field[string] `query:"directory"`
-	Agent     param.Field[string] `json:"agent"`
-	MessageID param.Field[string] `json:"messageID"`
-	Model     param.Field[string] `json:"model"`
+	Arguments string `json:"arguments,required"`
+	Command string `json:"command,required"`
+	Directory *string `query:"directory,omitempty"`
+	Agent *string `json:"agent,omitempty"`
+	MessageID *string `json:"messageID,omitempty"`
+	Model *string `json:"model,omitempty"`
 }
 
 func (r SessionCommandParams) MarshalJSON() (data []byte, err error) {
@@ -1646,7 +1645,7 @@ func (r SessionCommandParams) URLQuery() (url.Values, error) {
 }
 
 type SessionGetParams struct {
-	Directory param.Field[string] `query:"directory"`
+	Directory *string `query:"directory,omitempty"`
 }
 
 // URLQuery serializes [SessionGetParams]'s query parameters as `url.Values`.
@@ -1658,10 +1657,10 @@ func (r SessionGetParams) URLQuery() (url.Values, error) {
 }
 
 type SessionInitParams struct {
-	MessageID  param.Field[string] `json:"messageID,required"`
-	ModelID    param.Field[string] `json:"modelID,required"`
-	ProviderID param.Field[string] `json:"providerID,required"`
-	Directory  param.Field[string] `query:"directory"`
+	MessageID string `json:"messageID,required"`
+	ModelID string `json:"modelID,required"`
+	ProviderID string `json:"providerID,required"`
+	Directory *string `query:"directory,omitempty"`
 }
 
 func (r SessionInitParams) MarshalJSON() (data []byte, err error) {
@@ -1677,7 +1676,7 @@ func (r SessionInitParams) URLQuery() (url.Values, error) {
 }
 
 type SessionMessageParams struct {
-	Directory param.Field[string] `query:"directory"`
+	Directory *string `query:"directory,omitempty"`
 }
 
 // URLQuery serializes [SessionMessageParams]'s query parameters as `url.Values`.
@@ -1689,7 +1688,7 @@ func (r SessionMessageParams) URLQuery() (url.Values, error) {
 }
 
 type SessionMessagesParams struct {
-	Directory param.Field[string] `query:"directory"`
+	Directory *string `query:"directory,omitempty"`
 }
 
 // URLQuery serializes [SessionMessagesParams]'s query parameters as `url.Values`.
@@ -1701,14 +1700,14 @@ func (r SessionMessagesParams) URLQuery() (url.Values, error) {
 }
 
 type SessionPromptParams struct {
-	Parts     param.Field[[]SessionPromptParamsPartUnion] `json:"parts,required"`
-	Directory param.Field[string]                         `query:"directory"`
-	Agent     param.Field[string]                         `json:"agent"`
-	MessageID param.Field[string]                         `json:"messageID"`
-	Model     param.Field[SessionPromptParamsModel]       `json:"model"`
-	NoReply   param.Field[bool]                           `json:"noReply"`
-	System    param.Field[string]                         `json:"system"`
-	Tools     param.Field[map[string]bool]                `json:"tools"`
+	Parts []SessionPromptParamsPartUnion `json:"parts,required"`
+	Directory *string `query:"directory,omitempty"`
+	Agent *string `json:"agent,omitempty"`
+	MessageID *string `json:"messageID,omitempty"`
+	Model *SessionPromptParamsModel `json:"model,omitempty"`
+	NoReply *bool `json:"noReply,omitempty"`
+	System *string `json:"system,omitempty"`
+	Tools *map[string]bool `json:"tools,omitempty"`
 }
 
 func (r SessionPromptParams) MarshalJSON() (data []byte, err error) {
@@ -1724,17 +1723,17 @@ func (r SessionPromptParams) URLQuery() (url.Values, error) {
 }
 
 type SessionPromptParamsPart struct {
-	Type      param.Field[SessionPromptParamsPartsType] `json:"type,required"`
-	ID        param.Field[string]                       `json:"id"`
-	Filename  param.Field[string]                       `json:"filename"`
-	Metadata  param.Field[interface{}]                  `json:"metadata"`
-	Mime      param.Field[string]                       `json:"mime"`
-	Name      param.Field[string]                       `json:"name"`
-	Source    param.Field[interface{}]                  `json:"source"`
-	Synthetic param.Field[bool]                         `json:"synthetic"`
-	Text      param.Field[string]                       `json:"text"`
-	Time      param.Field[interface{}]                  `json:"time"`
-	URL       param.Field[string]                       `json:"url"`
+	Type SessionPromptParamsPartsType `json:"type,required"`
+	ID *string `json:"id,omitempty"`
+	Filename *string `json:"filename,omitempty"`
+	Metadata any `json:"metadata,omitempty"`
+	Mime *string `json:"mime,omitempty"`
+	Name *string `json:"name,omitempty"`
+	Source any `json:"source,omitempty"`
+	Synthetic *bool `json:"synthetic,omitempty"`
+	Text *string `json:"text,omitempty"`
+	Time any `json:"time,omitempty"`
+	URL *string `json:"url,omitempty"`
 }
 
 func (r SessionPromptParamsPart) MarshalJSON() (data []byte, err error) {
@@ -1766,8 +1765,8 @@ func (r SessionPromptParamsPartsType) IsKnown() bool {
 }
 
 type SessionPromptParamsModel struct {
-	ModelID    param.Field[string] `json:"modelID,required"`
-	ProviderID param.Field[string] `json:"providerID,required"`
+	ModelID string `json:"modelID,required"`
+	ProviderID string `json:"providerID,required"`
 }
 
 func (r SessionPromptParamsModel) MarshalJSON() (data []byte, err error) {
@@ -1775,9 +1774,9 @@ func (r SessionPromptParamsModel) MarshalJSON() (data []byte, err error) {
 }
 
 type SessionRevertParams struct {
-	MessageID param.Field[string] `json:"messageID,required"`
-	Directory param.Field[string] `query:"directory"`
-	PartID    param.Field[string] `json:"partID"`
+	MessageID string `json:"messageID,required"`
+	Directory *string `query:"directory,omitempty"`
+	PartID *string `json:"partID,omitempty"`
 }
 
 func (r SessionRevertParams) MarshalJSON() (data []byte, err error) {
@@ -1793,7 +1792,7 @@ func (r SessionRevertParams) URLQuery() (url.Values, error) {
 }
 
 type SessionShareParams struct {
-	Directory param.Field[string] `query:"directory"`
+	Directory *string `query:"directory,omitempty"`
 }
 
 // URLQuery serializes [SessionShareParams]'s query parameters as `url.Values`.
@@ -1805,9 +1804,9 @@ func (r SessionShareParams) URLQuery() (url.Values, error) {
 }
 
 type SessionShellParams struct {
-	Agent     param.Field[string] `json:"agent,required"`
-	Command   param.Field[string] `json:"command,required"`
-	Directory param.Field[string] `query:"directory"`
+	Agent string `json:"agent,required"`
+	Command string `json:"command,required"`
+	Directory *string `query:"directory,omitempty"`
 }
 
 func (r SessionShellParams) MarshalJSON() (data []byte, err error) {
@@ -1823,9 +1822,9 @@ func (r SessionShellParams) URLQuery() (url.Values, error) {
 }
 
 type SessionSummarizeParams struct {
-	ModelID    param.Field[string] `json:"modelID,required"`
-	ProviderID param.Field[string] `json:"providerID,required"`
-	Directory  param.Field[string] `query:"directory"`
+	ModelID string `json:"modelID,required"`
+	ProviderID string `json:"providerID,required"`
+	Directory *string `query:"directory,omitempty"`
 }
 
 func (r SessionSummarizeParams) MarshalJSON() (data []byte, err error) {
@@ -1841,7 +1840,7 @@ func (r SessionSummarizeParams) URLQuery() (url.Values, error) {
 }
 
 type SessionUnrevertParams struct {
-	Directory param.Field[string] `query:"directory"`
+	Directory *string `query:"directory,omitempty"`
 }
 
 // URLQuery serializes [SessionUnrevertParams]'s query parameters as `url.Values`.
@@ -1853,7 +1852,7 @@ func (r SessionUnrevertParams) URLQuery() (url.Values, error) {
 }
 
 type SessionUnshareParams struct {
-	Directory param.Field[string] `query:"directory"`
+	Directory *string `query:"directory,omitempty"`
 }
 
 // URLQuery serializes [SessionUnshareParams]'s query parameters as `url.Values`.

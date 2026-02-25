@@ -40,6 +40,20 @@ func FileParam(reader io.Reader, filename string, contentType string) param.Fiel
 	return F[io.Reader](&file{reader, filename, contentType})
 }
 
+// Pointer helpers for optional fields (return *T instead of param.Field[T])
+
+// PtrString returns a pointer to the given string value.
+func PtrString(value string) *string { return &value }
+
+// PtrInt returns a pointer to the given int64 value.
+func PtrInt(value int64) *int64 { return &value }
+
+// PtrFloat returns a pointer to the given float64 value.
+func PtrFloat(value float64) *float64 { return &value }
+
+// PtrBool returns a pointer to the given bool value.
+func PtrBool(value bool) *bool { return &value }
+
 type file struct {
 	io.Reader
 	name        string

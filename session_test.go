@@ -24,9 +24,9 @@ func TestSessionNewWithOptionalParams(t *testing.T) {
 		t.Fatalf("failed to create client: %v", err)
 	}
 	_, err = client.Session.Create(context.TODO(), &opencode.SessionNewParams{
-		Directory: opencode.F("directory"),
-		ParentID:  opencode.F("sesJ!"),
-		Title:     opencode.F("title"),
+		Directory: opencode.PtrString("directory"),
+		ParentID:  opencode.PtrString("sesJ!"),
+		Title:     opencode.PtrString("title"),
 	})
 	if err != nil {
 		var apierr *opencode.Error
@@ -54,8 +54,8 @@ func TestSessionUpdateWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"id",
 		&opencode.SessionUpdateParams{
-			Directory: opencode.F("directory"),
-			Title:     opencode.F("title"),
+			Directory: opencode.PtrString("directory"),
+			Title:     opencode.PtrString("title"),
 		},
 	)
 	if err != nil {
@@ -81,7 +81,7 @@ func TestSessionListWithOptionalParams(t *testing.T) {
 		t.Fatalf("failed to create client: %v", err)
 	}
 	_, err = client.Session.List(context.TODO(), &opencode.SessionListParams{
-		Directory: opencode.F("directory"),
+		Directory: opencode.PtrString("directory"),
 	})
 	if err != nil {
 		var apierr *opencode.Error
@@ -109,7 +109,7 @@ func TestSessionDeleteWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"sesJ!",
 		&opencode.SessionDeleteParams{
-			Directory: opencode.F("directory"),
+			Directory: opencode.PtrString("directory"),
 		},
 	)
 	if err != nil {
@@ -138,7 +138,7 @@ func TestSessionAbortWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"id",
 		&opencode.SessionAbortParams{
-			Directory: opencode.F("directory"),
+			Directory: opencode.PtrString("directory"),
 		},
 	)
 	if err != nil {
@@ -167,7 +167,7 @@ func TestSessionChildrenWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"sesJ!",
 		&opencode.SessionChildrenParams{
-			Directory: opencode.F("directory"),
+			Directory: opencode.PtrString("directory"),
 		},
 	)
 	if err != nil {
@@ -196,12 +196,12 @@ func TestSessionCommandWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"id",
 		&opencode.SessionCommandParams{
-			Arguments: opencode.F("arguments"),
-			Command:   opencode.F("command"),
-			Directory: opencode.F("directory"),
-			Agent:     opencode.F("agent"),
-			MessageID: opencode.F("msgJ!"),
-			Model:     opencode.F("model"),
+			Arguments: "arguments",
+			Command: "command",
+			Directory: opencode.PtrString("directory"),
+			Agent:     opencode.PtrString("agent"),
+			MessageID: opencode.PtrString("msgJ!"),
+			Model:     opencode.PtrString("model"),
 		},
 	)
 	if err != nil {
@@ -230,7 +230,7 @@ func TestSessionGetWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"sesJ!",
 		&opencode.SessionGetParams{
-			Directory: opencode.F("directory"),
+			Directory: opencode.PtrString("directory"),
 		},
 	)
 	if err != nil {
@@ -259,10 +259,10 @@ func TestSessionInitWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"id",
 		&opencode.SessionInitParams{
-			MessageID:  opencode.F("msgJ!"),
-			ModelID:    opencode.F("modelID"),
-			ProviderID: opencode.F("providerID"),
-			Directory:  opencode.F("directory"),
+			MessageID: "msgJ!",
+			ModelID: "modelID",
+			ProviderID: "providerID",
+			Directory:  opencode.PtrString("directory"),
 		},
 	)
 	if err != nil {
@@ -292,7 +292,7 @@ func TestSessionMessageWithOptionalParams(t *testing.T) {
 		"id",
 		"messageID",
 		&opencode.SessionMessageParams{
-			Directory: opencode.F("directory"),
+			Directory: opencode.PtrString("directory"),
 		},
 	)
 	if err != nil {
@@ -321,7 +321,7 @@ func TestSessionMessagesWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"id",
 		&opencode.SessionMessagesParams{
-			Directory: opencode.F("directory"),
+			Directory: opencode.PtrString("directory"),
 		},
 	)
 	if err != nil {
@@ -350,31 +350,31 @@ func TestSessionPromptWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"id",
 		&opencode.SessionPromptParams{
-			Parts: opencode.F([]opencode.SessionPromptParamsPartUnion{opencode.TextPartInputParam{
-				Text: opencode.F("text"),
-				Type: opencode.F(opencode.TextPartInputTypeText),
-				ID:   opencode.F("id"),
-				Metadata: opencode.F(map[string]interface{}{
+			Parts: []opencode.SessionPromptParamsPartUnion{opencode.TextPartInputParam{
+				Text: "text",
+				Type: opencode.TextPartInputTypeText,
+				ID:   opencode.PtrString("id"),
+				Metadata: &map[string]interface{}{
 					"foo": "bar",
-				}),
-				Synthetic: opencode.F(true),
-				Time: opencode.F(opencode.TextPartInputTimeParam{
-					Start: opencode.F(0.000000),
-					End:   opencode.F(0.000000),
-				}),
-			}}),
-			Directory: opencode.F("directory"),
-			Agent:     opencode.F("agent"),
-			MessageID: opencode.F("msgJ!"),
-			Model: opencode.F(opencode.SessionPromptParamsModel{
-				ModelID:    opencode.F("modelID"),
-				ProviderID: opencode.F("providerID"),
-			}),
-			NoReply: opencode.F(true),
-			System:  opencode.F("system"),
-			Tools: opencode.F(map[string]bool{
+				},
+				Synthetic: opencode.PtrBool(true),
+				Time: &opencode.TextPartInputTimeParam{
+					Start: 0.000000,
+					End:   opencode.PtrFloat(0.000000),
+				},
+			}},
+			Directory: opencode.PtrString("directory"),
+			Agent:     opencode.PtrString("agent"),
+			MessageID: opencode.PtrString("msgJ!"),
+			Model: &opencode.SessionPromptParamsModel{
+				ModelID:    "modelID",
+				ProviderID: "providerID",
+			},
+			NoReply: opencode.PtrBool(true),
+			System:  opencode.PtrString("system"),
+			Tools: &map[string]bool{
 				"foo": true,
-			}),
+			},
 		},
 	)
 	if err != nil {
@@ -403,9 +403,9 @@ func TestSessionRevertWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"id",
 		&opencode.SessionRevertParams{
-			MessageID: opencode.F("msgJ!"),
-			Directory: opencode.F("directory"),
-			PartID:    opencode.F("prtJ!"),
+			MessageID: "msgJ!",
+			Directory: opencode.PtrString("directory"),
+			PartID:    opencode.PtrString("prtJ!"),
 		},
 	)
 	if err != nil {
@@ -434,7 +434,7 @@ func TestSessionShareWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"id",
 		&opencode.SessionShareParams{
-			Directory: opencode.F("directory"),
+			Directory: opencode.PtrString("directory"),
 		},
 	)
 	if err != nil {
