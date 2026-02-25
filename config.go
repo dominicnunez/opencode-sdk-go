@@ -3,6 +3,7 @@ package opencode
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/url"
 
@@ -19,6 +20,18 @@ func (s *ConfigService) Get(ctx context.Context, params *ConfigGetParams) (*Conf
 	}
 	var result Config
 	err := s.client.do(ctx, http.MethodGet, "config", params, &result)
+	if err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+func (s *ConfigService) Update(ctx context.Context, params *ConfigUpdateParams) (*Config, error) {
+	if params == nil {
+		return nil, errors.New("params is required")
+	}
+	var result Config
+	err := s.client.do(ctx, http.MethodPatch, "config", params, &result)
 	if err != nil {
 		return nil, err
 	}
@@ -1528,4 +1541,20 @@ type ConfigGetParams struct {
 // URLQuery serializes [ConfigGetParams]'s query parameters as `url.Values`.
 func (r ConfigGetParams) URLQuery() (url.Values, error) {
 	return queryparams.Marshal(r)
+}
+
+type ConfigUpdateParams struct {
+	// Full Config struct to update
+	Config    Config  `json:"-"`
+	Directory *string `query:"directory,omitempty"`
+}
+
+// URLQuery serializes [ConfigUpdateParams]'s query parameters as `url.Values`.
+func (r ConfigUpdateParams) URLQuery() (url.Values, error) {
+	return queryparams.Marshal(r)
+}
+
+// MarshalJSON marshals the Config field for the request body
+func (r ConfigUpdateParams) MarshalJSON() ([]byte, error) {
+	return json.Marshal(r.Config)
 }

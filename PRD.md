@@ -127,7 +127,7 @@ Verify these already exist (my earlier scan found them but coverage script misse
 
 ### Config service (`config.go`) — add 1 missing method:
 
-- [ ] `Update(ctx, params) → (*Config, error)` — `PATCH /config`. Params: full Config struct
+- [x] `Update(ctx, params) → (*Config, error)` — `PATCH /config`. Params: full Config struct
 
 ### Auth service — create new `auth.go`:
 
