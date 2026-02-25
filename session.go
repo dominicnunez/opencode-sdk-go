@@ -289,6 +289,21 @@ func (s *SessionService) Todo(ctx context.Context, id string, params *SessionTod
 	return result, nil
 }
 
+func (s *SessionService) Unrevert(ctx context.Context, id string, params *SessionUnrevertParams) (*Session, error) {
+	if id == "" {
+		return nil, errors.New("missing required id parameter")
+	}
+	if params == nil {
+		params = &SessionUnrevertParams{}
+	}
+	var result Session
+	err := s.client.do(ctx, http.MethodPost, "session/"+id+"/unrevert", params, &result)
+	if err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
 type AgentPart struct {
 	ID        string          `json:"id,required"`
 	MessageID string          `json:"messageID,required"`
