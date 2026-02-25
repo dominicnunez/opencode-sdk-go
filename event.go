@@ -2,6 +2,7 @@ package opencode
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -54,109 +55,249 @@ func (s *EventService) ListStreaming(ctx context.Context, params *EventListParam
 }
 
 type Event struct {
-	Data  interface{} `json:"properties"`
-	Type  EventType   `json:"type"`
-	union EventUnion
+	Type EventType `json:"type"`
+	raw  json.RawMessage
 }
 
-func (r *Event) UnmarshalJSON(data []byte) error {
-	*r = Event{}
-	err := apijson.UnmarshalRoot(data, &r.union)
-	if err != nil {
+func (e *Event) UnmarshalJSON(data []byte) error {
+	// Peek at discriminator
+	var peek struct {
+		Type EventType `json:"type"`
+	}
+	if err := json.Unmarshal(data, &peek); err != nil {
 		return err
 	}
-	return apijson.Port(r.union, r)
+	e.Type = peek.Type
+	e.raw = data
+	return nil
 }
 
-func (r Event) AsUnion() EventUnion {
-	return r.union
+// AsInstallationUpdated returns the event as EventInstallationUpdated if Type is "installation.updated".
+func (e Event) AsInstallationUpdated() (*EventInstallationUpdated, bool) {
+	if e.Type != EventTypeInstallationUpdated {
+		return nil, false
+	}
+	var evt EventInstallationUpdated
+	if err := json.Unmarshal(e.raw, &evt); err != nil {
+		return nil, false
+	}
+	return &evt, true
 }
 
-type EventUnion interface {
-	implementsEvent()
+// AsLspClientDiagnostics returns the event as EventLspClientDiagnostics if Type is "lsp.client.diagnostics".
+func (e Event) AsLspClientDiagnostics() (*EventLspClientDiagnostics, bool) {
+	if e.Type != EventTypeLspClientDiagnostics {
+		return nil, false
+	}
+	var evt EventLspClientDiagnostics
+	if err := json.Unmarshal(e.raw, &evt); err != nil {
+		return nil, false
+	}
+	return &evt, true
 }
 
-func init() {
-	apijson.RegisterUnion(
-		reflect.TypeOf((*EventUnion)(nil)).Elem(),
-		"",
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(EventInstallationUpdated{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(EventLspClientDiagnostics{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(EventMessageUpdated{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(EventMessageRemoved{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(EventMessagePartUpdated{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(EventMessagePartRemoved{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(EventSessionCompacted{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(EventPermissionUpdated{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(EventPermissionReplied{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(EventFileEdited{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(EventFileWatcherUpdated{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(EventTodoUpdated{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(EventSessionIdle{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(EventSessionCreated{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(EventSessionUpdated{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(EventSessionDeleted{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(EventSessionError{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(EventServerConnected{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(EventIdeInstalled{}),
-		},
-	)
+// AsMessageUpdated returns the event as EventMessageUpdated if Type is "message.updated".
+func (e Event) AsMessageUpdated() (*EventMessageUpdated, bool) {
+	if e.Type != EventTypeMessageUpdated {
+		return nil, false
+	}
+	var evt EventMessageUpdated
+	if err := json.Unmarshal(e.raw, &evt); err != nil {
+		return nil, false
+	}
+	return &evt, true
+}
+
+// AsMessageRemoved returns the event as EventMessageRemoved if Type is "message.removed".
+func (e Event) AsMessageRemoved() (*EventMessageRemoved, bool) {
+	if e.Type != EventTypeMessageRemoved {
+		return nil, false
+	}
+	var evt EventMessageRemoved
+	if err := json.Unmarshal(e.raw, &evt); err != nil {
+		return nil, false
+	}
+	return &evt, true
+}
+
+// AsMessagePartUpdated returns the event as EventMessagePartUpdated if Type is "message.part.updated".
+func (e Event) AsMessagePartUpdated() (*EventMessagePartUpdated, bool) {
+	if e.Type != EventTypeMessagePartUpdated {
+		return nil, false
+	}
+	var evt EventMessagePartUpdated
+	if err := json.Unmarshal(e.raw, &evt); err != nil {
+		return nil, false
+	}
+	return &evt, true
+}
+
+// AsMessagePartRemoved returns the event as EventMessagePartRemoved if Type is "message.part.removed".
+func (e Event) AsMessagePartRemoved() (*EventMessagePartRemoved, bool) {
+	if e.Type != EventTypeMessagePartRemoved {
+		return nil, false
+	}
+	var evt EventMessagePartRemoved
+	if err := json.Unmarshal(e.raw, &evt); err != nil {
+		return nil, false
+	}
+	return &evt, true
+}
+
+// AsSessionCompacted returns the event as EventSessionCompacted if Type is "session.compacted".
+func (e Event) AsSessionCompacted() (*EventSessionCompacted, bool) {
+	if e.Type != EventTypeSessionCompacted {
+		return nil, false
+	}
+	var evt EventSessionCompacted
+	if err := json.Unmarshal(e.raw, &evt); err != nil {
+		return nil, false
+	}
+	return &evt, true
+}
+
+// AsPermissionUpdated returns the event as EventPermissionUpdated if Type is "permission.updated".
+func (e Event) AsPermissionUpdated() (*EventPermissionUpdated, bool) {
+	if e.Type != EventTypePermissionUpdated {
+		return nil, false
+	}
+	var evt EventPermissionUpdated
+	if err := json.Unmarshal(e.raw, &evt); err != nil {
+		return nil, false
+	}
+	return &evt, true
+}
+
+// AsPermissionReplied returns the event as EventPermissionReplied if Type is "permission.replied".
+func (e Event) AsPermissionReplied() (*EventPermissionReplied, bool) {
+	if e.Type != EventTypePermissionReplied {
+		return nil, false
+	}
+	var evt EventPermissionReplied
+	if err := json.Unmarshal(e.raw, &evt); err != nil {
+		return nil, false
+	}
+	return &evt, true
+}
+
+// AsFileEdited returns the event as EventFileEdited if Type is "file.edited".
+func (e Event) AsFileEdited() (*EventFileEdited, bool) {
+	if e.Type != EventTypeFileEdited {
+		return nil, false
+	}
+	var evt EventFileEdited
+	if err := json.Unmarshal(e.raw, &evt); err != nil {
+		return nil, false
+	}
+	return &evt, true
+}
+
+// AsFileWatcherUpdated returns the event as EventFileWatcherUpdated if Type is "file.watcher.updated".
+func (e Event) AsFileWatcherUpdated() (*EventFileWatcherUpdated, bool) {
+	if e.Type != EventTypeFileWatcherUpdated {
+		return nil, false
+	}
+	var evt EventFileWatcherUpdated
+	if err := json.Unmarshal(e.raw, &evt); err != nil {
+		return nil, false
+	}
+	return &evt, true
+}
+
+// AsTodoUpdated returns the event as EventTodoUpdated if Type is "todo.updated".
+func (e Event) AsTodoUpdated() (*EventTodoUpdated, bool) {
+	if e.Type != EventTypeTodoUpdated {
+		return nil, false
+	}
+	var evt EventTodoUpdated
+	if err := json.Unmarshal(e.raw, &evt); err != nil {
+		return nil, false
+	}
+	return &evt, true
+}
+
+// AsSessionIdle returns the event as EventSessionIdle if Type is "session.idle".
+func (e Event) AsSessionIdle() (*EventSessionIdle, bool) {
+	if e.Type != EventTypeSessionIdle {
+		return nil, false
+	}
+	var evt EventSessionIdle
+	if err := json.Unmarshal(e.raw, &evt); err != nil {
+		return nil, false
+	}
+	return &evt, true
+}
+
+// AsSessionCreated returns the event as EventSessionCreated if Type is "session.created".
+func (e Event) AsSessionCreated() (*EventSessionCreated, bool) {
+	if e.Type != EventTypeSessionCreated {
+		return nil, false
+	}
+	var evt EventSessionCreated
+	if err := json.Unmarshal(e.raw, &evt); err != nil {
+		return nil, false
+	}
+	return &evt, true
+}
+
+// AsSessionUpdated returns the event as EventSessionUpdated if Type is "session.updated".
+func (e Event) AsSessionUpdated() (*EventSessionUpdated, bool) {
+	if e.Type != EventTypeSessionUpdated {
+		return nil, false
+	}
+	var evt EventSessionUpdated
+	if err := json.Unmarshal(e.raw, &evt); err != nil {
+		return nil, false
+	}
+	return &evt, true
+}
+
+// AsSessionDeleted returns the event as EventSessionDeleted if Type is "session.deleted".
+func (e Event) AsSessionDeleted() (*EventSessionDeleted, bool) {
+	if e.Type != EventTypeSessionDeleted {
+		return nil, false
+	}
+	var evt EventSessionDeleted
+	if err := json.Unmarshal(e.raw, &evt); err != nil {
+		return nil, false
+	}
+	return &evt, true
+}
+
+// AsSessionError returns the event as EventSessionError if Type is "session.error".
+func (e Event) AsSessionError() (*EventSessionError, bool) {
+	if e.Type != EventTypeSessionError {
+		return nil, false
+	}
+	var evt EventSessionError
+	if err := json.Unmarshal(e.raw, &evt); err != nil {
+		return nil, false
+	}
+	return &evt, true
+}
+
+// AsServerConnected returns the event as EventServerConnected if Type is "server.connected".
+func (e Event) AsServerConnected() (*EventServerConnected, bool) {
+	if e.Type != EventTypeServerConnected {
+		return nil, false
+	}
+	var evt EventServerConnected
+	if err := json.Unmarshal(e.raw, &evt); err != nil {
+		return nil, false
+	}
+	return &evt, true
+}
+
+// AsIdeInstalled returns the event as EventIdeInstalled if Type is "ide.installed".
+func (e Event) AsIdeInstalled() (*EventIdeInstalled, bool) {
+	if e.Type != EventTypeIdeInstalled {
+		return nil, false
+	}
+	var evt EventIdeInstalled
+	if err := json.Unmarshal(e.raw, &evt); err != nil {
+		return nil, false
+	}
+	return &evt, true
 }
 
 type EventInstallationUpdated struct {
@@ -164,7 +305,6 @@ type EventInstallationUpdated struct {
 	Type EventInstallationUpdatedType   `json:"type"`
 }
 
-func (r EventInstallationUpdated) implementsEvent() {}
 
 type EventInstallationUpdatedData struct {
 	Version string `json:"version"`
@@ -189,7 +329,6 @@ type EventLspClientDiagnostics struct {
 	Type EventLspClientDiagnosticsType  `json:"type"`
 }
 
-func (r EventLspClientDiagnostics) implementsEvent() {}
 
 type EventLspClientDiagnosticsData struct {
 	Path     string `json:"path"`
@@ -215,7 +354,6 @@ type EventMessageUpdated struct {
 	Type EventMessageUpdatedType `json:"type"`
 }
 
-func (r EventMessageUpdated) implementsEvent() {}
 
 type EventMessageUpdatedData struct {
 	Info Message `json:"info"`
@@ -240,7 +378,6 @@ type EventMessageRemoved struct {
 	Type EventMessageRemovedType `json:"type"`
 }
 
-func (r EventMessageRemoved) implementsEvent() {}
 
 type EventMessageRemovedData struct {
 	MessageID string `json:"messageID"`
@@ -266,7 +403,6 @@ type EventMessagePartUpdated struct {
 	Type EventMessagePartUpdatedType `json:"type"`
 }
 
-func (r EventMessagePartUpdated) implementsEvent() {}
 
 type EventMessagePartUpdatedData struct {
 	Part  Part    `json:"part"`
@@ -292,7 +428,6 @@ type EventMessagePartRemoved struct {
 	Type EventMessagePartRemovedType `json:"type"`
 }
 
-func (r EventMessagePartRemoved) implementsEvent() {}
 
 type EventMessagePartRemovedData struct {
 	MessageID string `json:"messageID"`
@@ -319,7 +454,6 @@ type EventSessionCompacted struct {
 	Type EventSessionCompactedType `json:"type"`
 }
 
-func (r EventSessionCompacted) implementsEvent() {}
 
 type EventSessionCompactedData struct {
 	SessionID string `json:"sessionID"`
@@ -344,7 +478,6 @@ type EventPermissionUpdated struct {
 	Type EventPermissionUpdatedType `json:"type"`
 }
 
-func (r EventPermissionUpdated) implementsEvent() {}
 
 type EventPermissionUpdatedType string
 
@@ -365,7 +498,6 @@ type EventPermissionReplied struct {
 	Type EventPermissionRepliedType `json:"type"`
 }
 
-func (r EventPermissionReplied) implementsEvent() {}
 
 type EventPermissionRepliedData struct {
 	PermissionID string `json:"permissionID"`
@@ -392,7 +524,6 @@ type EventFileEdited struct {
 	Type EventFileEditedType `json:"type"`
 }
 
-func (r EventFileEdited) implementsEvent() {}
 
 type EventFileEditedData struct {
 	File string `json:"file"`
@@ -417,7 +548,6 @@ type EventFileWatcherUpdated struct {
 	Type EventFileWatcherUpdatedType `json:"type"`
 }
 
-func (r EventFileWatcherUpdated) implementsEvent() {}
 
 type EventFileWatcherUpdatedData struct {
 	Event EventFileWatcherUpdatedDataEvent `json:"event"`
@@ -459,7 +589,6 @@ type EventTodoUpdated struct {
 	Type EventTodoUpdatedType `json:"type"`
 }
 
-func (r EventTodoUpdated) implementsEvent() {}
 
 type EventTodoUpdatedData struct {
 	SessionID string `json:"sessionID"`
@@ -492,7 +621,6 @@ type EventSessionIdle struct {
 	Type EventSessionIdleType `json:"type"`
 }
 
-func (r EventSessionIdle) implementsEvent() {}
 
 type EventSessionIdleData struct {
 	SessionID string `json:"sessionID"`
@@ -517,7 +645,6 @@ type EventSessionCreated struct {
 	Type EventSessionCreatedType `json:"type"`
 }
 
-func (r EventSessionCreated) implementsEvent() {}
 
 type EventSessionCreatedData struct {
 	Info Session `json:"info"`
@@ -542,7 +669,6 @@ type EventSessionUpdated struct {
 	Type EventSessionUpdatedType `json:"type"`
 }
 
-func (r EventSessionUpdated) implementsEvent() {}
 
 type EventSessionUpdatedData struct {
 	Info Session `json:"info"`
@@ -567,7 +693,6 @@ type EventSessionDeleted struct {
 	Type EventSessionDeletedType `json:"type"`
 }
 
-func (r EventSessionDeleted) implementsEvent() {}
 
 type EventSessionDeletedData struct {
 	Info Session `json:"info"`
@@ -592,7 +717,6 @@ type EventSessionError struct {
 	Type EventSessionErrorType `json:"type"`
 }
 
-func (r EventSessionError) implementsEvent() {}
 
 type EventSessionErrorData struct {
 	Error     *SessionError `json:"error,omitempty"`
@@ -736,7 +860,6 @@ type EventServerConnected struct {
 	Type EventServerConnectedType `json:"type"`
 }
 
-func (r EventServerConnected) implementsEvent() {}
 
 type EventServerConnectedType string
 
@@ -757,7 +880,6 @@ type EventIdeInstalled struct {
 	Type EventIdeInstalledType `json:"type"`
 }
 
-func (r EventIdeInstalled) implementsEvent() {}
 
 type EventIdeInstalledData struct {
 	Ide string `json:"ide"`

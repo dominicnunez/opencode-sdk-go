@@ -6,8 +6,6 @@ import (
 	"context"
 	"net/http"
 	"net/url"
-
-	"github.com/dominicnunez/opencode-sdk-go/internal/apijson"
 	"github.com/dominicnunez/opencode-sdk-go/internal/apiquery"
 )
 
@@ -58,10 +56,6 @@ type File struct {
 	Status  FileStatus `json:"status,required"`
 }
 
-func (r *File) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
 type FileStatus string
 
 const (
@@ -86,10 +80,6 @@ type FileNode struct {
 	Type     FileNodeType `json:"type,required"`
 }
 
-func (r *FileNode) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
 type FileNodeType string
 
 const (
@@ -112,10 +102,6 @@ type FileReadResponse struct {
 	Encoding FileReadResponseEncoding `json:"encoding,omitempty"`
 	MimeType string                   `json:"mimeType,omitempty"`
 	Patch    FileReadResponsePatch    `json:"patch,omitempty"`
-}
-
-func (r *FileReadResponse) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
 }
 
 type FileReadResponseType string
@@ -155,20 +141,12 @@ type FileReadResponsePatch struct {
 	OldHeader   string                      `json:"oldHeader,omitempty"`
 }
 
-func (r *FileReadResponsePatch) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
 type FileReadResponsePatchHunk struct {
 	Lines    []string `json:"lines,required"`
 	NewLines float64  `json:"newLines,required"`
 	NewStart float64  `json:"newStart,required"`
 	OldLines float64  `json:"oldLines,required"`
 	OldStart float64  `json:"oldStart,required"`
-}
-
-func (r *FileReadResponsePatchHunk) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
 }
 
 type FileListParams struct {

@@ -4,8 +4,6 @@ import (
 	"context"
 	"net/http"
 	"net/url"
-
-	"github.com/dominicnunez/opencode-sdk-go/internal/apijson"
 	"github.com/dominicnunez/opencode-sdk-go/internal/apiquery"
 )
 
@@ -39,10 +37,6 @@ type Agent struct {
 	TopP        float64                `json:"topP,omitempty"`
 }
 
-func (r *Agent) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
 type AgentMode string
 
 const (
@@ -63,10 +57,6 @@ type AgentPermission struct {
 	Bash     map[string]AgentPermissionBash `json:"bash"`
 	Edit     AgentPermissionEdit            `json:"edit"`
 	Webfetch *AgentPermissionWebfetch       `json:"webfetch,omitempty"`
-}
-
-func (r *AgentPermission) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
 }
 
 type AgentPermissionBash string
@@ -120,10 +110,6 @@ func (r AgentPermissionWebfetch) IsKnown() bool {
 type AgentModel struct {
 	ModelID    string `json:"modelID"`
 	ProviderID string `json:"providerID"`
-}
-
-func (r *AgentModel) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
 }
 
 type AgentListParams struct {

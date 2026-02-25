@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/dominicnunez/opencode-sdk-go/internal/apijson"
 	"github.com/dominicnunez/opencode-sdk-go/internal/apiquery"
 )
 
@@ -57,17 +56,9 @@ type Symbol struct {
 	Name     string         `json:"name,required"`
 }
 
-func (r *Symbol) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
 type SymbolLocation struct {
 	Range SymbolLocationRange `json:"range,required"`
 	Uri   string              `json:"uri,required"`
-}
-
-func (r *SymbolLocation) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
 }
 
 type SymbolLocationRange struct {
@@ -75,26 +66,14 @@ type SymbolLocationRange struct {
 	Start SymbolLocationRangeStart `json:"start,required"`
 }
 
-func (r *SymbolLocationRange) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
 type SymbolLocationRangeEnd struct {
 	Character float64 `json:"character,required"`
 	Line      float64 `json:"line,required"`
 }
 
-func (r *SymbolLocationRangeEnd) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
 type SymbolLocationRangeStart struct {
 	Character float64 `json:"character,required"`
 	Line      float64 `json:"line,required"`
-}
-
-func (r *SymbolLocationRangeStart) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
 }
 
 type FindTextResponse struct {
@@ -105,24 +84,12 @@ type FindTextResponse struct {
 	Submatches     []FindTextResponseSubmatch `json:"submatches,required"`
 }
 
-func (r *FindTextResponse) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
 type FindTextResponseLines struct {
 	Text string `json:"text,required"`
 }
 
-func (r *FindTextResponseLines) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
 type FindTextResponsePath struct {
 	Text string `json:"text,required"`
-}
-
-func (r *FindTextResponsePath) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
 }
 
 type FindTextResponseSubmatch struct {
@@ -131,16 +98,8 @@ type FindTextResponseSubmatch struct {
 	Start float64                         `json:"start,required"`
 }
 
-func (r *FindTextResponseSubmatch) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
 type FindTextResponseSubmatchesMatch struct {
 	Text string `json:"text,required"`
-}
-
-func (r *FindTextResponseSubmatchesMatch) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
 }
 
 type FindFilesParams struct {

@@ -4,8 +4,6 @@ import (
 	"context"
 	"net/http"
 	"net/url"
-
-	"github.com/dominicnunez/opencode-sdk-go/internal/apijson"
 	"github.com/dominicnunez/opencode-sdk-go/internal/apiquery"
 )
 
@@ -30,10 +28,6 @@ type Path struct {
 	Directory string `json:"directory,required"`
 	State     string `json:"state,required"`
 	Worktree  string `json:"worktree,required"`
-}
-
-func (r *Path) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
 }
 
 type PathGetParams struct {

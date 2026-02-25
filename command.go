@@ -4,8 +4,6 @@ import (
 	"context"
 	"net/http"
 	"net/url"
-
-	"github.com/dominicnunez/opencode-sdk-go/internal/apijson"
 	"github.com/dominicnunez/opencode-sdk-go/internal/apiquery"
 )
 
@@ -32,10 +30,6 @@ type Command struct {
 	Description string `json:"description"`
 	Model       string `json:"model"`
 	Subtask     bool   `json:"subtask"`
-}
-
-func (r *Command) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
 }
 
 type CommandListParams struct {

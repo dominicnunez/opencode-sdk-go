@@ -63,10 +63,6 @@ type Model struct {
 	ToolCall     bool                   `json:"tool_call"`
 }
 
-func (r *Model) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
 type ModelCost struct {
 	Input      float64 `json:"input"`
 	Output     float64 `json:"output"`
@@ -74,26 +70,14 @@ type ModelCost struct {
 	CacheWrite float64 `json:"cache_write,omitempty"`
 }
 
-func (r *ModelCost) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
 type ModelLimit struct {
 	Context float64 `json:"context"`
 	Output  float64 `json:"output"`
 }
 
-func (r *ModelLimit) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
 type ModelModalities struct {
 	Input  []ModelModalityInput  `json:"input"`
 	Output []ModelModalityOutput `json:"output"`
-}
-
-func (r *ModelModalities) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
 }
 
 type ModelModalityInput string
@@ -120,10 +104,6 @@ type ModelProvider struct {
 	Npm string `json:"npm"`
 }
 
-func (r *ModelProvider) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
 type ModelStatus string
 
 const (
@@ -140,17 +120,9 @@ type Provider struct {
 	Npm    string           `json:"npm,omitempty"`
 }
 
-func (r *Provider) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
 type AppProvidersResponse struct {
 	Default   map[string]string `json:"default"`
 	Providers []Provider        `json:"providers"`
-}
-
-func (r *AppProvidersResponse) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
 }
 
 type AppLogParams struct {

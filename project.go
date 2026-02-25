@@ -4,8 +4,6 @@ import (
 	"context"
 	"net/http"
 	"net/url"
-
-	"github.com/dominicnunez/opencode-sdk-go/internal/apijson"
 	"github.com/dominicnunez/opencode-sdk-go/internal/apiquery"
 )
 
@@ -44,17 +42,9 @@ type Project struct {
 	Vcs      ProjectVcs `json:"vcs"`
 }
 
-func (r *Project) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
 type ProjectTime struct {
 	Created     float64 `json:"created,required"`
 	Initialized float64 `json:"initialized"`
-}
-
-func (r *ProjectTime) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
 }
 
 type ProjectVcs string

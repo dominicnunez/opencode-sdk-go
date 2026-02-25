@@ -87,7 +87,7 @@ Apply this pattern to each union:
 
 - [x] **FilePartSource** (discriminator: `type`) → `FileSource`, `SymbolSource`. Remove `FilePartSourceUnion` interface and init block. Add `AsFile()`, `AsSymbol()` methods.
 
-- [ ] **Event** (discriminator: `type`) → 19 event types. Remove `EventUnion` interface and init block. Add `AsMessageUpdated()`, `AsSessionCreated()`, etc. for each event type.
+- [x] **Event** (discriminator: `type`) → 19 event types. Remove `EventUnion` interface and init block. Add `AsMessageUpdated()`, `AsSessionCreated()`, etc. for each event type.
 
 - [ ] **AssistantMessageError** (discriminator: `name`) → `MessageAbortedError`, `MessageOutputLengthError`, `APIError`, `ProviderAuthError`, `UnknownError`. Remove `AssistantMessageErrorUnion` interface and init block. Add `AsAborted()`, `AsOutputLength()`, `AsAPI()`, `AsProviderAuth()`, `AsUnknown()` methods.
 
