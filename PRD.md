@@ -81,7 +81,7 @@ Apply this pattern to each union:
 
 - [x] **Message** (discriminator: `role`) → `UserMessage`, `AssistantMessage`. Remove `MessageUnion` interface, `apijson.RegisterUnion` init block, `apijson.Port` call. Add `AsUser()`, `AsAssistant()` methods.
 
-- [ ] **Part** (discriminator: `type`) → `TextPart`, `ReasoningPart`, `FilePart`, `ToolPart`, `StepStartPart`, `StepFinishPart`, `SnapshotPart`, `PatchPart`, `AgentPart`, `RetryPart`. Remove `PartUnion` interface and init block. Add `AsText()`, `AsReasoning()`, `AsFile()`, `AsTool()`, `AsStepStart()`, `AsStepFinish()`, `AsSnapshot()`, `AsPatch()`, `AsAgent()`, `AsRetry()` methods.
+- [x] **Part** (discriminator: `type`) → `TextPart`, `ReasoningPart`, `FilePart`, `ToolPart`, `StepStartPart`, `StepFinishPart`, `SnapshotPart`, `PatchPart`, `AgentPart`, `RetryPart`. Remove `PartUnion` interface and init block. Add `AsText()`, `AsReasoning()`, `AsFile()`, `AsTool()`, `AsStepStart()`, `AsStepFinish()`, `AsSnapshot()`, `AsPatch()`, `AsAgent()`, `AsRetry()` methods.
 
 - [ ] **ToolState** (discriminator: `status`) → `ToolStatePending`, `ToolStateRunning`, `ToolStateCompleted`, `ToolStateError`. Remove `ToolStateUnion` interface and init block. Add `AsPending()`, `AsRunning()`, `AsCompleted()`, `AsError()` methods.
 

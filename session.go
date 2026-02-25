@@ -226,8 +226,6 @@ type AgentPart struct {
 	Source    AgentPartSource `json:"source"`
 }
 
-func (r AgentPart) implementsPart() {}
-
 type AgentPartType string
 
 const (
@@ -479,8 +477,6 @@ type FilePart struct {
 	Source    FilePartSource `json:"source"`
 }
 
-func (r FilePart) implementsPart() {}
-
 type FilePartType string
 
 const (
@@ -722,113 +718,153 @@ func (r MessageRole) IsKnown() bool {
 	return false
 }
 
+// Part is a discriminated union type representing different kinds of message parts.
+// Use the As* methods to access the specific part type based on the Type field.
 type Part struct {
 	ID        string   `json:"id,required"`
 	MessageID string   `json:"messageID,required"`
 	SessionID string   `json:"sessionID,required"`
 	Type      PartType `json:"type,required"`
-	Attempt   float64  `json:"attempt"`
-	CallID    string   `json:"callID"`
-	Cost      float64  `json:"cost"`
-	// This field can have the runtime type of [PartRetryPartError].
-	Error    interface{} `json:"error"`
-	Filename string      `json:"filename"`
-	// This field can have the runtime type of [[]string].
-	Files interface{} `json:"files"`
-	Hash  string      `json:"hash"`
-	// This field can have the runtime type of [map[string]interface{}].
-	Metadata interface{} `json:"metadata"`
-	Mime     string      `json:"mime"`
-	Name     string      `json:"name"`
-	Reason   string      `json:"reason"`
-	Snapshot string      `json:"snapshot"`
-	// This field can have the runtime type of [FilePartSource], [AgentPartSource].
-	Source interface{} `json:"source"`
-	// This field can have the runtime type of [ToolPartState].
-	State     interface{} `json:"state"`
-	Synthetic bool        `json:"synthetic"`
-	Text      string      `json:"text"`
-	// This field can have the runtime type of [TextPartTime], [ReasoningPartTime],
-	// [PartRetryPartTime].
-	Time interface{} `json:"time"`
-	// This field can have the runtime type of [StepFinishPartTokens].
-	Tokens interface{} `json:"tokens"`
-	Tool   string      `json:"tool"`
-	URL    string      `json:"url"`
-	union  PartUnion
+	raw       json.RawMessage
 }
 
-func (r *Part) UnmarshalJSON(data []byte) (err error) {
-	*r = Part{}
-	err = apijson.UnmarshalRoot(data, &r.union)
-	if err != nil {
+func (r *Part) UnmarshalJSON(data []byte) error {
+	// Peek at discriminator to determine the type
+	var peek struct {
+		ID        string   `json:"id"`
+		MessageID string   `json:"messageID"`
+		SessionID string   `json:"sessionID"`
+		Type      PartType `json:"type"`
+	}
+	if err := json.Unmarshal(data, &peek); err != nil {
 		return err
 	}
-	return apijson.Port(r.union, &r)
+	r.ID = peek.ID
+	r.MessageID = peek.MessageID
+	r.SessionID = peek.SessionID
+	r.Type = peek.Type
+	r.raw = data
+	return nil
 }
 
-// AsUnion returns a [PartUnion] interface which you can cast to the specific types
-// for more type safety.
-//
-// Possible runtime types of the union are [TextPart], [ReasoningPart], [FilePart],
-// [ToolPart], [StepStartPart], [StepFinishPart], [SnapshotPart], [PartPatchPart],
-// [AgentPart], [PartRetryPart].
-func (r Part) AsUnion() PartUnion {
-	return r.union
+// AsText returns the part as a TextPart if Type is "text".
+func (r Part) AsText() (*TextPart, bool) {
+	if r.Type != PartTypeText {
+		return nil, false
+	}
+	var part TextPart
+	if err := json.Unmarshal(r.raw, &part); err != nil {
+		return nil, false
+	}
+	return &part, true
 }
 
-// Union satisfied by [TextPart], [ReasoningPart], [FilePart], [ToolPart],
-// [StepStartPart], [StepFinishPart], [SnapshotPart], [PartPatchPart], [AgentPart]
-// or [PartRetryPart].
-type PartUnion interface {
-	implementsPart()
+// AsReasoning returns the part as a ReasoningPart if Type is "reasoning".
+func (r Part) AsReasoning() (*ReasoningPart, bool) {
+	if r.Type != PartTypeReasoning {
+		return nil, false
+	}
+	var part ReasoningPart
+	if err := json.Unmarshal(r.raw, &part); err != nil {
+		return nil, false
+	}
+	return &part, true
 }
 
-func init() {
-	apijson.RegisterUnion(
-		reflect.TypeOf((*PartUnion)(nil)).Elem(),
-		"",
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(TextPart{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(ReasoningPart{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(FilePart{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(ToolPart{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(StepStartPart{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(StepFinishPart{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(SnapshotPart{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(PartPatchPart{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(AgentPart{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(PartRetryPart{}),
-		},
-	)
+// AsFile returns the part as a FilePart if Type is "file".
+func (r Part) AsFile() (*FilePart, bool) {
+	if r.Type != PartTypeFile {
+		return nil, false
+	}
+	var part FilePart
+	if err := json.Unmarshal(r.raw, &part); err != nil {
+		return nil, false
+	}
+	return &part, true
+}
+
+// AsTool returns the part as a ToolPart if Type is "tool".
+func (r Part) AsTool() (*ToolPart, bool) {
+	if r.Type != PartTypeTool {
+		return nil, false
+	}
+	var part ToolPart
+	if err := json.Unmarshal(r.raw, &part); err != nil {
+		return nil, false
+	}
+	return &part, true
+}
+
+// AsStepStart returns the part as a StepStartPart if Type is "step-start".
+func (r Part) AsStepStart() (*StepStartPart, bool) {
+	if r.Type != PartTypeStepStart {
+		return nil, false
+	}
+	var part StepStartPart
+	if err := json.Unmarshal(r.raw, &part); err != nil {
+		return nil, false
+	}
+	return &part, true
+}
+
+// AsStepFinish returns the part as a StepFinishPart if Type is "step-finish".
+func (r Part) AsStepFinish() (*StepFinishPart, bool) {
+	if r.Type != PartTypeStepFinish {
+		return nil, false
+	}
+	var part StepFinishPart
+	if err := json.Unmarshal(r.raw, &part); err != nil {
+		return nil, false
+	}
+	return &part, true
+}
+
+// AsSnapshot returns the part as a SnapshotPart if Type is "snapshot".
+func (r Part) AsSnapshot() (*SnapshotPart, bool) {
+	if r.Type != PartTypeSnapshot {
+		return nil, false
+	}
+	var part SnapshotPart
+	if err := json.Unmarshal(r.raw, &part); err != nil {
+		return nil, false
+	}
+	return &part, true
+}
+
+// AsPatch returns the part as a PartPatchPart if Type is "patch".
+func (r Part) AsPatch() (*PartPatchPart, bool) {
+	if r.Type != PartTypePatch {
+		return nil, false
+	}
+	var part PartPatchPart
+	if err := json.Unmarshal(r.raw, &part); err != nil {
+		return nil, false
+	}
+	return &part, true
+}
+
+// AsAgent returns the part as an AgentPart if Type is "agent".
+func (r Part) AsAgent() (*AgentPart, bool) {
+	if r.Type != PartTypeAgent {
+		return nil, false
+	}
+	var part AgentPart
+	if err := json.Unmarshal(r.raw, &part); err != nil {
+		return nil, false
+	}
+	return &part, true
+}
+
+// AsRetry returns the part as a PartRetryPart if Type is "retry".
+func (r Part) AsRetry() (*PartRetryPart, bool) {
+	if r.Type != PartTypeRetry {
+		return nil, false
+	}
+	var part PartRetryPart
+	if err := json.Unmarshal(r.raw, &part); err != nil {
+		return nil, false
+	}
+	return &part, true
 }
 
 type PartPatchPart struct {
@@ -839,8 +875,6 @@ type PartPatchPart struct {
 	SessionID string            `json:"sessionID,required"`
 	Type      PartPatchPartType `json:"type,required"`
 }
-
-func (r PartPatchPart) implementsPart() {}
 
 type PartPatchPartType string
 
@@ -865,8 +899,6 @@ type PartRetryPart struct {
 	Time      PartRetryPartTime  `json:"time,required"`
 	Type      PartRetryPartType  `json:"type,required"`
 }
-
-func (r PartRetryPart) implementsPart() {}
 
 type PartRetryPartError struct {
 	Data PartRetryPartErrorData `json:"data,required"`
@@ -946,8 +978,6 @@ type ReasoningPart struct {
 	Metadata  map[string]interface{} `json:"metadata"`
 }
 
-func (r ReasoningPart) implementsPart() {}
-
 type ReasoningPartTime struct {
 	Start float64               `json:"start,required"`
 	End   float64               `json:"end"`
@@ -1017,8 +1047,6 @@ type SnapshotPart struct {
 	Type      SnapshotPartType `json:"type,required"`
 }
 
-func (r SnapshotPart) implementsPart() {}
-
 type SnapshotPartType string
 
 const (
@@ -1043,8 +1071,6 @@ type StepFinishPart struct {
 	Type      StepFinishPartType   `json:"type,required"`
 	Snapshot  string               `json:"snapshot"`
 }
-
-func (r StepFinishPart) implementsPart() {}
 
 type StepFinishPartTokens struct {
 	Cache     StepFinishPartTokensCache `json:"cache,required"`
@@ -1079,8 +1105,6 @@ type StepStartPart struct {
 	Type      StepStartPartType `json:"type,required"`
 	Snapshot  string            `json:"snapshot"`
 }
-
-func (r StepStartPart) implementsPart() {}
 
 type StepStartPartType string
 
@@ -1189,8 +1213,6 @@ type TextPart struct {
 	Time      TextPartTime           `json:"time"`
 }
 
-func (r TextPart) implementsPart() {}
-
 type TextPartType string
 
 const (
@@ -1258,8 +1280,6 @@ type ToolPart struct {
 	Type      ToolPartType           `json:"type,required"`
 	Metadata  map[string]interface{} `json:"metadata"`
 }
-
-func (r ToolPart) implementsPart() {}
 
 type ToolPartState struct {
 	Status ToolPartStateStatus `json:"status,required"`
