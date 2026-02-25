@@ -6,14 +6,11 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"reflect"
 
 	"github.com/dominicnunez/opencode-sdk-go/internal"
-	"github.com/dominicnunez/opencode-sdk-go/internal/apijson"
 	"github.com/dominicnunez/opencode-sdk-go/internal/apiquery"
 	"github.com/dominicnunez/opencode-sdk-go/packages/ssestream"
 	"github.com/dominicnunez/opencode-sdk-go/shared"
-	"github.com/tidwall/gjson"
 )
 
 type EventService struct {
@@ -724,61 +721,82 @@ type EventSessionErrorData struct {
 }
 
 type SessionError struct {
-	Data  interface{}        `json:"data"`
-	Name  SessionErrorName   `json:"name"`
-	union SessionErrorUnion
+	Name SessionErrorName `json:"name"`
+	raw  json.RawMessage
 }
 
 func (r *SessionError) UnmarshalJSON(data []byte) error {
-	*r = SessionError{}
-	err := apijson.UnmarshalRoot(data, &r.union)
-	if err != nil {
+	// Peek at discriminator
+	var peek struct {
+		Name SessionErrorName `json:"name"`
+	}
+	if err := json.Unmarshal(data, &peek); err != nil {
 		return err
 	}
-	return apijson.Port(r.union, r)
+	r.Name = peek.Name
+	r.raw = data
+	return nil
 }
 
-func (r SessionError) AsUnion() SessionErrorUnion {
-	return r.union
+func (r SessionError) AsProviderAuth() (*shared.ProviderAuthError, bool) {
+	if r.Name != SessionErrorNameProviderAuthError {
+		return nil, false
+	}
+	var err shared.ProviderAuthError
+	if e := json.Unmarshal(r.raw, &err); e != nil {
+		return nil, false
+	}
+	return &err, true
 }
 
-type SessionErrorUnion interface {
-	ImplementsSessionError()
+func (r SessionError) AsUnknown() (*shared.UnknownError, bool) {
+	if r.Name != SessionErrorNameUnknownError {
+		return nil, false
+	}
+	var err shared.UnknownError
+	if e := json.Unmarshal(r.raw, &err); e != nil {
+		return nil, false
+	}
+	return &err, true
 }
 
-func init() {
-	apijson.RegisterUnion(
-		reflect.TypeOf((*SessionErrorUnion)(nil)).Elem(),
-		"",
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(shared.ProviderAuthError{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(shared.UnknownError{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(MessageOutputLengthError{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(shared.MessageAbortedError{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(SessionAPIError{}),
-		},
-	)
+func (r SessionError) AsOutputLength() (*MessageOutputLengthError, bool) {
+	if r.Name != SessionErrorNameMessageOutputLengthError {
+		return nil, false
+	}
+	var err MessageOutputLengthError
+	if e := json.Unmarshal(r.raw, &err); e != nil {
+		return nil, false
+	}
+	return &err, true
+}
+
+func (r SessionError) AsAborted() (*shared.MessageAbortedError, bool) {
+	if r.Name != SessionErrorNameMessageAbortedError {
+		return nil, false
+	}
+	var err shared.MessageAbortedError
+	if e := json.Unmarshal(r.raw, &err); e != nil {
+		return nil, false
+	}
+	return &err, true
+}
+
+func (r SessionError) AsAPI() (*SessionAPIError, bool) {
+	if r.Name != SessionErrorNameAPIError {
+		return nil, false
+	}
+	var err SessionAPIError
+	if e := json.Unmarshal(r.raw, &err); e != nil {
+		return nil, false
+	}
+	return &err, true
 }
 
 type MessageOutputLengthError struct {
 	Data interface{}                  `json:"data"`
 	Name MessageOutputLengthErrorName `json:"name"`
 }
-
-func (r MessageOutputLengthError) ImplementsSessionError() {}
 
 type MessageOutputLengthErrorName string
 
@@ -798,8 +816,6 @@ type SessionAPIError struct {
 	Data SessionAPIErrorData `json:"data"`
 	Name SessionAPIErrorName `json:"name"`
 }
-
-func (r SessionAPIError) ImplementsSessionError() {}
 
 type SessionAPIErrorData struct {
 	IsRetryable     bool              `json:"isRetryable"`

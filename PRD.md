@@ -97,7 +97,9 @@ Apply this pattern to each union:
 
 - [x] **ConfigLsp** (discriminator: presence of `command` field) → `ConfigLspDisabled`, `ConfigLspObject`. Remove `ConfigLspUnion` interface and init block. Add `AsDisabled()`, `AsObject()` methods.
 
-- [ ] Delete all `func init()` blocks that call `apijson.RegisterUnion`
+- [x] **SessionError** (discriminator: `name`) → `ProviderAuthError`, `UnknownError`, `MessageOutputLengthError`, `MessageAbortedError`, `SessionAPIError`. Remove `SessionErrorUnion` interface and init block. Add `AsProviderAuth()`, `AsUnknown()`, `AsOutputLength()`, `AsAborted()`, `AsAPI()` methods.
+
+- [ ] Delete all `func init()` blocks that call `apijson.RegisterUnion` (8 remaining: 7 in config.go, 1 in sessionpermission.go)
 - [ ] Remove all `reflect` and `gjson` imports
 
 ---
