@@ -1,37 +1,19 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
-
 package apierror
 
 import (
 	"fmt"
 	"net/http"
 	"net/http/httputil"
-
-	"github.com/dominicnunez/opencode-sdk-go/internal/apijson"
 )
 
 // Error represents an error that originates from the API, i.e. when a request is
 // made and the API returns a response with a HTTP status code. Other errors are
 // not wrapped by this SDK.
 type Error struct {
-	JSON       errorJSON `json:"-"`
 	StatusCode int
 	Request    *http.Request
 	Response   *http.Response
-}
-
-// errorJSON contains the JSON metadata for the struct [Error]
-type errorJSON struct {
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *Error) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r errorJSON) RawJSON() string {
-	return r.raw
+	Body       string
 }
 
 func (r *Error) Error() string {
@@ -50,7 +32,7 @@ func (r *Error) Error() string {
 		statusText = http.StatusText(r.Response.StatusCode)
 	}
 
-	raw := r.JSON.RawJSON()
+	raw := r.Body
 	if raw == "" {
 		raw = "(no response body)"
 	}

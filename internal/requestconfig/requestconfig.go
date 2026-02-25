@@ -512,10 +512,11 @@ func (cfg *RequestConfig) Execute() (err error) {
 		res.Body = io.NopCloser(bytes.NewBuffer(contents))
 
 		// Load the contents into the error format if it is provided.
-		aerr := apierror.Error{Request: cfg.Request, Response: res, StatusCode: res.StatusCode}
-		err = aerr.UnmarshalJSON(contents)
-		if err != nil {
-			return err
+		aerr := apierror.Error{
+			Request:    cfg.Request,
+			Response:   res,
+			StatusCode: res.StatusCode,
+			Body:       string(contents),
 		}
 		return &aerr
 	}
