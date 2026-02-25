@@ -27,7 +27,7 @@ Replace `internal/requestconfig` + `option/` with a single `client.go` `do()` me
 
 Remove `internal/apijson` (2,185 lines), `internal/apiquery`, `internal/apiform` and replace with stdlib.
 
-- [ ] Delete `internal/apijson/` — all of it (decoder, encoder, field, port, registry, tag)
+- [x] Delete `internal/apijson/` — all of it (decoder, encoder, field, port, registry, tag)
 - [ ] Delete `internal/apiform/` — all of it
 - [ ] Replace `internal/apiquery/` with a simple `queryParams(v interface{}) url.Values` helper that reads `query:"name"` struct tags (or just use the existing `URLQuery()` methods on param structs and delete apiquery too)
 - [ ] Remove `github.com/tidwall/gjson` dependency

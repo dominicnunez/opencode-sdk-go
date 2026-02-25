@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/dominicnunez/opencode-sdk-go/internal/apijson"
 	"github.com/dominicnunez/opencode-sdk-go/internal/apiquery"
 )
 
@@ -131,10 +130,6 @@ type AppLogParams struct {
 	Service   string                 `json:"service"`
 	Extra     map[string]interface{} `json:"extra,omitempty"`
 	Directory *string                `query:"directory,omitempty"`
-}
-
-func (r AppLogParams) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
 }
 
 func (r AppLogParams) URLQuery() (url.Values, error) {

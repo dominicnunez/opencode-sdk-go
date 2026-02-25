@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/dominicnunez/opencode-sdk-go/internal/apijson"
 	"github.com/dominicnunez/opencode-sdk-go/internal/apiquery"
 	"github.com/dominicnunez/opencode-sdk-go/shared"
 )
@@ -251,10 +250,6 @@ type AgentPartInputParam struct {
 	Source *AgentPartInputSourceParam `json:"source,omitempty"`
 }
 
-func (r AgentPartInputParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
 func (r AgentPartInputParam) implementsSessionPromptParamsPartUnion() {}
 
 type AgentPartInputType string
@@ -275,10 +270,6 @@ type AgentPartInputSourceParam struct {
 	End int64 `json:"end,required"`
 	Start int64 `json:"start,required"`
 	Value string `json:"value,required"`
-}
-
-func (r AgentPartInputSourceParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
 }
 
 type AssistantMessage struct {
@@ -505,10 +496,6 @@ type FilePartInputParam struct {
 	Source *FilePartSourceUnionParam `json:"source,omitempty"`
 }
 
-func (r FilePartInputParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
 func (r FilePartInputParam) implementsSessionPromptParamsPartUnion() {}
 
 type FilePartInputType string
@@ -593,10 +580,6 @@ type FilePartSourceParam struct {
 	Range any `json:"range,omitempty"`
 }
 
-func (r FilePartSourceParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
 func (r FilePartSourceParam) implementsFilePartSourceUnionParam() {}
 
 // Satisfied by [FileSourceParam], [SymbolSourceParam], [FilePartSourceParam].
@@ -614,10 +597,6 @@ type FilePartSourceTextParam struct {
 	End int64 `json:"end,required"`
 	Start int64 `json:"start,required"`
 	Value string `json:"value,required"`
-}
-
-func (r FilePartSourceTextParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
 }
 
 type FileSource struct {
@@ -644,10 +623,6 @@ type FileSourceParam struct {
 	Path string `json:"path,required"`
 	Text FilePartSourceTextParam `json:"text,required"`
 	Type FileSourceType `json:"type,required"`
-}
-
-func (r FileSourceParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
 }
 
 func (r FileSourceParam) implementsFilePartSourceUnionParam() {}
@@ -1166,10 +1141,6 @@ type SymbolSourceParam struct {
 	Type SymbolSourceType `json:"type,required"`
 }
 
-func (r SymbolSourceParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
 func (r SymbolSourceParam) implementsFilePartSourceUnionParam() {}
 
 type SymbolSourceRangeParam struct {
@@ -1177,26 +1148,14 @@ type SymbolSourceRangeParam struct {
 	Start SymbolSourceRangeStartParam `json:"start,required"`
 }
 
-func (r SymbolSourceRangeParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
 type SymbolSourceRangeEndParam struct {
 	Character float64 `json:"character,required"`
 	Line float64 `json:"line,required"`
 }
 
-func (r SymbolSourceRangeEndParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
 type SymbolSourceRangeStartParam struct {
 	Character float64 `json:"character,required"`
 	Line float64 `json:"line,required"`
-}
-
-func (r SymbolSourceRangeStartParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
 }
 
 type TextPart struct {
@@ -1238,10 +1197,6 @@ type TextPartInputParam struct {
 	Time *TextPartInputTimeParam `json:"time,omitempty"`
 }
 
-func (r TextPartInputParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
 func (r TextPartInputParam) implementsSessionPromptParamsPartUnion() {}
 
 type TextPartInputType string
@@ -1261,10 +1216,6 @@ func (r TextPartInputType) IsKnown() bool {
 type TextPartInputTimeParam struct {
 	Start float64 `json:"start,required"`
 	End *float64 `json:"end,omitempty"`
-}
-
-func (r TextPartInputTimeParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
 }
 
 type ToolPart struct {
@@ -1544,10 +1495,6 @@ type SessionNewParams struct {
 	Title *string `json:"title,omitempty"`
 }
 
-func (r SessionNewParams) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
 // URLQuery serializes [SessionNewParams]'s query parameters as `url.Values`.
 func (r SessionNewParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
@@ -1559,10 +1506,6 @@ func (r SessionNewParams) URLQuery() (url.Values, error) {
 type SessionUpdateParams struct {
 	Directory *string `query:"directory,omitempty"`
 	Title *string `json:"title,omitempty"`
-}
-
-func (r SessionUpdateParams) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
 }
 
 // URLQuery serializes [SessionUpdateParams]'s query parameters as `url.Values`.
@@ -1630,10 +1573,6 @@ type SessionCommandParams struct {
 	Model *string `json:"model,omitempty"`
 }
 
-func (r SessionCommandParams) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
 // URLQuery serializes [SessionCommandParams]'s query parameters as `url.Values`.
 func (r SessionCommandParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
@@ -1659,10 +1598,6 @@ type SessionInitParams struct {
 	ModelID string `json:"modelID,required"`
 	ProviderID string `json:"providerID,required"`
 	Directory *string `query:"directory,omitempty"`
-}
-
-func (r SessionInitParams) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
 }
 
 // URLQuery serializes [SessionInitParams]'s query parameters as `url.Values`.
@@ -1708,10 +1643,6 @@ type SessionPromptParams struct {
 	Tools *map[string]bool `json:"tools,omitempty"`
 }
 
-func (r SessionPromptParams) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
 // URLQuery serializes [SessionPromptParams]'s query parameters as `url.Values`.
 func (r SessionPromptParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
@@ -1732,10 +1663,6 @@ type SessionPromptParamsPart struct {
 	Text *string `json:"text,omitempty"`
 	Time any `json:"time,omitempty"`
 	URL *string `json:"url,omitempty"`
-}
-
-func (r SessionPromptParamsPart) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
 }
 
 func (r SessionPromptParamsPart) implementsSessionPromptParamsPartUnion() {}
@@ -1767,18 +1694,10 @@ type SessionPromptParamsModel struct {
 	ProviderID string `json:"providerID,required"`
 }
 
-func (r SessionPromptParamsModel) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
 type SessionRevertParams struct {
 	MessageID string `json:"messageID,required"`
 	Directory *string `query:"directory,omitempty"`
 	PartID *string `json:"partID,omitempty"`
-}
-
-func (r SessionRevertParams) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
 }
 
 // URLQuery serializes [SessionRevertParams]'s query parameters as `url.Values`.
@@ -1807,10 +1726,6 @@ type SessionShellParams struct {
 	Directory *string `query:"directory,omitempty"`
 }
 
-func (r SessionShellParams) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
 // URLQuery serializes [SessionShellParams]'s query parameters as `url.Values`.
 func (r SessionShellParams) URLQuery() (url.Values, error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
@@ -1823,10 +1738,6 @@ type SessionSummarizeParams struct {
 	ModelID string `json:"modelID,required"`
 	ProviderID string `json:"providerID,required"`
 	Directory *string `query:"directory,omitempty"`
-}
-
-func (r SessionSummarizeParams) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
 }
 
 // URLQuery serializes [SessionSummarizeParams]'s query parameters as `url.Values`.
