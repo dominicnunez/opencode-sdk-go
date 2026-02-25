@@ -24,7 +24,7 @@ func TestPathGetWithOptionalParams(t *testing.T) {
 		t.Fatalf("failed to create client: %v", err)
 	}
 	_, err = client.Path.Get(context.TODO(), &opencode.PathGetParams{
-		Directory: opencode.F("directory"),
+		Directory: opencode.Ptr("directory"),
 	})
 	if err != nil {
 		var apierr *opencode.Error

@@ -26,13 +26,13 @@ func TestAppLogWithOptionalParams(t *testing.T) {
 		t.Fatalf("failed to create client: %v", err)
 	}
 	_, err = client.App.Log(context.TODO(), &opencode.AppLogParams{
-		Level:     opencode.F(opencode.AppLogParamsLevelDebug),
-		Message:   opencode.F("message"),
-		Service:   opencode.F("service"),
-		Directory: opencode.F("directory"),
-		Extra: opencode.F(map[string]interface{}{
+		Level:     opencode.LogLevelDebug,
+		Message:   "message",
+		Service:   "service",
+		Directory: opencode.Ptr("directory"),
+		Extra: map[string]interface{}{
 			"foo": "bar",
-		}),
+		},
 	})
 	if err != nil {
 		var apierr *opencode.Error
@@ -57,7 +57,7 @@ func TestAppProvidersWithOptionalParams(t *testing.T) {
 		t.Fatalf("failed to create client: %v", err)
 	}
 	_, err = client.App.Providers(context.TODO(), &opencode.AppProvidersParams{
-		Directory: opencode.F("directory"),
+		Directory: opencode.Ptr("directory"),
 	})
 	if err != nil {
 		var apierr *opencode.Error

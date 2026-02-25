@@ -24,7 +24,7 @@ func TestProjectListWithOptionalParams(t *testing.T) {
 		t.Fatalf("failed to create client: %v", err)
 	}
 	_, err = client.Project.List(context.TODO(), &opencode.ProjectListParams{
-		Directory: opencode.F("directory"),
+		Directory: opencode.Ptr("directory"),
 	})
 	if err != nil {
 		var apierr *opencode.Error
@@ -49,7 +49,7 @@ func TestProjectCurrentWithOptionalParams(t *testing.T) {
 		t.Fatalf("failed to create client: %v", err)
 	}
 	_, err = client.Project.Current(context.TODO(), &opencode.ProjectCurrentParams{
-		Directory: opencode.F("directory"),
+		Directory: opencode.Ptr("directory"),
 	})
 	if err != nil {
 		var apierr *opencode.Error

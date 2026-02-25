@@ -28,8 +28,8 @@ func TestSessionPermissionRespondWithOptionalParams(t *testing.T) {
 		"id",
 		"permissionID",
 		&opencode.SessionPermissionRespondParams{
-			Response:  opencode.F(opencode.SessionPermissionRespondParamsResponseOnce),
-			Directory: opencode.F("directory"),
+			Response:  opencode.PermissionResponseOnce,
+			Directory: opencode.Ptr("directory"),
 		},
 	)
 	if err != nil {

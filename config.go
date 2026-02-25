@@ -10,7 +10,6 @@ import (
 
 	"github.com/dominicnunez/opencode-sdk-go/internal/apijson"
 	"github.com/dominicnunez/opencode-sdk-go/internal/apiquery"
-	"github.com/dominicnunez/opencode-sdk-go/internal/param"
 	"github.com/dominicnunez/opencode-sdk-go/shared"
 	"github.com/tidwall/gjson"
 )
@@ -2120,7 +2119,7 @@ func (r McpRemoteConfigType) IsKnown() bool {
 }
 
 type ConfigGetParams struct {
-	Directory param.Field[string] `query:"directory"`
+	Directory *string `query:"directory,omitempty"`
 }
 
 // URLQuery serializes [ConfigGetParams]'s query parameters as `url.Values`.

@@ -24,7 +24,7 @@ func TestCommandListWithOptionalParams(t *testing.T) {
 		t.Fatalf("failed to create client: %v", err)
 	}
 	_, err = client.Command.List(context.TODO(), &opencode.CommandListParams{
-		Directory: opencode.F("directory"),
+		Directory: opencode.Ptr("directory"),
 	})
 	if err != nil {
 		var apierr *opencode.Error
