@@ -6,7 +6,7 @@ import (
 	"context"
 	"net/http"
 	"net/url"
-	"github.com/dominicnunez/opencode-sdk-go/internal/apiquery"
+	"github.com/dominicnunez/opencode-sdk-go/internal/queryparams"
 )
 
 type FileService struct {
@@ -155,10 +155,7 @@ type FileListParams struct {
 }
 
 func (r FileListParams) URLQuery() (url.Values, error) {
-	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
-		ArrayFormat:  apiquery.ArrayQueryFormatComma,
-		NestedFormat: apiquery.NestedQueryFormatBrackets,
-	})
+	return queryparams.Marshal(r)
 }
 
 type FileReadParams struct {
@@ -167,10 +164,7 @@ type FileReadParams struct {
 }
 
 func (r FileReadParams) URLQuery() (url.Values, error) {
-	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
-		ArrayFormat:  apiquery.ArrayQueryFormatComma,
-		NestedFormat: apiquery.NestedQueryFormatBrackets,
-	})
+	return queryparams.Marshal(r)
 }
 
 type FileStatusParams struct {
@@ -178,8 +172,5 @@ type FileStatusParams struct {
 }
 
 func (r FileStatusParams) URLQuery() (url.Values, error) {
-	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
-		ArrayFormat:  apiquery.ArrayQueryFormatComma,
-		NestedFormat: apiquery.NestedQueryFormatBrackets,
-	})
+	return queryparams.Marshal(r)
 }

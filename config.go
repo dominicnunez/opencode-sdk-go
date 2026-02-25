@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/dominicnunez/opencode-sdk-go/internal/apiquery"
+	"github.com/dominicnunez/opencode-sdk-go/internal/queryparams"
 )
 
 type ConfigService struct {
@@ -1527,8 +1527,5 @@ type ConfigGetParams struct {
 
 // URLQuery serializes [ConfigGetParams]'s query parameters as `url.Values`.
 func (r ConfigGetParams) URLQuery() (url.Values, error) {
-	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
-		ArrayFormat:  apiquery.ArrayQueryFormatComma,
-		NestedFormat: apiquery.NestedQueryFormatBrackets,
-	})
+	return queryparams.Marshal(r)
 }

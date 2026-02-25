@@ -8,7 +8,7 @@ import (
 	"net/url"
 
 	"github.com/dominicnunez/opencode-sdk-go/internal"
-	"github.com/dominicnunez/opencode-sdk-go/internal/apiquery"
+	"github.com/dominicnunez/opencode-sdk-go/internal/queryparams"
 	"github.com/dominicnunez/opencode-sdk-go/packages/ssestream"
 	"github.com/dominicnunez/opencode-sdk-go/shared"
 )
@@ -952,8 +952,5 @@ type EventListParams struct {
 }
 
 func (r EventListParams) URLQuery() (url.Values, error) {
-	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
-		ArrayFormat:  apiquery.ArrayQueryFormatComma,
-		NestedFormat: apiquery.NestedQueryFormatBrackets,
-	})
+	return queryparams.Marshal(r)
 }

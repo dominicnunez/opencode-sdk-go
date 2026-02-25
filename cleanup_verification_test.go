@@ -40,17 +40,17 @@ func TestCleanupVerification(t *testing.T) {
 		}
 	})
 
-	t.Run("gjson dependency is still present", func(t *testing.T) {
-		// gjson is a core dependency for union types and internal decoder - should NOT be removed
+	t.Run("gjson dependency is removed", func(t *testing.T) {
+		// gjson was removed after converting unions to stdlib discriminated union pattern
 		goModPath := "go.mod"
 		content, err := os.ReadFile(goModPath)
 		if err != nil {
 			t.Fatalf("failed to read go.mod: %v", err)
 		}
 
-		// Verify gjson is still in go.mod (it's actively used)
-		if !containsString(string(content), "github.com/tidwall/gjson") {
-			t.Error("gjson should still be in go.mod - it's used for union types and JSON decoding")
+		// Verify gjson is no longer in go.mod (all unions now use stdlib)
+		if containsString(string(content), "github.com/tidwall/gjson") {
+			t.Error("gjson should be removed from go.mod - all unions now use stdlib discriminated union pattern")
 		}
 	})
 }

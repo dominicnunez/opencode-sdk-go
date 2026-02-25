@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/url"
-	"github.com/dominicnunez/opencode-sdk-go/internal/apiquery"
+	"github.com/dominicnunez/opencode-sdk-go/internal/queryparams"
 )
 
 type CommandService struct {
@@ -37,8 +37,5 @@ type CommandListParams struct {
 }
 
 func (r CommandListParams) URLQuery() (url.Values, error) {
-	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
-		ArrayFormat:  apiquery.ArrayQueryFormatComma,
-		NestedFormat: apiquery.NestedQueryFormatBrackets,
-	})
+	return queryparams.Marshal(r)
 }

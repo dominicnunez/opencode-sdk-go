@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/url"
-	"github.com/dominicnunez/opencode-sdk-go/internal/apiquery"
+	"github.com/dominicnunez/opencode-sdk-go/internal/queryparams"
 )
 
 type ProjectService struct {
@@ -66,10 +66,7 @@ type ProjectListParams struct {
 }
 
 func (r ProjectListParams) URLQuery() (url.Values, error) {
-	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
-		ArrayFormat:  apiquery.ArrayQueryFormatComma,
-		NestedFormat: apiquery.NestedQueryFormatBrackets,
-	})
+	return queryparams.Marshal(r)
 }
 
 type ProjectCurrentParams struct {
@@ -77,8 +74,5 @@ type ProjectCurrentParams struct {
 }
 
 func (r ProjectCurrentParams) URLQuery() (url.Values, error) {
-	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
-		ArrayFormat:  apiquery.ArrayQueryFormatComma,
-		NestedFormat: apiquery.NestedQueryFormatBrackets,
-	})
+	return queryparams.Marshal(r)
 }

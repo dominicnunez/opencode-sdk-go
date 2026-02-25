@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/dominicnunez/opencode-sdk-go/internal/apiquery"
+	"github.com/dominicnunez/opencode-sdk-go/internal/queryparams"
 )
 
 type TuiService struct {
@@ -135,10 +135,7 @@ type TuiAppendPromptParams struct {
 }
 
 func (r TuiAppendPromptParams) URLQuery() (url.Values, error) {
-	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
-		ArrayFormat:  apiquery.ArrayQueryFormatComma,
-		NestedFormat: apiquery.NestedQueryFormatBrackets,
-	})
+	return queryparams.Marshal(r)
 }
 
 type TuiClearPromptParams struct {
@@ -146,10 +143,7 @@ type TuiClearPromptParams struct {
 }
 
 func (r TuiClearPromptParams) URLQuery() (url.Values, error) {
-	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
-		ArrayFormat:  apiquery.ArrayQueryFormatComma,
-		NestedFormat: apiquery.NestedQueryFormatBrackets,
-	})
+	return queryparams.Marshal(r)
 }
 
 type TuiExecuteCommandParams struct {
@@ -158,10 +152,7 @@ type TuiExecuteCommandParams struct {
 }
 
 func (r TuiExecuteCommandParams) URLQuery() (url.Values, error) {
-	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
-		ArrayFormat:  apiquery.ArrayQueryFormatComma,
-		NestedFormat: apiquery.NestedQueryFormatBrackets,
-	})
+	return queryparams.Marshal(r)
 }
 
 type TuiOpenHelpParams struct {
@@ -169,10 +160,7 @@ type TuiOpenHelpParams struct {
 }
 
 func (r TuiOpenHelpParams) URLQuery() (url.Values, error) {
-	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
-		ArrayFormat:  apiquery.ArrayQueryFormatComma,
-		NestedFormat: apiquery.NestedQueryFormatBrackets,
-	})
+	return queryparams.Marshal(r)
 }
 
 type TuiOpenModelsParams struct {
@@ -180,10 +168,7 @@ type TuiOpenModelsParams struct {
 }
 
 func (r TuiOpenModelsParams) URLQuery() (url.Values, error) {
-	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
-		ArrayFormat:  apiquery.ArrayQueryFormatComma,
-		NestedFormat: apiquery.NestedQueryFormatBrackets,
-	})
+	return queryparams.Marshal(r)
 }
 
 type TuiOpenSessionsParams struct {
@@ -191,10 +176,7 @@ type TuiOpenSessionsParams struct {
 }
 
 func (r TuiOpenSessionsParams) URLQuery() (url.Values, error) {
-	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
-		ArrayFormat:  apiquery.ArrayQueryFormatComma,
-		NestedFormat: apiquery.NestedQueryFormatBrackets,
-	})
+	return queryparams.Marshal(r)
 }
 
 type TuiOpenThemesParams struct {
@@ -202,10 +184,7 @@ type TuiOpenThemesParams struct {
 }
 
 func (r TuiOpenThemesParams) URLQuery() (url.Values, error) {
-	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
-		ArrayFormat:  apiquery.ArrayQueryFormatComma,
-		NestedFormat: apiquery.NestedQueryFormatBrackets,
-	})
+	return queryparams.Marshal(r)
 }
 
 type TuiShowToastParams struct {
@@ -216,10 +195,7 @@ type TuiShowToastParams struct {
 }
 
 func (r TuiShowToastParams) URLQuery() (url.Values, error) {
-	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
-		ArrayFormat:  apiquery.ArrayQueryFormatComma,
-		NestedFormat: apiquery.NestedQueryFormatBrackets,
-	})
+	return queryparams.Marshal(r)
 }
 
 type TuiSubmitPromptParams struct {
@@ -227,8 +203,5 @@ type TuiSubmitPromptParams struct {
 }
 
 func (r TuiSubmitPromptParams) URLQuery() (url.Values, error) {
-	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
-		ArrayFormat:  apiquery.ArrayQueryFormatComma,
-		NestedFormat: apiquery.NestedQueryFormatBrackets,
-	})
+	return queryparams.Marshal(r)
 }
