@@ -1,32 +1,8 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
-
 package shared
-
-import (
-	"github.com/dominicnunez/opencode-sdk-go/internal/apijson"
-)
 
 type MessageAbortedError struct {
 	Data MessageAbortedErrorData `json:"data,required"`
 	Name MessageAbortedErrorName `json:"name,required"`
-	JSON messageAbortedErrorJSON `json:"-"`
-}
-
-// messageAbortedErrorJSON contains the JSON metadata for the struct
-// [MessageAbortedError]
-type messageAbortedErrorJSON struct {
-	Data        apijson.Field
-	Name        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *MessageAbortedError) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r messageAbortedErrorJSON) RawJSON() string {
-	return r.raw
 }
 
 func (r MessageAbortedError) ImplementsSessionError() {}
@@ -34,24 +10,7 @@ func (r MessageAbortedError) ImplementsSessionError() {}
 func (r MessageAbortedError) ImplementsAssistantMessageError() {}
 
 type MessageAbortedErrorData struct {
-	Message string                      `json:"message,required"`
-	JSON    messageAbortedErrorDataJSON `json:"-"`
-}
-
-// messageAbortedErrorDataJSON contains the JSON metadata for the struct
-// [MessageAbortedErrorData]
-type messageAbortedErrorDataJSON struct {
-	Message     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *MessageAbortedErrorData) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r messageAbortedErrorDataJSON) RawJSON() string {
-	return r.raw
+	Message string `json:"message,required"`
 }
 
 type MessageAbortedErrorName string
@@ -71,24 +30,6 @@ func (r MessageAbortedErrorName) IsKnown() bool {
 type ProviderAuthError struct {
 	Data ProviderAuthErrorData `json:"data,required"`
 	Name ProviderAuthErrorName `json:"name,required"`
-	JSON providerAuthErrorJSON `json:"-"`
-}
-
-// providerAuthErrorJSON contains the JSON metadata for the struct
-// [ProviderAuthError]
-type providerAuthErrorJSON struct {
-	Data        apijson.Field
-	Name        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ProviderAuthError) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r providerAuthErrorJSON) RawJSON() string {
-	return r.raw
 }
 
 func (r ProviderAuthError) ImplementsSessionError() {}
@@ -96,26 +37,8 @@ func (r ProviderAuthError) ImplementsSessionError() {}
 func (r ProviderAuthError) ImplementsAssistantMessageError() {}
 
 type ProviderAuthErrorData struct {
-	Message    string                    `json:"message,required"`
-	ProviderID string                    `json:"providerID,required"`
-	JSON       providerAuthErrorDataJSON `json:"-"`
-}
-
-// providerAuthErrorDataJSON contains the JSON metadata for the struct
-// [ProviderAuthErrorData]
-type providerAuthErrorDataJSON struct {
-	Message     apijson.Field
-	ProviderID  apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ProviderAuthErrorData) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r providerAuthErrorDataJSON) RawJSON() string {
-	return r.raw
+	Message    string `json:"message,required"`
+	ProviderID string `json:"providerID,required"`
 }
 
 type ProviderAuthErrorName string
@@ -135,23 +58,6 @@ func (r ProviderAuthErrorName) IsKnown() bool {
 type UnknownError struct {
 	Data UnknownErrorData `json:"data,required"`
 	Name UnknownErrorName `json:"name,required"`
-	JSON unknownErrorJSON `json:"-"`
-}
-
-// unknownErrorJSON contains the JSON metadata for the struct [UnknownError]
-type unknownErrorJSON struct {
-	Data        apijson.Field
-	Name        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *UnknownError) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r unknownErrorJSON) RawJSON() string {
-	return r.raw
 }
 
 func (r UnknownError) ImplementsSessionError() {}
@@ -159,24 +65,7 @@ func (r UnknownError) ImplementsSessionError() {}
 func (r UnknownError) ImplementsAssistantMessageError() {}
 
 type UnknownErrorData struct {
-	Message string               `json:"message,required"`
-	JSON    unknownErrorDataJSON `json:"-"`
-}
-
-// unknownErrorDataJSON contains the JSON metadata for the struct
-// [UnknownErrorData]
-type unknownErrorDataJSON struct {
-	Message     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *UnknownErrorData) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r unknownErrorDataJSON) RawJSON() string {
-	return r.raw
+	Message string `json:"message,required"`
 }
 
 type UnknownErrorName string
