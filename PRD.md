@@ -150,7 +150,7 @@ Verify these already exist (my earlier scan found them but coverage script misse
 
 ### Session Permissions — verify coverage:
 
-- [ ] Verify `SessionPermissionService.Reply(ctx, id, permissionID, params)` exists and matches `POST /session/{id}/permissions/{permissionID}`
+- [x] Verify `SessionPermissionService.Reply(ctx, id, permissionID, params)` exists and matches `POST /session/{id}/permissions/{permissionID}`
 
 ---
 
