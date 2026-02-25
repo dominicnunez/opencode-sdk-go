@@ -112,7 +112,7 @@ All follow the existing pattern in the codebase. Use the spec for request/respon
 
 ### Session service (`session.go`) — add 10 missing methods:
 
-- [ ] `Diff(ctx, id, params) → ([]FileDiff, error)` — `GET /session/{id}/diff`
+- [x] `Diff(ctx, id, params) → ([]FileDiff, error)` — `GET /session/{id}/diff`
 - [ ] `Fork(ctx, id, params) → (*Session, error)` — `POST /session/{id}/fork`. Params: `messageID string` (required)
 - [ ] `Shell(ctx, id, params) → (*SessionShellResponse, error)` — `POST /session/{id}/shell`. Params: `command string` (required), `timeout *int64`
 - [ ] `Summarize(ctx, id, params) → (*Session, error)` — `POST /session/{id}/summarize`
@@ -159,7 +159,7 @@ Verify these already exist (my earlier scan found them but coverage script misse
 Check each schema in `openapi.yml` against existing Go types. Add any missing ones.
 
 - [ ] `Todo` struct — `content string`, `status string`, `priority string`, `id string`
-- [ ] `FileDiff` struct — `file string`, `before string`, `after string`, `additions int64`, `deletions int64`  
+- [x] `FileDiff` struct — `file string`, `before string`, `after string`, `additions int64`, `deletions int64`  
 - [ ] `SessionShellResponse` — check spec for response schema
 - [ ] `SessionForkParams` — `messageID string` (required), `directory *string`
 - [ ] `McpStatus` — check spec for response schema of `GET /mcp`

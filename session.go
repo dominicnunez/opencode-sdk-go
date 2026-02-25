@@ -214,6 +214,21 @@ func (s *SessionService) Share(ctx context.Context, id string, params *SessionSh
 	return &result, nil
 }
 
+func (s *SessionService) Diff(ctx context.Context, id string, params *SessionDiffParams) ([]FileDiff, error) {
+	if id == "" {
+		return nil, errors.New("missing required id parameter")
+	}
+	if params == nil {
+		params = &SessionDiffParams{}
+	}
+	var result []FileDiff
+	err := s.client.do(ctx, http.MethodGet, "session/"+id+"/diff", params, &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
 type AgentPart struct {
 	ID        string          `json:"id,required"`
 	MessageID string          `json:"messageID,required"`
@@ -485,6 +500,14 @@ func (r FilePartType) IsKnown() bool {
 		return true
 	}
 	return false
+}
+
+type FileDiff struct {
+	File      string  `json:"file,required"`
+	Before    string  `json:"before,required"`
+	After     string  `json:"after,required"`
+	Additions float64 `json:"additions,required"`
+	Deletions float64 `json:"deletions,required"`
 }
 
 type FilePartInputParam struct {
@@ -1557,6 +1580,16 @@ type SessionCommandParams struct {
 
 // URLQuery serializes [SessionCommandParams]'s query parameters as `url.Values`.
 func (r SessionCommandParams) URLQuery() (url.Values, error) {
+	return queryparams.Marshal(r)
+}
+
+type SessionDiffParams struct {
+	Directory *string `query:"directory,omitempty"`
+	MessageID *string `query:"messageID,omitempty"`
+}
+
+// URLQuery serializes [SessionDiffParams]'s query parameters as `url.Values`.
+func (r SessionDiffParams) URLQuery() (url.Values, error) {
 	return queryparams.Marshal(r)
 }
 
