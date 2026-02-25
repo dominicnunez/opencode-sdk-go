@@ -147,8 +147,8 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 
 	var body io.Reader
 
-	// Handle query params for GET requests
-	if method == http.MethodGet && params != nil {
+	// Handle query params for all request types
+	if params != nil {
 		if queryer, ok := params.(interface{ URLQuery() (url.Values, error) }); ok {
 			query, err := queryer.URLQuery()
 			if err != nil {

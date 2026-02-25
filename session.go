@@ -229,6 +229,21 @@ func (s *SessionService) Diff(ctx context.Context, id string, params *SessionDif
 	return result, nil
 }
 
+func (s *SessionService) Fork(ctx context.Context, id string, params *SessionForkParams) (*Session, error) {
+	if id == "" {
+		return nil, errors.New("missing required id parameter")
+	}
+	if params == nil {
+		return nil, errors.New("missing required params")
+	}
+	var result Session
+	err := s.client.do(ctx, http.MethodPost, "session/"+id+"/fork", params, &result)
+	if err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
 type AgentPart struct {
 	ID        string          `json:"id,required"`
 	MessageID string          `json:"messageID,required"`
@@ -1590,6 +1605,16 @@ type SessionDiffParams struct {
 
 // URLQuery serializes [SessionDiffParams]'s query parameters as `url.Values`.
 func (r SessionDiffParams) URLQuery() (url.Values, error) {
+	return queryparams.Marshal(r)
+}
+
+type SessionForkParams struct {
+	MessageID string  `json:"messageID,required"`
+	Directory *string `query:"directory,omitempty"`
+}
+
+// URLQuery serializes [SessionForkParams]'s query parameters as `url.Values`.
+func (r SessionForkParams) URLQuery() (url.Values, error) {
 	return queryparams.Marshal(r)
 }
 

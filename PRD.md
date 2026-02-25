@@ -113,7 +113,7 @@ All follow the existing pattern in the codebase. Use the spec for request/respon
 ### Session service (`session.go`) — add 10 missing methods:
 
 - [x] `Diff(ctx, id, params) → ([]FileDiff, error)` — `GET /session/{id}/diff`
-- [ ] `Fork(ctx, id, params) → (*Session, error)` — `POST /session/{id}/fork`. Params: `messageID string` (required)
+- [x] `Fork(ctx, id, params) → (*Session, error)` — `POST /session/{id}/fork`. Params: `messageID string` (required)
 - [ ] `Shell(ctx, id, params) → (*SessionShellResponse, error)` — `POST /session/{id}/shell`. Params: `command string` (required), `timeout *int64`
 - [ ] `Summarize(ctx, id, params) → (*Session, error)` — `POST /session/{id}/summarize`
 - [ ] `Todo(ctx, id, params) → ([]Todo, error)` — `GET /session/{id}/todo`
