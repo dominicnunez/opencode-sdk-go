@@ -519,61 +519,71 @@ func (r ConfigLayout) IsKnown() bool {
 	return false
 }
 
+// ConfigLsp represents LSP (Language Server Protocol) configuration.
+// It can be either ConfigLspDisabled or ConfigLspObject.
+// The variant is determined by checking for the presence of the "command" field.
 type ConfigLsp struct {
-	// This field can have the runtime type of [[]string].
-	Command  interface{} `json:"command"`
-	Disabled bool        `json:"disabled"`
-	// This field can have the runtime type of [map[string]string].
-	Env interface{} `json:"env"`
-	// This field can have the runtime type of [[]string].
-	Extensions interface{} `json:"extensions"`
-	// This field can have the runtime type of [map[string]interface{}].
-	Initialization interface{}   `json:"initialization"`
-	union          ConfigLspUnion
+	// raw stores the full JSON for lazy unmarshaling
+	raw json.RawMessage
 }
 
-func (r *ConfigLsp) UnmarshalJSON(data []byte) (err error) {
-	*r = ConfigLsp{}
-	err = apijson.UnmarshalRoot(data, &r.union)
-	if err != nil {
-		return err
+func (r *ConfigLsp) UnmarshalJSON(data []byte) error {
+	// Store raw JSON for lazy unmarshaling
+	r.raw = data
+	return nil
+}
+
+// AsDisabled returns the config as ConfigLspDisabled if it has disabled=true without command field.
+// Returns (nil, false) if it's not a disabled config or unmarshaling fails.
+func (r ConfigLsp) AsDisabled() (*ConfigLspDisabled, bool) {
+	// Try to unmarshal as ConfigLspDisabled
+	var disabled ConfigLspDisabled
+	if err := json.Unmarshal(r.raw, &disabled); err != nil {
+		return nil, false
 	}
-	return apijson.Port(r.union, &r)
+
+	// Check if it has the disabled field set to true and no command field
+	var peek struct {
+		Command  interface{} `json:"command"`
+		Disabled bool        `json:"disabled"`
+	}
+	if err := json.Unmarshal(r.raw, &peek); err != nil {
+		return nil, false
+	}
+
+	// If command field exists, it's not a disabled config
+	if peek.Command != nil {
+		return nil, false
+	}
+
+	// Must have disabled=true
+	if !peek.Disabled {
+		return nil, false
+	}
+
+	return &disabled, true
 }
 
-// AsUnion returns a [ConfigLspUnion] interface which you can cast to the specific
-// types for more type safety.
-//
-// Possible runtime types of the union are [ConfigLspDisabled], [ConfigLspObject].
-func (r ConfigLsp) AsUnion() ConfigLspUnion {
-	return r.union
-}
+// AsObject returns the config as ConfigLspObject if it has a command field.
+// Returns (nil, false) if it's not an object config or unmarshaling fails.
+func (r ConfigLsp) AsObject() (*ConfigLspObject, bool) {
+	// Try to unmarshal as ConfigLspObject
+	var obj ConfigLspObject
+	if err := json.Unmarshal(r.raw, &obj); err != nil {
+		return nil, false
+	}
 
-// Union satisfied by [ConfigLspDisabled] or [ConfigLspObject].
-type ConfigLspUnion interface {
-	implementsConfigLsp()
-}
+	// Must have command field
+	if len(obj.Command) == 0 {
+		return nil, false
+	}
 
-func init() {
-	apijson.RegisterUnion(
-		reflect.TypeOf((*ConfigLspUnion)(nil)).Elem(),
-		"",
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(ConfigLspDisabled{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(ConfigLspObject{}),
-		},
-	)
+	return &obj, true
 }
 
 type ConfigLspDisabled struct {
 	Disabled ConfigLspDisabledDisabled `json:"disabled,required"`
 }
-
-func (r ConfigLspDisabled) implementsConfigLsp() {}
 
 type ConfigLspDisabledDisabled bool
 
@@ -596,8 +606,6 @@ type ConfigLspObject struct {
 	Extensions     []string               `json:"extensions"`
 	Initialization map[string]interface{} `json:"initialization"`
 }
-
-func (r ConfigLspObject) implementsConfigLsp() {}
 
 // ConfigMcp represents MCP (Model Context Protocol) server configuration.
 // It can be either McpLocalConfig or McpRemoteConfig, discriminated by the type field.

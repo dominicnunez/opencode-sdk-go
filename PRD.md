@@ -95,7 +95,7 @@ Apply this pattern to each union:
 
 - [x] **ConfigMcp** (discriminator: `type`) → `McpLocalConfig`, `McpRemoteConfig`. Remove `ConfigMcpUnion` interface and init block. Add `AsLocal()`, `AsRemote()` methods.
 
-- [ ] **ConfigLsp** — check if this is a union in the spec or just a struct. Handle accordingly.
+- [x] **ConfigLsp** (discriminator: presence of `command` field) → `ConfigLspDisabled`, `ConfigLspObject`. Remove `ConfigLspUnion` interface and init block. Add `AsDisabled()`, `AsObject()` methods.
 
 - [ ] Delete all `func init()` blocks that call `apijson.RegisterUnion`
 - [ ] Remove all `reflect` and `gjson` imports
