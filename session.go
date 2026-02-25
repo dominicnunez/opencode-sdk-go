@@ -1281,68 +1281,72 @@ type ToolPart struct {
 	Metadata  map[string]interface{} `json:"metadata"`
 }
 
+// ToolPartState is a discriminated union type representing the state of a tool.
+// Use the As* methods to access the specific state type based on the Status discriminator.
 type ToolPartState struct {
-	Status ToolPartStateStatus `json:"status,required"`
-	// This field can have the runtime type of [[]FilePart].
-	Attachments interface{} `json:"attachments"`
-	Error       string      `json:"error"`
-	// This field can have the runtime type of [interface{}], [map[string]interface{}].
-	Input interface{} `json:"input"`
-	// This field can have the runtime type of [map[string]interface{}].
-	Metadata interface{} `json:"metadata"`
-	Output   string      `json:"output"`
-	// This field can have the runtime type of [ToolStateRunningTime],
-	// [ToolStateCompletedTime], [ToolStateErrorTime].
-	Time  interface{}       `json:"time"`
-	Title string            `json:"title"`
-	union ToolPartStateUnion
+	Status ToolPartStateStatus `json:"status"`
+	raw    json.RawMessage
 }
 
-func (r *ToolPartState) UnmarshalJSON(data []byte) (err error) {
-	*r = ToolPartState{}
-	err = apijson.UnmarshalRoot(data, &r.union)
-	if err != nil {
+func (r *ToolPartState) UnmarshalJSON(data []byte) error {
+	// Peek at the discriminator (status field)
+	var peek struct {
+		Status ToolPartStateStatus `json:"status"`
+	}
+	if err := json.Unmarshal(data, &peek); err != nil {
 		return err
 	}
-	return apijson.Port(r.union, &r)
+	r.Status = peek.Status
+	r.raw = data
+	return nil
 }
 
-// AsUnion returns a [ToolPartStateUnion] interface which you can cast to the
-// specific types for more type safety.
-//
-// Possible runtime types of the union are [ToolStatePending], [ToolStateRunning],
-// [ToolStateCompleted], [ToolStateError].
-func (r ToolPartState) AsUnion() ToolPartStateUnion {
-	return r.union
+// AsPending returns the state as ToolStatePending if Status is "pending".
+func (r ToolPartState) AsPending() (*ToolStatePending, bool) {
+	if r.Status != ToolPartStateStatusPending {
+		return nil, false
+	}
+	var state ToolStatePending
+	if err := json.Unmarshal(r.raw, &state); err != nil {
+		return nil, false
+	}
+	return &state, true
 }
 
-// Union satisfied by [ToolStatePending], [ToolStateRunning], [ToolStateCompleted]
-// or [ToolStateError].
-type ToolPartStateUnion interface {
-	implementsToolPartState()
+// AsRunning returns the state as ToolStateRunning if Status is "running".
+func (r ToolPartState) AsRunning() (*ToolStateRunning, bool) {
+	if r.Status != ToolPartStateStatusRunning {
+		return nil, false
+	}
+	var state ToolStateRunning
+	if err := json.Unmarshal(r.raw, &state); err != nil {
+		return nil, false
+	}
+	return &state, true
 }
 
-func init() {
-	apijson.RegisterUnion(
-		reflect.TypeOf((*ToolPartStateUnion)(nil)).Elem(),
-		"",
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(ToolStatePending{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(ToolStateRunning{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(ToolStateCompleted{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(ToolStateError{}),
-		},
-	)
+// AsCompleted returns the state as ToolStateCompleted if Status is "completed".
+func (r ToolPartState) AsCompleted() (*ToolStateCompleted, bool) {
+	if r.Status != ToolPartStateStatusCompleted {
+		return nil, false
+	}
+	var state ToolStateCompleted
+	if err := json.Unmarshal(r.raw, &state); err != nil {
+		return nil, false
+	}
+	return &state, true
+}
+
+// AsError returns the state as ToolStateError if Status is "error".
+func (r ToolPartState) AsError() (*ToolStateError, bool) {
+	if r.Status != ToolPartStateStatusError {
+		return nil, false
+	}
+	var state ToolStateError
+	if err := json.Unmarshal(r.raw, &state); err != nil {
+		return nil, false
+	}
+	return &state, true
 }
 
 type ToolPartStateStatus string
@@ -1386,8 +1390,6 @@ type ToolStateCompleted struct {
 	Attachments []FilePart               `json:"attachments"`
 }
 
-func (r ToolStateCompleted) implementsToolPartState() {}
-
 type ToolStateCompletedStatus string
 
 const (
@@ -1416,8 +1418,6 @@ type ToolStateError struct {
 	Metadata map[string]interface{} `json:"metadata"`
 }
 
-func (r ToolStateError) implementsToolPartState() {}
-
 type ToolStateErrorStatus string
 
 const (
@@ -1441,8 +1441,6 @@ type ToolStatePending struct {
 	Status ToolStatePendingStatus `json:"status,required"`
 }
 
-func (r ToolStatePending) implementsToolPartState() {}
-
 type ToolStatePendingStatus string
 
 const (
@@ -1464,8 +1462,6 @@ type ToolStateRunning struct {
 	Metadata map[string]interface{} `json:"metadata"`
 	Title    string                 `json:"title"`
 }
-
-func (r ToolStateRunning) implementsToolPartState() {}
 
 type ToolStateRunningStatus string
 

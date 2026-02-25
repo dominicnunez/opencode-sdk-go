@@ -83,7 +83,7 @@ Apply this pattern to each union:
 
 - [x] **Part** (discriminator: `type`) → `TextPart`, `ReasoningPart`, `FilePart`, `ToolPart`, `StepStartPart`, `StepFinishPart`, `SnapshotPart`, `PatchPart`, `AgentPart`, `RetryPart`. Remove `PartUnion` interface and init block. Add `AsText()`, `AsReasoning()`, `AsFile()`, `AsTool()`, `AsStepStart()`, `AsStepFinish()`, `AsSnapshot()`, `AsPatch()`, `AsAgent()`, `AsRetry()` methods.
 
-- [ ] **ToolState** (discriminator: `status`) → `ToolStatePending`, `ToolStateRunning`, `ToolStateCompleted`, `ToolStateError`. Remove `ToolStateUnion` interface and init block. Add `AsPending()`, `AsRunning()`, `AsCompleted()`, `AsError()` methods.
+- [x] **ToolState** (discriminator: `status`) → `ToolStatePending`, `ToolStateRunning`, `ToolStateCompleted`, `ToolStateError`. Remove `ToolStateUnion` interface and init block. Add `AsPending()`, `AsRunning()`, `AsCompleted()`, `AsError()` methods.
 
 - [ ] **FilePartSource** (discriminator: `type`) → `FileSource`, `SymbolSource`. Remove `FilePartSourceUnion` interface and init block. Add `AsFile()`, `AsSymbol()` methods.
 
