@@ -2,6 +2,7 @@ package opencode
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -1399,6 +1400,103 @@ func (r McpRemoteConfigType) IsKnown() bool {
 		return true
 	}
 	return false
+}
+
+// Auth represents authentication credentials. It can be one of OAuth, ApiAuth, or WellKnownAuth,
+// discriminated by the type field.
+type Auth struct {
+	// Type discriminator: "oauth", "api", or "wellknown"
+	Type AuthType `json:"type"`
+	// raw stores the full JSON for lazy unmarshaling
+	raw json.RawMessage
+}
+
+// AuthType is the discriminator for Auth union
+type AuthType string
+
+const (
+	AuthTypeOAuth      AuthType = "oauth"
+	AuthTypeAPI        AuthType = "api"
+	AuthTypeWellKnown  AuthType = "wellknown"
+)
+
+func (r AuthType) IsKnown() bool {
+	switch r {
+	case AuthTypeOAuth, AuthTypeAPI, AuthTypeWellKnown:
+		return true
+	}
+	return false
+}
+
+// UnmarshalJSON implements json.Unmarshaler for Auth
+func (a *Auth) UnmarshalJSON(data []byte) error {
+	// Peek at discriminator
+	var peek struct {
+		Type AuthType `json:"type"`
+	}
+	if err := json.Unmarshal(data, &peek); err != nil {
+		return err
+	}
+	a.Type = peek.Type
+	a.raw = data
+	return nil
+}
+
+// AsOAuth returns the OAuth variant if the type is oauth
+func (a Auth) AsOAuth() (*OAuth, bool) {
+	if a.Type != AuthTypeOAuth {
+		return nil, false
+	}
+	var oauth OAuth
+	if err := json.Unmarshal(a.raw, &oauth); err != nil {
+		return nil, false
+	}
+	return &oauth, true
+}
+
+// AsAPI returns the ApiAuth variant if the type is api
+func (a Auth) AsAPI() (*ApiAuth, bool) {
+	if a.Type != AuthTypeAPI {
+		return nil, false
+	}
+	var apiAuth ApiAuth
+	if err := json.Unmarshal(a.raw, &apiAuth); err != nil {
+		return nil, false
+	}
+	return &apiAuth, true
+}
+
+// AsWellKnown returns the WellKnownAuth variant if the type is wellknown
+func (a Auth) AsWellKnown() (*WellKnownAuth, bool) {
+	if a.Type != AuthTypeWellKnown {
+		return nil, false
+	}
+	var wellKnown WellKnownAuth
+	if err := json.Unmarshal(a.raw, &wellKnown); err != nil {
+		return nil, false
+	}
+	return &wellKnown, true
+}
+
+// OAuth represents OAuth authentication credentials
+type OAuth struct {
+	Type    AuthType `json:"type"`
+	Refresh string   `json:"refresh"`
+	Access  string   `json:"access"`
+	Expires int64    `json:"expires"`
+}
+
+// ApiAuth represents API key authentication
+type ApiAuth struct {
+	Type AuthType `json:"type"`
+	Key  string   `json:"key"`
+}
+
+// WellKnownAuth represents well-known authentication
+type WellKnownAuth struct {
+	Type  AuthType `json:"type"`
+	Key   string   `json:"key"`
+	Token string   `json:"token"`
 }
 
 type ConfigGetParams struct {

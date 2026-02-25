@@ -91,7 +91,7 @@ Apply this pattern to each union:
 
 - [x] **AssistantMessageError** (discriminator: `name`) → `MessageAbortedError`, `MessageOutputLengthError`, `APIError`, `ProviderAuthError`, `UnknownError`. Remove `AssistantMessageErrorUnion` interface and init block. Add `AsAborted()`, `AsOutputLength()`, `AsAPI()`, `AsProviderAuth()`, `AsUnknown()` methods.
 
-- [ ] **Auth** (discriminator: `type`) → `OAuth`, `ApiAuth`, `WellKnownAuth`. Remove `AuthUnion` interface and init block. Add `AsOAuth()`, `AsAPI()`, `AsWellKnown()` methods.
+- [x] **Auth** (discriminator: `type`) → `OAuth`, `ApiAuth`, `WellKnownAuth`. Remove `AuthUnion` interface and init block. Add `AsOAuth()`, `AsAPI()`, `AsWellKnown()` methods.
 
 - [ ] **ConfigMcp** (discriminator: `type`) → `McpLocalConfig`, `McpRemoteConfig`. Remove `ConfigMcpUnion` interface and init block. Add `AsLocal()`, `AsRemote()` methods.
 
