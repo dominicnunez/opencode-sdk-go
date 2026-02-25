@@ -121,9 +121,9 @@ All follow the existing pattern in the codebase. Use the spec for request/respon
 - [x] `Unshare(ctx, id, params) → (*Session, error)` — `DELETE /session/{id}/share`
 
 Verify these already exist (my earlier scan found them but coverage script missed due to path concat):
-- [ ] Verify `Delete` works — `DELETE /session/{id}`
-- [ ] Verify `Get` works — `GET /session/{id}`
-- [ ] Verify `Update` works — `PATCH /session/{id}`
+- [x] Verify `Delete` works — `DELETE /session/{id}`
+- [x] Verify `Get` works — `GET /session/{id}`
+- [x] Verify `Update` works — `PATCH /session/{id}`
 
 ### Config service (`config.go`) — add 1 missing method:
 
