@@ -1,15 +1,297 @@
-# PRD: Complete SDK Redesign — Remove Generated Code Patterns
+# PRD: Complete Idiomatic Go SDK — Full Spec Coverage, Zero Stainless
 
-- [x] In `session.go`: delete every `type *JSON struct` definition (~65 of them, e.g. `sessionJSON`, `agentPartJSON`, `assistantMessageJSON`), delete every `func (r *SomeType) UnmarshalJSON(data []byte) (err error)` method that populates those JSON structs, remove the `JSON someTypeJSON \`json:"-"\`` field from every response struct, remove unused imports (`"github.com/tidwall/gjson"`, `"reflect"`, `"github.com/dominicnunez/opencode-sdk-go/internal/apijson"` — keep `apiquery` if query param structs still use it), and remove the `// File generated from our OpenAPI spec by Stainless.` comment at the top. Do NOT change response struct fields, param structs, or service method signatures.
+Reference spec: `openapi.yml` (OpenAPI 3.1.1, 51 endpoints, committed in repo root)
 
-- [x] In `config.go`: delete every `type *JSON struct` definition (~40 of them, e.g. `configJSON`, `configAgentJSON`, `configCommandJSON`), delete every `func (r *SomeType) UnmarshalJSON(data []byte) (err error)` method, remove the `JSON someTypeJSON \`json:"-"\`` field from every response struct, remove unused imports (`"github.com/tidwall/gjson"`, `"reflect"`, `"github.com/dominicnunez/opencode-sdk-go/internal/apijson"` — keep `apiquery` if query param structs still use it), and remove the `// File generated from our OpenAPI spec by Stainless.` comment at the top. Do NOT change response struct fields, param structs, or service method signatures.
+This PRD has two goals:
+1. Implement all 51 spec endpoints as idiomatic Go service methods
+2. Remove every remaining Stainless internal — `apijson`, `apiquery`, `apiform`, `requestconfig`, `option`, `gjson`, `reflect`-based union registration — and replace with clean stdlib Go
 
-- [x] In `shared/shared.go`: delete every `type *JSON struct` definition (6 of them: `messageAbortedErrorJSON`, `messageAbortedErrorDataJSON`, `providerAuthErrorJSON`, `providerAuthErrorDataJSON`, `unknownErrorJSON`, `unknownErrorDataJSON`), delete every `func (r *SomeType) UnmarshalJSON(data []byte) (err error)` method, remove the `JSON someTypeJSON \`json:"-"\`` field from every response struct, and remove unused imports (`"github.com/tidwall/gjson"`, `"reflect"`, `"github.com/dominicnunez/opencode-sdk-go/internal/apijson"`).
+**Rule: the OpenAPI spec defines WHAT the SDK does. This PRD defines HOW — and the how is pure Go.**
 
-- [x] In `session.go`: convert all `param.Field[T]` wrapper types in input/param structs to direct Go types. Rules: `param.Field[string]` with tag `json:"foo,required"` becomes `string` with tag `json:"foo"`; `param.Field[string]` with tag `json:"foo"` (no required) becomes `*string` with tag `json:"foo,omitempty"`; `param.Field[int64]` with `required` becomes `int64`; without `required` becomes `*int64` with `omitempty`; `param.Field[SomeType]` with `required` becomes `SomeType`; without `required` becomes `*SomeType` with `omitempty`; `param.Field[interface{}]` becomes `any` with `omitempty`; `param.Field[[]T]` with `required` becomes `[]T`. Remove the `"github.com/dominicnunez/opencode-sdk-go/internal/param"` import. Update `session_test.go` to construct param structs with direct values instead of `param.Field` wrappers (e.g. `opencode.F("value")` becomes just `"value"`, pointer fields use `opencode.String("value")`).
+---
 
-- [x] Delete `field.go` (root-level file that re-exports param helpers `F()`, `Null()`, `Raw()`, `String()`, `Int()`, `Float()`, `Bool()`, `FileParam()`). Delete the entire `internal/param/` directory. In `internal/requestconfig/requestconfig.go`, remove the `"github.com/dominicnunez/opencode-sdk-go/internal/param"` import and any code paths that handle `param.Field` types. Verify no other files import `internal/param` — if any do, fix those imports first. Run `go mod tidy` after.
+## Phase 1: Replace Stainless HTTP internals with stdlib client
 
-- [x] In `internal/apierror/apierror.go`: remove the `errorJSON` metadata struct and the `UnmarshalJSON` method that populates it. Replace with standard `json.Unmarshal` for the `Error` struct. Remove the `JSON errorJSON \`json:"-"\`` field from the `Error` struct. Keep all other `Error` struct fields and the `Error()` string method intact. Remove unused imports (`"github.com/tidwall/gjson"`, `"reflect"`, `"github.com/dominicnunez/opencode-sdk-go/internal/apijson"` if no longer needed).
+Replace `internal/requestconfig` + `option/` with a single `client.go` `do()` method that uses `net/http` + `encoding/json` directly.
 
-- [x] Final cleanup: check if `aliases.go` only re-exports types that no longer exist or are unused — if so delete it. Check if `"github.com/tidwall/gjson"` is still imported anywhere in the codebase — if not, run `go mod tidy` to remove it from `go.mod`. Run `go vet ./...` and `go test -race ./...` and `go build ./...` to verify everything is clean.
+- [x] `client.go` already has `NewClient` with functional options (`WithBaseURL`, `WithHTTPClient`, `WithTimeout`, `WithMaxRetries`) — keep this
+- [ ] Rewrite `Client.do()` to NOT delegate to `requestconfig.ExecuteNewRequest`. Instead: build `*http.Request` directly, marshal JSON body with `encoding/json`, set headers, execute with retry loop, unmarshal response with `encoding/json`. Handle query params via `url.Values` from param structs' `URLQuery()` methods
+- [ ] Add `Client.doRaw()` variant that returns `*http.Response` for SSE streaming (used by `EventService.ListStreaming`)
+- [ ] Delete `internal/requestconfig/` entirely
+- [ ] Delete `option/requestoption.go` and `option/middleware.go` — replace any needed options with `ClientOption` functional options on the client itself
+- [ ] Update all service methods to use the new `do()` / `doRaw()` — no more `opts ...option.RequestOption` on individual methods
+
+---
+
+## Phase 2: Replace Stainless JSON machinery with encoding/json
+
+Remove `internal/apijson` (2,185 lines), `internal/apiquery`, `internal/apiform` and replace with stdlib.
+
+- [ ] Delete `internal/apijson/` — all of it (decoder, encoder, field, port, registry, tag)
+- [ ] Delete `internal/apiform/` — all of it
+- [ ] Replace `internal/apiquery/` with a simple `queryParams(v interface{}) url.Values` helper that reads `query:"name"` struct tags (or just use the existing `URLQuery()` methods on param structs and delete apiquery too)
+- [ ] Remove `github.com/tidwall/gjson` dependency
+- [ ] Run `go mod tidy` to clean deps
+
+---
+
+## Phase 3: Replace union types with idiomatic Go discriminated unions
+
+The spec has 6 union types. Stainless handles them with `reflect` + `gjson` + `apijson.RegisterUnion` + `init()` blocks. Replace with type-switch on a discriminator field.
+
+**Pattern for all unions:**
+
+```go
+// Message is either UserMessage or AssistantMessage, discriminated by Role.
+type Message struct {
+	Role MessageRole `json:"role"`
+	// Embed raw JSON for lazy decode
+	raw json.RawMessage
+}
+
+func (m *Message) UnmarshalJSON(data []byte) error {
+	// Peek at discriminator
+	var peek struct {
+		Role MessageRole `json:"role"`
+	}
+	if err := json.Unmarshal(data, &peek); err != nil {
+		return err
+	}
+	m.Role = peek.Role
+	m.raw = data
+	return nil
+}
+
+func (m Message) AsUser() (*UserMessage, bool) {
+	if m.Role != MessageRoleUser { return nil, false }
+	var msg UserMessage
+	if err := json.Unmarshal(m.raw, &msg); err != nil { return nil, false }
+	return &msg, true
+}
+
+func (m Message) AsAssistant() (*AssistantMessage, bool) {
+	if m.Role != MessageRoleAssistant { return nil, false }
+	var msg AssistantMessage
+	if err := json.Unmarshal(m.raw, &msg); err != nil { return nil, false }
+	return &msg, true
+}
+```
+
+Apply this pattern to each union:
+
+- [ ] **Message** (discriminator: `role`) → `UserMessage`, `AssistantMessage`. Remove `MessageUnion` interface, `apijson.RegisterUnion` init block, `apijson.Port` call. Add `AsUser()`, `AsAssistant()` methods.
+
+- [ ] **Part** (discriminator: `type`) → `TextPart`, `ReasoningPart`, `FilePart`, `ToolPart`, `StepStartPart`, `StepFinishPart`, `SnapshotPart`, `PatchPart`, `AgentPart`, `RetryPart`. Remove `PartUnion` interface and init block. Add `AsText()`, `AsReasoning()`, `AsFile()`, `AsTool()`, `AsStepStart()`, `AsStepFinish()`, `AsSnapshot()`, `AsPatch()`, `AsAgent()`, `AsRetry()` methods.
+
+- [ ] **ToolState** (discriminator: `status`) → `ToolStatePending`, `ToolStateRunning`, `ToolStateCompleted`, `ToolStateError`. Remove `ToolStateUnion` interface and init block. Add `AsPending()`, `AsRunning()`, `AsCompleted()`, `AsError()` methods.
+
+- [ ] **FilePartSource** (discriminator: `type`) → `FileSource`, `SymbolSource`. Remove `FilePartSourceUnion` interface and init block. Add `AsFile()`, `AsSymbol()` methods.
+
+- [ ] **Event** (discriminator: `type`) → 19 event types. Remove `EventUnion` interface and init block. Add `AsMessageUpdated()`, `AsSessionCreated()`, etc. for each event type.
+
+- [ ] **AssistantMessageError** (discriminator: `name`) → `MessageAbortedError`, `MessageOutputLengthError`, `APIError`, `ProviderAuthError`, `UnknownError`. Remove `AssistantMessageErrorUnion` interface and init block. Add `AsAborted()`, `AsOutputLength()`, `AsAPI()`, `AsProviderAuth()`, `AsUnknown()` methods.
+
+- [ ] **Auth** (discriminator: `type`) → `OAuth`, `ApiAuth`, `WellKnownAuth`. Remove `AuthUnion` interface and init block. Add `AsOAuth()`, `AsAPI()`, `AsWellKnown()` methods.
+
+- [ ] **ConfigMcp** (discriminator: `type`) → `McpLocalConfig`, `McpRemoteConfig`. Remove `ConfigMcpUnion` interface and init block. Add `AsLocal()`, `AsRemote()` methods.
+
+- [ ] **ConfigLsp** — check if this is a union in the spec or just a struct. Handle accordingly.
+
+- [ ] Delete all `func init()` blocks that call `apijson.RegisterUnion`
+- [ ] Remove all `reflect` and `gjson` imports
+
+---
+
+## Phase 4: Add missing service methods (18 endpoints)
+
+All follow the existing pattern in the codebase. Use the spec for request/response types.
+
+### Session service (`session.go`) — add 10 missing methods:
+
+- [ ] `Diff(ctx, id, params) → ([]FileDiff, error)` — `GET /session/{id}/diff`
+- [ ] `Fork(ctx, id, params) → (*Session, error)` — `POST /session/{id}/fork`. Params: `messageID string` (required)
+- [ ] `Shell(ctx, id, params) → (*SessionShellResponse, error)` — `POST /session/{id}/shell`. Params: `command string` (required), `timeout *int64`
+- [ ] `Summarize(ctx, id, params) → (*Session, error)` — `POST /session/{id}/summarize`
+- [ ] `Todo(ctx, id, params) → ([]Todo, error)` — `GET /session/{id}/todo`
+- [ ] `Unrevert(ctx, id, params) → (*Session, error)` — `POST /session/{id}/unrevert`
+- [ ] `Unshare(ctx, id, params) → error` — `DELETE /session/{id}/share`
+
+Verify these already exist (my earlier scan found them but coverage script missed due to path concat):
+- [ ] Verify `Delete` works — `DELETE /session/{id}`
+- [ ] Verify `Get` works — `GET /session/{id}`
+- [ ] Verify `Update` works — `PATCH /session/{id}`
+
+### Config service (`config.go`) — add 1 missing method:
+
+- [ ] `Update(ctx, params) → (*Config, error)` — `PATCH /config`. Params: full Config struct
+
+### Auth service — create new `auth.go`:
+
+- [ ] Create `AuthService` struct on Client
+- [ ] `Set(ctx, id, params) → error` — `PUT /auth/{id}`. Params: Auth union (OAuth | ApiAuth | WellKnownAuth)
+- [ ] Wire into `Client` in `NewClient()`
+
+### MCP service — create new `mcp.go`:
+
+- [ ] Create `McpService` struct on Client
+- [ ] `Status(ctx, params) → (*McpStatus, error)` — `GET /mcp`
+- [ ] Wire into `Client` in `NewClient()`
+
+### Tool service — create new `tool.go`:
+
+- [ ] Create `ToolService` struct on Client
+- [ ] `IDs(ctx, params) → (*ToolIDs, error)` — `GET /experimental/tool/ids`
+- [ ] `List(ctx, params) → (*ToolList, error)` — `GET /experimental/tool`
+- [ ] Wire into `Client` in `NewClient()`
+
+### Session Permissions — verify coverage:
+
+- [ ] Verify `SessionPermissionService.Reply(ctx, id, permissionID, params)` exists and matches `POST /session/{id}/permissions/{permissionID}`
+
+---
+
+## Phase 5: Add missing response/param types from spec
+
+Check each schema in `openapi.yml` against existing Go types. Add any missing ones.
+
+- [ ] `Todo` struct — `content string`, `status string`, `priority string`, `id string`
+- [ ] `FileDiff` struct — `file string`, `before string`, `after string`, `additions int64`, `deletions int64`  
+- [ ] `SessionShellResponse` — check spec for response schema
+- [ ] `SessionForkParams` — `messageID string` (required), `directory *string`
+- [ ] `McpStatus` — check spec for response schema of `GET /mcp`
+- [ ] `ToolIDs` — check spec
+- [ ] `ToolList` / `ToolListItem` — `id string`, `description string`, `parameters interface{}`
+- [ ] Verify all existing types match spec field names and types. Fix any drift.
+
+---
+
+## Phase 6: Clean up event.go streaming
+
+- [ ] Keep `ssestream` package — it's clean and works
+- [ ] Update `EventService.ListStreaming` to use `Client.doRaw()` instead of `requestconfig.ExecuteNewRequest`
+- [ ] Ensure Event union type uses the Phase 3 discriminated union pattern (switch on `type` field)
+
+---
+
+## Phase 7: Update and expand tests
+
+- [ ] Update all existing tests to work without `option.RequestOption` params
+- [ ] Add tests for each new service method (auth, mcp, tool, missing session methods)
+- [ ] Add tests for each union type's `As*()` methods — verify correct and incorrect discriminator values
+- [ ] Add tests for `Client.do()` — mock HTTP server, verify request construction, headers, query params, JSON body
+- [ ] Remove `internal/sessiontest/` if it only tested Stainless patterns
+- [ ] Remove `internal/testutil/` if unused after cleanup
+
+---
+
+## Phase 8: Final cleanup
+
+- [ ] Delete `internal/apijson/` (all files)
+- [ ] Delete `internal/apiform/` (all files)
+- [ ] Delete `internal/apiquery/` (all files — or keep minimal query helper if needed)
+- [ ] Delete `internal/requestconfig/` (all files)
+- [ ] Delete `option/` package (all files)
+- [ ] Delete `internal/timeformat/` if unused
+- [ ] Delete `aliases.go` if it only re-exports removed types
+- [ ] Delete `ptr.go` if it only has `String()`, `Int()`, `Float()`, `Bool()` helpers that are no longer needed (or keep if tests use them for pointer construction)
+- [ ] Remove `github.com/tidwall/gjson` from go.mod
+- [ ] Run `go mod tidy`
+- [ ] Run `go vet ./...`
+- [ ] Run `go test -race ./...`
+- [ ] Run `go build ./...`
+- [ ] Run `golangci-lint run ./...` (add `.golangci.yml` if not present)
+- [ ] Verify 0 imports of deleted packages remain
+- [ ] Update README.md with new usage examples showing idiomatic patterns
+
+---
+
+## What NOT to change
+
+- **Keep `ssestream` package** — already clean, handles SSE decoding well
+- **Keep all spec-defined types** — every struct that maps to an OpenAPI schema stays
+- **Keep functional options on Client** — `WithBaseURL`, `WithHTTPClient`, `WithTimeout`, `WithMaxRetries`
+- **Keep `shared/` package** — contains error types used across services
+- **Keep service pattern** — `ServiceName` struct with pointer to `Client`, methods take `(ctx, params)` return `(result, error)`
+
+---
+
+## Endpoint checklist (51 total)
+
+When complete, every box should be checked:
+
+### Session (16)
+- [ ] `POST   /session` — session.create
+- [ ] `GET    /session` — session.list
+- [ ] `GET    /session/{id}` — session.get
+- [ ] `PATCH  /session/{id}` — session.update
+- [ ] `DELETE /session/{id}` — session.delete
+- [ ] `POST   /session/{id}/abort` — session.abort
+- [ ] `GET    /session/{id}/children` — session.children
+- [ ] `POST   /session/{id}/command` — session.command
+- [ ] `GET    /session/{id}/diff` — session.diff
+- [ ] `POST   /session/{id}/fork` — session.fork
+- [ ] `POST   /session/{id}/init` — session.init
+- [ ] `GET    /session/{id}/message` — session.messages
+- [ ] `GET    /session/{id}/message/{messageID}` — session.message
+- [ ] `POST   /session/{id}/message` — session.prompt
+- [ ] `POST   /session/{id}/revert` — session.revert
+- [ ] `POST   /session/{id}/share` — session.share
+- [ ] `POST   /session/{id}/shell` — session.shell
+- [ ] `POST   /session/{id}/summarize` — session.summarize
+- [ ] `GET    /session/{id}/todo` — session.todo
+- [ ] `POST   /session/{id}/unrevert` — session.unrevert
+- [ ] `DELETE /session/{id}/share` — session.unshare
+- [ ] `POST   /session/{id}/permissions/{permissionID}` — session.permission.reply
+
+### Config (3)
+- [ ] `GET    /config` — config.get
+- [ ] `PATCH  /config` — config.update
+- [ ] `GET    /config/providers` — config.providers
+
+### Project (2)
+- [ ] `GET    /project` — project.list
+- [ ] `GET    /project/current` — project.current
+
+### File (3)
+- [ ] `GET    /file` — file.list
+- [ ] `GET    /file/content` — file.read
+- [ ] `GET    /file/status` — file.status
+
+### Find (3)
+- [ ] `GET    /find` — find.text
+- [ ] `GET    /find/file` — find.files
+- [ ] `GET    /find/symbol` — find.symbols
+
+### Event (1)
+- [ ] `GET    /event` — event.subscribe (SSE stream)
+
+### TUI (8)
+- [ ] `POST   /tui/append-prompt` — tui.appendPrompt
+- [ ] `POST   /tui/clear-prompt` — tui.clearPrompt
+- [ ] `POST   /tui/execute-command` — tui.executeCommand
+- [ ] `POST   /tui/open-help` — tui.openHelp
+- [ ] `POST   /tui/open-models` — tui.openModels
+- [ ] `POST   /tui/open-sessions` — tui.openSessions
+- [ ] `POST   /tui/open-themes` — tui.openThemes
+- [ ] `POST   /tui/show-toast` — tui.showToast
+- [ ] `POST   /tui/submit-prompt` — tui.submitPrompt
+
+### App (2)
+- [ ] `GET    /agent` — app.agents
+- [ ] `POST   /log` — app.log
+
+### Auth (1)
+- [ ] `PUT    /auth/{id}` — auth.set
+
+### Command (1)
+- [ ] `GET    /command` — command.list
+
+### Path (1)
+- [ ] `GET    /path` — path.get
+
+### MCP (1)
+- [ ] `GET    /mcp` — mcp.status
+
+### Tool (2)
+- [ ] `GET    /experimental/tool/ids` — tool.ids
+- [ ] `GET    /experimental/tool` — tool.list
