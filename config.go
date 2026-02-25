@@ -1,5 +1,3 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
-
 package opencode
 
 import (
@@ -78,47 +76,6 @@ type Config struct {
 	// Custom username to display in conversations instead of system username
 	Username string        `json:"username"`
 	Watcher  ConfigWatcher `json:"watcher"`
-	JSON     configJSON    `json:"-"`
-}
-
-// configJSON contains the JSON metadata for the struct [Config]
-type configJSON struct {
-	Schema            apijson.Field
-	Agent             apijson.Field
-	Autoshare         apijson.Field
-	Autoupdate        apijson.Field
-	Command           apijson.Field
-	DisabledProviders apijson.Field
-	Experimental      apijson.Field
-	Formatter         apijson.Field
-	Instructions      apijson.Field
-	Keybinds          apijson.Field
-	Layout            apijson.Field
-	Lsp               apijson.Field
-	Mcp               apijson.Field
-	Mode              apijson.Field
-	Model             apijson.Field
-	Permission        apijson.Field
-	Plugin            apijson.Field
-	Provider          apijson.Field
-	Share             apijson.Field
-	SmallModel        apijson.Field
-	Snapshot          apijson.Field
-	Theme             apijson.Field
-	Tools             apijson.Field
-	Tui               apijson.Field
-	Username          apijson.Field
-	Watcher           apijson.Field
-	raw               string
-	ExtraFields       map[string]apijson.Field
-}
-
-func (r *Config) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r configJSON) RawJSON() string {
-	return r.raw
 }
 
 // Agent configuration, see https://opencode.ai/docs/agent
@@ -127,24 +84,6 @@ type ConfigAgent struct {
 	General     ConfigAgentGeneral     `json:"general"`
 	Plan        ConfigAgentPlan        `json:"plan"`
 	ExtraFields map[string]ConfigAgent `json:"-,extras"`
-	JSON        configAgentJSON        `json:"-"`
-}
-
-// configAgentJSON contains the JSON metadata for the struct [ConfigAgent]
-type configAgentJSON struct {
-	Build       apijson.Field
-	General     apijson.Field
-	Plan        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ConfigAgent) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r configAgentJSON) RawJSON() string {
-	return r.raw
 }
 
 type ConfigAgentBuild struct {
@@ -159,31 +98,6 @@ type ConfigAgentBuild struct {
 	Tools       map[string]bool            `json:"tools"`
 	TopP        float64                    `json:"top_p"`
 	ExtraFields map[string]interface{}     `json:"-,extras"`
-	JSON        configAgentBuildJSON       `json:"-"`
-}
-
-// configAgentBuildJSON contains the JSON metadata for the struct
-// [ConfigAgentBuild]
-type configAgentBuildJSON struct {
-	Description apijson.Field
-	Disable     apijson.Field
-	Mode        apijson.Field
-	Model       apijson.Field
-	Permission  apijson.Field
-	Prompt      apijson.Field
-	Temperature apijson.Field
-	Tools       apijson.Field
-	TopP        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ConfigAgentBuild) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r configAgentBuildJSON) RawJSON() string {
-	return r.raw
 }
 
 type ConfigAgentBuildMode string
@@ -206,25 +120,6 @@ type ConfigAgentBuildPermission struct {
 	Bash     ConfigAgentBuildPermissionBashUnion `json:"bash"`
 	Edit     ConfigAgentBuildPermissionEdit      `json:"edit"`
 	Webfetch ConfigAgentBuildPermissionWebfetch  `json:"webfetch"`
-	JSON     configAgentBuildPermissionJSON      `json:"-"`
-}
-
-// configAgentBuildPermissionJSON contains the JSON metadata for the struct
-// [ConfigAgentBuildPermission]
-type configAgentBuildPermissionJSON struct {
-	Bash        apijson.Field
-	Edit        apijson.Field
-	Webfetch    apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ConfigAgentBuildPermission) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r configAgentBuildPermissionJSON) RawJSON() string {
-	return r.raw
 }
 
 // Union satisfied by [ConfigAgentBuildPermissionBashString] or
@@ -330,31 +225,6 @@ type ConfigAgentGeneral struct {
 	Tools       map[string]bool              `json:"tools"`
 	TopP        float64                      `json:"top_p"`
 	ExtraFields map[string]interface{}       `json:"-,extras"`
-	JSON        configAgentGeneralJSON       `json:"-"`
-}
-
-// configAgentGeneralJSON contains the JSON metadata for the struct
-// [ConfigAgentGeneral]
-type configAgentGeneralJSON struct {
-	Description apijson.Field
-	Disable     apijson.Field
-	Mode        apijson.Field
-	Model       apijson.Field
-	Permission  apijson.Field
-	Prompt      apijson.Field
-	Temperature apijson.Field
-	Tools       apijson.Field
-	TopP        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ConfigAgentGeneral) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r configAgentGeneralJSON) RawJSON() string {
-	return r.raw
 }
 
 type ConfigAgentGeneralMode string
@@ -377,25 +247,6 @@ type ConfigAgentGeneralPermission struct {
 	Bash     ConfigAgentGeneralPermissionBashUnion `json:"bash"`
 	Edit     ConfigAgentGeneralPermissionEdit      `json:"edit"`
 	Webfetch ConfigAgentGeneralPermissionWebfetch  `json:"webfetch"`
-	JSON     configAgentGeneralPermissionJSON      `json:"-"`
-}
-
-// configAgentGeneralPermissionJSON contains the JSON metadata for the struct
-// [ConfigAgentGeneralPermission]
-type configAgentGeneralPermissionJSON struct {
-	Bash        apijson.Field
-	Edit        apijson.Field
-	Webfetch    apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ConfigAgentGeneralPermission) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r configAgentGeneralPermissionJSON) RawJSON() string {
-	return r.raw
 }
 
 // Union satisfied by [ConfigAgentGeneralPermissionBashString] or
@@ -501,30 +352,6 @@ type ConfigAgentPlan struct {
 	Tools       map[string]bool           `json:"tools"`
 	TopP        float64                   `json:"top_p"`
 	ExtraFields map[string]interface{}    `json:"-,extras"`
-	JSON        configAgentPlanJSON       `json:"-"`
-}
-
-// configAgentPlanJSON contains the JSON metadata for the struct [ConfigAgentPlan]
-type configAgentPlanJSON struct {
-	Description apijson.Field
-	Disable     apijson.Field
-	Mode        apijson.Field
-	Model       apijson.Field
-	Permission  apijson.Field
-	Prompt      apijson.Field
-	Temperature apijson.Field
-	Tools       apijson.Field
-	TopP        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ConfigAgentPlan) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r configAgentPlanJSON) RawJSON() string {
-	return r.raw
 }
 
 type ConfigAgentPlanMode string
@@ -547,25 +374,6 @@ type ConfigAgentPlanPermission struct {
 	Bash     ConfigAgentPlanPermissionBashUnion `json:"bash"`
 	Edit     ConfigAgentPlanPermissionEdit      `json:"edit"`
 	Webfetch ConfigAgentPlanPermissionWebfetch  `json:"webfetch"`
-	JSON     configAgentPlanPermissionJSON      `json:"-"`
-}
-
-// configAgentPlanPermissionJSON contains the JSON metadata for the struct
-// [ConfigAgentPlanPermission]
-type configAgentPlanPermissionJSON struct {
-	Bash        apijson.Field
-	Edit        apijson.Field
-	Webfetch    apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ConfigAgentPlanPermission) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r configAgentPlanPermissionJSON) RawJSON() string {
-	return r.raw
 }
 
 // Union satisfied by [ConfigAgentPlanPermissionBashString] or
@@ -665,118 +473,26 @@ type ConfigCommand struct {
 	Description string            `json:"description"`
 	Model       string            `json:"model"`
 	Subtask     bool              `json:"subtask"`
-	JSON        configCommandJSON `json:"-"`
-}
-
-// configCommandJSON contains the JSON metadata for the struct [ConfigCommand]
-type configCommandJSON struct {
-	Template    apijson.Field
-	Agent       apijson.Field
-	Description apijson.Field
-	Model       apijson.Field
-	Subtask     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ConfigCommand) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r configCommandJSON) RawJSON() string {
-	return r.raw
 }
 
 type ConfigExperimental struct {
 	DisablePasteSummary bool                   `json:"disable_paste_summary"`
 	Hook                ConfigExperimentalHook `json:"hook"`
-	JSON                configExperimentalJSON `json:"-"`
-}
-
-// configExperimentalJSON contains the JSON metadata for the struct
-// [ConfigExperimental]
-type configExperimentalJSON struct {
-	DisablePasteSummary apijson.Field
-	Hook                apijson.Field
-	raw                 string
-	ExtraFields         map[string]apijson.Field
-}
-
-func (r *ConfigExperimental) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r configExperimentalJSON) RawJSON() string {
-	return r.raw
 }
 
 type ConfigExperimentalHook struct {
 	FileEdited       map[string][]ConfigExperimentalHookFileEdited `json:"file_edited"`
 	SessionCompleted []ConfigExperimentalHookSessionCompleted      `json:"session_completed"`
-	JSON             configExperimentalHookJSON                    `json:"-"`
-}
-
-// configExperimentalHookJSON contains the JSON metadata for the struct
-// [ConfigExperimentalHook]
-type configExperimentalHookJSON struct {
-	FileEdited       apijson.Field
-	SessionCompleted apijson.Field
-	raw              string
-	ExtraFields      map[string]apijson.Field
-}
-
-func (r *ConfigExperimentalHook) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r configExperimentalHookJSON) RawJSON() string {
-	return r.raw
 }
 
 type ConfigExperimentalHookFileEdited struct {
 	Command     []string                             `json:"command,required"`
 	Environment map[string]string                    `json:"environment"`
-	JSON        configExperimentalHookFileEditedJSON `json:"-"`
-}
-
-// configExperimentalHookFileEditedJSON contains the JSON metadata for the struct
-// [ConfigExperimentalHookFileEdited]
-type configExperimentalHookFileEditedJSON struct {
-	Command     apijson.Field
-	Environment apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ConfigExperimentalHookFileEdited) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r configExperimentalHookFileEditedJSON) RawJSON() string {
-	return r.raw
 }
 
 type ConfigExperimentalHookSessionCompleted struct {
 	Command     []string                                   `json:"command,required"`
 	Environment map[string]string                          `json:"environment"`
-	JSON        configExperimentalHookSessionCompletedJSON `json:"-"`
-}
-
-// configExperimentalHookSessionCompletedJSON contains the JSON metadata for the
-// struct [ConfigExperimentalHookSessionCompleted]
-type configExperimentalHookSessionCompletedJSON struct {
-	Command     apijson.Field
-	Environment apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ConfigExperimentalHookSessionCompleted) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r configExperimentalHookSessionCompletedJSON) RawJSON() string {
-	return r.raw
 }
 
 type ConfigFormatter struct {
@@ -784,25 +500,6 @@ type ConfigFormatter struct {
 	Disabled    bool                `json:"disabled"`
 	Environment map[string]string   `json:"environment"`
 	Extensions  []string            `json:"extensions"`
-	JSON        configFormatterJSON `json:"-"`
-}
-
-// configFormatterJSON contains the JSON metadata for the struct [ConfigFormatter]
-type configFormatterJSON struct {
-	Command     apijson.Field
-	Disabled    apijson.Field
-	Environment apijson.Field
-	Extensions  apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ConfigFormatter) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r configFormatterJSON) RawJSON() string {
-	return r.raw
 }
 
 // @deprecated Always uses stretch layout.
@@ -831,23 +528,7 @@ type ConfigLsp struct {
 	Extensions interface{} `json:"extensions"`
 	// This field can have the runtime type of [map[string]interface{}].
 	Initialization interface{}   `json:"initialization"`
-	JSON           configLspJSON `json:"-"`
 	union          ConfigLspUnion
-}
-
-// configLspJSON contains the JSON metadata for the struct [ConfigLsp]
-type configLspJSON struct {
-	Command        apijson.Field
-	Disabled       apijson.Field
-	Env            apijson.Field
-	Extensions     apijson.Field
-	Initialization apijson.Field
-	raw            string
-	ExtraFields    map[string]apijson.Field
-}
-
-func (r configLspJSON) RawJSON() string {
-	return r.raw
 }
 
 func (r *ConfigLsp) UnmarshalJSON(data []byte) (err error) {
@@ -889,23 +570,6 @@ func init() {
 
 type ConfigLspDisabled struct {
 	Disabled ConfigLspDisabledDisabled `json:"disabled,required"`
-	JSON     configLspDisabledJSON     `json:"-"`
-}
-
-// configLspDisabledJSON contains the JSON metadata for the struct
-// [ConfigLspDisabled]
-type configLspDisabledJSON struct {
-	Disabled    apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ConfigLspDisabled) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r configLspDisabledJSON) RawJSON() string {
-	return r.raw
 }
 
 func (r ConfigLspDisabled) implementsConfigLsp() {}
@@ -930,26 +594,6 @@ type ConfigLspObject struct {
 	Env            map[string]string      `json:"env"`
 	Extensions     []string               `json:"extensions"`
 	Initialization map[string]interface{} `json:"initialization"`
-	JSON           configLspObjectJSON    `json:"-"`
-}
-
-// configLspObjectJSON contains the JSON metadata for the struct [ConfigLspObject]
-type configLspObjectJSON struct {
-	Command        apijson.Field
-	Disabled       apijson.Field
-	Env            apijson.Field
-	Extensions     apijson.Field
-	Initialization apijson.Field
-	raw            string
-	ExtraFields    map[string]apijson.Field
-}
-
-func (r *ConfigLspObject) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r configLspObjectJSON) RawJSON() string {
-	return r.raw
 }
 
 func (r ConfigLspObject) implementsConfigLsp() {}
@@ -967,25 +611,10 @@ type ConfigMcp struct {
 	Headers interface{} `json:"headers"`
 	// URL of the remote MCP server
 	URL   string        `json:"url"`
-	JSON  configMcpJSON `json:"-"`
 	union ConfigMcpUnion
 }
 
-// configMcpJSON contains the JSON metadata for the struct [ConfigMcp]
-type configMcpJSON struct {
-	Type        apijson.Field
-	Command     apijson.Field
-	Enabled     apijson.Field
-	Environment apijson.Field
-	Headers     apijson.Field
-	URL         apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
 
-func (r configMcpJSON) RawJSON() string {
-	return r.raw
-}
 
 func (r *ConfigMcp) UnmarshalJSON(data []byte) (err error) {
 	*r = ConfigMcp{}
@@ -1045,24 +674,10 @@ type ConfigMode struct {
 	Build       ConfigModeBuild       `json:"build"`
 	Plan        ConfigModePlan        `json:"plan"`
 	ExtraFields map[string]ConfigMode `json:"-,extras"`
-	JSON        configModeJSON        `json:"-"`
 }
 
-// configModeJSON contains the JSON metadata for the struct [ConfigMode]
-type configModeJSON struct {
-	Build       apijson.Field
-	Plan        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
 
-func (r *ConfigMode) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
 
-func (r configModeJSON) RawJSON() string {
-	return r.raw
-}
 
 type ConfigModeBuild struct {
 	// Description of when to use the agent
@@ -1076,31 +691,10 @@ type ConfigModeBuild struct {
 	Tools       map[string]bool           `json:"tools"`
 	TopP        float64                   `json:"top_p"`
 	ExtraFields map[string]interface{}    `json:"-,extras"`
-	JSON        configModeBuildJSON       `json:"-"`
 }
 
-// configModeBuildJSON contains the JSON metadata for the struct [ConfigModeBuild]
-type configModeBuildJSON struct {
-	Description apijson.Field
-	Disable     apijson.Field
-	Mode        apijson.Field
-	Model       apijson.Field
-	Permission  apijson.Field
-	Prompt      apijson.Field
-	Temperature apijson.Field
-	Tools       apijson.Field
-	TopP        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
 
-func (r *ConfigModeBuild) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
 
-func (r configModeBuildJSON) RawJSON() string {
-	return r.raw
-}
 
 type ConfigModeBuildMode string
 
@@ -1122,26 +716,10 @@ type ConfigModeBuildPermission struct {
 	Bash     ConfigModeBuildPermissionBashUnion `json:"bash"`
 	Edit     ConfigModeBuildPermissionEdit      `json:"edit"`
 	Webfetch ConfigModeBuildPermissionWebfetch  `json:"webfetch"`
-	JSON     configModeBuildPermissionJSON      `json:"-"`
 }
 
-// configModeBuildPermissionJSON contains the JSON metadata for the struct
-// [ConfigModeBuildPermission]
-type configModeBuildPermissionJSON struct {
-	Bash        apijson.Field
-	Edit        apijson.Field
-	Webfetch    apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
 
-func (r *ConfigModeBuildPermission) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
 
-func (r configModeBuildPermissionJSON) RawJSON() string {
-	return r.raw
-}
 
 // Union satisfied by [ConfigModeBuildPermissionBashString] or
 // [ConfigModeBuildPermissionBashMap].
@@ -1246,31 +824,10 @@ type ConfigModePlan struct {
 	Tools       map[string]bool          `json:"tools"`
 	TopP        float64                  `json:"top_p"`
 	ExtraFields map[string]interface{}   `json:"-,extras"`
-	JSON        configModePlanJSON       `json:"-"`
 }
 
-// configModePlanJSON contains the JSON metadata for the struct [ConfigModePlan]
-type configModePlanJSON struct {
-	Description apijson.Field
-	Disable     apijson.Field
-	Mode        apijson.Field
-	Model       apijson.Field
-	Permission  apijson.Field
-	Prompt      apijson.Field
-	Temperature apijson.Field
-	Tools       apijson.Field
-	TopP        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
 
-func (r *ConfigModePlan) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
 
-func (r configModePlanJSON) RawJSON() string {
-	return r.raw
-}
 
 type ConfigModePlanMode string
 
@@ -1292,26 +849,10 @@ type ConfigModePlanPermission struct {
 	Bash     ConfigModePlanPermissionBashUnion `json:"bash"`
 	Edit     ConfigModePlanPermissionEdit      `json:"edit"`
 	Webfetch ConfigModePlanPermissionWebfetch  `json:"webfetch"`
-	JSON     configModePlanPermissionJSON      `json:"-"`
 }
 
-// configModePlanPermissionJSON contains the JSON metadata for the struct
-// [ConfigModePlanPermission]
-type configModePlanPermissionJSON struct {
-	Bash        apijson.Field
-	Edit        apijson.Field
-	Webfetch    apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
 
-func (r *ConfigModePlanPermission) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
 
-func (r configModePlanPermissionJSON) RawJSON() string {
-	return r.raw
-}
 
 // Union satisfied by [ConfigModePlanPermissionBashString] or
 // [ConfigModePlanPermissionBashMap].
@@ -1408,26 +949,10 @@ type ConfigPermission struct {
 	Bash     ConfigPermissionBashUnion `json:"bash"`
 	Edit     ConfigPermissionEdit      `json:"edit"`
 	Webfetch ConfigPermissionWebfetch  `json:"webfetch"`
-	JSON     configPermissionJSON      `json:"-"`
 }
 
-// configPermissionJSON contains the JSON metadata for the struct
-// [ConfigPermission]
-type configPermissionJSON struct {
-	Bash        apijson.Field
-	Edit        apijson.Field
-	Webfetch    apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
 
-func (r *ConfigPermission) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
 
-func (r configPermissionJSON) RawJSON() string {
-	return r.raw
-}
 
 // Union satisfied by [ConfigPermissionBashString] or [ConfigPermissionBashMap].
 type ConfigPermissionBashUnion interface {
@@ -1527,29 +1052,10 @@ type ConfigProvider struct {
 	Name    string                         `json:"name"`
 	Npm     string                         `json:"npm"`
 	Options ConfigProviderOptions          `json:"options"`
-	JSON    configProviderJSON             `json:"-"`
 }
 
-// configProviderJSON contains the JSON metadata for the struct [ConfigProvider]
-type configProviderJSON struct {
-	ID          apijson.Field
-	API         apijson.Field
-	Env         apijson.Field
-	Models      apijson.Field
-	Name        apijson.Field
-	Npm         apijson.Field
-	Options     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
 
-func (r *ConfigProvider) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
 
-func (r configProviderJSON) RawJSON() string {
-	return r.raw
-}
 
 type ConfigProviderModel struct {
 	ID           string                         `json:"id"`
@@ -1566,110 +1072,36 @@ type ConfigProviderModel struct {
 	Status       ConfigProviderModelsStatus     `json:"status"`
 	Temperature  bool                           `json:"temperature"`
 	ToolCall     bool                           `json:"tool_call"`
-	JSON         configProviderModelJSON        `json:"-"`
 }
 
-// configProviderModelJSON contains the JSON metadata for the struct
-// [ConfigProviderModel]
-type configProviderModelJSON struct {
-	ID           apijson.Field
-	Attachment   apijson.Field
-	Cost         apijson.Field
-	Experimental apijson.Field
-	Limit        apijson.Field
-	Modalities   apijson.Field
-	Name         apijson.Field
-	Options      apijson.Field
-	Provider     apijson.Field
-	Reasoning    apijson.Field
-	ReleaseDate  apijson.Field
-	Status       apijson.Field
-	Temperature  apijson.Field
-	ToolCall     apijson.Field
-	raw          string
-	ExtraFields  map[string]apijson.Field
-}
 
-func (r *ConfigProviderModel) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
 
-func (r configProviderModelJSON) RawJSON() string {
-	return r.raw
-}
 
 type ConfigProviderModelsCost struct {
 	Input      float64                      `json:"input,required"`
 	Output     float64                      `json:"output,required"`
 	CacheRead  float64                      `json:"cache_read"`
 	CacheWrite float64                      `json:"cache_write"`
-	JSON       configProviderModelsCostJSON `json:"-"`
 }
 
-// configProviderModelsCostJSON contains the JSON metadata for the struct
-// [ConfigProviderModelsCost]
-type configProviderModelsCostJSON struct {
-	Input       apijson.Field
-	Output      apijson.Field
-	CacheRead   apijson.Field
-	CacheWrite  apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
 
-func (r *ConfigProviderModelsCost) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
 
-func (r configProviderModelsCostJSON) RawJSON() string {
-	return r.raw
-}
 
 type ConfigProviderModelsLimit struct {
 	Context float64                       `json:"context,required"`
 	Output  float64                       `json:"output,required"`
-	JSON    configProviderModelsLimitJSON `json:"-"`
 }
 
-// configProviderModelsLimitJSON contains the JSON metadata for the struct
-// [ConfigProviderModelsLimit]
-type configProviderModelsLimitJSON struct {
-	Context     apijson.Field
-	Output      apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
 
-func (r *ConfigProviderModelsLimit) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
 
-func (r configProviderModelsLimitJSON) RawJSON() string {
-	return r.raw
-}
 
 type ConfigProviderModelsModalities struct {
 	Input  []ConfigProviderModelsModalitiesInput  `json:"input,required"`
 	Output []ConfigProviderModelsModalitiesOutput `json:"output,required"`
-	JSON   configProviderModelsModalitiesJSON     `json:"-"`
 }
 
-// configProviderModelsModalitiesJSON contains the JSON metadata for the struct
-// [ConfigProviderModelsModalities]
-type configProviderModelsModalitiesJSON struct {
-	Input       apijson.Field
-	Output      apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
 
-func (r *ConfigProviderModelsModalities) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
 
-func (r configProviderModelsModalitiesJSON) RawJSON() string {
-	return r.raw
-}
 
 type ConfigProviderModelsModalitiesInput string
 
@@ -1709,24 +1141,10 @@ func (r ConfigProviderModelsModalitiesOutput) IsKnown() bool {
 
 type ConfigProviderModelsProvider struct {
 	Npm  string                           `json:"npm,required"`
-	JSON configProviderModelsProviderJSON `json:"-"`
 }
 
-// configProviderModelsProviderJSON contains the JSON metadata for the struct
-// [ConfigProviderModelsProvider]
-type configProviderModelsProviderJSON struct {
-	Npm         apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
 
-func (r *ConfigProviderModelsProvider) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
 
-func (r configProviderModelsProviderJSON) RawJSON() string {
-	return r.raw
-}
 
 type ConfigProviderModelsStatus string
 
@@ -1750,26 +1168,10 @@ type ConfigProviderOptions struct {
 	// minutes). Set to false to disable timeout.
 	Timeout     ConfigProviderOptionsTimeoutUnion `json:"timeout"`
 	ExtraFields map[string]interface{}            `json:"-,extras"`
-	JSON        configProviderOptionsJSON         `json:"-"`
 }
 
-// configProviderOptionsJSON contains the JSON metadata for the struct
-// [ConfigProviderOptions]
-type configProviderOptionsJSON struct {
-	APIKey      apijson.Field
-	BaseURL     apijson.Field
-	Timeout     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
 
-func (r *ConfigProviderOptions) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
 
-func (r configProviderOptionsJSON) RawJSON() string {
-	return r.raw
-}
 
 // Timeout in milliseconds for requests to this provider. Default is 300000 (5
 // minutes). Set to false to disable timeout.
@@ -1820,43 +1222,17 @@ func (r ConfigShare) IsKnown() bool {
 type ConfigTui struct {
 	// TUI scroll speed
 	ScrollSpeed float64       `json:"scroll_speed"`
-	JSON        configTuiJSON `json:"-"`
 }
 
-// configTuiJSON contains the JSON metadata for the struct [ConfigTui]
-type configTuiJSON struct {
-	ScrollSpeed apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
 
-func (r *ConfigTui) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
 
-func (r configTuiJSON) RawJSON() string {
-	return r.raw
-}
 
 type ConfigWatcher struct {
 	Ignore []string          `json:"ignore"`
-	JSON   configWatcherJSON `json:"-"`
 }
 
-// configWatcherJSON contains the JSON metadata for the struct [ConfigWatcher]
-type configWatcherJSON struct {
-	Ignore      apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
 
-func (r *ConfigWatcher) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
 
-func (r configWatcherJSON) RawJSON() string {
-	return r.raw
-}
 
 // Custom keybind configurations
 type KeybindsConfig struct {
@@ -1958,71 +1334,10 @@ type KeybindsConfig struct {
 	ThinkingBlocks string `json:"thinking_blocks"`
 	// Toggle tool details
 	ToolDetails string             `json:"tool_details"`
-	JSON        keybindsConfigJSON `json:"-"`
 }
 
-// keybindsConfigJSON contains the JSON metadata for the struct [KeybindsConfig]
-type keybindsConfigJSON struct {
-	AgentCycle               apijson.Field
-	AgentCycleReverse        apijson.Field
-	AgentList                apijson.Field
-	AppExit                  apijson.Field
-	AppHelp                  apijson.Field
-	EditorOpen               apijson.Field
-	FileClose                apijson.Field
-	FileDiffToggle           apijson.Field
-	FileList                 apijson.Field
-	FileSearch               apijson.Field
-	InputClear               apijson.Field
-	InputNewline             apijson.Field
-	InputPaste               apijson.Field
-	InputSubmit              apijson.Field
-	Leader                   apijson.Field
-	MessagesCopy             apijson.Field
-	MessagesFirst            apijson.Field
-	MessagesHalfPageDown     apijson.Field
-	MessagesHalfPageUp       apijson.Field
-	MessagesLast             apijson.Field
-	MessagesLayoutToggle     apijson.Field
-	MessagesNext             apijson.Field
-	MessagesPageDown         apijson.Field
-	MessagesPageUp           apijson.Field
-	MessagesPrevious         apijson.Field
-	MessagesRedo             apijson.Field
-	MessagesRevert           apijson.Field
-	MessagesUndo             apijson.Field
-	ModelCycleRecent         apijson.Field
-	ModelCycleRecentReverse  apijson.Field
-	ModelList                apijson.Field
-	ProjectInit              apijson.Field
-	SessionChildCycle        apijson.Field
-	SessionChildCycleReverse apijson.Field
-	SessionCompact           apijson.Field
-	SessionExport            apijson.Field
-	SessionInterrupt         apijson.Field
-	SessionList              apijson.Field
-	SessionNew               apijson.Field
-	SessionShare             apijson.Field
-	SessionTimeline          apijson.Field
-	SessionUnshare           apijson.Field
-	SwitchAgent              apijson.Field
-	SwitchAgentReverse       apijson.Field
-	SwitchMode               apijson.Field
-	SwitchModeReverse        apijson.Field
-	ThemeList                apijson.Field
-	ThinkingBlocks           apijson.Field
-	ToolDetails              apijson.Field
-	raw                      string
-	ExtraFields              map[string]apijson.Field
-}
 
-func (r *KeybindsConfig) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
 
-func (r keybindsConfigJSON) RawJSON() string {
-	return r.raw
-}
 
 type McpLocalConfig struct {
 	// Command and arguments to run the MCP server
@@ -2033,26 +1348,10 @@ type McpLocalConfig struct {
 	Enabled bool `json:"enabled"`
 	// Environment variables to set when running the MCP server
 	Environment map[string]string  `json:"environment"`
-	JSON        mcpLocalConfigJSON `json:"-"`
 }
 
-// mcpLocalConfigJSON contains the JSON metadata for the struct [McpLocalConfig]
-type mcpLocalConfigJSON struct {
-	Command     apijson.Field
-	Type        apijson.Field
-	Enabled     apijson.Field
-	Environment apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
 
-func (r *McpLocalConfig) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
 
-func (r mcpLocalConfigJSON) RawJSON() string {
-	return r.raw
-}
 
 func (r McpLocalConfig) implementsConfigMcp() {}
 
@@ -2080,26 +1379,10 @@ type McpRemoteConfig struct {
 	Enabled bool `json:"enabled"`
 	// Headers to send with the request
 	Headers map[string]string   `json:"headers"`
-	JSON    mcpRemoteConfigJSON `json:"-"`
 }
 
-// mcpRemoteConfigJSON contains the JSON metadata for the struct [McpRemoteConfig]
-type mcpRemoteConfigJSON struct {
-	Type        apijson.Field
-	URL         apijson.Field
-	Enabled     apijson.Field
-	Headers     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
 
-func (r *McpRemoteConfig) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
 
-func (r mcpRemoteConfigJSON) RawJSON() string {
-	return r.raw
-}
 
 func (r McpRemoteConfig) implementsConfigMcp() {}
 
