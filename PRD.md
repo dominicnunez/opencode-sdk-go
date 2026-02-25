@@ -93,7 +93,7 @@ Apply this pattern to each union:
 
 - [x] **Auth** (discriminator: `type`) → `OAuth`, `ApiAuth`, `WellKnownAuth`. Remove `AuthUnion` interface and init block. Add `AsOAuth()`, `AsAPI()`, `AsWellKnown()` methods.
 
-- [ ] **ConfigMcp** (discriminator: `type`) → `McpLocalConfig`, `McpRemoteConfig`. Remove `ConfigMcpUnion` interface and init block. Add `AsLocal()`, `AsRemote()` methods.
+- [x] **ConfigMcp** (discriminator: `type`) → `McpLocalConfig`, `McpRemoteConfig`. Remove `ConfigMcpUnion` interface and init block. Add `AsLocal()`, `AsRemote()` methods.
 
 - [ ] **ConfigLsp** — check if this is a union in the spec or just a struct. Handle accordingly.
 

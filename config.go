@@ -599,59 +599,52 @@ type ConfigLspObject struct {
 
 func (r ConfigLspObject) implementsConfigLsp() {}
 
+// ConfigMcp represents MCP (Model Context Protocol) server configuration.
+// It can be either McpLocalConfig or McpRemoteConfig, discriminated by the type field.
 type ConfigMcp struct {
-	// Type of MCP server connection
-	Type ConfigMcpType `json:"type,required"`
-	// This field can have the runtime type of [[]string].
-	Command interface{} `json:"command"`
-	// Enable or disable the MCP server on startup
-	Enabled bool `json:"enabled"`
-	// This field can have the runtime type of [map[string]string].
-	Environment interface{} `json:"environment"`
-	// This field can have the runtime type of [map[string]string].
-	Headers interface{} `json:"headers"`
-	// URL of the remote MCP server
-	URL   string        `json:"url"`
-	union ConfigMcpUnion
+	// Type discriminator: "local" or "remote"
+	Type ConfigMcpType `json:"type"`
+	// raw stores the full JSON for lazy unmarshaling
+	raw json.RawMessage
 }
 
-
-
-func (r *ConfigMcp) UnmarshalJSON(data []byte) (err error) {
-	*r = ConfigMcp{}
-	err = apijson.UnmarshalRoot(data, &r.union)
-	if err != nil {
+func (r *ConfigMcp) UnmarshalJSON(data []byte) error {
+	// Peek at the discriminator field
+	var peek struct {
+		Type ConfigMcpType `json:"type"`
+	}
+	if err := json.Unmarshal(data, &peek); err != nil {
 		return err
 	}
-	return apijson.Port(r.union, &r)
+	r.Type = peek.Type
+	r.raw = data
+	return nil
 }
 
-// AsUnion returns a [ConfigMcpUnion] interface which you can cast to the specific
-// types for more type safety.
-//
-// Possible runtime types of the union are [McpLocalConfig], [McpRemoteConfig].
-func (r ConfigMcp) AsUnion() ConfigMcpUnion {
-	return r.union
+// AsLocal returns the config as McpLocalConfig if type is "local".
+// Returns (nil, false) if the type is not "local" or unmarshaling fails.
+func (r ConfigMcp) AsLocal() (*McpLocalConfig, bool) {
+	if r.Type != ConfigMcpTypeLocal {
+		return nil, false
+	}
+	var local McpLocalConfig
+	if err := json.Unmarshal(r.raw, &local); err != nil {
+		return nil, false
+	}
+	return &local, true
 }
 
-// Union satisfied by [McpLocalConfig] or [McpRemoteConfig].
-type ConfigMcpUnion interface {
-	implementsConfigMcp()
-}
-
-func init() {
-	apijson.RegisterUnion(
-		reflect.TypeOf((*ConfigMcpUnion)(nil)).Elem(),
-		"",
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(McpLocalConfig{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(McpRemoteConfig{}),
-		},
-	)
+// AsRemote returns the config as McpRemoteConfig if type is "remote".
+// Returns (nil, false) if the type is not "remote" or unmarshaling fails.
+func (r ConfigMcp) AsRemote() (*McpRemoteConfig, bool) {
+	if r.Type != ConfigMcpTypeRemote {
+		return nil, false
+	}
+	var remote McpRemoteConfig
+	if err := json.Unmarshal(r.raw, &remote); err != nil {
+		return nil, false
+	}
+	return &remote, true
 }
 
 // Type of MCP server connection
@@ -1354,7 +1347,6 @@ type McpLocalConfig struct {
 
 
 
-func (r McpLocalConfig) implementsConfigMcp() {}
 
 // Type of MCP server connection
 type McpLocalConfigType string
@@ -1385,7 +1377,6 @@ type McpRemoteConfig struct {
 
 
 
-func (r McpRemoteConfig) implementsConfigMcp() {}
 
 // Type of MCP server connection
 type McpRemoteConfigType string
