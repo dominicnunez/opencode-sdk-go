@@ -244,6 +244,21 @@ func (s *SessionService) Fork(ctx context.Context, id string, params *SessionFor
 	return &result, nil
 }
 
+func (s *SessionService) Shell(ctx context.Context, id string, params *SessionShellParams) (*AssistantMessage, error) {
+	if id == "" {
+		return nil, errors.New("missing required id parameter")
+	}
+	if params == nil {
+		return nil, errors.New("missing required params")
+	}
+	var result AssistantMessage
+	err := s.client.do(ctx, http.MethodPost, "session/"+id+"/shell", params, &result)
+	if err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
 type AgentPart struct {
 	ID        string          `json:"id,required"`
 	MessageID string          `json:"messageID,required"`

@@ -114,7 +114,7 @@ All follow the existing pattern in the codebase. Use the spec for request/respon
 
 - [x] `Diff(ctx, id, params) → ([]FileDiff, error)` — `GET /session/{id}/diff`
 - [x] `Fork(ctx, id, params) → (*Session, error)` — `POST /session/{id}/fork`. Params: `messageID string` (required)
-- [ ] `Shell(ctx, id, params) → (*SessionShellResponse, error)` — `POST /session/{id}/shell`. Params: `command string` (required), `timeout *int64`
+- [x] `Shell(ctx, id, params) → (*AssistantMessage, error)` — `POST /session/{id}/shell`. Params: `agent string` (required), `command string` (required), `directory *string` (optional)
 - [ ] `Summarize(ctx, id, params) → (*Session, error)` — `POST /session/{id}/summarize`
 - [ ] `Todo(ctx, id, params) → ([]Todo, error)` — `GET /session/{id}/todo`
 - [ ] `Unrevert(ctx, id, params) → (*Session, error)` — `POST /session/{id}/unrevert`
@@ -240,7 +240,7 @@ When complete, every box should be checked:
 - [ ] `POST   /session/{id}/message` — session.prompt
 - [ ] `POST   /session/{id}/revert` — session.revert
 - [ ] `POST   /session/{id}/share` — session.share
-- [ ] `POST   /session/{id}/shell` — session.shell
+- [x] `POST   /session/{id}/shell` — session.shell
 - [ ] `POST   /session/{id}/summarize` — session.summarize
 - [ ] `GET    /session/{id}/todo` — session.todo
 - [ ] `POST   /session/{id}/unrevert` — session.unrevert
