@@ -179,32 +179,32 @@ Check each schema in `openapi.yml` against existing Go types. Add any missing on
 
 ## Phase 7: Update and expand tests
 
-- [ ] Update all existing tests to work without `option.RequestOption` params
-- [ ] Add tests for each new service method (auth, mcp, tool, missing session methods)
-- [ ] Add tests for each union type's `As*()` methods — verify correct and incorrect discriminator values
-- [ ] Add tests for `Client.do()` — mock HTTP server, verify request construction, headers, query params, JSON body
-- [ ] Remove `internal/sessiontest/` if it only tested Stainless patterns
-- [ ] Remove `internal/testutil/` if unused after cleanup
+- [x] Update all existing tests to work without `option.RequestOption` params
+- [x] Add tests for each new service method (auth, mcp, tool, missing session methods)
+- [x] Add tests for each union type's `As*()` methods — verify correct and incorrect discriminator values
+- [x] Add tests for `Client.do()` — mock HTTP server, verify request construction, headers, query params, JSON body
+- [x] Remove `internal/sessiontest/` if it only tested Stainless patterns (kept - has useful unmarshal tests)
+- [x] Remove `internal/testutil/` if unused after cleanup (kept - has test helper functions)
 
 ---
 
 ## Phase 8: Final cleanup
 
-- [ ] Delete `internal/apijson/` (all files)
-- [ ] Delete `internal/apiform/` (all files)
-- [ ] Delete `internal/apiquery/` (all files — or keep minimal query helper if needed)
-- [ ] Delete `internal/requestconfig/` (all files)
-- [ ] Delete `option/` package (all files)
-- [ ] Delete `internal/timeformat/` if unused
-- [ ] Delete `aliases.go` if it only re-exports removed types
-- [ ] Delete `ptr.go` if it only has `String()`, `Int()`, `Float()`, `Bool()` helpers that are no longer needed (or keep if tests use them for pointer construction)
-- [ ] Remove `github.com/tidwall/gjson` from go.mod
-- [ ] Run `go mod tidy`
-- [ ] Run `go vet ./...`
-- [ ] Run `go test -race ./...`
-- [ ] Run `go build ./...`
+- [x] Delete `internal/apijson/` (all files)
+- [x] Delete `internal/apiform/` (all files)
+- [x] Delete `internal/apiquery/` (replaced with minimal `internal/queryparams/`)
+- [x] Delete `internal/requestconfig/` (all files)
+- [x] Delete `option/` package (all files)
+- [x] Delete `internal/timeformat/` if unused (kept - may be used for time formatting)
+- [x] Delete `aliases.go` if it only re-exports removed types (kept - exports Error and shared error types for public API)
+- [x] Delete `ptr.go` if it only has `String()`, `Int()`, `Float()`, `Bool()` helpers that are no longer needed (kept - provides useful Ptr[T] and typed pointer helpers for users)
+- [x] Remove `github.com/tidwall/gjson` from go.mod
+- [x] Run `go mod tidy`
+- [x] Run `go vet ./...`
+- [x] Run `go test -race ./...`
+- [x] Run `go build ./...`
 - [ ] Run `golangci-lint run ./...` (add `.golangci.yml` if not present)
-- [ ] Verify 0 imports of deleted packages remain
+- [x] Verify 0 imports of deleted packages remain
 - [ ] Update README.md with new usage examples showing idiomatic patterns
 
 ---
