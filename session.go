@@ -274,6 +274,21 @@ func (s *SessionService) Summarize(ctx context.Context, id string, params *Sessi
 	return result, nil
 }
 
+func (s *SessionService) Todo(ctx context.Context, id string, params *SessionTodoParams) ([]Todo, error) {
+	if id == "" {
+		return nil, errors.New("missing required id parameter")
+	}
+	if params == nil {
+		params = &SessionTodoParams{}
+	}
+	var result []Todo
+	err := s.client.do(ctx, http.MethodGet, "session/"+id+"/todo", params, &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
 type AgentPart struct {
 	ID        string          `json:"id,required"`
 	MessageID string          `json:"messageID,required"`
@@ -1785,6 +1800,15 @@ type SessionSummarizeParams struct {
 
 // URLQuery serializes [SessionSummarizeParams]'s query parameters as `url.Values`.
 func (r SessionSummarizeParams) URLQuery() (url.Values, error) {
+	return queryparams.Marshal(r)
+}
+
+type SessionTodoParams struct {
+	Directory *string `query:"directory,omitempty"`
+}
+
+// URLQuery serializes [SessionTodoParams]'s query parameters as `url.Values`.
+func (r SessionTodoParams) URLQuery() (url.Values, error) {
 	return queryparams.Marshal(r)
 }
 

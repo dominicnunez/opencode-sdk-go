@@ -116,7 +116,7 @@ All follow the existing pattern in the codebase. Use the spec for request/respon
 - [x] `Fork(ctx, id, params) → (*Session, error)` — `POST /session/{id}/fork`. Params: `messageID string` (required)
 - [x] `Shell(ctx, id, params) → (*AssistantMessage, error)` — `POST /session/{id}/shell`. Params: `agent string` (required), `command string` (required), `directory *string` (optional)
 - [x] `Summarize(ctx, id, params) → (bool, error)` — `POST /session/{id}/summarize`. Params: `providerID string` (required), `modelID string` (required), `directory *string` (optional query param)
-- [ ] `Todo(ctx, id, params) → ([]Todo, error)` — `GET /session/{id}/todo`
+- [x] `Todo(ctx, id, params) → ([]Todo, error)` — `GET /session/{id}/todo`
 - [ ] `Unrevert(ctx, id, params) → (*Session, error)` — `POST /session/{id}/unrevert`
 - [ ] `Unshare(ctx, id, params) → error` — `DELETE /session/{id}/share`
 
@@ -242,7 +242,7 @@ When complete, every box should be checked:
 - [ ] `POST   /session/{id}/share` — session.share
 - [x] `POST   /session/{id}/shell` — session.shell
 - [ ] `POST   /session/{id}/summarize` — session.summarize
-- [ ] `GET    /session/{id}/todo` — session.todo
+- [x] `GET    /session/{id}/todo` — session.todo
 - [ ] `POST   /session/{id}/unrevert` — session.unrevert
 - [ ] `DELETE /session/{id}/share` — session.unshare
 - [ ] `POST   /session/{id}/permissions/{permissionID}` — session.permission.reply
