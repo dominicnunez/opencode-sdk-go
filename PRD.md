@@ -205,7 +205,7 @@ Check each schema in `openapi.yml` against existing Go types. Add any missing on
 - [x] Run `go build ./...`
 - [x] Run `golangci-lint run ./...` (add `.golangci.yml` if not present)
 - [x] Verify 0 imports of deleted packages remain
-- [ ] Update README.md with new usage examples showing idiomatic patterns
+- [x] Update README.md with new usage examples showing idiomatic patterns
 
 ---
 

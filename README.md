@@ -3,9 +3,7 @@
 <a href="https://pkg.go.dev/github.com/anomalyco/opencode-sdk-go"><img src="https://pkg.go.dev/badge/github.com/anomalyco/opencode-sdk-go.svg" alt="Go Reference"></a>
 
 The Opencode Go library provides convenient access to the [Opencode REST API](https://opencode.ai/docs)
-from applications written in Go.
-
-It is generated with [Stainless](https://www.stainless.com/).
+from applications written in Go. This is a pure, idiomatic Go SDK built with Go's standard library.
 
 ## Installation
 
@@ -43,123 +41,163 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/anomalyco/opencode-sdk-go"
 )
 
 func main() {
-	client := opencode.NewClient()
+	client, err := opencode.NewClient(
+		opencode.WithBaseURL("http://localhost:8080"),
+		opencode.WithTimeout(30 * time.Second),
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// List all sessions
 	sessions, err := client.Session.List(context.TODO(), opencode.SessionListParams{})
 	if err != nil {
-		panic(err.Error())
+		log.Fatal(err)
 	}
-	fmt.Printf("%+v\n", sessions)
+	fmt.Printf("Found %d sessions\n", len(sessions))
+
+	// Create a new session
+	session, err := client.Session.New(context.TODO(), opencode.SessionNewParams{
+		Agent:    "general-purpose",
+		Contents: []opencode.MessageUnionParam{
+			opencode.UserMessageParam{
+				Role:  opencode.MessageRoleUser,
+				Parts: []opencode.PartInputParam{
+					opencode.TextPartInputParam{
+						Text: "Hello, how can you help me?",
+					},
+				},
+			},
+		},
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("Created session: %s\n", session.ID)
 }
 
 ```
 
-### Request fields
+### Request Parameters
 
-All request parameters are wrapped in a generic `Field` type,
-which we use to distinguish zero values from null or omitted fields.
+Request parameters use idiomatic Go types:
+- **Required fields** use direct types: `string`, `int64`, `bool`, `MyType`
+- **Optional fields** use pointer types: `*string`, `*int64`, `*bool`, `*MyType`
 
-This prevents accidentally sending a zero value if you forget a required parameter,
-and enables explicitly sending `null`, `false`, `''`, or `0` on optional parameters.
-Any field not specified is not sent.
-
-To construct fields with values, use the helpers `String()`, `Int()`, `Float()`, or most commonly, the generic `F[T]()`.
-To send a null, use `Null[T]()`, and to send a nonconforming value, use `Raw[T](any)`. For example:
+Optional fields with `nil` values are automatically omitted from the request.
 
 ```go
-params := FooParams{
-	Name: opencode.F("hello"),
+params := opencode.SessionCommandParams{
+	// Required field - direct type
+	Command: "list-files",
 
-	// Explicitly send `"description": null`
-	Description: opencode.Null[string](),
+	// Optional field - use pointer
+	Directory: opencode.Ptr("./src"),
 
-	Point: opencode.F(opencode.Point{
-		X: opencode.Int(0),
-		Y: opencode.Int(1),
+	// Optional field - nil means omit from request
+	Agent: nil,
+}
+```
 
-		// In cases where the API specifies a given type,
-		// but you want to send something else, use `Raw`:
-		Z: opencode.Raw[int64](0.01), // sends a float
+For convenience, we provide `Ptr[T](value T)` to create pointers:
+
+```go
+params := opencode.SessionUpdateParams{
+	Title: opencode.Ptr("My Updated Title"),
+}
+```
+
+### Response Objects
+
+All response fields use standard Go types decoded with `encoding/json`:
+- **String fields**: `string` (empty string if null/missing)
+- **Number fields**: `int64`, `float64` (zero if null/missing)
+- **Boolean fields**: `bool` (false if null/missing)
+- **Object fields**: `SomeType` or `*SomeType` depending on nullability
+
+```go
+session, err := client.Session.Get(context.TODO(), "sess_xxx", nil)
+if err != nil {
+	log.Fatal(err)
+}
+
+// Access response fields directly
+fmt.Printf("Session ID: %s\n", session.ID)
+fmt.Printf("Title: %s\n", session.Title)
+fmt.Printf("Created: %s\n", session.Time.Format(time.RFC3339))
+
+// Check for empty values (zero values indicate null/missing)
+if session.ParentID == "" {
+	fmt.Println("This is a root session (no parent)")
+}
+```
+
+### Client Configuration
+
+Configure the client using functional options at initialization:
+
+```go
+client, err := opencode.NewClient(
+	// Set the base URL (defaults to http://localhost:8080)
+	opencode.WithBaseURL("https://api.opencode.ai"),
+
+	// Configure timeout (defaults to 2 minutes)
+	opencode.WithTimeout(60 * time.Second),
+
+	// Configure max retries (defaults to 2)
+	opencode.WithMaxRetries(5),
+
+	// Use a custom HTTP client
+	opencode.WithHTTPClient(&http.Client{
+		Transport: myCustomTransport,
 	}),
+)
+if err != nil {
+	log.Fatal(err)
 }
 ```
 
-### Response objects
+Available client options:
+- `WithBaseURL(url string)` - Set the API base URL
+- `WithTimeout(duration time.Duration)` - Set request timeout
+- `WithMaxRetries(retries int)` - Set maximum retry attempts
+- `WithHTTPClient(client *http.Client)` - Use a custom HTTP client
 
-All fields in response structs are value types (not pointers or wrappers).
+### Union Types
 
-If a given field is `null`, not present, or invalid, the corresponding field
-will simply be its zero value.
-
-All response structs also include a special `JSON` field, containing more detailed
-information about each property, which you can use like so:
+Some response types use discriminated unions. Use the `As*()` methods to safely extract the specific variant:
 
 ```go
-if res.Name == "" {
-	// true if `"name"` is either not present or explicitly null
-	res.JSON.Name.IsNull()
+// Messages can be UserMessage or AssistantMessage
+messages, err := client.Session.Messages(context.TODO(), "sess_xxx", nil)
+if err != nil {
+	log.Fatal(err)
+}
 
-	// true if the `"name"` key was not present in the response JSON at all
-	res.JSON.Name.IsMissing()
-
-	// When the API returns data that cannot be coerced to the expected type:
-	if res.JSON.Name.IsInvalid() {
-		raw := res.JSON.Name.Raw()
-
-		legacyName := struct{
-			First string `json:"first"`
-			Last  string `json:"last"`
-		}{}
-		json.Unmarshal([]byte(raw), &legacyName)
-		name = legacyName.First + " " + legacyName.Last
+for _, msg := range messages {
+	// Check which type of message
+	if user, ok := msg.AsUser(); ok {
+		fmt.Printf("User: %s\n", user.Parts[0].AsText().Text)
+	} else if assistant, ok := msg.AsAssistant(); ok {
+		fmt.Printf("Assistant: %s\n", assistant.Parts[0].AsText().Text)
 	}
 }
+
+// Parts can be TextPart, FilePart, ToolPart, etc.
+if textPart, ok := part.AsText(); ok {
+	fmt.Printf("Text: %s\n", textPart.Text)
+} else if filePart, ok := part.AsFile(); ok {
+	fmt.Printf("File: %s\n", filePart.Source.AsFile().Path)
+} else if toolPart, ok := part.AsTool(); ok {
+	fmt.Printf("Tool: %s\n", toolPart.Name)
+}
 ```
-
-These `.JSON` structs also include an `Extras` map containing
-any properties in the json response that were not specified
-in the struct. This can be useful for API features not yet
-present in the SDK.
-
-```go
-body := res.JSON.ExtraFields["my_unexpected_field"].Raw()
-```
-
-### RequestOptions
-
-This library uses the functional options pattern. Functions defined in the
-`option` package return a `RequestOption`, which is a closure that mutates a
-`RequestConfig`. These options can be supplied to the client or at individual
-requests. For example:
-
-```go
-client := opencode.NewClient(
-	// Adds a header to every request made by the client
-	option.WithHeader("X-Some-Header", "custom_header_info"),
-)
-
-client.Session.List(context.TODO(), ...,
-	// Override the header
-	option.WithHeader("X-Some-Header", "some_other_custom_header_info"),
-	// Add an undocumented field to the request body, using sjson syntax
-	option.WithJSONSet("some.json.path", map[string]string{"my": "object"}),
-)
-```
-
-See the [full list of request options](https://pkg.go.dev/github.com/anomalyco/opencode-sdk-go/option).
-
-### Pagination
-
-This library provides some conveniences for working with paginated list endpoints.
-
-You can use `.ListAutoPaging()` methods to iterate through items across all pages:
-
-Or you can use simple `.List()` methods to fetch a single page and receive a standard response object
-with additional helper methods like `.GetNextPage()`, e.g.:
 
 ### Errors
 
@@ -187,165 +225,219 @@ if HTTP transport fails, you might receive `*url.Error` wrapping `*net.OpError`.
 
 ### Timeouts
 
-Requests do not time out by default; use context to configure a timeout for a request lifecycle.
-
-Note that if a request is [retried](#retries), the context timeout does not start over.
-To set a per-retry timeout, use `option.WithRequestTimeout()`.
+Configure client-level timeout when creating the client:
 
 ```go
-// This sets the timeout for the request, including all the retries.
-ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
-defer cancel()
-client.Session.List(
-	ctx,
-	opencode.SessionListParams{},
-	// This sets the per-retry timeout
-	option.WithRequestTimeout(20*time.Second),
+client, err := opencode.NewClient(
+	opencode.WithTimeout(60 * time.Second),
 )
 ```
 
-### File uploads
+Or use context for per-request timeouts:
 
-Request parameters that correspond to file uploads in multipart requests are typed as
-`param.Field[io.Reader]`. The contents of the `io.Reader` will by default be sent as a multipart form
-part with the file name of "anonymous_file" and content-type of "application/octet-stream".
+```go
+ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+defer cancel()
 
-The file name and content-type can be customized by implementing `Name() string` or `ContentType()
-string` on the run-time type of `io.Reader`. Note that `os.File` implements `Name() string`, so a
-file returned by `os.Open` will be sent with the file name on disk.
+sessions, err := client.Session.List(ctx, opencode.SessionListParams{})
+if err != nil {
+	log.Fatal(err)
+}
+```
 
-We also provide a helper `opencode.FileParam(reader io.Reader, filename string, contentType string)`
-which can be used to wrap any `io.Reader` with the appropriate file name and content type.
+Note: If a request is retried, the context timeout applies to the total time including all retries.
+
+### Streaming Events
+
+Subscribe to real-time events using Server-Sent Events (SSE):
+
+```go
+stream, err := client.Event.ListStreaming(context.TODO(), opencode.EventListStreamingParams{})
+if err != nil {
+	log.Fatal(err)
+}
+defer stream.Close()
+
+for stream.Next() {
+	event := stream.Current()
+
+	// Handle specific event types
+	if msgUpdated, ok := event.AsMessageUpdated(); ok {
+		fmt.Printf("Message updated: %s\n", msgUpdated.Data.Info.ID)
+	} else if sessionCreated, ok := event.AsSessionCreated(); ok {
+		fmt.Printf("Session created: %s\n", sessionCreated.Data.Info.ID)
+	}
+}
+
+if err := stream.Err(); err != nil {
+	log.Fatal(err)
+}
+```
 
 ### Retries
 
-Certain errors will be automatically retried 2 times by default, with a short exponential backoff.
-We retry by default all connection errors, 408 Request Timeout, 409 Conflict, 429 Rate Limit,
-and >=500 Internal errors.
+The client automatically retries failed requests with exponential backoff (default: 2 retries).
 
-You can use the `WithMaxRetries` option to configure or disable this:
+Retries are triggered for:
+- Connection errors
+- 408 Request Timeout
+- 429 Too Many Requests
+- 5xx Server Errors
+
+Configure retry behavior at client initialization:
 
 ```go
-// Configure the default for all requests:
-client := opencode.NewClient(
-	option.WithMaxRetries(0), // default is 2
-)
+client, err := opencode.NewClient(
+	// Disable retries
+	opencode.WithMaxRetries(0),
 
-// Override per-request:
-client.Session.List(
-	context.TODO(),
-	opencode.SessionListParams{},
-	option.WithMaxRetries(5),
+	// Or increase retries
+	opencode.WithMaxRetries(5),
 )
 ```
 
-### Accessing raw response data (e.g. response headers)
+The retry backoff schedule is: 500ms, 1s, 2s, 4s, 8s (capped at 8 seconds).
 
-You can access the raw HTTP response data by using the `option.WithResponseInto()` request option. This is useful when
-you need to examine response headers, status codes, or other details.
+### Advanced Usage
+
+#### Working with Authentication
+
+Set authentication credentials for external services:
 
 ```go
-// Create a variable to store the HTTP response
-var response *http.Response
-sessions, err := client.Session.List(
-	context.TODO(),
-	opencode.SessionListParams{},
-	option.WithResponseInto(&response),
-)
+// OAuth authentication
+err := client.Auth.Set(context.TODO(), "provider-id", opencode.AuthSetParams{
+	Auth: opencode.OAuth{
+		Type:    opencode.AuthTypeOAuth,
+		Refresh: "refresh_token_here",
+		Access:  opencode.Ptr("access_token_here"),
+		Expires: opencode.Ptr(int64(1234567890)),
+	},
+})
+
+// API key authentication
+err := client.Auth.Set(context.TODO(), "provider-id", opencode.AuthSetParams{
+	Auth: opencode.ApiAuth{
+		Type: opencode.AuthTypeAPI,
+		Key:  "api_key_here",
+	},
+})
+```
+
+#### Forking Sessions
+
+Create a new session from an existing one at a specific message:
+
+```go
+forked, err := client.Session.Fork(context.TODO(), "sess_xxx", opencode.SessionForkParams{
+	MessageID: "msg_yyy",
+	Directory: opencode.Ptr("/workspace/project"),
+})
+```
+
+#### Running Shell Commands
+
+Execute shell commands in a session:
+
+```go
+result, err := client.Session.Shell(context.TODO(), "sess_xxx", opencode.SessionShellParams{
+	Agent:     "bash",
+	Command:   "ls -la",
+	Directory: opencode.Ptr("/workspace"),
+})
+```
+
+### Working with Tools
+
+List available tools and their schemas:
+
+```go
+// Get all tool IDs
+toolIDs, err := client.Tool.IDs(context.TODO(), opencode.ToolIDsParams{})
 if err != nil {
-	// handle error
+	log.Fatal(err)
 }
-fmt.Printf("%+v\n", sessions)
+fmt.Printf("Available tools: %v\n", *toolIDs)
 
-fmt.Printf("Status Code: %d\n", response.StatusCode)
-fmt.Printf("Headers: %+#v\n", response.Header)
-```
-
-### Making custom/undocumented requests
-
-This library is typed for convenient access to the documented API. If you need to access undocumented
-endpoints, params, or response properties, the library can still be used.
-
-#### Undocumented endpoints
-
-To make requests to undocumented endpoints, you can use `client.Get`, `client.Post`, and other HTTP verbs.
-`RequestOptions` on the client, such as retries, will be respected when making these requests.
-
-```go
-var (
-    // params can be an io.Reader, a []byte, an encoding/json serializable object,
-    // or a "…Params" struct defined in this library.
-    params map[string]interface{}
-
-    // result can be an []byte, *http.Response, a encoding/json deserializable object,
-    // or a model defined in this library.
-    result *http.Response
-)
-err := client.Post(context.Background(), "/unspecified", params, &result)
+// Get tool schemas for a specific provider/model
+tools, err := client.Tool.List(context.TODO(), opencode.ToolListParams{
+	Provider: "anthropic",
+	Model:    "claude-sonnet-4-5",
+})
 if err != nil {
-    …
+	log.Fatal(err)
+}
+
+for _, tool := range *tools {
+	fmt.Printf("Tool: %s - %s\n", tool.ID, tool.Description)
+	// tool.Parameters contains the JSON schema
 }
 ```
 
-#### Undocumented request params
+### MCP Server Status
 
-To make requests using undocumented parameters, you may use either the `option.WithQuerySet()`
-or the `option.WithJSONSet()` methods.
+Check the status of MCP (Model Context Protocol) servers:
 
 ```go
-params := FooNewParams{
-    ID:   opencode.F("id_xxxx"),
-    Data: opencode.F(FooNewParamsData{
-        FirstName: opencode.F("John"),
-    }),
+status, err := client.Mcp.Status(context.TODO(), opencode.McpStatusParams{})
+if err != nil {
+	log.Fatal(err)
 }
-client.Foo.New(context.Background(), params, option.WithJSONSet("data.last_name", "Doe"))
+
+// status is map[string]interface{} containing dynamic server info
+for serverID, serverInfo := range *status {
+	fmt.Printf("Server %s: %+v\n", serverID, serverInfo)
+}
 ```
 
-#### Undocumented response properties
+### Custom HTTP Client
 
-To access undocumented response properties, you may either access the raw JSON of the response as a string
-with `result.JSON.RawJSON()`, or get the raw JSON of a particular field on the result with
-`result.JSON.Foo.Raw()`.
-
-Any fields that are not present on the response struct will be saved and can be accessed by `result.JSON.ExtraFields()` which returns the extra fields as a `map[string]Field`.
-
-### Middleware
-
-We provide `option.WithMiddleware` which applies the given
-middleware to requests.
+Use a custom HTTP client for advanced control over requests:
 
 ```go
-func Logger(req *http.Request, next option.MiddlewareNext) (res *http.Response, err error) {
-	// Before the request
+customClient := &http.Client{
+	Transport: &http.Transport{
+		MaxIdleConns:        100,
+		MaxIdleConnsPerHost: 10,
+		IdleConnTimeout:     90 * time.Second,
+	},
+	Timeout: 30 * time.Second,
+}
+
+client, err := opencode.NewClient(
+	opencode.WithHTTPClient(customClient),
+)
+```
+
+For request logging or middleware, wrap the transport:
+
+```go
+type LoggingTransport struct {
+	Base http.RoundTripper
+}
+
+func (t *LoggingTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	start := time.Now()
-	LogReq(req)
+	log.Printf("→ %s %s", req.Method, req.URL)
 
-	// Forward the request to the next handler
-	res, err = next(req)
+	resp, err := t.Base.RoundTrip(req)
 
-	// Handle stuff after the request
-	end := time.Now()
-	LogRes(res, err, start - end)
+	duration := time.Since(start)
+	if err != nil {
+		log.Printf("← Error: %v (took %s)", err, duration)
+	} else {
+		log.Printf("← %d %s (took %s)", resp.StatusCode, resp.Status, duration)
+	}
 
-    return res, err
+	return resp, err
 }
 
-client := opencode.NewClient(
-	option.WithMiddleware(Logger),
+client, err := opencode.NewClient(
+	opencode.WithHTTPClient(&http.Client{
+		Transport: &LoggingTransport{Base: http.DefaultTransport},
+	}),
 )
 ```
-
-When multiple middlewares are provided as variadic arguments, the middlewares
-are applied left to right. If `option.WithMiddleware` is given
-multiple times, for example first in the client then the method, the
-middleware in the client will run first and the middleware given in the method
-will run next.
-
-You may also replace the default `http.Client` with
-`option.WithHTTPClient(client)`. Only one http client is
-accepted (this overwrites any previous client) and receives requests after any
-middleware has been applied.
 
 ## Semantic versioning
 
