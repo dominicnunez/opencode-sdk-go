@@ -7,12 +7,10 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"reflect"
 
 	"github.com/dominicnunez/opencode-sdk-go/internal/apijson"
 	"github.com/dominicnunez/opencode-sdk-go/internal/apiquery"
 	"github.com/dominicnunez/opencode-sdk-go/shared"
-	"github.com/tidwall/gjson"
 )
 
 type SessionService struct {
@@ -337,73 +335,82 @@ type AssistantMessageTokensCache struct {
 }
 
 type AssistantMessageError struct {
-	// This field can have the runtime type of [shared.ProviderAuthErrorData],
-	// [shared.UnknownErrorData], [interface{}], [shared.MessageAbortedErrorData],
-	// [AssistantMessageErrorAPIErrorData].
-	Data  interface{}               `json:"data,required"`
-	Name  AssistantMessageErrorName `json:"name,required"`
-	union AssistantMessageErrorUnion
+	Name AssistantMessageErrorName `json:"name,required"`
+	raw  json.RawMessage
 }
 
-func (r *AssistantMessageError) UnmarshalJSON(data []byte) (err error) {
-	*r = AssistantMessageError{}
-	err = apijson.UnmarshalRoot(data, &r.union)
-	if err != nil {
+func (r *AssistantMessageError) UnmarshalJSON(data []byte) error {
+	// Peek at discriminator
+	var peek struct {
+		Name AssistantMessageErrorName `json:"name"`
+	}
+	if err := json.Unmarshal(data, &peek); err != nil {
 		return err
 	}
-	return apijson.Port(r.union, &r)
+	r.Name = peek.Name
+	r.raw = data
+	return nil
 }
 
-// AsUnion returns a [AssistantMessageErrorUnion] interface which you can cast to
-// the specific types for more type safety.
-//
-// Possible runtime types of the union are [shared.ProviderAuthError],
-// [shared.UnknownError], [AssistantMessageErrorMessageOutputLengthError],
-// [shared.MessageAbortedError], [AssistantMessageErrorAPIError].
-func (r AssistantMessageError) AsUnion() AssistantMessageErrorUnion {
-	return r.union
+func (r AssistantMessageError) AsProviderAuth() (*shared.ProviderAuthError, bool) {
+	if r.Name != AssistantMessageErrorNameProviderAuthError {
+		return nil, false
+	}
+	var err shared.ProviderAuthError
+	if err := json.Unmarshal(r.raw, &err); err != nil {
+		return nil, false
+	}
+	return &err, true
 }
 
-// Union satisfied by [shared.ProviderAuthError], [shared.UnknownError],
-// [AssistantMessageErrorMessageOutputLengthError], [shared.MessageAbortedError] or
-// [AssistantMessageErrorAPIError].
-type AssistantMessageErrorUnion interface {
-	ImplementsAssistantMessageError()
+func (r AssistantMessageError) AsUnknown() (*shared.UnknownError, bool) {
+	if r.Name != AssistantMessageErrorNameUnknownError {
+		return nil, false
+	}
+	var err shared.UnknownError
+	if err := json.Unmarshal(r.raw, &err); err != nil {
+		return nil, false
+	}
+	return &err, true
 }
 
-func init() {
-	apijson.RegisterUnion(
-		reflect.TypeOf((*AssistantMessageErrorUnion)(nil)).Elem(),
-		"",
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(shared.ProviderAuthError{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(shared.UnknownError{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(AssistantMessageErrorMessageOutputLengthError{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(shared.MessageAbortedError{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(AssistantMessageErrorAPIError{}),
-		},
-	)
+func (r AssistantMessageError) AsOutputLength() (*AssistantMessageErrorMessageOutputLengthError, bool) {
+	if r.Name != AssistantMessageErrorNameMessageOutputLengthError {
+		return nil, false
+	}
+	var err AssistantMessageErrorMessageOutputLengthError
+	if err := json.Unmarshal(r.raw, &err); err != nil {
+		return nil, false
+	}
+	return &err, true
+}
+
+func (r AssistantMessageError) AsAborted() (*shared.MessageAbortedError, bool) {
+	if r.Name != AssistantMessageErrorNameMessageAbortedError {
+		return nil, false
+	}
+	var err shared.MessageAbortedError
+	if err := json.Unmarshal(r.raw, &err); err != nil {
+		return nil, false
+	}
+	return &err, true
+}
+
+func (r AssistantMessageError) AsAPI() (*AssistantMessageErrorAPIError, bool) {
+	if r.Name != AssistantMessageErrorNameAPIError {
+		return nil, false
+	}
+	var err AssistantMessageErrorAPIError
+	if err := json.Unmarshal(r.raw, &err); err != nil {
+		return nil, false
+	}
+	return &err, true
 }
 
 type AssistantMessageErrorMessageOutputLengthError struct {
 	Data interface{}                                       `json:"data,required"`
 	Name AssistantMessageErrorMessageOutputLengthErrorName `json:"name,required"`
 }
-
-func (r AssistantMessageErrorMessageOutputLengthError) ImplementsAssistantMessageError() {}
 
 type AssistantMessageErrorMessageOutputLengthErrorName string
 
@@ -423,8 +430,6 @@ type AssistantMessageErrorAPIError struct {
 	Data AssistantMessageErrorAPIErrorData `json:"data,required"`
 	Name AssistantMessageErrorAPIErrorName `json:"name,required"`
 }
-
-func (r AssistantMessageErrorAPIError) ImplementsAssistantMessageError() {}
 
 type AssistantMessageErrorAPIErrorData struct {
 	IsRetryable     bool                                  `json:"isRetryable,required"`

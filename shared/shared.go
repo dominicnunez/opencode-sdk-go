@@ -7,8 +7,6 @@ type MessageAbortedError struct {
 
 func (r MessageAbortedError) ImplementsSessionError() {}
 
-func (r MessageAbortedError) ImplementsAssistantMessageError() {}
-
 type MessageAbortedErrorData struct {
 	Message string `json:"message,required"`
 }
@@ -33,8 +31,6 @@ type ProviderAuthError struct {
 }
 
 func (r ProviderAuthError) ImplementsSessionError() {}
-
-func (r ProviderAuthError) ImplementsAssistantMessageError() {}
 
 type ProviderAuthErrorData struct {
 	Message    string `json:"message,required"`
@@ -61,8 +57,6 @@ type UnknownError struct {
 }
 
 func (r UnknownError) ImplementsSessionError() {}
-
-func (r UnknownError) ImplementsAssistantMessageError() {}
 
 type UnknownErrorData struct {
 	Message string `json:"message,required"`
