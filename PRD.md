@@ -118,7 +118,7 @@ All follow the existing pattern in the codebase. Use the spec for request/respon
 - [x] `Summarize(ctx, id, params) → (bool, error)` — `POST /session/{id}/summarize`. Params: `providerID string` (required), `modelID string` (required), `directory *string` (optional query param)
 - [x] `Todo(ctx, id, params) → ([]Todo, error)` — `GET /session/{id}/todo`
 - [x] `Unrevert(ctx, id, params) → (*Session, error)` — `POST /session/{id}/unrevert`
-- [ ] `Unshare(ctx, id, params) → error` — `DELETE /session/{id}/share`
+- [x] `Unshare(ctx, id, params) → (*Session, error)` — `DELETE /session/{id}/share`
 
 Verify these already exist (my earlier scan found them but coverage script missed due to path concat):
 - [ ] Verify `Delete` works — `DELETE /session/{id}`

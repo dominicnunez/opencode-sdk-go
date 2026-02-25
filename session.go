@@ -304,6 +304,21 @@ func (s *SessionService) Unrevert(ctx context.Context, id string, params *Sessio
 	return &result, nil
 }
 
+func (s *SessionService) Unshare(ctx context.Context, id string, params *SessionUnshareParams) (*Session, error) {
+	if id == "" {
+		return nil, errors.New("missing required id parameter")
+	}
+	if params == nil {
+		params = &SessionUnshareParams{}
+	}
+	var result Session
+	err := s.client.do(ctx, http.MethodDelete, "session/"+id+"/share", params, &result)
+	if err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
 type AgentPart struct {
 	ID        string          `json:"id,required"`
 	MessageID string          `json:"messageID,required"`
