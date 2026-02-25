@@ -35,6 +35,7 @@ type Client struct {
 	Config  *ConfigService
 	File    *FileService
 	Find    *FindService
+	Mcp     *McpService
 	Path    *PathService
 	Project *ProjectService
 	Command *CommandService
@@ -69,6 +70,7 @@ func NewClient(opts ...ClientOption) (*Client, error) {
 	c.Config = &ConfigService{client: c}
 	c.File = &FileService{client: c}
 	c.Find = &FindService{client: c}
+	c.Mcp = &McpService{client: c}
 	c.Path = &PathService{client: c}
 	c.Project = &ProjectService{client: c}
 	c.Command = &CommandService{client: c}

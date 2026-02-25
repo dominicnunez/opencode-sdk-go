@@ -137,9 +137,9 @@ Verify these already exist (my earlier scan found them but coverage script misse
 
 ### MCP service — create new `mcp.go`:
 
-- [ ] Create `McpService` struct on Client
-- [ ] `Status(ctx, params) → (*McpStatus, error)` — `GET /mcp`
-- [ ] Wire into `Client` in `NewClient()`
+- [x] Create `McpService` struct on Client
+- [x] `Status(ctx, params) → (*McpStatus, error)` — `GET /mcp`
+- [x] Wire into `Client` in `NewClient()`
 
 ### Tool service — create new `tool.go`:
 
