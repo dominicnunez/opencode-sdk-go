@@ -158,22 +158,22 @@ Verify these already exist (my earlier scan found them but coverage script misse
 
 Check each schema in `openapi.yml` against existing Go types. Add any missing ones.
 
-- [ ] `Todo` struct — `content string`, `status string`, `priority string`, `id string`
-- [x] `FileDiff` struct — `file string`, `before string`, `after string`, `additions int64`, `deletions int64`  
-- [ ] `SessionShellResponse` — check spec for response schema
-- [ ] `SessionForkParams` — `messageID string` (required), `directory *string`
-- [ ] `McpStatus` — check spec for response schema of `GET /mcp`
-- [ ] `ToolIDs` — check spec
-- [ ] `ToolList` / `ToolListItem` — `id string`, `description string`, `parameters interface{}`
-- [ ] Verify all existing types match spec field names and types. Fix any drift.
+- [x] `Todo` struct — `content string`, `status string`, `priority string`, `id string`
+- [x] `FileDiff` struct — `file string`, `before string`, `after string`, `additions int64`, `deletions int64`
+- [x] `SessionShellResponse` — returns `AssistantMessage` (verified from spec)
+- [x] `SessionForkParams` — `messageID string` (required), `directory *string`
+- [x] `McpStatus` — `map[string]interface{}` for flexible JSON (verified from spec)
+- [x] `ToolIDs` — `[]string` array of tool IDs
+- [x] `ToolList` / `ToolListItem` — `id string`, `description string`, `parameters interface{}`
+- [x] Verify all existing types match spec field names and types. Fix any drift.
 
 ---
 
 ## Phase 6: Clean up event.go streaming
 
-- [ ] Keep `ssestream` package — it's clean and works
-- [ ] Update `EventService.ListStreaming` to use `Client.doRaw()` instead of `requestconfig.ExecuteNewRequest`
-- [ ] Ensure Event union type uses the Phase 3 discriminated union pattern (switch on `type` field)
+- [x] Keep `ssestream` package — it's clean and works
+- [x] Update `EventService.ListStreaming` to use `Client.doRaw()` instead of `requestconfig.ExecuteNewRequest`
+- [x] Ensure Event union type uses the Phase 3 discriminated union pattern (switch on `type` field)
 
 ---
 
