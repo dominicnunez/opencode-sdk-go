@@ -259,6 +259,21 @@ func (s *SessionService) Shell(ctx context.Context, id string, params *SessionSh
 	return &result, nil
 }
 
+func (s *SessionService) Summarize(ctx context.Context, id string, params *SessionSummarizeParams) (bool, error) {
+	if id == "" {
+		return false, errors.New("missing required id parameter")
+	}
+	if params == nil {
+		return false, errors.New("missing required params")
+	}
+	var result bool
+	err := s.client.do(ctx, http.MethodPost, "session/"+id+"/summarize", params, &result)
+	if err != nil {
+		return false, err
+	}
+	return result, nil
+}
+
 type AgentPart struct {
 	ID        string          `json:"id,required"`
 	MessageID string          `json:"messageID,required"`

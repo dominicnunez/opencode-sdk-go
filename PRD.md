@@ -115,7 +115,7 @@ All follow the existing pattern in the codebase. Use the spec for request/respon
 - [x] `Diff(ctx, id, params) → ([]FileDiff, error)` — `GET /session/{id}/diff`
 - [x] `Fork(ctx, id, params) → (*Session, error)` — `POST /session/{id}/fork`. Params: `messageID string` (required)
 - [x] `Shell(ctx, id, params) → (*AssistantMessage, error)` — `POST /session/{id}/shell`. Params: `agent string` (required), `command string` (required), `directory *string` (optional)
-- [ ] `Summarize(ctx, id, params) → (*Session, error)` — `POST /session/{id}/summarize`
+- [x] `Summarize(ctx, id, params) → (bool, error)` — `POST /session/{id}/summarize`. Params: `providerID string` (required), `modelID string` (required), `directory *string` (optional query param)
 - [ ] `Todo(ctx, id, params) → ([]Todo, error)` — `GET /session/{id}/todo`
 - [ ] `Unrevert(ctx, id, params) → (*Session, error)` — `POST /session/{id}/unrevert`
 - [ ] `Unshare(ctx, id, params) → error` — `DELETE /session/{id}/share`
