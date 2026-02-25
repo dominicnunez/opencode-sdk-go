@@ -223,79 +223,79 @@ Check each schema in `openapi.yml` against existing Go types. Add any missing on
 
 When complete, every box should be checked:
 
-### Session (16)
-- [ ] `POST   /session` — session.create
-- [ ] `GET    /session` — session.list
-- [ ] `GET    /session/{id}` — session.get
-- [ ] `PATCH  /session/{id}` — session.update
-- [ ] `DELETE /session/{id}` — session.delete
-- [ ] `POST   /session/{id}/abort` — session.abort
-- [ ] `GET    /session/{id}/children` — session.children
-- [ ] `POST   /session/{id}/command` — session.command
-- [ ] `GET    /session/{id}/diff` — session.diff
-- [ ] `POST   /session/{id}/fork` — session.fork
-- [ ] `POST   /session/{id}/init` — session.init
-- [ ] `GET    /session/{id}/message` — session.messages
-- [ ] `GET    /session/{id}/message/{messageID}` — session.message
-- [ ] `POST   /session/{id}/message` — session.prompt
-- [ ] `POST   /session/{id}/revert` — session.revert
-- [ ] `POST   /session/{id}/share` — session.share
+### Session (22)
+- [x] `POST   /session` — session.create
+- [x] `GET    /session` — session.list
+- [x] `GET    /session/{id}` — session.get
+- [x] `PATCH  /session/{id}` — session.update
+- [x] `DELETE /session/{id}` — session.delete
+- [x] `POST   /session/{id}/abort` — session.abort
+- [x] `GET    /session/{id}/children` — session.children
+- [x] `POST   /session/{id}/command` — session.command
+- [x] `GET    /session/{id}/diff` — session.diff
+- [x] `POST   /session/{id}/fork` — session.fork
+- [x] `POST   /session/{id}/init` — session.init
+- [x] `GET    /session/{id}/message` — session.messages
+- [x] `GET    /session/{id}/message/{messageID}` — session.message
+- [x] `POST   /session/{id}/message` — session.prompt
+- [x] `POST   /session/{id}/revert` — session.revert
+- [x] `POST   /session/{id}/share` — session.share
 - [x] `POST   /session/{id}/shell` — session.shell
-- [ ] `POST   /session/{id}/summarize` — session.summarize
+- [x] `POST   /session/{id}/summarize` — session.summarize
 - [x] `GET    /session/{id}/todo` — session.todo
 - [x] `POST   /session/{id}/unrevert` — session.unrevert
-- [ ] `DELETE /session/{id}/share` — session.unshare
-- [ ] `POST   /session/{id}/permissions/{permissionID}` — session.permission.reply
+- [x] `DELETE /session/{id}/share` — session.unshare
+- [x] `POST   /session/{id}/permissions/{permissionID}` — session.permission.respond
 
 ### Config (3)
-- [ ] `GET    /config` — config.get
-- [ ] `PATCH  /config` — config.update
-- [ ] `GET    /config/providers` — config.providers
+- [x] `GET    /config` — config.get
+- [x] `PATCH  /config` — config.update
+- [x] `GET    /config/providers` — config.providers
 
 ### Project (2)
-- [ ] `GET    /project` — project.list
-- [ ] `GET    /project/current` — project.current
+- [x] `GET    /project` — project.list
+- [x] `GET    /project/current` — project.current
 
 ### File (3)
-- [ ] `GET    /file` — file.list
-- [ ] `GET    /file/content` — file.read
-- [ ] `GET    /file/status` — file.status
+- [x] `GET    /file` — file.list
+- [x] `GET    /file/content` — file.read
+- [x] `GET    /file/status` — file.status
 
 ### Find (3)
-- [ ] `GET    /find` — find.text
-- [ ] `GET    /find/file` — find.files
-- [ ] `GET    /find/symbol` — find.symbols
+- [x] `GET    /find` — find.text
+- [x] `GET    /find/file` — find.files
+- [x] `GET    /find/symbol` — find.symbols
 
 ### Event (1)
-- [ ] `GET    /event` — event.subscribe (SSE stream)
+- [x] `GET    /event` — event.subscribe (SSE stream)
 
-### TUI (8)
-- [ ] `POST   /tui/append-prompt` — tui.appendPrompt
-- [ ] `POST   /tui/clear-prompt` — tui.clearPrompt
-- [ ] `POST   /tui/execute-command` — tui.executeCommand
-- [ ] `POST   /tui/open-help` — tui.openHelp
-- [ ] `POST   /tui/open-models` — tui.openModels
-- [ ] `POST   /tui/open-sessions` — tui.openSessions
-- [ ] `POST   /tui/open-themes` — tui.openThemes
-- [ ] `POST   /tui/show-toast` — tui.showToast
-- [ ] `POST   /tui/submit-prompt` — tui.submitPrompt
+### TUI (9)
+- [x] `POST   /tui/append-prompt` — tui.appendPrompt
+- [x] `POST   /tui/clear-prompt` — tui.clearPrompt
+- [x] `POST   /tui/execute-command` — tui.executeCommand
+- [x] `POST   /tui/open-help` — tui.openHelp
+- [x] `POST   /tui/open-models` — tui.openModels
+- [x] `POST   /tui/open-sessions` — tui.openSessions
+- [x] `POST   /tui/open-themes` — tui.openThemes
+- [x] `POST   /tui/show-toast` — tui.showToast
+- [x] `POST   /tui/submit-prompt` — tui.submitPrompt
 
 ### App (2)
-- [ ] `GET    /agent` — app.agents
-- [ ] `POST   /log` — app.log
+- [x] `GET    /agent` — agent.list
+- [x] `POST   /log` — app.log
 
 ### Auth (1)
-- [ ] `PUT    /auth/{id}` — auth.set
+- [x] `PUT    /auth/{id}` — auth.set
 
 ### Command (1)
-- [ ] `GET    /command` — command.list
+- [x] `GET    /command` — command.list
 
 ### Path (1)
-- [ ] `GET    /path` — path.get
+- [x] `GET    /path` — path.get
 
 ### MCP (1)
-- [ ] `GET    /mcp` — mcp.status
+- [x] `GET    /mcp` — mcp.status
 
 ### Tool (2)
-- [ ] `GET    /experimental/tool/ids` — tool.ids
-- [ ] `GET    /experimental/tool` — tool.list
+- [x] `GET    /experimental/tool/ids` — tool.ids
+- [x] `GET    /experimental/tool` — tool.list

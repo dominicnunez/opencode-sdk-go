@@ -38,6 +38,18 @@ func (s *ConfigService) Update(ctx context.Context, params *ConfigUpdateParams) 
 	return &result, nil
 }
 
+func (s *ConfigService) Providers(ctx context.Context, params *ConfigProviderListParams) (*ConfigProviderListResponse, error) {
+	if params == nil {
+		params = &ConfigProviderListParams{}
+	}
+	var result ConfigProviderListResponse
+	err := s.client.do(ctx, http.MethodGet, "config/providers", params, &result)
+	if err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
 type Config struct {
 	// JSON schema reference for configuration validation
 	Schema string `json:"$schema"`
@@ -1557,4 +1569,18 @@ func (r ConfigUpdateParams) URLQuery() (url.Values, error) {
 // MarshalJSON marshals the Config field for the request body
 func (r ConfigUpdateParams) MarshalJSON() ([]byte, error) {
 	return json.Marshal(r.Config)
+}
+
+type ConfigProviderListParams struct {
+	Directory *string `query:"directory,omitempty"`
+}
+
+// URLQuery serializes [ConfigProviderListParams]'s query parameters as `url.Values`.
+func (r ConfigProviderListParams) URLQuery() (url.Values, error) {
+	return queryparams.Marshal(r)
+}
+
+type ConfigProviderListResponse struct {
+	Default   map[string]string `json:"default"`
+	Providers []ConfigProvider  `json:"providers"`
 }
