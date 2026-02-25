@@ -15,11 +15,11 @@ This PRD has two goals:
 Replace `internal/requestconfig` + `option/` with a single `client.go` `do()` method that uses `net/http` + `encoding/json` directly.
 
 - [x] `client.go` already has `NewClient` with functional options (`WithBaseURL`, `WithHTTPClient`, `WithTimeout`, `WithMaxRetries`) — keep this
-- [ ] Rewrite `Client.do()` to NOT delegate to `requestconfig.ExecuteNewRequest`. Instead: build `*http.Request` directly, marshal JSON body with `encoding/json`, set headers, execute with retry loop, unmarshal response with `encoding/json`. Handle query params via `url.Values` from param structs' `URLQuery()` methods
-- [ ] Add `Client.doRaw()` variant that returns `*http.Response` for SSE streaming (used by `EventService.ListStreaming`)
+- [x] Rewrite `Client.do()` to NOT delegate to `requestconfig.ExecuteNewRequest`. Instead: build `*http.Request` directly, marshal JSON body with `encoding/json`, set headers, execute with retry loop, unmarshal response with `encoding/json`. Handle query params via `url.Values` from param structs' `URLQuery()` methods
+- [x] Add `Client.doRaw()` variant that returns `*http.Response` for SSE streaming (used by `EventService.ListStreaming`)
 - [ ] Delete `internal/requestconfig/` entirely
 - [ ] Delete `option/requestoption.go` and `option/middleware.go` — replace any needed options with `ClientOption` functional options on the client itself
-- [ ] Update all service methods to use the new `do()` / `doRaw()` — no more `opts ...option.RequestOption` on individual methods
+- [x] Update all service methods to use the new `do()` / `doRaw()` — no more `opts ...option.RequestOption` on individual methods
 
 ---
 

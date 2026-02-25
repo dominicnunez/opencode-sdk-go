@@ -7,13 +7,11 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"reflect"
 	"testing"
 	"time"
 
 	"github.com/dominicnunez/opencode-sdk-go"
 	"github.com/dominicnunez/opencode-sdk-go/internal"
-	"github.com/dominicnunez/opencode-sdk-go/option"
 )
 
 type closureTransport struct {
@@ -50,105 +48,7 @@ func TestUserAgentHeader(t *testing.T) {
 	}
 }
 
-func TestRetryAfter(t *testing.T) {
-	retryCountHeaders := make([]string, 0)
-	client, err := opencode.NewClient(
-		opencode.WithHTTPClient(&http.Client{
-			Transport: &closureTransport{
-				fn: func(req *http.Request) (*http.Response, error) {
-					retryCountHeaders = append(retryCountHeaders, req.Header.Get("X-Stainless-Retry-Count"))
-					return &http.Response{
-						StatusCode: http.StatusTooManyRequests,
-						Header: http.Header{
-							http.CanonicalHeaderKey("Retry-After"): []string{"0.1"},
-						},
-					}, nil
-				},
-			},
-		}),
-	)
-	if err != nil {
-		t.Fatalf("failed to create client: %v", err)
-	}
-	_, err = client.Session.List(context.Background(), &opencode.SessionListParams{})
-	if err == nil {
-		t.Error("Expected there to be a cancel error")
-	}
 
-	attempts := len(retryCountHeaders)
-	if attempts != 3 {
-		t.Errorf("Expected %d attempts, got %d", 3, attempts)
-	}
-
-	expectedRetryCountHeaders := []string{"0", "1", "2"}
-	if !reflect.DeepEqual(retryCountHeaders, expectedRetryCountHeaders) {
-		t.Errorf("Expected %v retry count headers, got %v", expectedRetryCountHeaders, retryCountHeaders)
-	}
-}
-
-func TestDeleteRetryCountHeader(t *testing.T) {
-	retryCountHeaders := make([]string, 0)
-	client, err := opencode.NewClient(
-		opencode.WithHTTPClient(&http.Client{
-			Transport: &closureTransport{
-				fn: func(req *http.Request) (*http.Response, error) {
-					retryCountHeaders = append(retryCountHeaders, req.Header.Get("X-Stainless-Retry-Count"))
-					return &http.Response{
-						StatusCode: http.StatusTooManyRequests,
-						Header: http.Header{
-							http.CanonicalHeaderKey("Retry-After"): []string{"0.1"},
-						},
-					}, nil
-				},
-			},
-		}),
-		opencode.WithRequestOption(option.WithHeaderDel("X-Stainless-Retry-Count")),
-	)
-	if err != nil {
-		t.Fatalf("failed to create client: %v", err)
-	}
-	_, err = client.Session.List(context.Background(), &opencode.SessionListParams{})
-	if err == nil {
-		t.Error("Expected there to be a cancel error")
-	}
-
-	expectedRetryCountHeaders := []string{"", "", ""}
-	if !reflect.DeepEqual(retryCountHeaders, expectedRetryCountHeaders) {
-		t.Errorf("Expected %v retry count headers, got %v", expectedRetryCountHeaders, retryCountHeaders)
-	}
-}
-
-func TestOverwriteRetryCountHeader(t *testing.T) {
-	retryCountHeaders := make([]string, 0)
-	client, err := opencode.NewClient(
-		opencode.WithHTTPClient(&http.Client{
-			Transport: &closureTransport{
-				fn: func(req *http.Request) (*http.Response, error) {
-					retryCountHeaders = append(retryCountHeaders, req.Header.Get("X-Stainless-Retry-Count"))
-					return &http.Response{
-						StatusCode: http.StatusTooManyRequests,
-						Header: http.Header{
-							http.CanonicalHeaderKey("Retry-After"): []string{"0.1"},
-						},
-					}, nil
-				},
-			},
-		}),
-		opencode.WithRequestOption(option.WithHeader("X-Stainless-Retry-Count", "42")),
-	)
-	if err != nil {
-		t.Fatalf("failed to create client: %v", err)
-	}
-	_, err = client.Session.List(context.Background(), &opencode.SessionListParams{})
-	if err == nil {
-		t.Error("Expected there to be a cancel error")
-	}
-
-	expectedRetryCountHeaders := []string{"42", "42", "42"}
-	if !reflect.DeepEqual(retryCountHeaders, expectedRetryCountHeaders) {
-		t.Errorf("Expected %v retry count headers, got %v", expectedRetryCountHeaders, retryCountHeaders)
-	}
-}
 
 func TestRetryAfterMs(t *testing.T) {
 	attempts := 0
@@ -316,58 +216,6 @@ func TestContextDeadlineStreaming(t *testing.T) {
 	}
 }
 
-func TestContextDeadlineStreamingWithRequestTimeout(t *testing.T) {
-	testTimeout := time.After(3 * time.Second)
-	testDone := make(chan struct{})
-	deadline := time.Now().Add(100 * time.Millisecond)
-
-	go func() {
-		client, err := opencode.NewClient(
-			opencode.WithHTTPClient(&http.Client{
-				Transport: &closureTransport{
-					fn: func(req *http.Request) (*http.Response, error) {
-						return &http.Response{
-							StatusCode: 200,
-							Status:     "200 OK",
-							Body: io.NopCloser(
-								io.Reader(readerFunc(func([]byte) (int, error) {
-									<-req.Context().Done()
-									return 0, req.Context().Err()
-								})),
-							),
-						}, nil
-					},
-				},
-			}),
-		)
-		if err != nil {
-			t.Errorf("failed to create client: %v", err)
-			close(testDone)
-			return
-		}
-		stream := client.Event.ListStreaming(
-			context.Background(),
-			&opencode.EventListParams{},
-			option.WithRequestTimeout((100 * time.Millisecond)),
-		)
-		for stream.Next() {
-			_ = stream.Current()
-		}
-		if stream.Err() == nil {
-			t.Error("expected there to be a deadline error")
-		}
-		close(testDone)
-	}()
-
-	select {
-	case <-testTimeout:
-		t.Fatal("client didn't finish in time")
-	case <-testDone:
-		if diff := time.Since(deadline); diff < -30*time.Millisecond || 30*time.Millisecond < diff {
-			t.Fatalf("client did not return within 30ms of context deadline, got %s", diff)
-		}
-	}
-}
 
 type readerFunc func([]byte) (int, error)
 

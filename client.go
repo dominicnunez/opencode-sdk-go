@@ -1,16 +1,18 @@
 package opencode
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
 	"time"
 
-	"github.com/dominicnunez/opencode-sdk-go/internal/requestconfig"
-	"github.com/dominicnunez/opencode-sdk-go/option"
+	"github.com/dominicnunez/opencode-sdk-go/internal"
 )
 
 const (
@@ -20,11 +22,10 @@ const (
 )
 
 type Client struct {
-	baseURL        string
-	httpClient     *http.Client
-	maxRetries     int
-	timeout        time.Duration
-	defaultOptions []option.RequestOption
+	baseURL    string
+	httpClient *http.Client
+	maxRetries int
+	timeout    time.Duration
 
 	Session *SessionService
 	Event   *EventService
@@ -120,20 +121,127 @@ func WithMaxRetries(n int) ClientOption {
 	}
 }
 
-func WithRequestOption(opt option.RequestOption) ClientOption {
-	return func(c *Client) error {
-		c.defaultOptions = append(c.defaultOptions, opt)
+
+func (c *Client) do(ctx context.Context, method, path string, params, result interface{}) error {
+	resp, err := c.doRaw(ctx, method, path, params)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if result == nil {
 		return nil
 	}
+
+	return json.NewDecoder(resp.Body).Decode(result)
 }
 
-func (c *Client) do(ctx context.Context, method, path string, params, result interface{}, opts ...option.RequestOption) error {
-	allOpts := []option.RequestOption{
-		option.WithBaseURL(c.baseURL),
-		option.WithHTTPClient(c.httpClient),
-		option.WithMaxRetries(c.maxRetries),
+func (c *Client) doRaw(ctx context.Context, method, path string, params interface{}) (*http.Response, error) {
+	u, err := url.Parse(c.baseURL)
+	if err != nil {
+		return nil, fmt.Errorf("parse base URL: %w", err)
 	}
-	allOpts = append(allOpts, c.defaultOptions...)
-	allOpts = append(allOpts, opts...)
-	return requestconfig.ExecuteNewRequest(ctx, method, path, params, result, allOpts...)
+
+	// Build full URL
+	fullURL := u.ResolveReference(&url.URL{Path: path})
+
+	var body io.Reader
+
+	// Handle query params for GET requests
+	if method == http.MethodGet && params != nil {
+		if queryer, ok := params.(interface{ URLQuery() (url.Values, error) }); ok {
+			query, err := queryer.URLQuery()
+			if err != nil {
+				return nil, fmt.Errorf("encode query params: %w", err)
+			}
+			fullURL.RawQuery = query.Encode()
+		}
+	}
+
+	// Handle JSON body for POST/PATCH/PUT
+	if params != nil && method != http.MethodGet && method != http.MethodDelete {
+		var buf bytes.Buffer
+		if err := json.NewEncoder(&buf).Encode(params); err != nil {
+			return nil, fmt.Errorf("marshal request body: %w", err)
+		}
+		body = &buf
+	}
+
+	// Build request with retry loop
+	var resp *http.Response
+	var lastErr error
+
+	for attempt := 0; attempt <= c.maxRetries; attempt++ {
+		req, err := http.NewRequestWithContext(ctx, method, fullURL.String(), body)
+		if err != nil {
+			return nil, fmt.Errorf("create request: %w", err)
+		}
+
+		// Set headers
+		if body != nil {
+			req.Header.Set("Content-Type", "application/json")
+		}
+		req.Header.Set("Accept", "application/json")
+		req.Header.Set("User-Agent", fmt.Sprintf("Opencode/Go %s", internal.PackageVersion))
+
+		// Execute request
+		resp, lastErr = c.httpClient.Do(req)
+
+		// Check context cancellation
+		if ctx.Err() != nil {
+			return nil, ctx.Err()
+		}
+
+		// Success - return response
+		if lastErr == nil && resp.StatusCode < 400 {
+			return resp, nil
+		}
+
+		// Error response - don't retry client errors (4xx except specific cases)
+		if lastErr == nil && resp.StatusCode >= 400 {
+			// Only retry specific status codes
+			shouldRetry := resp.StatusCode == http.StatusRequestTimeout ||
+				resp.StatusCode == http.StatusTooManyRequests ||
+				resp.StatusCode >= http.StatusInternalServerError
+
+			if !shouldRetry || attempt >= c.maxRetries {
+				// Read error body
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				resp.Body.Close()
+				return nil, fmt.Errorf("HTTP %d: %s", resp.StatusCode, string(bodyBytes))
+			}
+
+			// Close body before retry
+			resp.Body.Close()
+		}
+
+		// Wait before retry (exponential backoff)
+		if attempt < c.maxRetries {
+			delay := time.Duration(500*(1<<attempt)) * time.Millisecond
+			if delay > 8*time.Second {
+				delay = 8 * time.Second
+			}
+			select {
+			case <-time.After(delay):
+			case <-ctx.Done():
+				return nil, ctx.Err()
+			}
+
+			// Reset body for retry if needed
+			if params != nil && method != http.MethodGet && method != http.MethodDelete {
+				var buf bytes.Buffer
+				if err := json.NewEncoder(&buf).Encode(params); err != nil {
+					return nil, fmt.Errorf("marshal request body for retry: %w", err)
+				}
+				body = &buf
+			}
+		}
+	}
+
+	// All retries exhausted
+	if lastErr != nil {
+		return nil, fmt.Errorf("request failed after %d retries: %w", c.maxRetries, lastErr)
+	}
+
+	return resp, nil
 }

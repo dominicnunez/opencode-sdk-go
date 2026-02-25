@@ -2,14 +2,14 @@ package opencode
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/url"
 	"reflect"
 
+	"github.com/dominicnunez/opencode-sdk-go/internal"
 	"github.com/dominicnunez/opencode-sdk-go/internal/apijson"
 	"github.com/dominicnunez/opencode-sdk-go/internal/apiquery"
-	"github.com/dominicnunez/opencode-sdk-go/internal/requestconfig"
-	"github.com/dominicnunez/opencode-sdk-go/option"
 	"github.com/dominicnunez/opencode-sdk-go/packages/ssestream"
 	"github.com/dominicnunez/opencode-sdk-go/shared"
 	"github.com/tidwall/gjson"
@@ -19,21 +19,38 @@ type EventService struct {
 	client *Client
 }
 
-func (s *EventService) ListStreaming(ctx context.Context, params *EventListParams, opts ...option.RequestOption) *ssestream.Stream[Event] {
+func (s *EventService) ListStreaming(ctx context.Context, params *EventListParams) *ssestream.Stream[Event] {
 	if params == nil {
 		params = &EventListParams{}
 	}
-	var raw *http.Response
-	allOpts := []option.RequestOption{
-		option.WithHeader("Accept", "text/event-stream"),
-		option.WithBaseURL(s.client.baseURL),
-		option.WithHTTPClient(s.client.httpClient),
-		option.WithMaxRetries(s.client.maxRetries),
+
+	// Build URL with query params
+	u, err := url.Parse(s.client.baseURL)
+	if err != nil {
+		return ssestream.NewStream[Event](nil, err)
 	}
-	allOpts = append(allOpts, s.client.defaultOptions...)
-	allOpts = append(allOpts, opts...)
-	err := requestconfig.ExecuteNewRequest(ctx, http.MethodGet, "event", params, &raw, allOpts...)
-	return ssestream.NewStream[Event](ssestream.NewDecoder(raw), err)
+	fullURL := u.ResolveReference(&url.URL{Path: "event"})
+
+	if params != nil {
+		query, err := params.URLQuery()
+		if err != nil {
+			return ssestream.NewStream[Event](nil, err)
+		}
+		fullURL.RawQuery = query.Encode()
+	}
+
+	// Create request with SSE headers
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fullURL.String(), nil)
+	if err != nil {
+		return ssestream.NewStream[Event](nil, err)
+	}
+
+	req.Header.Set("Accept", "text/event-stream")
+	req.Header.Set("User-Agent", fmt.Sprintf("Opencode/Go %s", internal.PackageVersion))
+
+	// Execute request
+	resp, err := s.client.httpClient.Do(req)
+	return ssestream.NewStream[Event](ssestream.NewDecoder(resp), err)
 }
 
 type Event struct {
