@@ -7,12 +7,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"reflect"
 
-	"github.com/dominicnunez/opencode-sdk-go/internal/apijson"
 	"github.com/dominicnunez/opencode-sdk-go/internal/apiquery"
-	"github.com/dominicnunez/opencode-sdk-go/shared"
-	"github.com/tidwall/gjson"
 )
 
 type SessionPermissionService struct {
@@ -54,39 +50,41 @@ type Permission struct {
 	Title     string                 `json:"title"`
 	Type      string                 `json:"type"`
 	CallID    string                 `json:"callID,omitempty"`
-	Pattern   PermissionPatternUnion `json:"pattern,omitempty"`
-}
-
-func (r *Permission) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	Pattern   *PermissionPattern     `json:"pattern,omitempty"`
 }
 
 type PermissionTime struct {
 	Created float64 `json:"created"`
 }
 
-type PermissionPatternUnion interface {
-	ImplementsPermissionPatternUnion()
+// PermissionPattern can be either a string or an array of strings.
+// Use AsString() or AsArray() to access the value.
+type PermissionPattern struct {
+	raw json.RawMessage
 }
 
-func init() {
-	apijson.RegisterUnion(
-		reflect.TypeOf((*PermissionPatternUnion)(nil)).Elem(),
-		"",
-		apijson.UnionVariant{
-			TypeFilter: gjson.String,
-			Type:       reflect.TypeOf(shared.UnionString("")),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(PermissionPatternArray{}),
-		},
-	)
+func (p *PermissionPattern) UnmarshalJSON(data []byte) error {
+	p.raw = data
+	return nil
 }
 
-type PermissionPatternArray []string
+// AsString returns the pattern as a string if it is a string, or ("", false) if it is an array.
+func (p PermissionPattern) AsString() (string, bool) {
+	var s string
+	if err := json.Unmarshal(p.raw, &s); err != nil {
+		return "", false
+	}
+	return s, true
+}
 
-func (r PermissionPatternArray) ImplementsPermissionPatternUnion() {}
+// AsArray returns the pattern as an array of strings if it is an array, or (nil, false) if it is a string.
+func (p PermissionPattern) AsArray() ([]string, bool) {
+	var arr []string
+	if err := json.Unmarshal(p.raw, &arr); err != nil {
+		return nil, false
+	}
+	return arr, true
+}
 
 type SessionPermissionRespondParams struct {
 	Response  PermissionResponse `json:"response"`

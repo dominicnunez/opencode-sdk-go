@@ -99,7 +99,9 @@ Apply this pattern to each union:
 
 - [x] **SessionError** (discriminator: `name`) → `ProviderAuthError`, `UnknownError`, `MessageOutputLengthError`, `MessageAbortedError`, `SessionAPIError`. Remove `SessionErrorUnion` interface and init block. Add `AsProviderAuth()`, `AsUnknown()`, `AsOutputLength()`, `AsAborted()`, `AsAPI()` methods.
 
-- [ ] Delete all `func init()` blocks that call `apijson.RegisterUnion` (8 remaining: 7 in config.go, 1 in sessionpermission.go)
+- [x] **PermissionPattern** (type-based: `string | array`) → convert to discriminated union with `AsString()` and `AsArray()` methods. Remove init block from sessionpermission.go.
+
+- [ ] Delete all `func init()` blocks that call `apijson.RegisterUnion` (7 remaining: all in config.go)
 - [ ] Remove all `reflect` and `gjson` imports
 
 ---
