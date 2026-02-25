@@ -40,6 +40,7 @@ type Client struct {
 	Project *ProjectService
 	Command *CommandService
 	Tui     *TuiService
+	Tool    *ToolService
 }
 
 type ClientOption func(*Client) error
@@ -75,6 +76,7 @@ func NewClient(opts ...ClientOption) (*Client, error) {
 	c.Project = &ProjectService{client: c}
 	c.Command = &CommandService{client: c}
 	c.Tui = &TuiService{client: c}
+	c.Tool = &ToolService{client: c}
 
 	c.Session.Permissions = &SessionPermissionService{client: c}
 

@@ -143,10 +143,10 @@ Verify these already exist (my earlier scan found them but coverage script misse
 
 ### Tool service — create new `tool.go`:
 
-- [ ] Create `ToolService` struct on Client
-- [ ] `IDs(ctx, params) → (*ToolIDs, error)` — `GET /experimental/tool/ids`
-- [ ] `List(ctx, params) → (*ToolList, error)` — `GET /experimental/tool`
-- [ ] Wire into `Client` in `NewClient()`
+- [x] Create `ToolService` struct on Client
+- [x] `IDs(ctx, params) → (*ToolIDs, error)` — `GET /experimental/tool/ids`
+- [x] `List(ctx, params) → (*ToolList, error)` — `GET /experimental/tool`
+- [x] Wire into `Client` in `NewClient()`
 
 ### Session Permissions — verify coverage:
 
