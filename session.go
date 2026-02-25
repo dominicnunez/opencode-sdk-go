@@ -1,5 +1,3 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
-
 package opencode
 
 import (
@@ -226,27 +224,6 @@ type AgentPart struct {
 	SessionID string          `json:"sessionID,required"`
 	Type      AgentPartType   `json:"type,required"`
 	Source    AgentPartSource `json:"source"`
-	JSON      agentPartJSON   `json:"-"`
-}
-
-// agentPartJSON contains the JSON metadata for the struct [AgentPart]
-type agentPartJSON struct {
-	ID          apijson.Field
-	MessageID   apijson.Field
-	Name        apijson.Field
-	SessionID   apijson.Field
-	Type        apijson.Field
-	Source      apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *AgentPart) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r agentPartJSON) RawJSON() string {
-	return r.raw
 }
 
 func (r AgentPart) implementsPart() {}
@@ -269,24 +246,6 @@ type AgentPartSource struct {
 	End   int64               `json:"end,required"`
 	Start int64               `json:"start,required"`
 	Value string              `json:"value,required"`
-	JSON  agentPartSourceJSON `json:"-"`
-}
-
-// agentPartSourceJSON contains the JSON metadata for the struct [AgentPartSource]
-type agentPartSourceJSON struct {
-	End         apijson.Field
-	Start       apijson.Field
-	Value       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *AgentPartSource) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r agentPartSourceJSON) RawJSON() string {
-	return r.raw
 }
 
 type AgentPartInputParam struct {
@@ -341,36 +300,6 @@ type AssistantMessage struct {
 	Tokens     AssistantMessageTokens `json:"tokens,required"`
 	Error      AssistantMessageError  `json:"error"`
 	Summary    bool                   `json:"summary"`
-	JSON       assistantMessageJSON   `json:"-"`
-}
-
-// assistantMessageJSON contains the JSON metadata for the struct
-// [AssistantMessage]
-type assistantMessageJSON struct {
-	ID          apijson.Field
-	Cost        apijson.Field
-	Mode        apijson.Field
-	ModelID     apijson.Field
-	ParentID    apijson.Field
-	Path        apijson.Field
-	ProviderID  apijson.Field
-	Role        apijson.Field
-	SessionID   apijson.Field
-	System      apijson.Field
-	Time        apijson.Field
-	Tokens      apijson.Field
-	Error       apijson.Field
-	Summary     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *AssistantMessage) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r assistantMessageJSON) RawJSON() string {
-	return r.raw
 }
 
 func (r AssistantMessage) implementsMessage() {}
@@ -378,24 +307,6 @@ func (r AssistantMessage) implementsMessage() {}
 type AssistantMessagePath struct {
 	Cwd  string                   `json:"cwd,required"`
 	Root string                   `json:"root,required"`
-	JSON assistantMessagePathJSON `json:"-"`
-}
-
-// assistantMessagePathJSON contains the JSON metadata for the struct
-// [AssistantMessagePath]
-type assistantMessagePathJSON struct {
-	Cwd         apijson.Field
-	Root        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *AssistantMessagePath) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r assistantMessagePathJSON) RawJSON() string {
-	return r.raw
 }
 
 type AssistantMessageRole string
@@ -415,24 +326,6 @@ func (r AssistantMessageRole) IsKnown() bool {
 type AssistantMessageTime struct {
 	Created   float64                  `json:"created,required"`
 	Completed float64                  `json:"completed"`
-	JSON      assistantMessageTimeJSON `json:"-"`
-}
-
-// assistantMessageTimeJSON contains the JSON metadata for the struct
-// [AssistantMessageTime]
-type assistantMessageTimeJSON struct {
-	Created     apijson.Field
-	Completed   apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *AssistantMessageTime) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r assistantMessageTimeJSON) RawJSON() string {
-	return r.raw
 }
 
 type AssistantMessageTokens struct {
@@ -440,49 +333,11 @@ type AssistantMessageTokens struct {
 	Input     float64                     `json:"input,required"`
 	Output    float64                     `json:"output,required"`
 	Reasoning float64                     `json:"reasoning,required"`
-	JSON      assistantMessageTokensJSON  `json:"-"`
-}
-
-// assistantMessageTokensJSON contains the JSON metadata for the struct
-// [AssistantMessageTokens]
-type assistantMessageTokensJSON struct {
-	Cache       apijson.Field
-	Input       apijson.Field
-	Output      apijson.Field
-	Reasoning   apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *AssistantMessageTokens) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r assistantMessageTokensJSON) RawJSON() string {
-	return r.raw
 }
 
 type AssistantMessageTokensCache struct {
 	Read  float64                         `json:"read,required"`
 	Write float64                         `json:"write,required"`
-	JSON  assistantMessageTokensCacheJSON `json:"-"`
-}
-
-// assistantMessageTokensCacheJSON contains the JSON metadata for the struct
-// [AssistantMessageTokensCache]
-type assistantMessageTokensCacheJSON struct {
-	Read        apijson.Field
-	Write       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *AssistantMessageTokensCache) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r assistantMessageTokensCacheJSON) RawJSON() string {
-	return r.raw
 }
 
 type AssistantMessageError struct {
@@ -491,21 +346,7 @@ type AssistantMessageError struct {
 	// [AssistantMessageErrorAPIErrorData].
 	Data  interface{}               `json:"data,required"`
 	Name  AssistantMessageErrorName `json:"name,required"`
-	JSON  assistantMessageErrorJSON `json:"-"`
 	union AssistantMessageErrorUnion
-}
-
-// assistantMessageErrorJSON contains the JSON metadata for the struct
-// [AssistantMessageError]
-type assistantMessageErrorJSON struct {
-	Data        apijson.Field
-	Name        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r assistantMessageErrorJSON) RawJSON() string {
-	return r.raw
 }
 
 func (r *AssistantMessageError) UnmarshalJSON(data []byte) (err error) {
@@ -564,24 +405,6 @@ func init() {
 type AssistantMessageErrorMessageOutputLengthError struct {
 	Data interface{}                                       `json:"data,required"`
 	Name AssistantMessageErrorMessageOutputLengthErrorName `json:"name,required"`
-	JSON assistantMessageErrorMessageOutputLengthErrorJSON `json:"-"`
-}
-
-// assistantMessageErrorMessageOutputLengthErrorJSON contains the JSON metadata for
-// the struct [AssistantMessageErrorMessageOutputLengthError]
-type assistantMessageErrorMessageOutputLengthErrorJSON struct {
-	Data        apijson.Field
-	Name        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *AssistantMessageErrorMessageOutputLengthError) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r assistantMessageErrorMessageOutputLengthErrorJSON) RawJSON() string {
-	return r.raw
 }
 
 func (r AssistantMessageErrorMessageOutputLengthError) ImplementsAssistantMessageError() {}
@@ -603,24 +426,6 @@ func (r AssistantMessageErrorMessageOutputLengthErrorName) IsKnown() bool {
 type AssistantMessageErrorAPIError struct {
 	Data AssistantMessageErrorAPIErrorData `json:"data,required"`
 	Name AssistantMessageErrorAPIErrorName `json:"name,required"`
-	JSON assistantMessageErrorAPIErrorJSON `json:"-"`
-}
-
-// assistantMessageErrorAPIErrorJSON contains the JSON metadata for the struct
-// [AssistantMessageErrorAPIError]
-type assistantMessageErrorAPIErrorJSON struct {
-	Data        apijson.Field
-	Name        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *AssistantMessageErrorAPIError) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r assistantMessageErrorAPIErrorJSON) RawJSON() string {
-	return r.raw
 }
 
 func (r AssistantMessageErrorAPIError) ImplementsAssistantMessageError() {}
@@ -631,27 +436,6 @@ type AssistantMessageErrorAPIErrorData struct {
 	ResponseBody    string                                `json:"responseBody"`
 	ResponseHeaders map[string]string                     `json:"responseHeaders"`
 	StatusCode      float64                               `json:"statusCode"`
-	JSON            assistantMessageErrorAPIErrorDataJSON `json:"-"`
-}
-
-// assistantMessageErrorAPIErrorDataJSON contains the JSON metadata for the struct
-// [AssistantMessageErrorAPIErrorData]
-type assistantMessageErrorAPIErrorDataJSON struct {
-	IsRetryable     apijson.Field
-	Message         apijson.Field
-	ResponseBody    apijson.Field
-	ResponseHeaders apijson.Field
-	StatusCode      apijson.Field
-	raw             string
-	ExtraFields     map[string]apijson.Field
-}
-
-func (r *AssistantMessageErrorAPIErrorData) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r assistantMessageErrorAPIErrorDataJSON) RawJSON() string {
-	return r.raw
 }
 
 type AssistantMessageErrorAPIErrorName string
@@ -695,29 +479,6 @@ type FilePart struct {
 	URL       string         `json:"url,required"`
 	Filename  string         `json:"filename"`
 	Source    FilePartSource `json:"source"`
-	JSON      filePartJSON   `json:"-"`
-}
-
-// filePartJSON contains the JSON metadata for the struct [FilePart]
-type filePartJSON struct {
-	ID          apijson.Field
-	MessageID   apijson.Field
-	Mime        apijson.Field
-	SessionID   apijson.Field
-	Type        apijson.Field
-	URL         apijson.Field
-	Filename    apijson.Field
-	Source      apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *FilePart) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r filePartJSON) RawJSON() string {
-	return r.raw
 }
 
 func (r FilePart) implementsPart() {}
@@ -773,24 +534,7 @@ type FilePartSource struct {
 	Name string             `json:"name"`
 	// This field can have the runtime type of [SymbolSourceRange].
 	Range interface{}        `json:"range"`
-	JSON  filePartSourceJSON `json:"-"`
 	union FilePartSourceUnion
-}
-
-// filePartSourceJSON contains the JSON metadata for the struct [FilePartSource]
-type filePartSourceJSON struct {
-	Path        apijson.Field
-	Text        apijson.Field
-	Type        apijson.Field
-	Kind        apijson.Field
-	Name        apijson.Field
-	Range       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r filePartSourceJSON) RawJSON() string {
-	return r.raw
 }
 
 func (r *FilePartSource) UnmarshalJSON(data []byte) (err error) {
@@ -869,25 +613,6 @@ type FilePartSourceText struct {
 	End   int64                  `json:"end,required"`
 	Start int64                  `json:"start,required"`
 	Value string                 `json:"value,required"`
-	JSON  filePartSourceTextJSON `json:"-"`
-}
-
-// filePartSourceTextJSON contains the JSON metadata for the struct
-// [FilePartSourceText]
-type filePartSourceTextJSON struct {
-	End         apijson.Field
-	Start       apijson.Field
-	Value       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *FilePartSourceText) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r filePartSourceTextJSON) RawJSON() string {
-	return r.raw
 }
 
 type FilePartSourceTextParam struct {
@@ -904,24 +629,6 @@ type FileSource struct {
 	Path string             `json:"path,required"`
 	Text FilePartSourceText `json:"text,required"`
 	Type FileSourceType     `json:"type,required"`
-	JSON fileSourceJSON     `json:"-"`
-}
-
-// fileSourceJSON contains the JSON metadata for the struct [FileSource]
-type fileSourceJSON struct {
-	Path        apijson.Field
-	Text        apijson.Field
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *FileSource) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r fileSourceJSON) RawJSON() string {
-	return r.raw
 }
 
 func (r FileSource) implementsFilePartSource() {}
@@ -974,32 +681,7 @@ type Message struct {
 	System interface{} `json:"system"`
 	// This field can have the runtime type of [AssistantMessageTokens].
 	Tokens interface{} `json:"tokens"`
-	JSON   messageJSON `json:"-"`
 	union  MessageUnion
-}
-
-// messageJSON contains the JSON metadata for the struct [Message]
-type messageJSON struct {
-	ID          apijson.Field
-	Role        apijson.Field
-	SessionID   apijson.Field
-	Time        apijson.Field
-	Cost        apijson.Field
-	Error       apijson.Field
-	Mode        apijson.Field
-	ModelID     apijson.Field
-	ParentID    apijson.Field
-	Path        apijson.Field
-	ProviderID  apijson.Field
-	Summary     apijson.Field
-	System      apijson.Field
-	Tokens      apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r messageJSON) RawJSON() string {
-	return r.raw
 }
 
 func (r *Message) UnmarshalJSON(data []byte) (err error) {
@@ -1087,42 +769,7 @@ type Part struct {
 	Tokens interface{} `json:"tokens"`
 	Tool   string      `json:"tool"`
 	URL    string      `json:"url"`
-	JSON   partJSON    `json:"-"`
 	union  PartUnion
-}
-
-// partJSON contains the JSON metadata for the struct [Part]
-type partJSON struct {
-	ID          apijson.Field
-	MessageID   apijson.Field
-	SessionID   apijson.Field
-	Type        apijson.Field
-	Attempt     apijson.Field
-	CallID      apijson.Field
-	Cost        apijson.Field
-	Error       apijson.Field
-	Filename    apijson.Field
-	Files       apijson.Field
-	Hash        apijson.Field
-	Metadata    apijson.Field
-	Mime        apijson.Field
-	Name        apijson.Field
-	Reason      apijson.Field
-	Snapshot    apijson.Field
-	Source      apijson.Field
-	State       apijson.Field
-	Synthetic   apijson.Field
-	Text        apijson.Field
-	Time        apijson.Field
-	Tokens      apijson.Field
-	Tool        apijson.Field
-	URL         apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r partJSON) RawJSON() string {
-	return r.raw
 }
 
 func (r *Part) UnmarshalJSON(data []byte) (err error) {
@@ -1205,27 +852,6 @@ type PartPatchPart struct {
 	MessageID string            `json:"messageID,required"`
 	SessionID string            `json:"sessionID,required"`
 	Type      PartPatchPartType `json:"type,required"`
-	JSON      partPatchPartJSON `json:"-"`
-}
-
-// partPatchPartJSON contains the JSON metadata for the struct [PartPatchPart]
-type partPatchPartJSON struct {
-	ID          apijson.Field
-	Files       apijson.Field
-	Hash        apijson.Field
-	MessageID   apijson.Field
-	SessionID   apijson.Field
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *PartPatchPart) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r partPatchPartJSON) RawJSON() string {
-	return r.raw
 }
 
 func (r PartPatchPart) implementsPart() {}
@@ -1252,28 +878,6 @@ type PartRetryPart struct {
 	SessionID string             `json:"sessionID,required"`
 	Time      PartRetryPartTime  `json:"time,required"`
 	Type      PartRetryPartType  `json:"type,required"`
-	JSON      partRetryPartJSON  `json:"-"`
-}
-
-// partRetryPartJSON contains the JSON metadata for the struct [PartRetryPart]
-type partRetryPartJSON struct {
-	ID          apijson.Field
-	Attempt     apijson.Field
-	Error       apijson.Field
-	MessageID   apijson.Field
-	SessionID   apijson.Field
-	Time        apijson.Field
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *PartRetryPart) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r partRetryPartJSON) RawJSON() string {
-	return r.raw
 }
 
 func (r PartRetryPart) implementsPart() {}
@@ -1281,24 +885,6 @@ func (r PartRetryPart) implementsPart() {}
 type PartRetryPartError struct {
 	Data PartRetryPartErrorData `json:"data,required"`
 	Name PartRetryPartErrorName `json:"name,required"`
-	JSON partRetryPartErrorJSON `json:"-"`
-}
-
-// partRetryPartErrorJSON contains the JSON metadata for the struct
-// [PartRetryPartError]
-type partRetryPartErrorJSON struct {
-	Data        apijson.Field
-	Name        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *PartRetryPartError) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r partRetryPartErrorJSON) RawJSON() string {
-	return r.raw
 }
 
 type PartRetryPartErrorData struct {
@@ -1307,27 +893,6 @@ type PartRetryPartErrorData struct {
 	ResponseBody    string                     `json:"responseBody"`
 	ResponseHeaders map[string]string          `json:"responseHeaders"`
 	StatusCode      float64                    `json:"statusCode"`
-	JSON            partRetryPartErrorDataJSON `json:"-"`
-}
-
-// partRetryPartErrorDataJSON contains the JSON metadata for the struct
-// [PartRetryPartErrorData]
-type partRetryPartErrorDataJSON struct {
-	IsRetryable     apijson.Field
-	Message         apijson.Field
-	ResponseBody    apijson.Field
-	ResponseHeaders apijson.Field
-	StatusCode      apijson.Field
-	raw             string
-	ExtraFields     map[string]apijson.Field
-}
-
-func (r *PartRetryPartErrorData) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r partRetryPartErrorDataJSON) RawJSON() string {
-	return r.raw
 }
 
 type PartRetryPartErrorName string
@@ -1346,23 +911,6 @@ func (r PartRetryPartErrorName) IsKnown() bool {
 
 type PartRetryPartTime struct {
 	Created float64               `json:"created,required"`
-	JSON    partRetryPartTimeJSON `json:"-"`
-}
-
-// partRetryPartTimeJSON contains the JSON metadata for the struct
-// [PartRetryPartTime]
-type partRetryPartTimeJSON struct {
-	Created     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *PartRetryPartTime) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r partRetryPartTimeJSON) RawJSON() string {
-	return r.raw
 }
 
 type PartRetryPartType string
@@ -1410,28 +958,6 @@ type ReasoningPart struct {
 	Time      ReasoningPartTime      `json:"time,required"`
 	Type      ReasoningPartType      `json:"type,required"`
 	Metadata  map[string]interface{} `json:"metadata"`
-	JSON      reasoningPartJSON      `json:"-"`
-}
-
-// reasoningPartJSON contains the JSON metadata for the struct [ReasoningPart]
-type reasoningPartJSON struct {
-	ID          apijson.Field
-	MessageID   apijson.Field
-	SessionID   apijson.Field
-	Text        apijson.Field
-	Time        apijson.Field
-	Type        apijson.Field
-	Metadata    apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ReasoningPart) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r reasoningPartJSON) RawJSON() string {
-	return r.raw
 }
 
 func (r ReasoningPart) implementsPart() {}
@@ -1439,24 +965,6 @@ func (r ReasoningPart) implementsPart() {}
 type ReasoningPartTime struct {
 	Start float64               `json:"start,required"`
 	End   float64               `json:"end"`
-	JSON  reasoningPartTimeJSON `json:"-"`
-}
-
-// reasoningPartTimeJSON contains the JSON metadata for the struct
-// [ReasoningPartTime]
-type reasoningPartTimeJSON struct {
-	Start       apijson.Field
-	End         apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ReasoningPartTime) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r reasoningPartTimeJSON) RawJSON() string {
-	return r.raw
 }
 
 type ReasoningPartType string
@@ -1484,55 +992,12 @@ type Session struct {
 	Revert    SessionRevert  `json:"revert"`
 	Share     SessionShare   `json:"share"`
 	Summary   SessionSummary `json:"summary"`
-	JSON      sessionJSON    `json:"-"`
-}
-
-// sessionJSON contains the JSON metadata for the struct [Session]
-type sessionJSON struct {
-	ID          apijson.Field
-	Directory   apijson.Field
-	ProjectID   apijson.Field
-	Time        apijson.Field
-	Title       apijson.Field
-	Version     apijson.Field
-	ParentID    apijson.Field
-	Revert      apijson.Field
-	Share       apijson.Field
-	Summary     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *Session) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sessionJSON) RawJSON() string {
-	return r.raw
 }
 
 type SessionTime struct {
 	Created    float64         `json:"created,required"`
 	Updated    float64         `json:"updated,required"`
 	Compacting float64         `json:"compacting"`
-	JSON       sessionTimeJSON `json:"-"`
-}
-
-// sessionTimeJSON contains the JSON metadata for the struct [SessionTime]
-type sessionTimeJSON struct {
-	Created     apijson.Field
-	Updated     apijson.Field
-	Compacting  apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SessionTime) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sessionTimeJSON) RawJSON() string {
-	return r.raw
 }
 
 type SessionRevert struct {
@@ -1540,65 +1005,14 @@ type SessionRevert struct {
 	Diff      string            `json:"diff"`
 	PartID    string            `json:"partID"`
 	Snapshot  string            `json:"snapshot"`
-	JSON      sessionRevertJSON `json:"-"`
-}
-
-// sessionRevertJSON contains the JSON metadata for the struct [SessionRevert]
-type sessionRevertJSON struct {
-	MessageID   apijson.Field
-	Diff        apijson.Field
-	PartID      apijson.Field
-	Snapshot    apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SessionRevert) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sessionRevertJSON) RawJSON() string {
-	return r.raw
 }
 
 type SessionShare struct {
 	URL  string           `json:"url,required"`
-	JSON sessionShareJSON `json:"-"`
-}
-
-// sessionShareJSON contains the JSON metadata for the struct [SessionShare]
-type sessionShareJSON struct {
-	URL         apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SessionShare) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sessionShareJSON) RawJSON() string {
-	return r.raw
 }
 
 type SessionSummary struct {
 	Diffs []SessionSummaryDiff `json:"diffs,required"`
-	JSON  sessionSummaryJSON   `json:"-"`
-}
-
-// sessionSummaryJSON contains the JSON metadata for the struct [SessionSummary]
-type sessionSummaryJSON struct {
-	Diffs       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SessionSummary) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sessionSummaryJSON) RawJSON() string {
-	return r.raw
 }
 
 type SessionSummaryDiff struct {
@@ -1607,27 +1021,6 @@ type SessionSummaryDiff struct {
 	Before    string                 `json:"before,required"`
 	Deletions float64                `json:"deletions,required"`
 	File      string                 `json:"file,required"`
-	JSON      sessionSummaryDiffJSON `json:"-"`
-}
-
-// sessionSummaryDiffJSON contains the JSON metadata for the struct
-// [SessionSummaryDiff]
-type sessionSummaryDiffJSON struct {
-	Additions   apijson.Field
-	After       apijson.Field
-	Before      apijson.Field
-	Deletions   apijson.Field
-	File        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SessionSummaryDiff) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sessionSummaryDiffJSON) RawJSON() string {
-	return r.raw
 }
 
 type SnapshotPart struct {
@@ -1636,26 +1029,6 @@ type SnapshotPart struct {
 	SessionID string           `json:"sessionID,required"`
 	Snapshot  string           `json:"snapshot,required"`
 	Type      SnapshotPartType `json:"type,required"`
-	JSON      snapshotPartJSON `json:"-"`
-}
-
-// snapshotPartJSON contains the JSON metadata for the struct [SnapshotPart]
-type snapshotPartJSON struct {
-	ID          apijson.Field
-	MessageID   apijson.Field
-	SessionID   apijson.Field
-	Snapshot    apijson.Field
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SnapshotPart) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r snapshotPartJSON) RawJSON() string {
-	return r.raw
 }
 
 func (r SnapshotPart) implementsPart() {}
@@ -1683,29 +1056,6 @@ type StepFinishPart struct {
 	Tokens    StepFinishPartTokens `json:"tokens,required"`
 	Type      StepFinishPartType   `json:"type,required"`
 	Snapshot  string               `json:"snapshot"`
-	JSON      stepFinishPartJSON   `json:"-"`
-}
-
-// stepFinishPartJSON contains the JSON metadata for the struct [StepFinishPart]
-type stepFinishPartJSON struct {
-	ID          apijson.Field
-	Cost        apijson.Field
-	MessageID   apijson.Field
-	Reason      apijson.Field
-	SessionID   apijson.Field
-	Tokens      apijson.Field
-	Type        apijson.Field
-	Snapshot    apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *StepFinishPart) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r stepFinishPartJSON) RawJSON() string {
-	return r.raw
 }
 
 func (r StepFinishPart) implementsPart() {}
@@ -1715,49 +1065,11 @@ type StepFinishPartTokens struct {
 	Input     float64                   `json:"input,required"`
 	Output    float64                   `json:"output,required"`
 	Reasoning float64                   `json:"reasoning,required"`
-	JSON      stepFinishPartTokensJSON  `json:"-"`
-}
-
-// stepFinishPartTokensJSON contains the JSON metadata for the struct
-// [StepFinishPartTokens]
-type stepFinishPartTokensJSON struct {
-	Cache       apijson.Field
-	Input       apijson.Field
-	Output      apijson.Field
-	Reasoning   apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *StepFinishPartTokens) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r stepFinishPartTokensJSON) RawJSON() string {
-	return r.raw
 }
 
 type StepFinishPartTokensCache struct {
 	Read  float64                       `json:"read,required"`
 	Write float64                       `json:"write,required"`
-	JSON  stepFinishPartTokensCacheJSON `json:"-"`
-}
-
-// stepFinishPartTokensCacheJSON contains the JSON metadata for the struct
-// [StepFinishPartTokensCache]
-type stepFinishPartTokensCacheJSON struct {
-	Read        apijson.Field
-	Write       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *StepFinishPartTokensCache) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r stepFinishPartTokensCacheJSON) RawJSON() string {
-	return r.raw
 }
 
 type StepFinishPartType string
@@ -1780,26 +1092,6 @@ type StepStartPart struct {
 	SessionID string            `json:"sessionID,required"`
 	Type      StepStartPartType `json:"type,required"`
 	Snapshot  string            `json:"snapshot"`
-	JSON      stepStartPartJSON `json:"-"`
-}
-
-// stepStartPartJSON contains the JSON metadata for the struct [StepStartPart]
-type stepStartPartJSON struct {
-	ID          apijson.Field
-	MessageID   apijson.Field
-	SessionID   apijson.Field
-	Type        apijson.Field
-	Snapshot    apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *StepStartPart) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r stepStartPartJSON) RawJSON() string {
-	return r.raw
 }
 
 func (r StepStartPart) implementsPart() {}
@@ -1825,27 +1117,6 @@ type SymbolSource struct {
 	Range SymbolSourceRange  `json:"range,required"`
 	Text  FilePartSourceText `json:"text,required"`
 	Type  SymbolSourceType   `json:"type,required"`
-	JSON  symbolSourceJSON   `json:"-"`
-}
-
-// symbolSourceJSON contains the JSON metadata for the struct [SymbolSource]
-type symbolSourceJSON struct {
-	Kind        apijson.Field
-	Name        apijson.Field
-	Path        apijson.Field
-	Range       apijson.Field
-	Text        apijson.Field
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SymbolSource) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r symbolSourceJSON) RawJSON() string {
-	return r.raw
 }
 
 func (r SymbolSource) implementsFilePartSource() {}
@@ -1853,70 +1124,16 @@ func (r SymbolSource) implementsFilePartSource() {}
 type SymbolSourceRange struct {
 	End   SymbolSourceRangeEnd   `json:"end,required"`
 	Start SymbolSourceRangeStart `json:"start,required"`
-	JSON  symbolSourceRangeJSON  `json:"-"`
-}
-
-// symbolSourceRangeJSON contains the JSON metadata for the struct
-// [SymbolSourceRange]
-type symbolSourceRangeJSON struct {
-	End         apijson.Field
-	Start       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SymbolSourceRange) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r symbolSourceRangeJSON) RawJSON() string {
-	return r.raw
 }
 
 type SymbolSourceRangeEnd struct {
 	Character float64                  `json:"character,required"`
 	Line      float64                  `json:"line,required"`
-	JSON      symbolSourceRangeEndJSON `json:"-"`
-}
-
-// symbolSourceRangeEndJSON contains the JSON metadata for the struct
-// [SymbolSourceRangeEnd]
-type symbolSourceRangeEndJSON struct {
-	Character   apijson.Field
-	Line        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SymbolSourceRangeEnd) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r symbolSourceRangeEndJSON) RawJSON() string {
-	return r.raw
 }
 
 type SymbolSourceRangeStart struct {
 	Character float64                    `json:"character,required"`
 	Line      float64                    `json:"line,required"`
-	JSON      symbolSourceRangeStartJSON `json:"-"`
-}
-
-// symbolSourceRangeStartJSON contains the JSON metadata for the struct
-// [SymbolSourceRangeStart]
-type symbolSourceRangeStartJSON struct {
-	Character   apijson.Field
-	Line        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SymbolSourceRangeStart) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r symbolSourceRangeStartJSON) RawJSON() string {
-	return r.raw
 }
 
 type SymbolSourceType string
@@ -1984,29 +1201,6 @@ type TextPart struct {
 	Metadata  map[string]interface{} `json:"metadata"`
 	Synthetic bool                   `json:"synthetic"`
 	Time      TextPartTime           `json:"time"`
-	JSON      textPartJSON           `json:"-"`
-}
-
-// textPartJSON contains the JSON metadata for the struct [TextPart]
-type textPartJSON struct {
-	ID          apijson.Field
-	MessageID   apijson.Field
-	SessionID   apijson.Field
-	Text        apijson.Field
-	Type        apijson.Field
-	Metadata    apijson.Field
-	Synthetic   apijson.Field
-	Time        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *TextPart) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r textPartJSON) RawJSON() string {
-	return r.raw
 }
 
 func (r TextPart) implementsPart() {}
@@ -2028,23 +1222,6 @@ func (r TextPartType) IsKnown() bool {
 type TextPartTime struct {
 	Start float64          `json:"start,required"`
 	End   float64          `json:"end"`
-	JSON  textPartTimeJSON `json:"-"`
-}
-
-// textPartTimeJSON contains the JSON metadata for the struct [TextPartTime]
-type textPartTimeJSON struct {
-	Start       apijson.Field
-	End         apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *TextPartTime) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r textPartTimeJSON) RawJSON() string {
-	return r.raw
 }
 
 type TextPartInputParam struct {
@@ -2094,29 +1271,6 @@ type ToolPart struct {
 	Tool      string                 `json:"tool,required"`
 	Type      ToolPartType           `json:"type,required"`
 	Metadata  map[string]interface{} `json:"metadata"`
-	JSON      toolPartJSON           `json:"-"`
-}
-
-// toolPartJSON contains the JSON metadata for the struct [ToolPart]
-type toolPartJSON struct {
-	ID          apijson.Field
-	CallID      apijson.Field
-	MessageID   apijson.Field
-	SessionID   apijson.Field
-	State       apijson.Field
-	Tool        apijson.Field
-	Type        apijson.Field
-	Metadata    apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ToolPart) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r toolPartJSON) RawJSON() string {
-	return r.raw
 }
 
 func (r ToolPart) implementsPart() {}
@@ -2135,26 +1289,7 @@ type ToolPartState struct {
 	// [ToolStateCompletedTime], [ToolStateErrorTime].
 	Time  interface{}       `json:"time"`
 	Title string            `json:"title"`
-	JSON  toolPartStateJSON `json:"-"`
 	union ToolPartStateUnion
-}
-
-// toolPartStateJSON contains the JSON metadata for the struct [ToolPartState]
-type toolPartStateJSON struct {
-	Status      apijson.Field
-	Attachments apijson.Field
-	Error       apijson.Field
-	Input       apijson.Field
-	Metadata    apijson.Field
-	Output      apijson.Field
-	Time        apijson.Field
-	Title       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r toolPartStateJSON) RawJSON() string {
-	return r.raw
 }
 
 func (r *ToolPartState) UnmarshalJSON(data []byte) (err error) {
@@ -2243,29 +1378,6 @@ type ToolStateCompleted struct {
 	Time        ToolStateCompletedTime   `json:"time,required"`
 	Title       string                   `json:"title,required"`
 	Attachments []FilePart               `json:"attachments"`
-	JSON        toolStateCompletedJSON   `json:"-"`
-}
-
-// toolStateCompletedJSON contains the JSON metadata for the struct
-// [ToolStateCompleted]
-type toolStateCompletedJSON struct {
-	Input       apijson.Field
-	Metadata    apijson.Field
-	Output      apijson.Field
-	Status      apijson.Field
-	Time        apijson.Field
-	Title       apijson.Field
-	Attachments apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ToolStateCompleted) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r toolStateCompletedJSON) RawJSON() string {
-	return r.raw
 }
 
 func (r ToolStateCompleted) implementsToolPartState() {}
@@ -2288,25 +1400,6 @@ type ToolStateCompletedTime struct {
 	End       float64                    `json:"end,required"`
 	Start     float64                    `json:"start,required"`
 	Compacted float64                    `json:"compacted"`
-	JSON      toolStateCompletedTimeJSON `json:"-"`
-}
-
-// toolStateCompletedTimeJSON contains the JSON metadata for the struct
-// [ToolStateCompletedTime]
-type toolStateCompletedTimeJSON struct {
-	End         apijson.Field
-	Start       apijson.Field
-	Compacted   apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ToolStateCompletedTime) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r toolStateCompletedTimeJSON) RawJSON() string {
-	return r.raw
 }
 
 type ToolStateError struct {
@@ -2315,26 +1408,6 @@ type ToolStateError struct {
 	Status   ToolStateErrorStatus   `json:"status,required"`
 	Time     ToolStateErrorTime     `json:"time,required"`
 	Metadata map[string]interface{} `json:"metadata"`
-	JSON     toolStateErrorJSON     `json:"-"`
-}
-
-// toolStateErrorJSON contains the JSON metadata for the struct [ToolStateError]
-type toolStateErrorJSON struct {
-	Error       apijson.Field
-	Input       apijson.Field
-	Status      apijson.Field
-	Time        apijson.Field
-	Metadata    apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ToolStateError) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r toolStateErrorJSON) RawJSON() string {
-	return r.raw
 }
 
 func (r ToolStateError) implementsToolPartState() {}
@@ -2356,45 +1429,10 @@ func (r ToolStateErrorStatus) IsKnown() bool {
 type ToolStateErrorTime struct {
 	End   float64                `json:"end,required"`
 	Start float64                `json:"start,required"`
-	JSON  toolStateErrorTimeJSON `json:"-"`
-}
-
-// toolStateErrorTimeJSON contains the JSON metadata for the struct
-// [ToolStateErrorTime]
-type toolStateErrorTimeJSON struct {
-	End         apijson.Field
-	Start       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ToolStateErrorTime) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r toolStateErrorTimeJSON) RawJSON() string {
-	return r.raw
 }
 
 type ToolStatePending struct {
 	Status ToolStatePendingStatus `json:"status,required"`
-	JSON   toolStatePendingJSON   `json:"-"`
-}
-
-// toolStatePendingJSON contains the JSON metadata for the struct
-// [ToolStatePending]
-type toolStatePendingJSON struct {
-	Status      apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ToolStatePending) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r toolStatePendingJSON) RawJSON() string {
-	return r.raw
 }
 
 func (r ToolStatePending) implementsToolPartState() {}
@@ -2419,27 +1457,6 @@ type ToolStateRunning struct {
 	Time     ToolStateRunningTime   `json:"time,required"`
 	Metadata map[string]interface{} `json:"metadata"`
 	Title    string                 `json:"title"`
-	JSON     toolStateRunningJSON   `json:"-"`
-}
-
-// toolStateRunningJSON contains the JSON metadata for the struct
-// [ToolStateRunning]
-type toolStateRunningJSON struct {
-	Input       apijson.Field
-	Status      apijson.Field
-	Time        apijson.Field
-	Metadata    apijson.Field
-	Title       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ToolStateRunning) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r toolStateRunningJSON) RawJSON() string {
-	return r.raw
 }
 
 func (r ToolStateRunning) implementsToolPartState() {}
@@ -2460,23 +1477,6 @@ func (r ToolStateRunningStatus) IsKnown() bool {
 
 type ToolStateRunningTime struct {
 	Start float64                  `json:"start,required"`
-	JSON  toolStateRunningTimeJSON `json:"-"`
-}
-
-// toolStateRunningTimeJSON contains the JSON metadata for the struct
-// [ToolStateRunningTime]
-type toolStateRunningTimeJSON struct {
-	Start       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ToolStateRunningTime) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r toolStateRunningTimeJSON) RawJSON() string {
-	return r.raw
 }
 
 type UserMessage struct {
@@ -2485,26 +1485,6 @@ type UserMessage struct {
 	SessionID string             `json:"sessionID,required"`
 	Time      UserMessageTime    `json:"time,required"`
 	Summary   UserMessageSummary `json:"summary"`
-	JSON      userMessageJSON    `json:"-"`
-}
-
-// userMessageJSON contains the JSON metadata for the struct [UserMessage]
-type userMessageJSON struct {
-	ID          apijson.Field
-	Role        apijson.Field
-	SessionID   apijson.Field
-	Time        apijson.Field
-	Summary     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *UserMessage) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r userMessageJSON) RawJSON() string {
-	return r.raw
 }
 
 func (r UserMessage) implementsMessage() {}
@@ -2525,47 +1505,12 @@ func (r UserMessageRole) IsKnown() bool {
 
 type UserMessageTime struct {
 	Created float64             `json:"created,required"`
-	JSON    userMessageTimeJSON `json:"-"`
-}
-
-// userMessageTimeJSON contains the JSON metadata for the struct [UserMessageTime]
-type userMessageTimeJSON struct {
-	Created     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *UserMessageTime) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r userMessageTimeJSON) RawJSON() string {
-	return r.raw
 }
 
 type UserMessageSummary struct {
 	Diffs []UserMessageSummaryDiff `json:"diffs,required"`
 	Body  string                   `json:"body"`
 	Title string                   `json:"title"`
-	JSON  userMessageSummaryJSON   `json:"-"`
-}
-
-// userMessageSummaryJSON contains the JSON metadata for the struct
-// [UserMessageSummary]
-type userMessageSummaryJSON struct {
-	Diffs       apijson.Field
-	Body        apijson.Field
-	Title       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *UserMessageSummary) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r userMessageSummaryJSON) RawJSON() string {
-	return r.raw
 }
 
 type UserMessageSummaryDiff struct {
@@ -2574,119 +1519,26 @@ type UserMessageSummaryDiff struct {
 	Before    string                     `json:"before,required"`
 	Deletions float64                    `json:"deletions,required"`
 	File      string                     `json:"file,required"`
-	JSON      userMessageSummaryDiffJSON `json:"-"`
-}
-
-// userMessageSummaryDiffJSON contains the JSON metadata for the struct
-// [UserMessageSummaryDiff]
-type userMessageSummaryDiffJSON struct {
-	Additions   apijson.Field
-	After       apijson.Field
-	Before      apijson.Field
-	Deletions   apijson.Field
-	File        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *UserMessageSummaryDiff) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r userMessageSummaryDiffJSON) RawJSON() string {
-	return r.raw
 }
 
 type SessionCommandResponse struct {
 	Info  AssistantMessage           `json:"info,required"`
 	Parts []Part                     `json:"parts,required"`
-	JSON  sessionCommandResponseJSON `json:"-"`
-}
-
-// sessionCommandResponseJSON contains the JSON metadata for the struct
-// [SessionCommandResponse]
-type sessionCommandResponseJSON struct {
-	Info        apijson.Field
-	Parts       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SessionCommandResponse) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sessionCommandResponseJSON) RawJSON() string {
-	return r.raw
 }
 
 type SessionMessageResponse struct {
 	Info  Message                    `json:"info,required"`
 	Parts []Part                     `json:"parts,required"`
-	JSON  sessionMessageResponseJSON `json:"-"`
-}
-
-// sessionMessageResponseJSON contains the JSON metadata for the struct
-// [SessionMessageResponse]
-type sessionMessageResponseJSON struct {
-	Info        apijson.Field
-	Parts       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SessionMessageResponse) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sessionMessageResponseJSON) RawJSON() string {
-	return r.raw
 }
 
 type SessionMessagesResponse struct {
 	Info  Message                     `json:"info,required"`
 	Parts []Part                      `json:"parts,required"`
-	JSON  sessionMessagesResponseJSON `json:"-"`
-}
-
-// sessionMessagesResponseJSON contains the JSON metadata for the struct
-// [SessionMessagesResponse]
-type sessionMessagesResponseJSON struct {
-	Info        apijson.Field
-	Parts       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SessionMessagesResponse) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sessionMessagesResponseJSON) RawJSON() string {
-	return r.raw
 }
 
 type SessionPromptResponse struct {
 	Info  AssistantMessage          `json:"info,required"`
 	Parts []Part                    `json:"parts,required"`
-	JSON  sessionPromptResponseJSON `json:"-"`
-}
-
-// sessionPromptResponseJSON contains the JSON metadata for the struct
-// [SessionPromptResponse]
-type sessionPromptResponseJSON struct {
-	Info        apijson.Field
-	Parts       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SessionPromptResponse) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sessionPromptResponseJSON) RawJSON() string {
-	return r.raw
 }
 
 type SessionNewParams struct {
