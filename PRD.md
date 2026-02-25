@@ -101,8 +101,8 @@ Apply this pattern to each union:
 
 - [x] **PermissionPattern** (type-based: `string | array`) → convert to discriminated union with `AsString()` and `AsArray()` methods. Remove init block from sessionpermission.go.
 
-- [ ] Delete all `func init()` blocks that call `apijson.RegisterUnion` (7 remaining: all in config.go)
-- [ ] Remove all `reflect` and `gjson` imports
+- [x] Delete all `func init()` blocks that call `apijson.RegisterUnion` (7 remaining: all in config.go)
+- [x] Remove all `reflect` and `gjson` imports
 
 ---
 

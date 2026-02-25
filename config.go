@@ -5,12 +5,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
-	"reflect"
 
-	"github.com/dominicnunez/opencode-sdk-go/internal/apijson"
 	"github.com/dominicnunez/opencode-sdk-go/internal/apiquery"
-	"github.com/dominicnunez/opencode-sdk-go/shared"
-	"github.com/tidwall/gjson"
 )
 
 type ConfigService struct {
@@ -123,25 +119,33 @@ type ConfigAgentBuildPermission struct {
 	Webfetch ConfigAgentBuildPermissionWebfetch  `json:"webfetch"`
 }
 
-// Union satisfied by [ConfigAgentBuildPermissionBashString] or
-// [ConfigAgentBuildPermissionBashMap].
-type ConfigAgentBuildPermissionBashUnion interface {
-	implementsConfigAgentBuildPermissionBashUnion()
+// ConfigAgentBuildPermissionBashUnion can be either a string or a map.
+// Use AsString() or AsMap() to access the value.
+type ConfigAgentBuildPermissionBashUnion struct {
+	raw json.RawMessage
 }
 
-func init() {
-	apijson.RegisterUnion(
-		reflect.TypeOf((*ConfigAgentBuildPermissionBashUnion)(nil)).Elem(),
-		"",
-		apijson.UnionVariant{
-			TypeFilter: gjson.String,
-			Type:       reflect.TypeOf(ConfigAgentBuildPermissionBashString("")),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(ConfigAgentBuildPermissionBashMap{}),
-		},
-	)
+func (p *ConfigAgentBuildPermissionBashUnion) UnmarshalJSON(data []byte) error {
+	p.raw = data
+	return nil
+}
+
+// AsString returns the value as a string if it is a string, or ("", false) if it is a map.
+func (p ConfigAgentBuildPermissionBashUnion) AsString() (ConfigAgentBuildPermissionBashString, bool) {
+	var s ConfigAgentBuildPermissionBashString
+	if err := json.Unmarshal(p.raw, &s); err != nil {
+		return "", false
+	}
+	return s, true
+}
+
+// AsMap returns the value as a map if it is a map, or (nil, false) if it is a string.
+func (p ConfigAgentBuildPermissionBashUnion) AsMap() (ConfigAgentBuildPermissionBashMap, bool) {
+	var m ConfigAgentBuildPermissionBashMap
+	if err := json.Unmarshal(p.raw, &m); err != nil {
+		return nil, false
+	}
+	return m, true
 }
 
 type ConfigAgentBuildPermissionBashString string
@@ -160,11 +164,7 @@ func (r ConfigAgentBuildPermissionBashString) IsKnown() bool {
 	return false
 }
 
-func (r ConfigAgentBuildPermissionBashString) implementsConfigAgentBuildPermissionBashUnion() {}
-
 type ConfigAgentBuildPermissionBashMap map[string]ConfigAgentBuildPermissionBashMapItem
-
-func (r ConfigAgentBuildPermissionBashMap) implementsConfigAgentBuildPermissionBashUnion() {}
 
 type ConfigAgentBuildPermissionBashMapItem string
 
@@ -250,25 +250,33 @@ type ConfigAgentGeneralPermission struct {
 	Webfetch ConfigAgentGeneralPermissionWebfetch  `json:"webfetch"`
 }
 
-// Union satisfied by [ConfigAgentGeneralPermissionBashString] or
-// [ConfigAgentGeneralPermissionBashMap].
-type ConfigAgentGeneralPermissionBashUnion interface {
-	implementsConfigAgentGeneralPermissionBashUnion()
+// ConfigAgentGeneralPermissionBashUnion can be either a string or a map.
+// Use AsString() or AsMap() to access the value.
+type ConfigAgentGeneralPermissionBashUnion struct {
+	raw json.RawMessage
 }
 
-func init() {
-	apijson.RegisterUnion(
-		reflect.TypeOf((*ConfigAgentGeneralPermissionBashUnion)(nil)).Elem(),
-		"",
-		apijson.UnionVariant{
-			TypeFilter: gjson.String,
-			Type:       reflect.TypeOf(ConfigAgentGeneralPermissionBashString("")),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(ConfigAgentGeneralPermissionBashMap{}),
-		},
-	)
+func (p *ConfigAgentGeneralPermissionBashUnion) UnmarshalJSON(data []byte) error {
+	p.raw = data
+	return nil
+}
+
+// AsString returns the value as a string if it is a string, or ("", false) if it is a map.
+func (p ConfigAgentGeneralPermissionBashUnion) AsString() (ConfigAgentGeneralPermissionBashString, bool) {
+	var s ConfigAgentGeneralPermissionBashString
+	if err := json.Unmarshal(p.raw, &s); err != nil {
+		return "", false
+	}
+	return s, true
+}
+
+// AsMap returns the value as a map if it is a map, or (nil, false) if it is a string.
+func (p ConfigAgentGeneralPermissionBashUnion) AsMap() (ConfigAgentGeneralPermissionBashMap, bool) {
+	var m ConfigAgentGeneralPermissionBashMap
+	if err := json.Unmarshal(p.raw, &m); err != nil {
+		return nil, false
+	}
+	return m, true
 }
 
 type ConfigAgentGeneralPermissionBashString string
@@ -287,11 +295,7 @@ func (r ConfigAgentGeneralPermissionBashString) IsKnown() bool {
 	return false
 }
 
-func (r ConfigAgentGeneralPermissionBashString) implementsConfigAgentGeneralPermissionBashUnion() {}
-
 type ConfigAgentGeneralPermissionBashMap map[string]ConfigAgentGeneralPermissionBashMapItem
-
-func (r ConfigAgentGeneralPermissionBashMap) implementsConfigAgentGeneralPermissionBashUnion() {}
 
 type ConfigAgentGeneralPermissionBashMapItem string
 
@@ -377,25 +381,33 @@ type ConfigAgentPlanPermission struct {
 	Webfetch ConfigAgentPlanPermissionWebfetch  `json:"webfetch"`
 }
 
-// Union satisfied by [ConfigAgentPlanPermissionBashString] or
-// [ConfigAgentPlanPermissionBashMap].
-type ConfigAgentPlanPermissionBashUnion interface {
-	implementsConfigAgentPlanPermissionBashUnion()
+// ConfigAgentPlanPermissionBashUnion can be either a string or a map.
+// Use AsString() or AsMap() to access the value.
+type ConfigAgentPlanPermissionBashUnion struct {
+	raw json.RawMessage
 }
 
-func init() {
-	apijson.RegisterUnion(
-		reflect.TypeOf((*ConfigAgentPlanPermissionBashUnion)(nil)).Elem(),
-		"",
-		apijson.UnionVariant{
-			TypeFilter: gjson.String,
-			Type:       reflect.TypeOf(ConfigAgentPlanPermissionBashString("")),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(ConfigAgentPlanPermissionBashMap{}),
-		},
-	)
+func (p *ConfigAgentPlanPermissionBashUnion) UnmarshalJSON(data []byte) error {
+	p.raw = data
+	return nil
+}
+
+// AsString returns the value as a string if it is a string, or ("", false) if it is a map.
+func (p ConfigAgentPlanPermissionBashUnion) AsString() (ConfigAgentPlanPermissionBashString, bool) {
+	var s ConfigAgentPlanPermissionBashString
+	if err := json.Unmarshal(p.raw, &s); err != nil {
+		return "", false
+	}
+	return s, true
+}
+
+// AsMap returns the value as a map if it is a map, or (nil, false) if it is a string.
+func (p ConfigAgentPlanPermissionBashUnion) AsMap() (ConfigAgentPlanPermissionBashMap, bool) {
+	var m ConfigAgentPlanPermissionBashMap
+	if err := json.Unmarshal(p.raw, &m); err != nil {
+		return nil, false
+	}
+	return m, true
 }
 
 type ConfigAgentPlanPermissionBashString string
@@ -414,11 +426,7 @@ func (r ConfigAgentPlanPermissionBashString) IsKnown() bool {
 	return false
 }
 
-func (r ConfigAgentPlanPermissionBashString) implementsConfigAgentPlanPermissionBashUnion() {}
-
 type ConfigAgentPlanPermissionBashMap map[string]ConfigAgentPlanPermissionBashMapItem
-
-func (r ConfigAgentPlanPermissionBashMap) implementsConfigAgentPlanPermissionBashUnion() {}
 
 type ConfigAgentPlanPermissionBashMapItem string
 
@@ -723,25 +731,33 @@ type ConfigModeBuildPermission struct {
 
 
 
-// Union satisfied by [ConfigModeBuildPermissionBashString] or
-// [ConfigModeBuildPermissionBashMap].
-type ConfigModeBuildPermissionBashUnion interface {
-	implementsConfigModeBuildPermissionBashUnion()
+// ConfigModeBuildPermissionBashUnion can be either a string or a map.
+// Use AsString() or AsMap() to access the value.
+type ConfigModeBuildPermissionBashUnion struct {
+	raw json.RawMessage
 }
 
-func init() {
-	apijson.RegisterUnion(
-		reflect.TypeOf((*ConfigModeBuildPermissionBashUnion)(nil)).Elem(),
-		"",
-		apijson.UnionVariant{
-			TypeFilter: gjson.String,
-			Type:       reflect.TypeOf(ConfigModeBuildPermissionBashString("")),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(ConfigModeBuildPermissionBashMap{}),
-		},
-	)
+func (p *ConfigModeBuildPermissionBashUnion) UnmarshalJSON(data []byte) error {
+	p.raw = data
+	return nil
+}
+
+// AsString returns the value as a string if it is a string, or ("", false) if it is a map.
+func (p ConfigModeBuildPermissionBashUnion) AsString() (ConfigModeBuildPermissionBashString, bool) {
+	var s ConfigModeBuildPermissionBashString
+	if err := json.Unmarshal(p.raw, &s); err != nil {
+		return "", false
+	}
+	return s, true
+}
+
+// AsMap returns the value as a map if it is a map, or (nil, false) if it is a string.
+func (p ConfigModeBuildPermissionBashUnion) AsMap() (ConfigModeBuildPermissionBashMap, bool) {
+	var m ConfigModeBuildPermissionBashMap
+	if err := json.Unmarshal(p.raw, &m); err != nil {
+		return nil, false
+	}
+	return m, true
 }
 
 type ConfigModeBuildPermissionBashString string
@@ -760,11 +776,7 @@ func (r ConfigModeBuildPermissionBashString) IsKnown() bool {
 	return false
 }
 
-func (r ConfigModeBuildPermissionBashString) implementsConfigModeBuildPermissionBashUnion() {}
-
 type ConfigModeBuildPermissionBashMap map[string]ConfigModeBuildPermissionBashMapItem
-
-func (r ConfigModeBuildPermissionBashMap) implementsConfigModeBuildPermissionBashUnion() {}
 
 type ConfigModeBuildPermissionBashMapItem string
 
@@ -856,25 +868,33 @@ type ConfigModePlanPermission struct {
 
 
 
-// Union satisfied by [ConfigModePlanPermissionBashString] or
-// [ConfigModePlanPermissionBashMap].
-type ConfigModePlanPermissionBashUnion interface {
-	implementsConfigModePlanPermissionBashUnion()
+// ConfigModePlanPermissionBashUnion can be either a string or a map.
+// Use AsString() or AsMap() to access the value.
+type ConfigModePlanPermissionBashUnion struct {
+	raw json.RawMessage
 }
 
-func init() {
-	apijson.RegisterUnion(
-		reflect.TypeOf((*ConfigModePlanPermissionBashUnion)(nil)).Elem(),
-		"",
-		apijson.UnionVariant{
-			TypeFilter: gjson.String,
-			Type:       reflect.TypeOf(ConfigModePlanPermissionBashString("")),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(ConfigModePlanPermissionBashMap{}),
-		},
-	)
+func (p *ConfigModePlanPermissionBashUnion) UnmarshalJSON(data []byte) error {
+	p.raw = data
+	return nil
+}
+
+// AsString returns the value as a string if it is a string, or ("", false) if it is a map.
+func (p ConfigModePlanPermissionBashUnion) AsString() (ConfigModePlanPermissionBashString, bool) {
+	var s ConfigModePlanPermissionBashString
+	if err := json.Unmarshal(p.raw, &s); err != nil {
+		return "", false
+	}
+	return s, true
+}
+
+// AsMap returns the value as a map if it is a map, or (nil, false) if it is a string.
+func (p ConfigModePlanPermissionBashUnion) AsMap() (ConfigModePlanPermissionBashMap, bool) {
+	var m ConfigModePlanPermissionBashMap
+	if err := json.Unmarshal(p.raw, &m); err != nil {
+		return nil, false
+	}
+	return m, true
 }
 
 type ConfigModePlanPermissionBashString string
@@ -893,11 +913,7 @@ func (r ConfigModePlanPermissionBashString) IsKnown() bool {
 	return false
 }
 
-func (r ConfigModePlanPermissionBashString) implementsConfigModePlanPermissionBashUnion() {}
-
 type ConfigModePlanPermissionBashMap map[string]ConfigModePlanPermissionBashMapItem
-
-func (r ConfigModePlanPermissionBashMap) implementsConfigModePlanPermissionBashUnion() {}
 
 type ConfigModePlanPermissionBashMapItem string
 
@@ -956,24 +972,33 @@ type ConfigPermission struct {
 
 
 
-// Union satisfied by [ConfigPermissionBashString] or [ConfigPermissionBashMap].
-type ConfigPermissionBashUnion interface {
-	implementsConfigPermissionBashUnion()
+// ConfigPermissionBashUnion can be either a string or a map.
+// Use AsString() or AsMap() to access the value.
+type ConfigPermissionBashUnion struct {
+	raw json.RawMessage
 }
 
-func init() {
-	apijson.RegisterUnion(
-		reflect.TypeOf((*ConfigPermissionBashUnion)(nil)).Elem(),
-		"",
-		apijson.UnionVariant{
-			TypeFilter: gjson.String,
-			Type:       reflect.TypeOf(ConfigPermissionBashString("")),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(ConfigPermissionBashMap{}),
-		},
-	)
+func (p *ConfigPermissionBashUnion) UnmarshalJSON(data []byte) error {
+	p.raw = data
+	return nil
+}
+
+// AsString returns the value as a string if it is a string, or ("", false) if it is a map.
+func (p ConfigPermissionBashUnion) AsString() (ConfigPermissionBashString, bool) {
+	var s ConfigPermissionBashString
+	if err := json.Unmarshal(p.raw, &s); err != nil {
+		return "", false
+	}
+	return s, true
+}
+
+// AsMap returns the value as a map if it is a map, or (nil, false) if it is a string.
+func (p ConfigPermissionBashUnion) AsMap() (ConfigPermissionBashMap, bool) {
+	var m ConfigPermissionBashMap
+	if err := json.Unmarshal(p.raw, &m); err != nil {
+		return nil, false
+	}
+	return m, true
 }
 
 type ConfigPermissionBashString string
@@ -992,11 +1017,7 @@ func (r ConfigPermissionBashString) IsKnown() bool {
 	return false
 }
 
-func (r ConfigPermissionBashString) implementsConfigPermissionBashUnion() {}
-
 type ConfigPermissionBashMap map[string]ConfigPermissionBashMapItem
-
-func (r ConfigPermissionBashMap) implementsConfigPermissionBashUnion() {}
 
 type ConfigPermissionBashMapItem string
 
@@ -1175,31 +1196,33 @@ type ConfigProviderOptions struct {
 
 
 
-// Timeout in milliseconds for requests to this provider. Default is 300000 (5
-// minutes). Set to false to disable timeout.
-//
-// Union satisfied by [shared.UnionInt] or [shared.UnionBool].
-type ConfigProviderOptionsTimeoutUnion interface {
-	ImplementsConfigProviderOptionsTimeoutUnion()
+// ConfigProviderOptionsTimeoutUnion can be either an int64 or a bool.
+// Use AsInt() or AsBool() to access the value.
+type ConfigProviderOptionsTimeoutUnion struct {
+	raw json.RawMessage
 }
 
-func init() {
-	apijson.RegisterUnion(
-		reflect.TypeOf((*ConfigProviderOptionsTimeoutUnion)(nil)).Elem(),
-		"",
-		apijson.UnionVariant{
-			TypeFilter: gjson.Number,
-			Type:       reflect.TypeOf(shared.UnionInt(0)),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.True,
-			Type:       reflect.TypeOf(shared.UnionBool(false)),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.False,
-			Type:       reflect.TypeOf(shared.UnionBool(false)),
-		},
-	)
+func (p *ConfigProviderOptionsTimeoutUnion) UnmarshalJSON(data []byte) error {
+	p.raw = data
+	return nil
+}
+
+// AsInt returns the timeout as an int64 if it is a number, or (0, false) if it is a bool.
+func (p ConfigProviderOptionsTimeoutUnion) AsInt() (int64, bool) {
+	var i int64
+	if err := json.Unmarshal(p.raw, &i); err != nil {
+		return 0, false
+	}
+	return i, true
+}
+
+// AsBool returns the timeout as a bool if it is a bool, or (false, false) if it is a number.
+func (p ConfigProviderOptionsTimeoutUnion) AsBool() (bool, bool) {
+	var b bool
+	if err := json.Unmarshal(p.raw, &b); err != nil {
+		return false, false
+	}
+	return b, true
 }
 
 // Control sharing behavior:'manual' allows manual sharing via commands, 'auto'
