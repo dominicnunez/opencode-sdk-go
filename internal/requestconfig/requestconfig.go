@@ -1,5 +1,3 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
-
 package requestconfig
 
 import (
@@ -22,7 +20,6 @@ import (
 	"github.com/dominicnunez/opencode-sdk-go/internal/apierror"
 	"github.com/dominicnunez/opencode-sdk-go/internal/apiform"
 	"github.com/dominicnunez/opencode-sdk-go/internal/apiquery"
-	"github.com/dominicnunez/opencode-sdk-go/internal/param"
 )
 
 const (
@@ -205,12 +202,6 @@ func NewRequestConfig(ctx context.Context, method string, u string, body interfa
 	return &cfg, nil
 }
 
-func UseDefaultParam[T any](dst *param.Field[T], src *T) {
-	if !dst.Present && src != nil {
-		dst.Value = *src
-		dst.Present = true
-	}
-}
 
 // This interface is primarily used to describe an [*http.Client], but also
 // supports custom HTTP implementations.

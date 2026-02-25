@@ -82,21 +82,11 @@ type Recursive struct {
 }
 
 type JSONFieldStruct struct {
-	A           bool                `json:"a"`
-	B           int64               `json:"b"`
-	C           string              `json:"c"`
-	D           string              `json:"d"`
-	ExtraFields map[string]int64    `json:"-,extras"`
-	JSON        JSONFieldStructJSON `json:"-,metadata"`
-}
-
-type JSONFieldStructJSON struct {
-	A           Field
-	B           Field
-	C           Field
-	D           Field
-	ExtraFields map[string]Field
-	raw         string
+	A           bool             `json:"a"`
+	B           int64            `json:"b"`
+	C           string           `json:"c"`
+	D           string           `json:"d"`
+	ExtraFields map[string]int64 `json:"-,extras"`
 }
 
 type UnknownStruct struct {
@@ -113,17 +103,10 @@ type Union interface {
 
 type Inline struct {
 	InlineField Primitives `json:"-,inline"`
-	JSON        InlineJSON `json:"-,metadata"`
 }
 
 type InlineArray struct {
-	InlineField []string   `json:"-,inline"`
-	JSON        InlineJSON `json:"-,metadata"`
-}
-
-type InlineJSON struct {
-	InlineField Field
-	raw         string
+	InlineField []string `json:"-,inline"`
 }
 
 type UnionInteger int64
@@ -437,29 +420,12 @@ var tests = map[string]struct {
 		Recursive{Name: "Robert", Child: &Recursive{Name: "Alex"}},
 	},
 
-	"metadata_coerce": {
-		`{"a":"12","b":"12","c":null,"extra_typed":12,"extra_untyped":{"foo":"bar"}}`,
+	"extras_field": {
+		`{"a":false,"b":12,"c":"","d":"","extra_typed":12,"extra_untyped":0}`,
 		JSONFieldStruct{
 			A: false,
 			B: 12,
 			C: "",
-			JSON: JSONFieldStructJSON{
-				raw: `{"a":"12","b":"12","c":null,"extra_typed":12,"extra_untyped":{"foo":"bar"}}`,
-				A:   Field{raw: `"12"`, status: invalid},
-				B:   Field{raw: `"12"`, status: valid},
-				C:   Field{raw: "null", status: null},
-				D:   Field{raw: "", status: missing},
-				ExtraFields: map[string]Field{
-					"extra_typed": {
-						raw:    "12",
-						status: valid,
-					},
-					"extra_untyped": {
-						raw:    `{"foo":"bar"}`,
-						status: invalid,
-					},
-				},
-			},
 			ExtraFields: map[string]int64{
 				"extra_typed":   12,
 				"extra_untyped": 0,
@@ -562,25 +528,17 @@ var tests = map[string]struct {
 		[]UnmarshalStruct{{Foo: "hello", prop: true}},
 	},
 
-	"inline_coerce": {
+	"inline_struct_decode": {
 		`{"a":false,"b":237628372683,"c":654,"d":9999.43,"e":43.76,"f":[1,2,3,4]}`,
 		Inline{
 			InlineField: Primitives{A: false, B: 237628372683, C: 0x28e, D: 9999.43, E: 43.76, F: []int{1, 2, 3, 4}},
-			JSON: InlineJSON{
-				InlineField: Field{raw: "{\"a\":false,\"b\":237628372683,\"c\":654,\"d\":9999.43,\"e\":43.76,\"f\":[1,2,3,4]}", status: 3},
-				raw:         "{\"a\":false,\"b\":237628372683,\"c\":654,\"d\":9999.43,\"e\":43.76,\"f\":[1,2,3,4]}",
-			},
 		},
 	},
 
-	"inline_array_coerce": {
+	"inline_array_decode": {
 		`["Hello","foo","bar"]`,
 		InlineArray{
 			InlineField: []string{"Hello", "foo", "bar"},
-			JSON: InlineJSON{
-				InlineField: Field{raw: `["Hello","foo","bar"]`, status: 3},
-				raw:         `["Hello","foo","bar"]`,
-			},
 		},
 	},
 }
@@ -601,7 +559,7 @@ func TestDecode(t *testing.T) {
 
 func TestEncode(t *testing.T) {
 	for name, test := range tests {
-		if strings.HasSuffix(name, "_coerce") {
+		if strings.HasSuffix(name, "_coerce") || strings.HasSuffix(name, "_decode") {
 			continue
 		}
 		t.Run(name, func(t *testing.T) {
