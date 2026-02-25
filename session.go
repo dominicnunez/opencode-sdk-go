@@ -520,52 +520,48 @@ func (r FilePartInputType) IsKnown() bool {
 	return false
 }
 
+// FilePartSource is either FileSource or SymbolSource, discriminated by Type.
 type FilePartSource struct {
-	Path string             `json:"path,required"`
-	Text FilePartSourceText `json:"text,required"`
 	Type FilePartSourceType `json:"type,required"`
-	Kind int64              `json:"kind"`
-	Name string             `json:"name"`
-	// This field can have the runtime type of [SymbolSourceRange].
-	Range interface{}        `json:"range"`
-	union FilePartSourceUnion
+	// Embed raw JSON for lazy decode
+	raw []byte `json:"-"`
 }
 
-func (r *FilePartSource) UnmarshalJSON(data []byte) (err error) {
-	*r = FilePartSource{}
-	err = apijson.UnmarshalRoot(data, &r.union)
-	if err != nil {
+func (r *FilePartSource) UnmarshalJSON(data []byte) error {
+	// Peek at discriminator
+	var peek struct {
+		Type FilePartSourceType `json:"type"`
+	}
+	if err := json.Unmarshal(data, &peek); err != nil {
 		return err
 	}
-	return apijson.Port(r.union, &r)
+	r.Type = peek.Type
+	r.raw = data
+	return nil
 }
 
-// AsUnion returns a [FilePartSourceUnion] interface which you can cast to the
-// specific types for more type safety.
-//
-// Possible runtime types of the union are [FileSource], [SymbolSource].
-func (r FilePartSource) AsUnion() FilePartSourceUnion {
-	return r.union
+// AsFile returns the source as a FileSource if Type is "file".
+func (r FilePartSource) AsFile() (*FileSource, bool) {
+	if r.Type != FilePartSourceTypeFile {
+		return nil, false
+	}
+	var src FileSource
+	if err := json.Unmarshal(r.raw, &src); err != nil {
+		return nil, false
+	}
+	return &src, true
 }
 
-// Union satisfied by [FileSource] or [SymbolSource].
-type FilePartSourceUnion interface {
-	implementsFilePartSource()
-}
-
-func init() {
-	apijson.RegisterUnion(
-		reflect.TypeOf((*FilePartSourceUnion)(nil)).Elem(),
-		"",
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(FileSource{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(SymbolSource{}),
-		},
-	)
+// AsSymbol returns the source as a SymbolSource if Type is "symbol".
+func (r FilePartSource) AsSymbol() (*SymbolSource, bool) {
+	if r.Type != FilePartSourceTypeSymbol {
+		return nil, false
+	}
+	var src SymbolSource
+	if err := json.Unmarshal(r.raw, &src); err != nil {
+		return nil, false
+	}
+	return &src, true
 }
 
 type FilePartSourceType string
@@ -624,8 +620,6 @@ type FileSource struct {
 	Text FilePartSourceText `json:"text,required"`
 	Type FileSourceType     `json:"type,required"`
 }
-
-func (r FileSource) implementsFilePartSource() {}
 
 type FileSourceType string
 
@@ -1128,8 +1122,6 @@ type SymbolSource struct {
 	Text  FilePartSourceText `json:"text,required"`
 	Type  SymbolSourceType   `json:"type,required"`
 }
-
-func (r SymbolSource) implementsFilePartSource() {}
 
 type SymbolSourceRange struct {
 	End   SymbolSourceRangeEnd   `json:"end,required"`

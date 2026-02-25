@@ -85,7 +85,7 @@ Apply this pattern to each union:
 
 - [x] **ToolState** (discriminator: `status`) → `ToolStatePending`, `ToolStateRunning`, `ToolStateCompleted`, `ToolStateError`. Remove `ToolStateUnion` interface and init block. Add `AsPending()`, `AsRunning()`, `AsCompleted()`, `AsError()` methods.
 
-- [ ] **FilePartSource** (discriminator: `type`) → `FileSource`, `SymbolSource`. Remove `FilePartSourceUnion` interface and init block. Add `AsFile()`, `AsSymbol()` methods.
+- [x] **FilePartSource** (discriminator: `type`) → `FileSource`, `SymbolSource`. Remove `FilePartSourceUnion` interface and init block. Add `AsFile()`, `AsSymbol()` methods.
 
 - [ ] **Event** (discriminator: `type`) → 19 event types. Remove `EventUnion` interface and init block. Add `AsMessageUpdated()`, `AsSessionCreated()`, etc. for each event type.
 
