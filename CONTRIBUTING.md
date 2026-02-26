@@ -1,66 +1,43 @@
+# Contributing
+
 ## Setting up the environment
 
-To set up the repository, run:
+```sh
+go mod download
+go build ./...
+```
+
+Requires [Go 1.22+](https://go.dev/doc/install).
+
+## Project Structure
+
+This is a hand-crafted SDK — no code generation. All source files are manually maintained.
+
+Key files:
+- `client.go` — Client + functional options
+- `errors.go` — Typed errors
+- `session.go`, `event.go`, `agent.go`, etc. — Service types and methods
+
+See [REDESIGN.md](REDESIGN.md) for architecture decisions.
+
+## Running Tests
 
 ```sh
-$ ./scripts/bootstrap
-$ ./scripts/build
+go test ./...
 ```
 
-This will install all the required dependencies and build the SDK.
-
-You can also [install go 1.22+ manually](https://go.dev/doc/install).
-
-## Modifying/Adding code
-
-Most of the SDK is generated code. Modifications to code will be persisted between generations, but may
-result in merge conflicts between manual patches and changes from the generator. The generator will never
-modify the contents of the `lib/` and `examples/` directories.
-
-## Adding and running examples
-
-All files in the `examples/` directory are not modified by the generator and can be freely edited or added to.
-
-```go
-# add an example to examples/<your-example>/main.go
-
-package main
-
-func main() {
-  // ...
-}
-```
-
-```sh
-$ go run ./examples/<your-example>
-```
-
-## Using the repository from source
-
-To use a local version of this library from source in another project, edit the `go.mod` with a replace
-directive. This can be done through the CLI with the following:
-
-```sh
-$ go mod edit -replace github.com/anomalyco/opencode-sdk-go=/path/to/opencode-sdk-go
-```
-
-## Running tests
-
-Most tests require you to [set up a mock server](https://github.com/stoplightio/prism) against the OpenAPI spec to run the tests.
-
-```sh
-# you will need npm installed
-$ npx prism mock path/to/your/openapi.yml
-```
-
-```sh
-$ ./scripts/test
-```
+Some tests may require a running OpenCode server or mock server.
 
 ## Formatting
 
-This library uses the standard gofmt code formatter:
-
 ```sh
-$ ./scripts/format
+gofmt -w .
 ```
+
+## Submitting Changes
+
+1. Fork the repo
+2. Create a feature branch
+3. Make your changes
+4. Run tests and formatting
+5. Open a PR with a clear description
