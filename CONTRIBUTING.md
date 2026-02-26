@@ -18,8 +18,6 @@ Key files:
 - `errors.go` — Typed errors
 - `session.go`, `event.go`, `agent.go`, etc. — Service types and methods
 
-See [REDESIGN.md](REDESIGN.md) for architecture decisions.
-
 ## Running Tests
 
 ```sh
