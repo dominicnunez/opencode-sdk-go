@@ -24,8 +24,8 @@ func TestSessionFork_Success(t *testing.T) {
 		if err := json.Unmarshal(body, &params); err != nil {
 			t.Errorf("failed to unmarshal request body: %v", err)
 		}
-		if params.MessageID != "msg_456" {
-			t.Errorf("expected messageID msg_456, got %s", params.MessageID)
+		if params.MessageID == nil || *params.MessageID != "msg_456" {
+			t.Errorf("expected messageID msg_456, got %v", params.MessageID)
 		}
 
 		// Send response
@@ -35,7 +35,7 @@ func TestSessionFork_Success(t *testing.T) {
 			ID:        "ses_789",
 			Directory: "/test",
 			ProjectID: "proj_1",
-			ParentID:  "ses_123",
+			ParentID:  Ptr("ses_123"),
 			Title:     "Forked Session",
 			Version:   "1.0.0",
 			Time: SessionTime{
@@ -52,7 +52,7 @@ func TestSessionFork_Success(t *testing.T) {
 	}
 
 	params := &SessionForkParams{
-		MessageID: "msg_456",
+		MessageID: Ptr("msg_456"),
 	}
 	session, err := client.Session.Fork(context.Background(), "ses_123", params)
 	if err != nil {
@@ -62,8 +62,8 @@ func TestSessionFork_Success(t *testing.T) {
 	if session.ID != "ses_789" {
 		t.Errorf("expected ID ses_789, got %s", session.ID)
 	}
-	if session.ParentID != "ses_123" {
-		t.Errorf("expected ParentID ses_123, got %s", session.ParentID)
+	if session.ParentID == nil || *session.ParentID != "ses_123" {
+		t.Errorf("expected ParentID ses_123, got %v", session.ParentID)
 	}
 	if session.Title != "Forked Session" {
 		t.Errorf("expected Title 'Forked Session', got %s", session.Title)
@@ -83,8 +83,8 @@ func TestSessionFork_WithDirectory(t *testing.T) {
 		if err := json.Unmarshal(body, &params); err != nil {
 			t.Errorf("failed to unmarshal request body: %v", err)
 		}
-		if params.MessageID != "msg_789" {
-			t.Errorf("expected messageID msg_789, got %s", params.MessageID)
+		if params.MessageID == nil || *params.MessageID != "msg_789" {
+			t.Errorf("expected messageID msg_789, got %v", params.MessageID)
 		}
 
 		w.Header().Set("Content-Type", "application/json")
@@ -110,7 +110,7 @@ func TestSessionFork_WithDirectory(t *testing.T) {
 
 	dir := "/custom/path"
 	params := &SessionForkParams{
-		MessageID: "msg_789",
+		MessageID: Ptr("msg_789"),
 		Directory: &dir,
 	}
 	session, err := client.Session.Fork(context.Background(), "ses_456", params)
@@ -130,7 +130,7 @@ func TestSessionFork_MissingID(t *testing.T) {
 	}
 
 	params := &SessionForkParams{
-		MessageID: "msg_123",
+		MessageID: Ptr("msg_123"),
 	}
 	_, err = client.Session.Fork(context.Background(), "", params)
 	if err == nil {
@@ -169,7 +169,7 @@ func TestSessionFork_ServerError(t *testing.T) {
 	}
 
 	params := &SessionForkParams{
-		MessageID: "msg_123",
+		MessageID: Ptr("msg_123"),
 	}
 	_, err = client.Session.Fork(context.Background(), "ses_123", params)
 	if err == nil {
@@ -191,7 +191,7 @@ func TestSessionFork_InvalidJSON(t *testing.T) {
 	}
 
 	params := &SessionForkParams{
-		MessageID: "msg_123",
+		MessageID: Ptr("msg_123"),
 	}
 	_, err = client.Session.Fork(context.Background(), "ses_123", params)
 	if err == nil {
@@ -201,7 +201,7 @@ func TestSessionFork_InvalidJSON(t *testing.T) {
 
 func TestSessionForkParams_Marshal(t *testing.T) {
 	params := SessionForkParams{
-		MessageID: "msg_123",
+		MessageID: Ptr("msg_123"),
 	}
 	data, err := json.Marshal(params)
 	if err != nil {
@@ -221,7 +221,7 @@ func TestSessionForkParams_Marshal(t *testing.T) {
 func TestSessionForkParams_MarshalWithDirectory(t *testing.T) {
 	dir := "/test/path"
 	params := SessionForkParams{
-		MessageID: "msg_123",
+		MessageID: Ptr("msg_123"),
 		Directory: &dir,
 	}
 	data, err := json.Marshal(params)
@@ -246,7 +246,7 @@ func TestSessionForkParams_MarshalWithDirectory(t *testing.T) {
 func TestSessionForkParams_URLQuery(t *testing.T) {
 	dir := "/test/path"
 	params := SessionForkParams{
-		MessageID: "msg_123",
+		MessageID: Ptr("msg_123"),
 		Directory: &dir,
 	}
 	values, err := params.URLQuery()
@@ -261,7 +261,7 @@ func TestSessionForkParams_URLQuery(t *testing.T) {
 
 func TestSessionForkParams_URLQueryWithoutDirectory(t *testing.T) {
 	params := SessionForkParams{
-		MessageID: "msg_123",
+		MessageID: Ptr("msg_123"),
 	}
 	values, err := params.URLQuery()
 	if err != nil {

@@ -71,24 +71,34 @@ func (s *SessionService) Get(ctx context.Context, id string, params *SessionGetP
 	return &result, nil
 }
 
-func (s *SessionService) Delete(ctx context.Context, id string, params *SessionDeleteParams) error {
+func (s *SessionService) Delete(ctx context.Context, id string, params *SessionDeleteParams) (bool, error) {
 	if id == "" {
-		return errors.New("missing required id parameter")
+		return false, errors.New("missing required id parameter")
 	}
 	if params == nil {
 		params = &SessionDeleteParams{}
 	}
-	return s.client.do(ctx, http.MethodDelete, "session/"+id, params, nil)
+	var result bool
+	err := s.client.do(ctx, http.MethodDelete, "session/"+id, params, &result)
+	if err != nil {
+		return false, err
+	}
+	return result, nil
 }
 
-func (s *SessionService) Abort(ctx context.Context, id string, params *SessionAbortParams) error {
+func (s *SessionService) Abort(ctx context.Context, id string, params *SessionAbortParams) (bool, error) {
 	if id == "" {
-		return errors.New("missing required id parameter")
+		return false, errors.New("missing required id parameter")
 	}
 	if params == nil {
 		params = &SessionAbortParams{}
 	}
-	return s.client.do(ctx, http.MethodPost, "session/"+id+"/abort", params, nil)
+	var result bool
+	err := s.client.do(ctx, http.MethodPost, "session/"+id+"/abort", params, &result)
+	if err != nil {
+		return false, err
+	}
+	return result, nil
 }
 
 func (s *SessionService) Children(ctx context.Context, id string, params *SessionChildrenParams) ([]Session, error) {
@@ -530,9 +540,9 @@ type AssistantMessageErrorAPIError struct {
 type AssistantMessageErrorAPIErrorData struct {
 	IsRetryable     bool                                  `json:"isRetryable"`
 	Message         string                                `json:"message"`
-	ResponseBody    string                                `json:"responseBody"`
+	ResponseBody    *string                               `json:"responseBody,omitempty"`
 	ResponseHeaders map[string]string                     `json:"responseHeaders"`
-	StatusCode      int                               `json:"statusCode"`
+	StatusCode      *int                                  `json:"statusCode,omitempty"`
 }
 
 type AssistantMessageErrorAPIErrorName string
@@ -995,9 +1005,9 @@ type PartRetryPartError struct {
 type PartRetryPartErrorData struct {
 	IsRetryable     bool                       `json:"isRetryable"`
 	Message         string                     `json:"message"`
-	ResponseBody    string                     `json:"responseBody"`
+	ResponseBody    *string                    `json:"responseBody,omitempty"`
 	ResponseHeaders map[string]string          `json:"responseHeaders"`
-	StatusCode      int                    `json:"statusCode"`
+	StatusCode      *int                       `json:"statusCode,omitempty"`
 }
 
 type PartRetryPartErrorName string
@@ -1067,7 +1077,7 @@ type ReasoningPart struct {
 
 type ReasoningPartTime struct {
 	Start float64               `json:"start"`
-	End   float64               `json:"end"`
+	End   *float64              `json:"end,omitempty"`
 }
 
 type ReasoningPartType string
@@ -1091,23 +1101,23 @@ type Session struct {
 	Time      SessionTime    `json:"time"`
 	Title     string         `json:"title"`
 	Version   string         `json:"version"`
-	ParentID  string         `json:"parentID"`
-	Revert    SessionRevert  `json:"revert"`
-	Share     SessionShare   `json:"share"`
-	Summary   SessionSummary `json:"summary"`
+	ParentID  *string         `json:"parentID,omitempty"`
+	Revert    *SessionRevert  `json:"revert,omitempty"`
+	Share     *SessionShare   `json:"share,omitempty"`
+	Summary   *SessionSummary `json:"summary,omitempty"`
 }
 
 type SessionTime struct {
 	Created    float64         `json:"created"`
 	Updated    float64         `json:"updated"`
-	Compacting float64         `json:"compacting"`
+	Compacting float64         `json:"compacting,omitempty"`
 }
 
 type SessionRevert struct {
 	MessageID string            `json:"messageID"`
-	Diff      string            `json:"diff"`
-	PartID    string            `json:"partID"`
-	Snapshot  string            `json:"snapshot"`
+	Diff      *string           `json:"diff,omitempty"`
+	PartID    *string           `json:"partID,omitempty"`
+	Snapshot  *string           `json:"snapshot,omitempty"`
 }
 
 type SessionShare struct {
@@ -1517,7 +1527,7 @@ func (r ToolStatePendingStatus) IsKnown() bool {
 }
 
 type ToolStateRunning struct {
-	Input    map[string]interface{} `json:"input"`
+	Input    interface{}            `json:"input"`
 	Status   ToolStateRunningStatus `json:"status"`
 	Time     ToolStateRunningTime   `json:"time"`
 	Metadata map[string]interface{} `json:"metadata"`
@@ -1684,7 +1694,7 @@ func (r SessionDiffParams) URLQuery() (url.Values, error) {
 }
 
 type SessionForkParams struct {
-	MessageID string  `json:"messageID"`
+	MessageID *string `json:"messageID,omitempty"`
 	Directory *string `json:"-" query:"directory,omitempty"`
 }
 

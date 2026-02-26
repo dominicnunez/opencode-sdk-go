@@ -39,7 +39,7 @@ func TestAuth_AsOAuth_Valid(t *testing.T) {
 		t.Errorf("Expected Access 'access_token_456', got %s", oauth.Access)
 	}
 	if oauth.Expires != 1234567890 {
-		t.Errorf("Expected Expires 1234567890, got %d", oauth.Expires)
+		t.Errorf("Expected Expires 1234567890, got %v", oauth.Expires)
 	}
 }
 

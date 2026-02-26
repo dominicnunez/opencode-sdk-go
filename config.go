@@ -1522,7 +1522,7 @@ type OAuth struct {
 	Type    AuthType `json:"type"`
 	Refresh string   `json:"refresh"`
 	Access  string   `json:"access"`
-	Expires int64    `json:"expires"`
+	Expires float64  `json:"expires"`
 }
 
 func (OAuth) implementsAuthSetParamsAuthUnion() {}
