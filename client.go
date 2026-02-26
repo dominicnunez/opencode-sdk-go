@@ -19,6 +19,9 @@ const (
 	DefaultBaseURL    = "http://localhost:54321"
 	DefaultTimeout    = 30 * time.Second
 	DefaultMaxRetries = 2
+
+	initialBackoffMs = 500
+	maxBackoff       = 8 * time.Second
 )
 
 type Client struct {
@@ -233,9 +236,9 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 
 		// Wait before retry (exponential backoff)
 		if attempt < c.maxRetries {
-			delay := time.Duration(500*(1<<attempt)) * time.Millisecond
-			if delay > 8*time.Second {
-				delay = 8 * time.Second
+			delay := time.Duration(initialBackoffMs*(1<<attempt)) * time.Millisecond
+			if delay > maxBackoff {
+				delay = maxBackoff
 			}
 			select {
 			case <-time.After(delay):
