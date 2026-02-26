@@ -14,21 +14,21 @@ func TestAssistantMessageError_AsProviderAuth_ValidProviderAuthError(t *testing.
 		}
 	}`)
 
-	var err AssistantMessageError
-	if unmarshalErr := json.Unmarshal(jsonData, &err); unmarshalErr != nil {
+	var ame AssistantMessageError
+	if unmarshalErr := json.Unmarshal(jsonData, &ame); unmarshalErr != nil {
 		t.Fatalf("Unmarshal failed: %v", unmarshalErr)
 	}
 
-	if err.Name != AssistantMessageErrorNameProviderAuthError {
-		t.Errorf("Expected Name to be ProviderAuthError, got %s", err.Name)
+	if ame.Name != AssistantMessageErrorNameProviderAuthError {
+		t.Errorf("Expected Name to be ProviderAuthError, got %s", ame.Name)
 	}
 
-	providerAuthErr, ok := err.AsProviderAuth()
-	if !ok {
-		t.Fatal("AsProviderAuth() should return true for ProviderAuthError")
+	providerAuthErr, err := ame.AsProviderAuth()
+	if err != nil {
+		t.Fatalf("AsProviderAuth() error: %v", err)
 	}
 	if providerAuthErr == nil {
-		t.Fatal("AsProviderAuth() should return non-nil error")
+		t.Fatal("AsProviderAuth() should return non-nil")
 	}
 	if providerAuthErr.Data.Message != "Authentication failed" {
 		t.Errorf("Expected message 'Authentication failed', got '%s'", providerAuthErr.Data.Message)
@@ -37,9 +37,13 @@ func TestAssistantMessageError_AsProviderAuth_ValidProviderAuthError(t *testing.
 		t.Errorf("Expected providerID 'provider-123', got '%s'", providerAuthErr.Data.ProviderID)
 	}
 
-	// Wrong type should return false
-	if _, ok := err.AsUnknown(); ok {
-		t.Error("AsUnknown() should return false for ProviderAuthError")
+	// Wrong type should return (nil, nil)
+	v, err := ame.AsUnknown()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if v != nil {
+		t.Error("AsUnknown() should return nil for ProviderAuthError")
 	}
 }
 
@@ -51,29 +55,33 @@ func TestAssistantMessageError_AsUnknown_ValidUnknownError(t *testing.T) {
 		}
 	}`)
 
-	var err AssistantMessageError
-	if unmarshalErr := json.Unmarshal(jsonData, &err); unmarshalErr != nil {
+	var ame AssistantMessageError
+	if unmarshalErr := json.Unmarshal(jsonData, &ame); unmarshalErr != nil {
 		t.Fatalf("Unmarshal failed: %v", unmarshalErr)
 	}
 
-	if err.Name != AssistantMessageErrorNameUnknownError {
-		t.Errorf("Expected Name to be UnknownError, got %s", err.Name)
+	if ame.Name != AssistantMessageErrorNameUnknownError {
+		t.Errorf("Expected Name to be UnknownError, got %s", ame.Name)
 	}
 
-	unknownErr, ok := err.AsUnknown()
-	if !ok {
-		t.Fatal("AsUnknown() should return true for UnknownError")
+	unknownErr, err := ame.AsUnknown()
+	if err != nil {
+		t.Fatalf("AsUnknown() error: %v", err)
 	}
 	if unknownErr == nil {
-		t.Fatal("AsUnknown() should return non-nil error")
+		t.Fatal("AsUnknown() should return non-nil")
 	}
 	if unknownErr.Data.Message != "Something went wrong" {
 		t.Errorf("Expected message 'Something went wrong', got '%s'", unknownErr.Data.Message)
 	}
 
-	// Wrong type should return false
-	if _, ok := err.AsAborted(); ok {
-		t.Error("AsAborted() should return false for UnknownError")
+	// Wrong type should return (nil, nil)
+	v, err := ame.AsAborted()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if v != nil {
+		t.Error("AsAborted() should return nil for UnknownError")
 	}
 }
 
@@ -83,26 +91,30 @@ func TestAssistantMessageError_AsOutputLength_ValidOutputLengthError(t *testing.
 		"data": {}
 	}`)
 
-	var err AssistantMessageError
-	if unmarshalErr := json.Unmarshal(jsonData, &err); unmarshalErr != nil {
+	var ame AssistantMessageError
+	if unmarshalErr := json.Unmarshal(jsonData, &ame); unmarshalErr != nil {
 		t.Fatalf("Unmarshal failed: %v", unmarshalErr)
 	}
 
-	if err.Name != AssistantMessageErrorNameMessageOutputLengthError {
-		t.Errorf("Expected Name to be MessageOutputLengthError, got %s", err.Name)
+	if ame.Name != AssistantMessageErrorNameMessageOutputLengthError {
+		t.Errorf("Expected Name to be MessageOutputLengthError, got %s", ame.Name)
 	}
 
-	outputLengthErr, ok := err.AsOutputLength()
-	if !ok {
-		t.Fatal("AsOutputLength() should return true for MessageOutputLengthError")
+	outputLengthErr, err := ame.AsOutputLength()
+	if err != nil {
+		t.Fatalf("AsOutputLength() error: %v", err)
 	}
 	if outputLengthErr == nil {
-		t.Fatal("AsOutputLength() should return non-nil error")
+		t.Fatal("AsOutputLength() should return non-nil")
 	}
 
-	// Wrong type should return false
-	if _, ok := err.AsAPI(); ok {
-		t.Error("AsAPI() should return false for MessageOutputLengthError")
+	// Wrong type should return (nil, nil)
+	v, err := ame.AsAPI()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if v != nil {
+		t.Error("AsAPI() should return nil for MessageOutputLengthError")
 	}
 }
 
@@ -114,29 +126,33 @@ func TestAssistantMessageError_AsAborted_ValidAbortedError(t *testing.T) {
 		}
 	}`)
 
-	var err AssistantMessageError
-	if unmarshalErr := json.Unmarshal(jsonData, &err); unmarshalErr != nil {
+	var ame AssistantMessageError
+	if unmarshalErr := json.Unmarshal(jsonData, &ame); unmarshalErr != nil {
 		t.Fatalf("Unmarshal failed: %v", unmarshalErr)
 	}
 
-	if err.Name != AssistantMessageErrorNameMessageAbortedError {
-		t.Errorf("Expected Name to be MessageAbortedError, got %s", err.Name)
+	if ame.Name != AssistantMessageErrorNameMessageAbortedError {
+		t.Errorf("Expected Name to be MessageAbortedError, got %s", ame.Name)
 	}
 
-	abortedErr, ok := err.AsAborted()
-	if !ok {
-		t.Fatal("AsAborted() should return true for MessageAbortedError")
+	abortedErr, err := ame.AsAborted()
+	if err != nil {
+		t.Fatalf("AsAborted() error: %v", err)
 	}
 	if abortedErr == nil {
-		t.Fatal("AsAborted() should return non-nil error")
+		t.Fatal("AsAborted() should return non-nil")
 	}
 	if abortedErr.Data.Message != "Request aborted by user" {
 		t.Errorf("Expected message 'Request aborted by user', got '%s'", abortedErr.Data.Message)
 	}
 
-	// Wrong type should return false
-	if _, ok := err.AsProviderAuth(); ok {
-		t.Error("AsProviderAuth() should return false for MessageAbortedError")
+	// Wrong type should return (nil, nil)
+	v, err := ame.AsProviderAuth()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if v != nil {
+		t.Error("AsProviderAuth() should return nil for MessageAbortedError")
 	}
 }
 
@@ -154,21 +170,21 @@ func TestAssistantMessageError_AsAPI_ValidAPIError(t *testing.T) {
 		}
 	}`)
 
-	var err AssistantMessageError
-	if unmarshalErr := json.Unmarshal(jsonData, &err); unmarshalErr != nil {
+	var ame AssistantMessageError
+	if unmarshalErr := json.Unmarshal(jsonData, &ame); unmarshalErr != nil {
 		t.Fatalf("Unmarshal failed: %v", unmarshalErr)
 	}
 
-	if err.Name != AssistantMessageErrorNameAPIError {
-		t.Errorf("Expected Name to be APIError, got %s", err.Name)
+	if ame.Name != AssistantMessageErrorNameAPIError {
+		t.Errorf("Expected Name to be APIError, got %s", ame.Name)
 	}
 
-	apiErr, ok := err.AsAPI()
-	if !ok {
-		t.Fatal("AsAPI() should return true for APIError")
+	apiErr, err := ame.AsAPI()
+	if err != nil {
+		t.Fatalf("AsAPI() error: %v", err)
 	}
 	if apiErr == nil {
-		t.Fatal("AsAPI() should return non-nil error")
+		t.Fatal("AsAPI() should return non-nil")
 	}
 	if !apiErr.Data.IsRetryable {
 		t.Error("Expected IsRetryable to be true")
@@ -177,7 +193,7 @@ func TestAssistantMessageError_AsAPI_ValidAPIError(t *testing.T) {
 		t.Errorf("Expected message 'Rate limit exceeded', got '%s'", apiErr.Data.Message)
 	}
 	if apiErr.Data.StatusCode != 429 {
-		t.Errorf("Expected StatusCode 429, got %f", apiErr.Data.StatusCode)
+		t.Errorf("Expected StatusCode 429, got %v", apiErr.Data.StatusCode)
 	}
 	if apiErr.Data.ResponseBody != "Too many requests" {
 		t.Errorf("Expected ResponseBody 'Too many requests', got '%s'", apiErr.Data.ResponseBody)
@@ -186,9 +202,13 @@ func TestAssistantMessageError_AsAPI_ValidAPIError(t *testing.T) {
 		t.Errorf("Expected retry-after header '60', got '%s'", apiErr.Data.ResponseHeaders["retry-after"])
 	}
 
-	// Wrong type should return false
-	if _, ok := err.AsOutputLength(); ok {
-		t.Error("AsOutputLength() should return false for APIError")
+	// Wrong type should return (nil, nil)
+	v, err := ame.AsOutputLength()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if v != nil {
+		t.Error("AsOutputLength() should return nil for APIError")
 	}
 }
 
@@ -201,31 +221,38 @@ func TestAssistantMessageError_WrongType(t *testing.T) {
 		}
 	}`)
 
-	var err AssistantMessageError
-	if unmarshalErr := json.Unmarshal(jsonData, &err); unmarshalErr != nil {
+	var ame AssistantMessageError
+	if unmarshalErr := json.Unmarshal(jsonData, &ame); unmarshalErr != nil {
 		t.Fatalf("Unmarshal failed: %v", unmarshalErr)
 	}
 
-	// All other As* methods should return false
-	if _, ok := err.AsUnknown(); ok {
-		t.Error("AsUnknown() should return false for ProviderAuthError")
+	if v, err := ame.AsUnknown(); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	} else if v != nil {
+		t.Error("AsUnknown() should return nil for ProviderAuthError")
 	}
-	if _, ok := err.AsOutputLength(); ok {
-		t.Error("AsOutputLength() should return false for ProviderAuthError")
+	if v, err := ame.AsOutputLength(); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	} else if v != nil {
+		t.Error("AsOutputLength() should return nil for ProviderAuthError")
 	}
-	if _, ok := err.AsAborted(); ok {
-		t.Error("AsAborted() should return false for ProviderAuthError")
+	if v, err := ame.AsAborted(); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	} else if v != nil {
+		t.Error("AsAborted() should return nil for ProviderAuthError")
 	}
-	if _, ok := err.AsAPI(); ok {
-		t.Error("AsAPI() should return false for ProviderAuthError")
+	if v, err := ame.AsAPI(); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	} else if v != nil {
+		t.Error("AsAPI() should return nil for ProviderAuthError")
 	}
 }
 
 func TestAssistantMessageError_InvalidJSON(t *testing.T) {
 	jsonData := []byte(`{invalid json}`)
 
-	var err AssistantMessageError
-	if unmarshalErr := json.Unmarshal(jsonData, &err); unmarshalErr == nil {
+	var ame AssistantMessageError
+	if unmarshalErr := json.Unmarshal(jsonData, &ame); unmarshalErr == nil {
 		t.Error("Expected Unmarshal to fail for invalid JSON")
 	}
 }
@@ -237,31 +264,24 @@ func TestAssistantMessageError_MissingName(t *testing.T) {
 		}
 	}`)
 
-	var err AssistantMessageError
-	if unmarshalErr := json.Unmarshal(jsonData, &err); unmarshalErr != nil {
+	var ame AssistantMessageError
+	if unmarshalErr := json.Unmarshal(jsonData, &ame); unmarshalErr != nil {
 		t.Fatalf("Unmarshal failed: %v", unmarshalErr)
 	}
 
-	// Name should be empty string
-	if err.Name != "" {
-		t.Errorf("Expected Name to be empty, got %s", err.Name)
+	if ame.Name != "" {
+		t.Errorf("Expected Name to be empty, got %s", ame.Name)
 	}
 
-	// All As* methods should return false for empty name
-	if _, ok := err.AsProviderAuth(); ok {
-		t.Error("AsProviderAuth() should return false for missing name")
+	if v, err := ame.AsProviderAuth(); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	} else if v != nil {
+		t.Error("AsProviderAuth() should return nil for missing name")
 	}
-	if _, ok := err.AsUnknown(); ok {
-		t.Error("AsUnknown() should return false for missing name")
-	}
-	if _, ok := err.AsOutputLength(); ok {
-		t.Error("AsOutputLength() should return false for missing name")
-	}
-	if _, ok := err.AsAborted(); ok {
-		t.Error("AsAborted() should return false for missing name")
-	}
-	if _, ok := err.AsAPI(); ok {
-		t.Error("AsAPI() should return false for missing name")
+	if v, err := ame.AsUnknown(); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	} else if v != nil {
+		t.Error("AsUnknown() should return nil for missing name")
 	}
 }
 
@@ -271,55 +291,40 @@ func TestAssistantMessageError_UnknownName(t *testing.T) {
 		"data": {}
 	}`)
 
-	var err AssistantMessageError
-	if unmarshalErr := json.Unmarshal(jsonData, &err); unmarshalErr != nil {
+	var ame AssistantMessageError
+	if unmarshalErr := json.Unmarshal(jsonData, &ame); unmarshalErr != nil {
 		t.Fatalf("Unmarshal failed: %v", unmarshalErr)
 	}
 
-	if err.Name != "UnknownErrorType" {
-		t.Errorf("Expected Name to be 'UnknownErrorType', got %s", err.Name)
+	if ame.Name != "UnknownErrorType" {
+		t.Errorf("Expected Name to be 'UnknownErrorType', got %s", ame.Name)
 	}
 
-	// All As* methods should return false for unknown name
-	if _, ok := err.AsProviderAuth(); ok {
-		t.Error("AsProviderAuth() should return false for unknown name")
-	}
-	if _, ok := err.AsUnknown(); ok {
-		t.Error("AsUnknown() should return false for unknown name")
-	}
-	if _, ok := err.AsOutputLength(); ok {
-		t.Error("AsOutputLength() should return false for unknown name")
-	}
-	if _, ok := err.AsAborted(); ok {
-		t.Error("AsAborted() should return false for unknown name")
-	}
-	if _, ok := err.AsAPI(); ok {
-		t.Error("AsAPI() should return false for unknown name")
+	if v, err := ame.AsProviderAuth(); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	} else if v != nil {
+		t.Error("AsProviderAuth() should return nil for unknown name")
 	}
 }
 
 func TestAssistantMessageError_MalformedData(t *testing.T) {
-	// Valid name but data structure doesn't match expected type
 	jsonData := []byte(`{
 		"name": "ProviderAuthError",
 		"data": "this should be an object not a string"
 	}`)
 
-	var err AssistantMessageError
-	if unmarshalErr := json.Unmarshal(jsonData, &err); unmarshalErr != nil {
+	var ame AssistantMessageError
+	if unmarshalErr := json.Unmarshal(jsonData, &ame); unmarshalErr != nil {
 		t.Fatalf("Unmarshal failed: %v", unmarshalErr)
 	}
 
-	if err.Name != AssistantMessageErrorNameProviderAuthError {
-		t.Errorf("Expected Name to be ProviderAuthError, got %s", err.Name)
+	if ame.Name != AssistantMessageErrorNameProviderAuthError {
+		t.Errorf("Expected Name to be ProviderAuthError, got %s", ame.Name)
 	}
 
-	// AsProviderAuth should fail because data structure is invalid
-	providerAuthErr, ok := err.AsProviderAuth()
-	if ok {
-		t.Error("AsProviderAuth() should return false for malformed data")
-	}
-	if providerAuthErr != nil {
-		t.Error("AsProviderAuth() should return nil for malformed data")
+	// AsProviderAuth should return error because data structure is invalid
+	_, err := ame.AsProviderAuth()
+	if err == nil {
+		t.Error("AsProviderAuth() should return error for malformed data")
 	}
 }

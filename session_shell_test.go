@@ -171,7 +171,7 @@ func TestSessionService_Shell_MissingParams(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for missing params, got nil")
 	}
-	if err.Error() != "missing required params" {
+	if err.Error() != "params is required" {
 		t.Errorf("unexpected error message: %s", err.Error())
 	}
 }

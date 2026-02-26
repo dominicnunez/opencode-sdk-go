@@ -151,7 +151,7 @@ func TestSessionFork_MissingParams(t *testing.T) {
 	if err == nil {
 		t.Error("expected error for missing params, got nil")
 	}
-	if err.Error() != "missing required params" {
+	if err.Error() != "params is required" {
 		t.Errorf("expected 'missing required params', got %s", err.Error())
 	}
 }

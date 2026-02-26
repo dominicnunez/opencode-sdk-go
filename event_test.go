@@ -13,8 +13,8 @@ func TestEvent_AsInstallationUpdated(t *testing.T) {
 		t.Fatalf("Failed to unmarshal: %v", err)
 	}
 
-	evt, ok := event.AsInstallationUpdated()
-	if !ok {
+	evt, err := event.AsInstallationUpdated()
+	if err != nil {
 		t.Fatal("Expected AsInstallationUpdated to return true")
 	}
 	if evt.Data.Version != "1.2.3" {
@@ -33,8 +33,8 @@ func TestEvent_AsMessageUpdated(t *testing.T) {
 		t.Fatalf("Failed to unmarshal: %v", err)
 	}
 
-	evt, ok := event.AsMessageUpdated()
-	if !ok {
+	evt, err := event.AsMessageUpdated()
+	if err != nil {
 		t.Fatal("Expected AsMessageUpdated to return true")
 	}
 	if evt.Data.Info.ID != "msg123" {
@@ -53,8 +53,8 @@ func TestEvent_AsSessionCreated(t *testing.T) {
 		t.Fatalf("Failed to unmarshal: %v", err)
 	}
 
-	evt, ok := event.AsSessionCreated()
-	if !ok {
+	evt, err := event.AsSessionCreated()
+	if err != nil {
 		t.Fatal("Expected AsSessionCreated to return true")
 	}
 	if evt.Data.Info.ID != "sess789" {
@@ -73,8 +73,8 @@ func TestEvent_AsTodoUpdated(t *testing.T) {
 		t.Fatalf("Failed to unmarshal: %v", err)
 	}
 
-	evt, ok := event.AsTodoUpdated()
-	if !ok {
+	evt, err := event.AsTodoUpdated()
+	if err != nil {
 		t.Fatal("Expected AsTodoUpdated to return true")
 	}
 	if evt.Data.SessionID != "sess123" {
@@ -99,8 +99,8 @@ func TestEvent_AsFileEdited(t *testing.T) {
 		t.Fatalf("Failed to unmarshal: %v", err)
 	}
 
-	evt, ok := event.AsFileEdited()
-	if !ok {
+	evt, err := event.AsFileEdited()
+	if err != nil {
 		t.Fatal("Expected AsFileEdited to return true")
 	}
 	if evt.Data.File != "main.go" {
@@ -116,10 +116,10 @@ func TestEvent_WrongType(t *testing.T) {
 		t.Fatalf("Failed to unmarshal: %v", err)
 	}
 
-	// Try to get as wrong type
-	evt, ok := event.AsInstallationUpdated()
-	if ok {
-		t.Fatal("Expected AsInstallationUpdated to return false for session.created event")
+	// Try to get as wrong type - should return (nil, nil)
+	evt, err := event.AsInstallationUpdated()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
 	}
 	if evt != nil {
 		t.Error("Expected nil event when type doesn't match")
@@ -134,10 +134,11 @@ func TestEvent_InvalidJSON(t *testing.T) {
 		t.Fatalf("Failed to unmarshal: %v", err)
 	}
 
-	// Type is correct but data is malformed - should handle gracefully
-	evt, ok := event.AsInstallationUpdated()
-	if ok {
-		// If it unmarshals, version should be empty string due to type mismatch
+	// Type is correct but data is malformed
+	evt, err := event.AsInstallationUpdated()
+	if err != nil {
+		t.Logf("AsInstallationUpdated returned error (expected for malformed data): %v", err)
+	} else if evt != nil {
 		if evt.Data.Version != "" {
 			t.Logf("Version parsed as: %s", evt.Data.Version)
 		}
@@ -157,10 +158,13 @@ func TestEvent_MissingType(t *testing.T) {
 		t.Errorf("Expected empty type, got %s", event.Type)
 	}
 
-	// Trying to get any specific type should return false
-	_, ok := event.AsInstallationUpdated()
-	if ok {
-		t.Error("Expected AsInstallationUpdated to return false when type is missing")
+	// Trying to get any specific type should return (nil, nil)
+	val, err := event.AsInstallationUpdated()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if val != nil {
+		t.Error("Expected AsInstallationUpdated to return nil when type is missing")
 	}
 }
 
@@ -172,8 +176,8 @@ func TestEvent_AsSessionError(t *testing.T) {
 		t.Fatalf("Failed to unmarshal: %v", err)
 	}
 
-	evt, ok := event.AsSessionError()
-	if !ok {
+	evt, err := event.AsSessionError()
+	if err != nil {
 		t.Fatal("Expected AsSessionError to return true")
 	}
 	if evt.Data.SessionID == nil || *evt.Data.SessionID != "sess123" {
@@ -192,25 +196,25 @@ func TestEvent_AllTypes(t *testing.T) {
 		jsonData  string
 		checkFunc func(Event) bool
 	}{
-		{"InstallationUpdated", EventTypeInstallationUpdated, `{"type":"installation.updated","properties":{"version":"1.0"}}`, func(e Event) bool { _, ok := e.AsInstallationUpdated(); return ok }},
-		{"LspClientDiagnostics", EventTypeLspClientDiagnostics, `{"type":"lsp.client.diagnostics","properties":{"path":"/test","serverID":"srv1"}}`, func(e Event) bool { _, ok := e.AsLspClientDiagnostics(); return ok }},
-		{"MessageUpdated", EventTypeMessageUpdated, `{"type":"message.updated","properties":{"info":{"id":"m1","sessionID":"s1","role":"user"}}}`, func(e Event) bool { _, ok := e.AsMessageUpdated(); return ok }},
-		{"MessageRemoved", EventTypeMessageRemoved, `{"type":"message.removed","properties":{"messageID":"m1","sessionID":"s1"}}`, func(e Event) bool { _, ok := e.AsMessageRemoved(); return ok }},
-		{"MessagePartUpdated", EventTypeMessagePartUpdated, `{"type":"message.part.updated","properties":{"part":{"id":"p1","messageID":"m1","sessionID":"s1","type":"text"}}}`, func(e Event) bool { _, ok := e.AsMessagePartUpdated(); return ok }},
-		{"MessagePartRemoved", EventTypeMessagePartRemoved, `{"type":"message.part.removed","properties":{"messageID":"m1","partID":"p1","sessionID":"s1"}}`, func(e Event) bool { _, ok := e.AsMessagePartRemoved(); return ok }},
-		{"SessionCompacted", EventTypeSessionCompacted, `{"type":"session.compacted","properties":{"sessionID":"s1"}}`, func(e Event) bool { _, ok := e.AsSessionCompacted(); return ok }},
-		{"PermissionUpdated", EventTypePermissionUpdated, `{"type":"permission.updated","properties":{"id":"perm1","sessionID":"s1","status":"pending"}}`, func(e Event) bool { _, ok := e.AsPermissionUpdated(); return ok }},
-		{"PermissionReplied", EventTypePermissionReplied, `{"type":"permission.replied","properties":{"permissionID":"p1","response":"allow","sessionID":"s1"}}`, func(e Event) bool { _, ok := e.AsPermissionReplied(); return ok }},
-		{"FileEdited", EventTypeFileEdited, `{"type":"file.edited","properties":{"file":"test.go"}}`, func(e Event) bool { _, ok := e.AsFileEdited(); return ok }},
-		{"FileWatcherUpdated", EventTypeFileWatcherUpdated, `{"type":"file.watcher.updated","properties":{"event":"change","file":"test.go"}}`, func(e Event) bool { _, ok := e.AsFileWatcherUpdated(); return ok }},
-		{"TodoUpdated", EventTypeTodoUpdated, `{"type":"todo.updated","properties":{"sessionID":"s1","todos":[]}}`, func(e Event) bool { _, ok := e.AsTodoUpdated(); return ok }},
-		{"SessionIdle", EventTypeSessionIdle, `{"type":"session.idle","properties":{"sessionID":"s1"}}`, func(e Event) bool { _, ok := e.AsSessionIdle(); return ok }},
-		{"SessionCreated", EventTypeSessionCreated, `{"type":"session.created","properties":{"info":{"id":"s1","directory":"/","projectID":"p1","time":{"created":0,"updated":0},"title":"","version":""}}}`, func(e Event) bool { _, ok := e.AsSessionCreated(); return ok }},
-		{"SessionUpdated", EventTypeSessionUpdated, `{"type":"session.updated","properties":{"info":{"id":"s1","directory":"/","projectID":"p1","time":{"created":0,"updated":0},"title":"","version":""}}}`, func(e Event) bool { _, ok := e.AsSessionUpdated(); return ok }},
-		{"SessionDeleted", EventTypeSessionDeleted, `{"type":"session.deleted","properties":{"info":{"id":"s1","directory":"/","projectID":"p1","time":{"created":0,"updated":0},"title":"","version":""}}}`, func(e Event) bool { _, ok := e.AsSessionDeleted(); return ok }},
-		{"SessionError", EventTypeSessionError, `{"type":"session.error","properties":{"sessionID":"s1"}}`, func(e Event) bool { _, ok := e.AsSessionError(); return ok }},
-		{"ServerConnected", EventTypeServerConnected, `{"type":"server.connected","properties":{}}`, func(e Event) bool { _, ok := e.AsServerConnected(); return ok }},
-		{"IdeInstalled", EventTypeIdeInstalled, `{"type":"ide.installed","properties":{"ide":"vscode"}}`, func(e Event) bool { _, ok := e.AsIdeInstalled(); return ok }},
+		{"InstallationUpdated", EventTypeInstallationUpdated, `{"type":"installation.updated","properties":{"version":"1.0"}}`, func(e Event) bool { v, err := e.AsInstallationUpdated(); return err == nil && v != nil }},
+		{"LspClientDiagnostics", EventTypeLspClientDiagnostics, `{"type":"lsp.client.diagnostics","properties":{"path":"/test","serverID":"srv1"}}`, func(e Event) bool { v, err := e.AsLspClientDiagnostics(); return err == nil && v != nil }},
+		{"MessageUpdated", EventTypeMessageUpdated, `{"type":"message.updated","properties":{"info":{"id":"m1","sessionID":"s1","role":"user"}}}`, func(e Event) bool { v, err := e.AsMessageUpdated(); return err == nil && v != nil }},
+		{"MessageRemoved", EventTypeMessageRemoved, `{"type":"message.removed","properties":{"messageID":"m1","sessionID":"s1"}}`, func(e Event) bool { v, err := e.AsMessageRemoved(); return err == nil && v != nil }},
+		{"MessagePartUpdated", EventTypeMessagePartUpdated, `{"type":"message.part.updated","properties":{"part":{"id":"p1","messageID":"m1","sessionID":"s1","type":"text"}}}`, func(e Event) bool { v, err := e.AsMessagePartUpdated(); return err == nil && v != nil }},
+		{"MessagePartRemoved", EventTypeMessagePartRemoved, `{"type":"message.part.removed","properties":{"messageID":"m1","partID":"p1","sessionID":"s1"}}`, func(e Event) bool { v, err := e.AsMessagePartRemoved(); return err == nil && v != nil }},
+		{"SessionCompacted", EventTypeSessionCompacted, `{"type":"session.compacted","properties":{"sessionID":"s1"}}`, func(e Event) bool { v, err := e.AsSessionCompacted(); return err == nil && v != nil }},
+		{"PermissionUpdated", EventTypePermissionUpdated, `{"type":"permission.updated","properties":{"id":"perm1","sessionID":"s1","status":"pending"}}`, func(e Event) bool { v, err := e.AsPermissionUpdated(); return err == nil && v != nil }},
+		{"PermissionReplied", EventTypePermissionReplied, `{"type":"permission.replied","properties":{"permissionID":"p1","response":"allow","sessionID":"s1"}}`, func(e Event) bool { v, err := e.AsPermissionReplied(); return err == nil && v != nil }},
+		{"FileEdited", EventTypeFileEdited, `{"type":"file.edited","properties":{"file":"test.go"}}`, func(e Event) bool { v, err := e.AsFileEdited(); return err == nil && v != nil }},
+		{"FileWatcherUpdated", EventTypeFileWatcherUpdated, `{"type":"file.watcher.updated","properties":{"event":"change","file":"test.go"}}`, func(e Event) bool { v, err := e.AsFileWatcherUpdated(); return err == nil && v != nil }},
+		{"TodoUpdated", EventTypeTodoUpdated, `{"type":"todo.updated","properties":{"sessionID":"s1","todos":[]}}`, func(e Event) bool { v, err := e.AsTodoUpdated(); return err == nil && v != nil }},
+		{"SessionIdle", EventTypeSessionIdle, `{"type":"session.idle","properties":{"sessionID":"s1"}}`, func(e Event) bool { v, err := e.AsSessionIdle(); return err == nil && v != nil }},
+		{"SessionCreated", EventTypeSessionCreated, `{"type":"session.created","properties":{"info":{"id":"s1","directory":"/","projectID":"p1","time":{"created":0,"updated":0},"title":"","version":""}}}`, func(e Event) bool { v, err := e.AsSessionCreated(); return err == nil && v != nil }},
+		{"SessionUpdated", EventTypeSessionUpdated, `{"type":"session.updated","properties":{"info":{"id":"s1","directory":"/","projectID":"p1","time":{"created":0,"updated":0},"title":"","version":""}}}`, func(e Event) bool { v, err := e.AsSessionUpdated(); return err == nil && v != nil }},
+		{"SessionDeleted", EventTypeSessionDeleted, `{"type":"session.deleted","properties":{"info":{"id":"s1","directory":"/","projectID":"p1","time":{"created":0,"updated":0},"title":"","version":""}}}`, func(e Event) bool { v, err := e.AsSessionDeleted(); return err == nil && v != nil }},
+		{"SessionError", EventTypeSessionError, `{"type":"session.error","properties":{"sessionID":"s1"}}`, func(e Event) bool { v, err := e.AsSessionError(); return err == nil && v != nil }},
+		{"ServerConnected", EventTypeServerConnected, `{"type":"server.connected","properties":{}}`, func(e Event) bool { v, err := e.AsServerConnected(); return err == nil && v != nil }},
+		{"IdeInstalled", EventTypeIdeInstalled, `{"type":"ide.installed","properties":{"ide":"vscode"}}`, func(e Event) bool { v, err := e.AsIdeInstalled(); return err == nil && v != nil }},
 	}
 
 	for _, tc := range testCases {

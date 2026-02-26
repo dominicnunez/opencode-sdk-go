@@ -7,17 +7,17 @@ import (
 
 func TestSessionError_AsProviderAuth_ValidProviderAuthError(t *testing.T) {
 	jsonData := `{"name":"ProviderAuthError","data":{"message":"auth failed","providerID":"test-provider"}}`
-	var err SessionError
-	if e := json.Unmarshal([]byte(jsonData), &err); e != nil {
+	var sessErr SessionError
+	if e := json.Unmarshal([]byte(jsonData), &sessErr); e != nil {
 		t.Fatalf("Unmarshal failed: %v", e)
 	}
-	if err.Name != SessionErrorNameProviderAuthError {
-		t.Errorf("Expected name ProviderAuthError, got %s", err.Name)
+	if sessErr.Name != SessionErrorNameProviderAuthError {
+		t.Errorf("Expected name ProviderAuthError, got %s", sessErr.Name)
 	}
 
-	providerAuthErr, ok := err.AsProviderAuth()
-	if !ok {
-		t.Fatal("Expected AsProviderAuth to return true")
+	providerAuthErr, err := sessErr.AsProviderAuth()
+	if err != nil {
+		t.Fatalf("AsProviderAuth error: %v", err)
 	}
 	if providerAuthErr == nil {
 		t.Fatal("Expected non-nil ProviderAuthError")
@@ -32,17 +32,17 @@ func TestSessionError_AsProviderAuth_ValidProviderAuthError(t *testing.T) {
 
 func TestSessionError_AsUnknown_ValidUnknownError(t *testing.T) {
 	jsonData := `{"name":"UnknownError","data":{"message":"something went wrong"}}`
-	var err SessionError
-	if e := json.Unmarshal([]byte(jsonData), &err); e != nil {
+	var sessErr SessionError
+	if e := json.Unmarshal([]byte(jsonData), &sessErr); e != nil {
 		t.Fatalf("Unmarshal failed: %v", e)
 	}
-	if err.Name != SessionErrorNameUnknownError {
-		t.Errorf("Expected name UnknownError, got %s", err.Name)
+	if sessErr.Name != SessionErrorNameUnknownError {
+		t.Errorf("Expected name UnknownError, got %s", sessErr.Name)
 	}
 
-	unknownErr, ok := err.AsUnknown()
-	if !ok {
-		t.Fatal("Expected AsUnknown to return true")
+	unknownErr, err := sessErr.AsUnknown()
+	if err != nil {
+		t.Fatalf("AsUnknown error: %v", err)
 	}
 	if unknownErr == nil {
 		t.Fatal("Expected non-nil UnknownError")
@@ -54,22 +54,21 @@ func TestSessionError_AsUnknown_ValidUnknownError(t *testing.T) {
 
 func TestSessionError_AsOutputLength_ValidMessageOutputLengthError(t *testing.T) {
 	jsonData := `{"name":"MessageOutputLengthError","data":{"limit":1000,"used":1500}}`
-	var err SessionError
-	if e := json.Unmarshal([]byte(jsonData), &err); e != nil {
+	var sessErr SessionError
+	if e := json.Unmarshal([]byte(jsonData), &sessErr); e != nil {
 		t.Fatalf("Unmarshal failed: %v", e)
 	}
-	if err.Name != SessionErrorNameMessageOutputLengthError {
-		t.Errorf("Expected name MessageOutputLengthError, got %s", err.Name)
+	if sessErr.Name != SessionErrorNameMessageOutputLengthError {
+		t.Errorf("Expected name MessageOutputLengthError, got %s", sessErr.Name)
 	}
 
-	outputLengthErr, ok := err.AsOutputLength()
-	if !ok {
-		t.Fatal("Expected AsOutputLength to return true")
+	outputLengthErr, err := sessErr.AsOutputLength()
+	if err != nil {
+		t.Fatalf("AsOutputLength error: %v", err)
 	}
 	if outputLengthErr == nil {
 		t.Fatal("Expected non-nil MessageOutputLengthError")
 	}
-	// Data is interface{} so we can check it's not nil
 	if outputLengthErr.Data == nil {
 		t.Error("Expected non-nil Data field")
 	}
@@ -77,17 +76,17 @@ func TestSessionError_AsOutputLength_ValidMessageOutputLengthError(t *testing.T)
 
 func TestSessionError_AsAborted_ValidMessageAbortedError(t *testing.T) {
 	jsonData := `{"name":"MessageAbortedError","data":{"message":"user cancelled"}}`
-	var err SessionError
-	if e := json.Unmarshal([]byte(jsonData), &err); e != nil {
+	var sessErr SessionError
+	if e := json.Unmarshal([]byte(jsonData), &sessErr); e != nil {
 		t.Fatalf("Unmarshal failed: %v", e)
 	}
-	if err.Name != SessionErrorNameMessageAbortedError {
-		t.Errorf("Expected name MessageAbortedError, got %s", err.Name)
+	if sessErr.Name != SessionErrorNameMessageAbortedError {
+		t.Errorf("Expected name MessageAbortedError, got %s", sessErr.Name)
 	}
 
-	abortedErr, ok := err.AsAborted()
-	if !ok {
-		t.Fatal("Expected AsAborted to return true")
+	abortedErr, err := sessErr.AsAborted()
+	if err != nil {
+		t.Fatalf("AsAborted error: %v", err)
 	}
 	if abortedErr == nil {
 		t.Fatal("Expected non-nil MessageAbortedError")
@@ -99,17 +98,17 @@ func TestSessionError_AsAborted_ValidMessageAbortedError(t *testing.T) {
 
 func TestSessionError_AsAPI_ValidSessionAPIError(t *testing.T) {
 	jsonData := `{"name":"APIError","data":{"isRetryable":true,"message":"timeout","statusCode":504,"responseBody":"Gateway Timeout","responseHeaders":{"content-type":"text/plain"}}}`
-	var err SessionError
-	if e := json.Unmarshal([]byte(jsonData), &err); e != nil {
+	var sessErr SessionError
+	if e := json.Unmarshal([]byte(jsonData), &sessErr); e != nil {
 		t.Fatalf("Unmarshal failed: %v", e)
 	}
-	if err.Name != SessionErrorNameAPIError {
-		t.Errorf("Expected name APIError, got %s", err.Name)
+	if sessErr.Name != SessionErrorNameAPIError {
+		t.Errorf("Expected name APIError, got %s", sessErr.Name)
 	}
 
-	apiErr, ok := err.AsAPI()
-	if !ok {
-		t.Fatal("Expected AsAPI to return true")
+	apiErr, err := sessErr.AsAPI()
+	if err != nil {
+		t.Fatalf("AsAPI error: %v", err)
 	}
 	if apiErr == nil {
 		t.Fatal("Expected non-nil SessionAPIError")
@@ -131,106 +130,109 @@ func TestSessionError_AsAPI_ValidSessionAPIError(t *testing.T) {
 	}
 }
 
-func TestSessionError_WrongType_ReturnsNilFalse(t *testing.T) {
+func TestSessionError_WrongType_ReturnsNilNil(t *testing.T) {
 	jsonData := `{"name":"ProviderAuthError","data":{"message":"auth failed","providerID":"test"}}`
-	var err SessionError
-	if e := json.Unmarshal([]byte(jsonData), &err); e != nil {
+	var sessErr SessionError
+	if e := json.Unmarshal([]byte(jsonData), &sessErr); e != nil {
 		t.Fatalf("Unmarshal failed: %v", e)
 	}
 
-	// Try wrong As* methods
-	if unknownErr, ok := err.AsUnknown(); ok || unknownErr != nil {
-		t.Error("Expected AsUnknown to return (nil, false) for ProviderAuthError")
+	if v, err := sessErr.AsUnknown(); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	} else if v != nil {
+		t.Error("Expected AsUnknown to return nil for ProviderAuthError")
 	}
-	if outputLengthErr, ok := err.AsOutputLength(); ok || outputLengthErr != nil {
-		t.Error("Expected AsOutputLength to return (nil, false) for ProviderAuthError")
+	if v, err := sessErr.AsOutputLength(); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	} else if v != nil {
+		t.Error("Expected AsOutputLength to return nil for ProviderAuthError")
 	}
-	if abortedErr, ok := err.AsAborted(); ok || abortedErr != nil {
-		t.Error("Expected AsAborted to return (nil, false) for ProviderAuthError")
+	if v, err := sessErr.AsAborted(); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	} else if v != nil {
+		t.Error("Expected AsAborted to return nil for ProviderAuthError")
 	}
-	if apiErr, ok := err.AsAPI(); ok || apiErr != nil {
-		t.Error("Expected AsAPI to return (nil, false) for ProviderAuthError")
+	if v, err := sessErr.AsAPI(); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	} else if v != nil {
+		t.Error("Expected AsAPI to return nil for ProviderAuthError")
 	}
 }
 
 func TestSessionError_InvalidJSON(t *testing.T) {
 	invalidJSON := `{"name":"ProviderAuthError","data":{malformed}}`
-	var err SessionError
-	// Unmarshal should fail on malformed JSON
-	if e := json.Unmarshal([]byte(invalidJSON), &err); e == nil {
+	var sessErr SessionError
+	if e := json.Unmarshal([]byte(invalidJSON), &sessErr); e == nil {
 		t.Fatal("Expected Unmarshal to fail on malformed JSON")
 	}
 }
 
 func TestSessionError_MalformedData_AsMethodFails(t *testing.T) {
-	// Valid JSON but with wrong data structure
 	jsonData := `{"name":"ProviderAuthError","data":"not an object"}`
-	var err SessionError
-	if e := json.Unmarshal([]byte(jsonData), &err); e != nil {
+	var sessErr SessionError
+	if e := json.Unmarshal([]byte(jsonData), &sessErr); e != nil {
 		t.Fatalf("Unmarshal failed: %v", e)
 	}
 
-	// AsProviderAuth should fail when trying to unmarshal the full data
-	if providerAuthErr, ok := err.AsProviderAuth(); ok || providerAuthErr != nil {
-		t.Error("Expected AsProviderAuth to fail on wrong data structure")
+	_, err := sessErr.AsProviderAuth()
+	if err == nil {
+		t.Error("Expected AsProviderAuth to return error for wrong data structure")
 	}
 }
 
 func TestSessionError_MissingName(t *testing.T) {
 	jsonData := `{"data":{"message":"test"}}`
-	var err SessionError
-	if e := json.Unmarshal([]byte(jsonData), &err); e != nil {
+	var sessErr SessionError
+	if e := json.Unmarshal([]byte(jsonData), &sessErr); e != nil {
 		t.Fatalf("Unmarshal failed: %v", e)
 	}
 
-	// Name should be empty
-	if err.Name != "" {
-		t.Errorf("Expected empty name, got %s", err.Name)
+	if sessErr.Name != "" {
+		t.Errorf("Expected empty name, got %s", sessErr.Name)
 	}
 
-	// All As* methods should return (nil, false)
-	if _, ok := err.AsProviderAuth(); ok {
-		t.Error("Expected AsProviderAuth to return false for empty name")
+	if v, err := sessErr.AsProviderAuth(); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	} else if v != nil {
+		t.Error("Expected AsProviderAuth to return nil for empty name")
 	}
 }
 
 func TestSessionError_UnknownName(t *testing.T) {
 	jsonData := `{"name":"UnknownErrorType","data":{"message":"test"}}`
-	var err SessionError
-	if e := json.Unmarshal([]byte(jsonData), &err); e != nil {
+	var sessErr SessionError
+	if e := json.Unmarshal([]byte(jsonData), &sessErr); e != nil {
 		t.Fatalf("Unmarshal failed: %v", e)
 	}
 
-	// Name should be set even if unknown
-	if err.Name != "UnknownErrorType" {
-		t.Errorf("Expected name UnknownErrorType, got %s", err.Name)
+	if sessErr.Name != "UnknownErrorType" {
+		t.Errorf("Expected name UnknownErrorType, got %s", sessErr.Name)
 	}
-
-	// IsKnown should return false
-	if err.Name.IsKnown() {
+	if sessErr.Name.IsKnown() {
 		t.Error("Expected IsKnown to return false for unknown error name")
 	}
 
-	// All As* methods should return (nil, false)
-	if _, ok := err.AsProviderAuth(); ok {
-		t.Error("Expected AsProviderAuth to return false for unknown name")
+	if v, err := sessErr.AsProviderAuth(); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	} else if v != nil {
+		t.Error("Expected AsProviderAuth to return nil for unknown name")
 	}
 }
 
 func TestSessionError_EmptyJSON(t *testing.T) {
 	jsonData := `{}`
-	var err SessionError
-	if e := json.Unmarshal([]byte(jsonData), &err); e != nil {
+	var sessErr SessionError
+	if e := json.Unmarshal([]byte(jsonData), &sessErr); e != nil {
 		t.Fatalf("Unmarshal failed: %v", e)
 	}
 
-	// Name should be empty
-	if err.Name != "" {
-		t.Errorf("Expected empty name, got %s", err.Name)
+	if sessErr.Name != "" {
+		t.Errorf("Expected empty name, got %s", sessErr.Name)
 	}
 
-	// All As* methods should return (nil, false)
-	if _, ok := err.AsUnknown(); ok {
-		t.Error("Expected AsUnknown to return false for empty JSON")
+	if v, err := sessErr.AsUnknown(); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	} else if v != nil {
+		t.Error("Expected AsUnknown to return nil for empty JSON")
 	}
 }

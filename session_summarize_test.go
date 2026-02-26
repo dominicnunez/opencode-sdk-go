@@ -111,7 +111,7 @@ func TestSessionSummarize_MissingParams(t *testing.T) {
 	if err == nil {
 		t.Fatal("Expected error for missing params, got nil")
 	}
-	if err.Error() != "missing required params" {
+	if err.Error() != "params is required" {
 		t.Errorf("Expected 'missing required params', got %v", err)
 	}
 }

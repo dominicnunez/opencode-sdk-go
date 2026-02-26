@@ -7,10 +7,10 @@ import (
 
 // TestParamMarshal verifies that param structs marshal correctly with stdlib encoding/json
 func TestParamMarshal(t *testing.T) {
-	t.Run("SessionNewParams with fields", func(t *testing.T) {
+	t.Run("SessionCreateParams with fields", func(t *testing.T) {
 		parentID := "parent-123"
 		title := "Test Session"
-		params := SessionNewParams{
+		params := SessionCreateParams{
 			ParentID: &parentID,
 			Title:    &title,
 		}
@@ -34,8 +34,8 @@ func TestParamMarshal(t *testing.T) {
 		}
 	})
 
-	t.Run("SessionNewParams omits nil fields", func(t *testing.T) {
-		params := SessionNewParams{
+	t.Run("SessionCreateParams omits nil fields", func(t *testing.T) {
+		params := SessionCreateParams{
 			ParentID: nil, // Should be omitted
 			Title:    nil, // Should be omitted
 		}

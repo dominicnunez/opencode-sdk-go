@@ -36,7 +36,7 @@ func TestClientDo_Success(t *testing.T) {
 		t.Fatalf("failed to create client: %v", err)
 	}
 
-	_, err = client.Session.Create(context.Background(), &opencode.SessionNewParams{
+	_, err = client.Session.Create(context.Background(), &opencode.SessionCreateParams{
 		ParentID: opencode.Ptr("test-parent"),
 	})
 	// Just check that the request was made successfully
@@ -153,7 +153,7 @@ func TestClientDo_PostWithBody(t *testing.T) {
 		t.Fatalf("failed to create client: %v", err)
 	}
 
-	_, err = client.Session.Create(context.Background(), &opencode.SessionNewParams{
+	_, err = client.Session.Create(context.Background(), &opencode.SessionCreateParams{
 		ParentID: opencode.Ptr("test-parent"),
 	})
 	if err != nil {

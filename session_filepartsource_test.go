@@ -25,8 +25,8 @@ func TestFilePartSource_AsFile_ValidFileSource(t *testing.T) {
 		t.Errorf("Expected type %q, got %q", FilePartSourceTypeFile, source.Type)
 	}
 
-	fileSource, ok := source.AsFile()
-	if !ok {
+	fileSource, err := source.AsFile()
+	if err != nil {
 		t.Fatal("AsFile() should succeed for file type")
 	}
 	if fileSource == nil {
@@ -56,12 +56,12 @@ func TestFilePartSource_AsSymbol_ValidSymbolSource(t *testing.T) {
 		"path": "/home/user/project/main.go",
 		"range": {
 			"start": {
-				"line": 3.0,
-				"character": 0.0
+				"line": 3,
+				"character": 0
 			},
 			"end": {
-				"line": 5.0,
-				"character": 1.0
+				"line": 5,
+				"character": 1
 			}
 		},
 		"text": {
@@ -80,8 +80,8 @@ func TestFilePartSource_AsSymbol_ValidSymbolSource(t *testing.T) {
 		t.Errorf("Expected type %q, got %q", FilePartSourceTypeSymbol, source.Type)
 	}
 
-	symbolSource, ok := source.AsSymbol()
-	if !ok {
+	symbolSource, err := source.AsSymbol()
+	if err != nil {
 		t.Fatal("AsSymbol() should succeed for symbol type")
 	}
 	if symbolSource == nil {
@@ -97,11 +97,11 @@ func TestFilePartSource_AsSymbol_ValidSymbolSource(t *testing.T) {
 	if symbolSource.Path != "/home/user/project/main.go" {
 		t.Errorf("Expected path %q, got %q", "/home/user/project/main.go", symbolSource.Path)
 	}
-	if symbolSource.Range.Start.Line != 3.0 {
-		t.Errorf("Expected range.start.line 3.0, got %f", symbolSource.Range.Start.Line)
+	if symbolSource.Range.Start.Line != 3 {
+		t.Errorf("Expected range.start.line 3, got %d", symbolSource.Range.Start.Line)
 	}
-	if symbolSource.Range.End.Character != 1.0 {
-		t.Errorf("Expected range.end.character 1.0, got %f", symbolSource.Range.End.Character)
+	if symbolSource.Range.End.Character != 1 {
+		t.Errorf("Expected range.end.character 1, got %d", symbolSource.Range.End.Character)
 	}
 	if symbolSource.Text.Start != 50 {
 		t.Errorf("Expected text.start 50, got %d", symbolSource.Text.Start)
@@ -130,8 +130,11 @@ func TestFilePartSource_AsFile_WrongType(t *testing.T) {
 		t.Fatalf("Unmarshal failed: %v", err)
 	}
 
-	fileSource, ok := source.AsFile()
-	if ok {
+	fileSource, err := source.AsFile()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if fileSource != nil {
 		t.Error("AsFile() should fail for symbol type")
 	}
 	if fileSource != nil {
@@ -155,8 +158,11 @@ func TestFilePartSource_AsSymbol_WrongType(t *testing.T) {
 		t.Fatalf("Unmarshal failed: %v", err)
 	}
 
-	symbolSource, ok := source.AsSymbol()
-	if ok {
+	symbolSource, err := source.AsSymbol()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if symbolSource != nil {
 		t.Error("AsSymbol() should fail for file type")
 	}
 	if symbolSource != nil {
@@ -181,10 +187,10 @@ func TestFilePartSource_InvalidJSON(t *testing.T) {
 	}
 
 	// AsFile and AsSymbol should both fail for unknown type
-	if fileSource, ok := source.AsFile(); ok || fileSource != nil {
+	if fileSource, err := source.AsFile(); err != nil || fileSource != nil {
 		t.Error("AsFile() should fail for unknown type")
 	}
-	if symbolSource, ok := source.AsSymbol(); ok || symbolSource != nil {
+	if symbolSource, err := source.AsSymbol(); err != nil || symbolSource != nil {
 		t.Error("AsSymbol() should fail for unknown type")
 	}
 }
@@ -213,10 +219,10 @@ func TestFilePartSource_EmptyJSON(t *testing.T) {
 	}
 
 	// Both methods should fail
-	if fileSource, ok := source.AsFile(); ok || fileSource != nil {
+	if fileSource, err := source.AsFile(); err != nil || fileSource != nil {
 		t.Error("AsFile() should fail for empty type")
 	}
-	if symbolSource, ok := source.AsSymbol(); ok || symbolSource != nil {
+	if symbolSource, err := source.AsSymbol(); err != nil || symbolSource != nil {
 		t.Error("AsSymbol() should fail for empty type")
 	}
 }
@@ -242,10 +248,10 @@ func TestFilePartSource_MissingType(t *testing.T) {
 	}
 
 	// Both methods should fail
-	if fileSource, ok := source.AsFile(); ok || fileSource != nil {
+	if fileSource, err := source.AsFile(); err != nil || fileSource != nil {
 		t.Error("AsFile() should fail for missing type")
 	}
-	if symbolSource, ok := source.AsSymbol(); ok || symbolSource != nil {
+	if symbolSource, err := source.AsSymbol(); err != nil || symbolSource != nil {
 		t.Error("AsSymbol() should fail for missing type")
 	}
 }
@@ -268,10 +274,10 @@ func TestFilePartSource_MalformedNestedJSON(t *testing.T) {
 		t.Errorf("Expected type %q, got %q", FilePartSourceTypeFile, source.Type)
 	}
 
-	// AsFile should fail because text field is malformed
-	fileSource, ok := source.AsFile()
-	if ok {
-		t.Error("AsFile() should fail for malformed nested JSON")
+	// AsFile should return error because text field is malformed
+	fileSource, err := source.AsFile()
+	if err == nil {
+		t.Fatal("AsFile() should return error for malformed nested JSON")
 	}
 	if fileSource != nil {
 		t.Error("AsFile() should return nil for malformed nested JSON")

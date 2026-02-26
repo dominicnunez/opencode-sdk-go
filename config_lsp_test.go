@@ -13,9 +13,9 @@ func TestConfigLsp_AsDisabled_ValidDisabled(t *testing.T) {
 		t.Fatalf("Unmarshal failed: %v", err)
 	}
 
-	disabled, ok := lsp.AsDisabled()
-	if !ok {
-		t.Fatal("AsDisabled() returned false, expected true")
+	disabled, err := lsp.AsDisabled()
+	if err != nil {
+		t.Fatalf("AsDisabled() returned error: %v", err)
 	}
 
 	if disabled == nil {
@@ -41,9 +41,9 @@ func TestConfigLsp_AsObject_ValidObject(t *testing.T) {
 		t.Fatalf("Unmarshal failed: %v", err)
 	}
 
-	obj, ok := lsp.AsObject()
-	if !ok {
-		t.Fatal("AsObject() returned false, expected true")
+	obj, err := lsp.AsObject()
+	if err != nil {
+		t.Fatalf("AsObject() returned error: %v", err)
 	}
 
 	if obj == nil {
@@ -91,9 +91,9 @@ func TestConfigLsp_AsObject_MinimalCommand(t *testing.T) {
 		t.Fatalf("Unmarshal failed: %v", err)
 	}
 
-	obj, ok := lsp.AsObject()
-	if !ok {
-		t.Fatal("AsObject() returned false, expected true")
+	obj, err := lsp.AsObject()
+	if err != nil {
+		t.Fatalf("AsObject() returned error: %v", err)
 	}
 
 	if obj == nil {
@@ -117,13 +117,12 @@ func TestConfigLsp_WrongType_DisabledAsObject(t *testing.T) {
 		t.Fatalf("Unmarshal failed: %v", err)
 	}
 
-	obj, ok := lsp.AsObject()
-	if ok {
-		t.Errorf("AsObject() returned true, expected false for disabled config")
+	obj, err := lsp.AsObject()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
 	}
-
 	if obj != nil {
-		t.Errorf("AsObject() returned non-nil, expected nil for disabled config")
+		t.Error("AsObject() should return nil for disabled config")
 	}
 }
 
@@ -135,13 +134,12 @@ func TestConfigLsp_WrongType_ObjectAsDisabled(t *testing.T) {
 		t.Fatalf("Unmarshal failed: %v", err)
 	}
 
-	disabled, ok := lsp.AsDisabled()
-	if ok {
-		t.Errorf("AsDisabled() returned true, expected false for object config")
+	disabled, err := lsp.AsDisabled()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
 	}
-
 	if disabled != nil {
-		t.Errorf("AsDisabled() returned non-nil, expected nil for object config")
+		t.Error("AsDisabled() should return nil for object config")
 	}
 }
 
@@ -149,19 +147,17 @@ func TestConfigLsp_InvalidJSON(t *testing.T) {
 	jsonData := `{"disabled": "not a boolean"}`
 
 	var lsp ConfigLsp
-	// UnmarshalJSON for ConfigLsp just stores raw JSON, so it won't fail
 	if err := json.Unmarshal([]byte(jsonData), &lsp); err != nil {
 		t.Fatalf("Unmarshal failed: %v", err)
 	}
 
-	// But AsDisabled should fail when trying to unmarshal the invalid JSON
-	disabled, ok := lsp.AsDisabled()
-	if ok {
-		t.Errorf("AsDisabled() returned true for invalid JSON, expected false")
+	// AsDisabled should return error when trying to unmarshal the invalid JSON
+	disabled, err := lsp.AsDisabled()
+	if err == nil {
+		t.Error("AsDisabled() should return error for invalid JSON")
 	}
-
 	if disabled != nil {
-		t.Errorf("AsDisabled() returned non-nil for invalid JSON, expected nil")
+		t.Error("AsDisabled() should return nil for invalid JSON")
 	}
 }
 
@@ -174,20 +170,20 @@ func TestConfigLsp_EmptyJSON(t *testing.T) {
 	}
 
 	// Empty JSON should not match either type
-	obj, ok := lsp.AsObject()
-	if ok {
-		t.Errorf("AsObject() returned true for empty JSON, expected false")
+	obj, err := lsp.AsObject()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
 	}
 	if obj != nil {
-		t.Errorf("AsObject() returned non-nil for empty JSON")
+		t.Error("AsObject() should return nil for empty JSON")
 	}
 
-	disabled, ok := lsp.AsDisabled()
-	if ok {
-		t.Errorf("AsDisabled() returned true for empty JSON, expected false")
+	disabled, err := lsp.AsDisabled()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
 	}
 	if disabled != nil {
-		t.Errorf("AsDisabled() returned non-nil for empty JSON")
+		t.Error("AsDisabled() should return nil for empty JSON")
 	}
 }
 
@@ -195,7 +191,6 @@ func TestConfigLsp_MalformedJSON(t *testing.T) {
 	jsonData := `{"command": ["gopls", "disabled": true}`
 
 	var lsp ConfigLsp
-	// UnmarshalJSON stores raw, but it's malformed
 	if err := json.Unmarshal([]byte(jsonData), &lsp); err == nil {
 		t.Fatal("Expected unmarshal to fail for malformed JSON")
 	}
@@ -221,7 +216,6 @@ func TestConfigLspDisabledDisabled_IsKnown(t *testing.T) {
 }
 
 func TestConfigLsp_ObjectWithDisabledTrue(t *testing.T) {
-	// Object config can have disabled=true along with command
 	jsonData := `{"command": ["gopls"], "disabled": true}`
 
 	var lsp ConfigLsp
@@ -229,27 +223,23 @@ func TestConfigLsp_ObjectWithDisabledTrue(t *testing.T) {
 		t.Fatalf("Unmarshal failed: %v", err)
 	}
 
-	// Should be treated as Object, not Disabled, because command field exists
-	obj, ok := lsp.AsObject()
-	if !ok {
-		t.Fatal("AsObject() returned false, expected true")
+	obj, err := lsp.AsObject()
+	if err != nil {
+		t.Fatalf("AsObject() returned error: %v", err)
 	}
-
 	if obj == nil {
 		t.Fatal("AsObject() returned nil")
 	}
-
 	if !obj.Disabled {
 		t.Errorf("Disabled = %v, want true", obj.Disabled)
 	}
 
-	// Should not be treated as Disabled
-	disabled, ok := lsp.AsDisabled()
-	if ok {
-		t.Errorf("AsDisabled() returned true, expected false when command field exists")
+	// Should not be treated as Disabled since command field exists
+	disabled, err := lsp.AsDisabled()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
 	}
-
 	if disabled != nil {
-		t.Errorf("AsDisabled() returned non-nil, expected nil when command field exists")
+		t.Error("AsDisabled() should return nil when command field exists")
 	}
 }

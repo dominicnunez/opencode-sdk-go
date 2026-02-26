@@ -25,8 +25,8 @@ func TestConfigMcp_AsLocal_ValidLocalConfig(t *testing.T) {
 		t.Errorf("Expected type %q, got %q", ConfigMcpTypeLocal, mcp.Type)
 	}
 
-	local, ok := mcp.AsLocal()
-	if !ok {
+	local, err := mcp.AsLocal()
+	if err != nil {
 		t.Fatal("AsLocal() returned false for local type")
 	}
 	if local == nil {
@@ -80,8 +80,8 @@ func TestConfigMcp_AsRemote_ValidRemoteConfig(t *testing.T) {
 		t.Errorf("Expected type %q, got %q", ConfigMcpTypeRemote, mcp.Type)
 	}
 
-	remote, ok := mcp.AsRemote()
-	if !ok {
+	remote, err := mcp.AsRemote()
+	if err != nil {
 		t.Fatal("AsRemote() returned false for remote type")
 	}
 	if remote == nil {
@@ -117,9 +117,12 @@ func TestConfigMcp_AsLocal_WrongType(t *testing.T) {
 		t.Fatalf("Failed to unmarshal ConfigMcp: %v", err)
 	}
 
-	local, ok := mcp.AsLocal()
-	if ok {
-		t.Error("AsLocal() returned true for remote type")
+	local, err := mcp.AsLocal()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if local != nil {
+		t.Error("AsLocal() should return nil for remote type")
 	}
 	if local != nil {
 		t.Error("AsLocal() returned non-nil for remote type")
@@ -137,9 +140,12 @@ func TestConfigMcp_AsRemote_WrongType(t *testing.T) {
 		t.Fatalf("Failed to unmarshal ConfigMcp: %v", err)
 	}
 
-	remote, ok := mcp.AsRemote()
-	if ok {
-		t.Error("AsRemote() returned true for local type")
+	remote, err := mcp.AsRemote()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if remote != nil {
+		t.Error("AsRemote() should return nil for local type")
 	}
 	if remote != nil {
 		t.Error("AsRemote() returned non-nil for local type")
@@ -162,9 +168,12 @@ func TestConfigMcp_InvalidJSON(t *testing.T) {
 		t.Errorf("Expected type %q, got %q", ConfigMcpTypeLocal, mcp.Type)
 	}
 
-	local, ok := mcp.AsLocal()
-	if ok {
-		t.Error("AsLocal() returned true for malformed JSON")
+	local, err := mcp.AsLocal()
+	if err == nil {
+		t.Error("AsLocal() should return error for malformed JSON")
+	}
+	if local != nil {
+		t.Error("AsLocal() should return nil for malformed JSON")
 	}
 	if local != nil {
 		t.Error("AsLocal() returned non-nil for malformed JSON")
@@ -187,17 +196,23 @@ func TestConfigMcp_MissingType(t *testing.T) {
 	}
 
 	// Both AsLocal and AsRemote should return false
-	local, ok := mcp.AsLocal()
-	if ok {
-		t.Error("AsLocal() returned true for missing type")
+	local, err := mcp.AsLocal()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if local != nil {
+		t.Error("AsLocal() should return nil for missing type")
 	}
 	if local != nil {
 		t.Error("AsLocal() returned non-nil for missing type")
 	}
 
-	remote, ok := mcp.AsRemote()
-	if ok {
-		t.Error("AsRemote() returned true for missing type")
+	remote, err := mcp.AsRemote()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if remote != nil {
+		t.Error("AsRemote() should return nil for missing type")
 	}
 	if remote != nil {
 		t.Error("AsRemote() returned non-nil for missing type")
@@ -220,17 +235,23 @@ func TestConfigMcp_UnknownType(t *testing.T) {
 	}
 
 	// Both AsLocal and AsRemote should return false
-	local, ok := mcp.AsLocal()
-	if ok {
-		t.Error("AsLocal() returned true for unknown type")
+	local, err := mcp.AsLocal()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if local != nil {
+		t.Error("AsLocal() should return nil for unknown type")
 	}
 	if local != nil {
 		t.Error("AsLocal() returned non-nil for unknown type")
 	}
 
-	remote, ok := mcp.AsRemote()
-	if ok {
-		t.Error("AsRemote() returned true for unknown type")
+	remote, err := mcp.AsRemote()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if remote != nil {
+		t.Error("AsRemote() should return nil for unknown type")
 	}
 	if remote != nil {
 		t.Error("AsRemote() returned non-nil for unknown type")
@@ -251,17 +272,23 @@ func TestConfigMcp_EmptyJSON(t *testing.T) {
 	}
 
 	// Both AsLocal and AsRemote should return false
-	local, ok := mcp.AsLocal()
-	if ok {
-		t.Error("AsLocal() returned true for empty JSON")
+	local, err := mcp.AsLocal()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if local != nil {
+		t.Error("AsLocal() should return nil for empty JSON")
 	}
 	if local != nil {
 		t.Error("AsLocal() returned non-nil for empty JSON")
 	}
 
-	remote, ok := mcp.AsRemote()
-	if ok {
-		t.Error("AsRemote() returned true for empty JSON")
+	remote, err := mcp.AsRemote()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if remote != nil {
+		t.Error("AsRemote() should return nil for empty JSON")
 	}
 	if remote != nil {
 		t.Error("AsRemote() returned non-nil for empty JSON")
@@ -285,10 +312,13 @@ func TestConfigMcp_MalformedJSON(t *testing.T) {
 		t.Errorf("Expected type %q, got %q", ConfigMcpTypeLocal, mcp.Type)
 	}
 
-	// AsLocal should fail due to malformed environment field
-	local, ok := mcp.AsLocal()
-	if ok {
-		t.Error("AsLocal() returned true for malformed environment")
+	// AsLocal should return error due to malformed environment field
+	local, err := mcp.AsLocal()
+	if err == nil {
+		t.Error("AsLocal() should return error for malformed environment")
+	}
+	if local != nil {
+		t.Error("AsLocal() should return nil for malformed environment")
 	}
 	if local != nil {
 		t.Error("AsLocal() returned non-nil for malformed environment")
@@ -329,8 +359,8 @@ func TestConfigMcp_LocalMinimalFields(t *testing.T) {
 		t.Fatalf("Failed to unmarshal ConfigMcp: %v", err)
 	}
 
-	local, ok := mcp.AsLocal()
-	if !ok {
+	local, err := mcp.AsLocal()
+	if err != nil {
 		t.Fatal("AsLocal() returned false for valid minimal local config")
 	}
 	if local == nil {
@@ -363,8 +393,8 @@ func TestConfigMcp_RemoteMinimalFields(t *testing.T) {
 		t.Fatalf("Failed to unmarshal ConfigMcp: %v", err)
 	}
 
-	remote, ok := mcp.AsRemote()
-	if !ok {
+	remote, err := mcp.AsRemote()
+	if err != nil {
 		t.Fatal("AsRemote() returned false for valid minimal remote config")
 	}
 	if remote == nil {

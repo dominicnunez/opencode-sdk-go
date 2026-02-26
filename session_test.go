@@ -23,7 +23,7 @@ func TestSessionNewWithOptionalParams(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create client: %v", err)
 	}
-	_, err = client.Session.Create(context.TODO(), &opencode.SessionNewParams{
+	_, err = client.Session.Create(context.TODO(), &opencode.SessionCreateParams{
 		Directory: opencode.Ptr("directory"),
 		ParentID:  opencode.Ptr("sesJ!"),
 		Title:     opencode.Ptr("title"),

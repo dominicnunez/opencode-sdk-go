@@ -47,31 +47,31 @@ func TestPermissionPattern_AsString(t *testing.T) {
 		name     string
 		jsonData string
 		want     string
-		wantOk   bool
+		wantErr  bool
 	}{
 		{
 			name:     "valid string pattern",
 			jsonData: `"*.go"`,
 			want:     "*.go",
-			wantOk:   true,
+			wantErr:  false,
 		},
 		{
 			name:     "empty string pattern",
 			jsonData: `""`,
 			want:     "",
-			wantOk:   true,
+			wantErr:  false,
 		},
 		{
-			name:     "array pattern returns false",
+			name:     "array pattern returns error",
 			jsonData: `["*.go", "*.ts"]`,
 			want:     "",
-			wantOk:   false,
+			wantErr:  true,
 		},
 		{
-			name:     "object pattern returns false",
+			name:     "object pattern returns error",
 			jsonData: `{"foo": "bar"}`,
 			want:     "",
-			wantOk:   false,
+			wantErr:  true,
 		},
 	}
 
@@ -82,9 +82,9 @@ func TestPermissionPattern_AsString(t *testing.T) {
 				t.Fatalf("Unmarshal error: %v", err)
 			}
 
-			got, ok := pattern.AsString()
-			if ok != tt.wantOk {
-				t.Errorf("AsString() ok = %v, want %v", ok, tt.wantOk)
+			got, err := pattern.AsString()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("AsString() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if got != tt.want {
 				t.Errorf("AsString() = %q, want %q", got, tt.want)
@@ -98,37 +98,37 @@ func TestPermissionPattern_AsArray(t *testing.T) {
 		name     string
 		jsonData string
 		want     []string
-		wantOk   bool
+		wantErr  bool
 	}{
 		{
 			name:     "valid array pattern",
 			jsonData: `["*.go", "*.ts"]`,
 			want:     []string{"*.go", "*.ts"},
-			wantOk:   true,
+			wantErr:  false,
 		},
 		{
 			name:     "single element array",
 			jsonData: `["*.go"]`,
 			want:     []string{"*.go"},
-			wantOk:   true,
+			wantErr:  false,
 		},
 		{
 			name:     "empty array",
 			jsonData: `[]`,
 			want:     []string{},
-			wantOk:   true,
+			wantErr:  false,
 		},
 		{
-			name:     "string pattern returns false",
+			name:     "string pattern returns error",
 			jsonData: `"*.go"`,
 			want:     nil,
-			wantOk:   false,
+			wantErr:  true,
 		},
 		{
-			name:     "object pattern returns false",
+			name:     "object pattern returns error",
 			jsonData: `{"foo": "bar"}`,
 			want:     nil,
-			wantOk:   false,
+			wantErr:  true,
 		},
 	}
 
@@ -139,11 +139,11 @@ func TestPermissionPattern_AsArray(t *testing.T) {
 				t.Fatalf("Unmarshal error: %v", err)
 			}
 
-			got, ok := pattern.AsArray()
-			if ok != tt.wantOk {
-				t.Errorf("AsArray() ok = %v, want %v", ok, tt.wantOk)
+			got, err := pattern.AsArray()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("AsArray() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			if ok && !stringSlicesEqual(got, tt.want) {
+			if err == nil && !stringSlicesEqual(got, tt.want) {
 				t.Errorf("AsArray() = %v, want %v", got, tt.want)
 			}
 		})
@@ -168,15 +168,13 @@ func TestPermissionPattern_InvalidJSON(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var pattern opencode.PermissionPattern
-			// UnmarshalJSON just stores raw bytes, so it won't error
-			// The error will occur when calling AsString() or AsArray()
 			if err := json.Unmarshal([]byte(tt.jsonData), &pattern); err == nil {
 				// Try to access the value - should fail
-				if _, ok := pattern.AsString(); ok {
-					t.Error("AsString() succeeded on invalid JSON, expected false")
+				if _, err := pattern.AsString(); err == nil {
+					t.Error("AsString() succeeded on invalid JSON, expected error")
 				}
-				if _, ok := pattern.AsArray(); ok {
-					t.Error("AsArray() succeeded on invalid JSON, expected false")
+				if _, err := pattern.AsArray(); err == nil {
+					t.Error("AsArray() succeeded on invalid JSON, expected error")
 				}
 			}
 		})
@@ -208,9 +206,9 @@ func TestPermission_UnmarshalWithStringPattern(t *testing.T) {
 		t.Fatal("Pattern is nil")
 	}
 
-	pattern, ok := perm.Pattern.AsString()
-	if !ok {
-		t.Fatal("Pattern.AsString() returned false")
+	pattern, err := perm.Pattern.AsString()
+	if err != nil {
+		t.Fatalf("Pattern.AsString() returned error: %v", err)
 	}
 	if pattern != "*.go" {
 		t.Errorf("Pattern = %q, want %q", pattern, "*.go")
@@ -242,9 +240,9 @@ func TestPermission_UnmarshalWithArrayPattern(t *testing.T) {
 		t.Fatal("Pattern is nil")
 	}
 
-	patterns, ok := perm.Pattern.AsArray()
-	if !ok {
-		t.Fatal("Pattern.AsArray() returned false")
+	patterns, err := perm.Pattern.AsArray()
+	if err != nil {
+		t.Fatalf("Pattern.AsArray() returned error: %v", err)
 	}
 	want := []string{"*.go", "*.ts", "*.js"}
 	if !stringSlicesEqual(patterns, want) {

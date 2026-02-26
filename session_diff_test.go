@@ -54,20 +54,20 @@ func TestSessionDiff_Success(t *testing.T) {
 		t.Errorf("Expected file main.go, got %s", result[0].File)
 	}
 	if result[0].Additions != 1 {
-		t.Errorf("Expected 1 addition, got %f", result[0].Additions)
+		t.Errorf("Expected 1 addition, got %d", result[0].Additions)
 	}
 	if result[0].Deletions != 1 {
-		t.Errorf("Expected 1 deletion, got %f", result[0].Deletions)
+		t.Errorf("Expected 1 deletion, got %d", result[0].Deletions)
 	}
 
 	if result[1].File != "README.md" {
 		t.Errorf("Expected file README.md, got %s", result[1].File)
 	}
 	if result[1].Additions != 2 {
-		t.Errorf("Expected 2 additions, got %f", result[1].Additions)
+		t.Errorf("Expected 2 additions, got %d", result[1].Additions)
 	}
 	if result[1].Deletions != 0 {
-		t.Errorf("Expected 0 deletions, got %f", result[1].Deletions)
+		t.Errorf("Expected 0 deletions, got %d", result[1].Deletions)
 	}
 }
 
@@ -231,10 +231,10 @@ func TestFileDiff_Unmarshal(t *testing.T) {
 		t.Errorf("Expected after 'new content', got %s", diff.After)
 	}
 	if diff.Additions != 10 {
-		t.Errorf("Expected 10 additions, got %f", diff.Additions)
+		t.Errorf("Expected 10 additions, got %d", diff.Additions)
 	}
 	if diff.Deletions != 5 {
-		t.Errorf("Expected 5 deletions, got %f", diff.Deletions)
+		t.Errorf("Expected 5 deletions, got %d", diff.Deletions)
 	}
 }
 
@@ -262,7 +262,7 @@ func TestFileDiff_Marshal(t *testing.T) {
 		t.Errorf("Expected file %s, got %s", diff.File, result.File)
 	}
 	if result.Additions != diff.Additions {
-		t.Errorf("Expected %f additions, got %f", diff.Additions, result.Additions)
+		t.Errorf("Expected %d additions, got %d", diff.Additions, result.Additions)
 	}
 }
 

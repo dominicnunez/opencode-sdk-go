@@ -13,8 +13,8 @@ func TestConfigAgentBuildPermissionBashUnion(t *testing.T) {
 		if err := json.Unmarshal(data, &u); err != nil {
 			t.Fatalf("Unmarshal failed: %v", err)
 		}
-		s, ok := u.AsString()
-		if !ok {
+		s, err := u.AsString()
+		if err != nil {
 			t.Fatal("AsString() returned false for string value")
 		}
 		if s != ConfigAgentBuildPermissionBashStringAllow {
@@ -28,8 +28,8 @@ func TestConfigAgentBuildPermissionBashUnion(t *testing.T) {
 		if err := json.Unmarshal(data, &u); err != nil {
 			t.Fatalf("Unmarshal failed: %v", err)
 		}
-		m, ok := u.AsMap()
-		if !ok {
+		m, err := u.AsMap()
+		if err != nil {
 			t.Fatal("AsMap() returned false for map value")
 		}
 		if len(m) != 2 {
@@ -49,9 +49,9 @@ func TestConfigAgentBuildPermissionBashUnion(t *testing.T) {
 		if err := json.Unmarshal(data, &u); err != nil {
 			t.Fatalf("Unmarshal failed: %v", err)
 		}
-		_, ok := u.AsString()
-		if ok {
-			t.Error("AsString() should return false for map value")
+		_, err := u.AsString()
+		if err == nil {
+			t.Error("AsString() should return error for map value")
 		}
 	})
 
@@ -61,9 +61,9 @@ func TestConfigAgentBuildPermissionBashUnion(t *testing.T) {
 		if err := json.Unmarshal(data, &u); err != nil {
 			t.Fatalf("Unmarshal failed: %v", err)
 		}
-		_, ok := u.AsMap()
-		if ok {
-			t.Error("AsMap() should return false for string value")
+		_, err := u.AsMap()
+		if err == nil {
+			t.Error("AsMap() should return error for string value")
 		}
 	})
 }
@@ -76,8 +76,8 @@ func TestConfigProviderOptionsTimeoutUnion(t *testing.T) {
 		if err := json.Unmarshal(data, &u); err != nil {
 			t.Fatalf("Unmarshal failed: %v", err)
 		}
-		i, ok := u.AsInt()
-		if !ok {
+		i, err := u.AsInt()
+		if err != nil {
 			t.Fatal("AsInt() returned false for int value")
 		}
 		if i != 300000 {
@@ -91,8 +91,8 @@ func TestConfigProviderOptionsTimeoutUnion(t *testing.T) {
 		if err := json.Unmarshal(data, &u); err != nil {
 			t.Fatalf("Unmarshal failed: %v", err)
 		}
-		b, ok := u.AsBool()
-		if !ok {
+		b, err := u.AsBool()
+		if err != nil {
 			t.Fatal("AsBool() returned false for bool value")
 		}
 		if b != false {
@@ -106,8 +106,8 @@ func TestConfigProviderOptionsTimeoutUnion(t *testing.T) {
 		if err := json.Unmarshal(data, &u); err != nil {
 			t.Fatalf("Unmarshal failed: %v", err)
 		}
-		b, ok := u.AsBool()
-		if !ok {
+		b, err := u.AsBool()
+		if err != nil {
 			t.Fatal("AsBool() returned false for bool value")
 		}
 		if b != true {
@@ -121,9 +121,9 @@ func TestConfigProviderOptionsTimeoutUnion(t *testing.T) {
 		if err := json.Unmarshal(data, &u); err != nil {
 			t.Fatalf("Unmarshal failed: %v", err)
 		}
-		_, ok := u.AsInt()
-		if ok {
-			t.Error("AsInt() should return false for bool value")
+		_, err := u.AsInt()
+		if err == nil {
+			t.Error("AsInt() should return error for bool value")
 		}
 	})
 
@@ -133,9 +133,9 @@ func TestConfigProviderOptionsTimeoutUnion(t *testing.T) {
 		if err := json.Unmarshal(data, &u); err != nil {
 			t.Fatalf("Unmarshal failed: %v", err)
 		}
-		_, ok := u.AsBool()
-		if ok {
-			t.Error("AsBool() should return false for int value")
+		_, err := u.AsBool()
+		if err == nil {
+			t.Error("AsBool() should return error for int value")
 		}
 	})
 }
@@ -148,8 +148,8 @@ func TestConfigAgentGeneralPermissionBashUnion(t *testing.T) {
 		if err := json.Unmarshal(data, &u); err != nil {
 			t.Fatalf("Unmarshal failed: %v", err)
 		}
-		s, ok := u.AsString()
-		if !ok {
+		s, err := u.AsString()
+		if err != nil {
 			t.Fatal("AsString() returned false for string value")
 		}
 		if s != ConfigAgentGeneralPermissionBashStringAsk {
@@ -163,8 +163,8 @@ func TestConfigAgentGeneralPermissionBashUnion(t *testing.T) {
 		if err := json.Unmarshal(data, &u); err != nil {
 			t.Fatalf("Unmarshal failed: %v", err)
 		}
-		m, ok := u.AsMap()
-		if !ok {
+		m, err := u.AsMap()
+		if err != nil {
 			t.Fatal("AsMap() returned false for map value")
 		}
 		if m["test"] != ConfigAgentGeneralPermissionBashMapAsk {
@@ -181,8 +181,8 @@ func TestConfigPermissionBashUnion(t *testing.T) {
 		if err := json.Unmarshal(data, &u); err != nil {
 			t.Fatalf("Unmarshal failed: %v", err)
 		}
-		s, ok := u.AsString()
-		if !ok {
+		s, err := u.AsString()
+		if err != nil {
 			t.Fatal("AsString() returned false for string value")
 		}
 		if s != ConfigPermissionBashStringDeny {
@@ -196,8 +196,8 @@ func TestConfigPermissionBashUnion(t *testing.T) {
 		if err := json.Unmarshal(data, &u); err != nil {
 			t.Fatalf("Unmarshal failed: %v", err)
 		}
-		m, ok := u.AsMap()
-		if !ok {
+		m, err := u.AsMap()
+		if err != nil {
 			t.Fatal("AsMap() returned false for empty map")
 		}
 		if len(m) != 0 {
@@ -225,8 +225,8 @@ func TestConfigAgentPlanPermissionBashUnion(t *testing.T) {
 		}
 		// Note: json.Unmarshal treats null as empty string for string types
 		// This is expected stdlib behavior
-		s, ok := u.AsString()
-		if !ok {
+		s, err := u.AsString()
+		if err != nil {
 			t.Error("AsString() should return true for null (unmarshals to empty string)")
 		}
 		if s != "" {
@@ -243,8 +243,8 @@ func TestConfigModeBuildPermissionBashUnion(t *testing.T) {
 		if err := json.Unmarshal(data, &u); err != nil {
 			t.Fatalf("Unmarshal failed: %v", err)
 		}
-		m, ok := u.AsMap()
-		if !ok {
+		m, err := u.AsMap()
+		if err != nil {
 			t.Fatal("AsMap() returned false for map value")
 		}
 		if len(m) != 3 {
@@ -261,8 +261,8 @@ func TestConfigModePlanPermissionBashUnion(t *testing.T) {
 		if err := json.Unmarshal([]byte(original), &u); err != nil {
 			t.Fatalf("Unmarshal failed: %v", err)
 		}
-		s, ok := u.AsString()
-		if !ok {
+		s, err := u.AsString()
+		if err != nil {
 			t.Fatal("AsString() returned false")
 		}
 		if s != ConfigModePlanPermissionBashStringAllow {
@@ -276,8 +276,8 @@ func TestConfigModePlanPermissionBashUnion(t *testing.T) {
 		if err := json.Unmarshal([]byte(original), &u); err != nil {
 			t.Fatalf("Unmarshal failed: %v", err)
 		}
-		m, ok := u.AsMap()
-		if !ok {
+		m, err := u.AsMap()
+		if err != nil {
 			t.Fatal("AsMap() returned false")
 		}
 		if m["test"] != ConfigModePlanPermissionBashMapDeny {

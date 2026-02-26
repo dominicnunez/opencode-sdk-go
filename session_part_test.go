@@ -25,8 +25,8 @@ func TestPart_AsText_ValidTextPart(t *testing.T) {
 		t.Errorf("Expected type %s, got %s", PartTypeText, part.Type)
 	}
 
-	textPart, ok := part.AsText()
-	if !ok {
+	textPart, err := part.AsText()
+	if err != nil {
 		t.Fatal("AsText() should return true for type=text")
 	}
 	if textPart == nil {
@@ -68,8 +68,8 @@ func TestPart_AsReasoning_ValidReasoningPart(t *testing.T) {
 		t.Errorf("Expected type %s, got %s", PartTypeReasoning, part.Type)
 	}
 
-	reasoningPart, ok := part.AsReasoning()
-	if !ok {
+	reasoningPart, err := part.AsReasoning()
+	if err != nil {
 		t.Fatal("AsReasoning() should return true for type=reasoning")
 	}
 	if reasoningPart == nil {
@@ -99,8 +99,8 @@ func TestPart_AsFile_ValidFilePart(t *testing.T) {
 		t.Fatalf("Failed to unmarshal: %v", err)
 	}
 
-	filePart, ok := part.AsFile()
-	if !ok {
+	filePart, err := part.AsFile()
+	if err != nil {
 		t.Fatal("AsFile() should return true for type=file")
 	}
 	if filePart.Mime != "text/plain" {
@@ -127,8 +127,8 @@ func TestPart_AsTool_ValidToolPart(t *testing.T) {
 		t.Fatalf("Failed to unmarshal: %v", err)
 	}
 
-	toolPart, ok := part.AsTool()
-	if !ok {
+	toolPart, err := part.AsTool()
+	if err != nil {
 		t.Fatal("AsTool() should return true for type=tool")
 	}
 	if toolPart.CallID != "call999" {
@@ -153,8 +153,8 @@ func TestPart_AsStepStart_ValidStepStartPart(t *testing.T) {
 		t.Fatalf("Failed to unmarshal: %v", err)
 	}
 
-	stepStartPart, ok := part.AsStepStart()
-	if !ok {
+	stepStartPart, err := part.AsStepStart()
+	if err != nil {
 		t.Fatal("AsStepStart() should return true for type=step-start")
 	}
 	if stepStartPart.Snapshot != "snap123" {
@@ -183,8 +183,8 @@ func TestPart_AsStepFinish_ValidStepFinishPart(t *testing.T) {
 		t.Fatalf("Failed to unmarshal: %v", err)
 	}
 
-	stepFinishPart, ok := part.AsStepFinish()
-	if !ok {
+	stepFinishPart, err := part.AsStepFinish()
+	if err != nil {
 		t.Fatal("AsStepFinish() should return true for type=step-finish")
 	}
 	if stepFinishPart.Cost != 0.05 {
@@ -194,7 +194,7 @@ func TestPart_AsStepFinish_ValidStepFinishPart(t *testing.T) {
 		t.Errorf("Expected reason max_tokens, got %s", stepFinishPart.Reason)
 	}
 	if stepFinishPart.Tokens.Input != 200 {
-		t.Errorf("Expected tokens.input 200, got %f", stepFinishPart.Tokens.Input)
+		t.Errorf("Expected tokens.input 200, got %d", stepFinishPart.Tokens.Input)
 	}
 }
 
@@ -212,8 +212,8 @@ func TestPart_AsSnapshot_ValidSnapshotPart(t *testing.T) {
 		t.Fatalf("Failed to unmarshal: %v", err)
 	}
 
-	snapshotPart, ok := part.AsSnapshot()
-	if !ok {
+	snapshotPart, err := part.AsSnapshot()
+	if err != nil {
 		t.Fatal("AsSnapshot() should return true for type=snapshot")
 	}
 	if snapshotPart.Snapshot != "snap789" {
@@ -236,8 +236,8 @@ func TestPart_AsPatch_ValidPatchPart(t *testing.T) {
 		t.Fatalf("Failed to unmarshal: %v", err)
 	}
 
-	patchPart, ok := part.AsPatch()
-	if !ok {
+	patchPart, err := part.AsPatch()
+	if err != nil {
 		t.Fatal("AsPatch() should return true for type=patch")
 	}
 	if patchPart.Hash != "abc123" {
@@ -262,8 +262,8 @@ func TestPart_AsAgent_ValidAgentPart(t *testing.T) {
 		t.Fatalf("Failed to unmarshal: %v", err)
 	}
 
-	agentPart, ok := part.AsAgent()
-	if !ok {
+	agentPart, err := part.AsAgent()
+	if err != nil {
 		t.Fatal("AsAgent() should return true for type=agent")
 	}
 	if agentPart.Name != "code-reviewer" {
@@ -293,12 +293,12 @@ func TestPart_AsRetry_ValidRetryPart(t *testing.T) {
 		t.Fatalf("Failed to unmarshal: %v", err)
 	}
 
-	retryPart, ok := part.AsRetry()
-	if !ok {
+	retryPart, err := part.AsRetry()
+	if err != nil {
 		t.Fatal("AsRetry() should return true for type=retry")
 	}
 	if retryPart.Attempt != 2 {
-		t.Errorf("Expected attempt 2, got %f", retryPart.Attempt)
+		t.Errorf("Expected attempt 2, got %d", retryPart.Attempt)
 	}
 	if retryPart.Error.Name != PartRetryPartErrorNameAPIError {
 		t.Errorf("Expected error name APIError, got %s", retryPart.Error.Name)
@@ -323,8 +323,11 @@ func TestPart_WrongTypeReturnsNil(t *testing.T) {
 	}
 
 	// Try to get as reasoning when it's actually text
-	reasoningPart, ok := part.AsReasoning()
-	if ok {
+	reasoningPart, err := part.AsReasoning()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if reasoningPart != nil {
 		t.Error("AsReasoning() should return false for type=text")
 	}
 	if reasoningPart != nil {
@@ -332,8 +335,11 @@ func TestPart_WrongTypeReturnsNil(t *testing.T) {
 	}
 
 	// Try to get as file when it's actually text
-	filePart, ok := part.AsFile()
-	if ok {
+	filePart, err := part.AsFile()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if filePart != nil {
 		t.Error("AsFile() should return false for type=text")
 	}
 	if filePart != nil {
@@ -368,12 +374,16 @@ func TestPart_MissingDiscriminator(t *testing.T) {
 		t.Errorf("Expected empty type, got %s", part.Type)
 	}
 
-	// All As* methods should return false
-	if _, ok := part.AsText(); ok {
-		t.Error("AsText() should return false for empty type")
+	// All As* methods should return (nil, nil) for wrong type
+	if v, err := part.AsText(); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	} else if v != nil {
+		t.Error("AsText() should return nil for empty type")
 	}
-	if _, ok := part.AsReasoning(); ok {
-		t.Error("AsReasoning() should return false for empty type")
+	if v, err := part.AsReasoning(); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	} else if v != nil {
+		t.Error("AsReasoning() should return nil for empty type")
 	}
 }
 
@@ -394,11 +404,14 @@ func TestPart_UnknownType(t *testing.T) {
 		t.Errorf("Expected type unknown-type, got %s", part.Type)
 	}
 
-	// All As* methods should return false
-	if _, ok := part.AsText(); ok {
-		t.Error("AsText() should return false for unknown type")
+	if v, err := part.AsText(); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	} else if v != nil {
+		t.Error("AsText() should return nil for unknown type")
 	}
-	if _, ok := part.AsTool(); ok {
-		t.Error("AsTool() should return false for unknown type")
+	if v, err := part.AsTool(); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	} else if v != nil {
+		t.Error("AsTool() should return nil for unknown type")
 	}
 }

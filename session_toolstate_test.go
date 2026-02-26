@@ -16,8 +16,8 @@ func TestToolPartState_AsPending_ValidPendingState(t *testing.T) {
 		t.Errorf("expected status pending, got %s", state.Status)
 	}
 
-	pending, ok := state.AsPending()
-	if !ok {
+	pending, err := state.AsPending()
+	if err != nil {
 		t.Fatal("AsPending() should return true for pending status")
 	}
 	if pending == nil {
@@ -45,8 +45,8 @@ func TestToolPartState_AsRunning_ValidRunningState(t *testing.T) {
 		t.Errorf("expected status running, got %s", state.Status)
 	}
 
-	running, ok := state.AsRunning()
-	if !ok {
+	running, err := state.AsRunning()
+	if err != nil {
 		t.Fatal("AsRunning() should return true for running status")
 	}
 	if running == nil {
@@ -82,8 +82,8 @@ func TestToolPartState_AsCompleted_ValidCompletedState(t *testing.T) {
 		t.Errorf("expected status completed, got %s", state.Status)
 	}
 
-	completed, ok := state.AsCompleted()
-	if !ok {
+	completed, err := state.AsCompleted()
+	if err != nil {
 		t.Fatal("AsCompleted() should return true for completed status")
 	}
 	if completed == nil {
@@ -123,8 +123,8 @@ func TestToolPartState_AsError_ValidErrorState(t *testing.T) {
 		t.Errorf("expected status error, got %s", state.Status)
 	}
 
-	errState, ok := state.AsError()
-	if !ok {
+	errState, err := state.AsError()
+	if err != nil {
 		t.Fatal("AsError() should return true for error status")
 	}
 	if errState == nil {
@@ -153,18 +153,22 @@ func TestToolPartState_WrongTypeReturnsNilFalse(t *testing.T) {
 	}
 
 	// Should succeed for pending
-	if pending, ok := state.AsPending(); !ok || pending == nil {
+	pending, err := state.AsPending()
+	if err != nil {
+		t.Fatalf("AsPending error: %v", err)
+	}
+	if pending == nil {
 		t.Error("AsPending() should succeed for pending status")
 	}
 
 	// Should fail for other types
-	if running, ok := state.AsRunning(); ok || running != nil {
+	if running, err := state.AsRunning(); err != nil || running != nil {
 		t.Error("AsRunning() should return (nil, false) for pending status")
 	}
-	if completed, ok := state.AsCompleted(); ok || completed != nil {
+	if completed, err := state.AsCompleted(); err != nil || completed != nil {
 		t.Error("AsCompleted() should return (nil, false) for pending status")
 	}
-	if errState, ok := state.AsError(); ok || errState != nil {
+	if errState, err := state.AsError(); err != nil || errState != nil {
 		t.Error("AsError() should return (nil, false) for pending status")
 	}
 }
@@ -177,9 +181,13 @@ func TestToolPartState_InvalidJSON(t *testing.T) {
 		t.Fatalf("unmarshal discriminator failed: %v", err)
 	}
 
-	// But AsRunning should fail due to invalid time field
-	if running, ok := state.AsRunning(); ok || running != nil {
-		t.Error("AsRunning() should return (nil, false) for invalid JSON")
+	// AsRunning should return error due to invalid time field
+	running, err := state.AsRunning()
+	if err == nil {
+		t.Error("AsRunning() should return error for invalid JSON")
+	}
+	if running != nil {
+		t.Error("AsRunning() should return nil for invalid JSON")
 	}
 }
 
@@ -191,16 +199,16 @@ func TestToolPartState_UnknownStatus(t *testing.T) {
 	}
 
 	// All As* methods should return (nil, false)
-	if pending, ok := state.AsPending(); ok || pending != nil {
+	if pending, err := state.AsPending(); err != nil || pending != nil {
 		t.Error("AsPending() should return (nil, false) for unknown status")
 	}
-	if running, ok := state.AsRunning(); ok || running != nil {
+	if running, err := state.AsRunning(); err != nil || running != nil {
 		t.Error("AsRunning() should return (nil, false) for unknown status")
 	}
-	if completed, ok := state.AsCompleted(); ok || completed != nil {
+	if completed, err := state.AsCompleted(); err != nil || completed != nil {
 		t.Error("AsCompleted() should return (nil, false) for unknown status")
 	}
-	if errState, ok := state.AsError(); ok || errState != nil {
+	if errState, err := state.AsError(); err != nil || errState != nil {
 		t.Error("AsError() should return (nil, false) for unknown status")
 	}
 }
@@ -218,16 +226,16 @@ func TestToolPartState_MissingStatus(t *testing.T) {
 	}
 
 	// All As* methods should return (nil, false)
-	if pending, ok := state.AsPending(); ok || pending != nil {
+	if pending, err := state.AsPending(); err != nil || pending != nil {
 		t.Error("AsPending() should return (nil, false) for missing status")
 	}
-	if running, ok := state.AsRunning(); ok || running != nil {
+	if running, err := state.AsRunning(); err != nil || running != nil {
 		t.Error("AsRunning() should return (nil, false) for missing status")
 	}
-	if completed, ok := state.AsCompleted(); ok || completed != nil {
+	if completed, err := state.AsCompleted(); err != nil || completed != nil {
 		t.Error("AsCompleted() should return (nil, false) for missing status")
 	}
-	if errState, ok := state.AsError(); ok || errState != nil {
+	if errState, err := state.AsError(); err != nil || errState != nil {
 		t.Error("AsError() should return (nil, false) for missing status")
 	}
 }
@@ -245,7 +253,7 @@ func TestToolPartState_EmptyJSON(t *testing.T) {
 	}
 
 	// All As* methods should return (nil, false)
-	if pending, ok := state.AsPending(); ok || pending != nil {
+	if pending, err := state.AsPending(); err != nil || pending != nil {
 		t.Error("AsPending() should return (nil, false) for empty JSON")
 	}
 }

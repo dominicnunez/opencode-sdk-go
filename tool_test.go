@@ -171,34 +171,12 @@ func TestToolService_List_Success(t *testing.T) {
 			{
 				ID:          "Read",
 				Description: "Read a file from the filesystem",
-				Parameters: map[string]interface{}{
-					"type": "object",
-					"properties": map[string]interface{}{
-						"file_path": map[string]interface{}{
-							"type":        "string",
-							"description": "The path to the file",
-						},
-					},
-					"required": []interface{}{"file_path"},
-				},
+				Parameters: json.RawMessage(`{"type":"object","properties":{"file_path":{"type":"string","description":"The path to the file"}},"required":["file_path"]}`),
 			},
 			{
 				ID:          "Write",
 				Description: "Write a file to the filesystem",
-				Parameters: map[string]interface{}{
-					"type": "object",
-					"properties": map[string]interface{}{
-						"file_path": map[string]interface{}{
-							"type":        "string",
-							"description": "The path to the file",
-						},
-						"content": map[string]interface{}{
-							"type":        "string",
-							"description": "The content to write",
-						},
-					},
-					"required": []interface{}{"file_path", "content"},
-				},
+				Parameters: json.RawMessage(`{"type":"object","properties":{"file_path":{"type":"string","description":"The path to the file"},"content":{"type":"string","description":"The content to write"}},"required":["file_path","content"]}`),
 			},
 		})
 	}))
@@ -238,9 +216,9 @@ func TestToolService_List_Success(t *testing.T) {
 	}
 
 	// Verify parameters structure for Read tool
-	params, ok := tool1.Parameters.(map[string]interface{})
-	if !ok {
-		t.Errorf("expected Parameters to be map[string]interface{}, got %T", tool1.Parameters)
+	var params map[string]interface{}
+	if err := json.Unmarshal(tool1.Parameters, &params); err != nil {
+		t.Errorf("failed to unmarshal Parameters: %v", err)
 	} else {
 		if params["type"] != "object" {
 			t.Errorf("expected type=object, got %v", params["type"])
@@ -489,9 +467,9 @@ func TestToolListItem_Unmarshal(t *testing.T) {
 		t.Errorf("expected description='Execute bash commands', got %s", item.Description)
 	}
 
-	params, ok := item.Parameters.(map[string]interface{})
-	if !ok {
-		t.Fatalf("expected Parameters to be map[string]interface{}, got %T", item.Parameters)
+	var params map[string]interface{}
+	if err := json.Unmarshal(item.Parameters, &params); err != nil {
+		t.Fatalf("failed to unmarshal Parameters: %v", err)
 	}
 
 	if params["type"] != "object" {

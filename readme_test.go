@@ -73,12 +73,15 @@ func TestREADMEExamples(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if user, ok := msg.AsUser(); ok {
-			if user.Role != UserMessageRoleUser {
-				t.Error("expected user message role")
-			}
-		} else {
-			t.Error("expected AsUser to succeed")
+		user, err := msg.AsUser()
+		if err != nil {
+			t.Fatalf("AsUser error: %v", err)
+		}
+		if user == nil {
+			t.Fatal("expected AsUser to succeed")
+		}
+		if user.Role != UserMessageRoleUser {
+			t.Error("expected user message role")
 		}
 
 		// Test Part union (TextPart)
@@ -88,12 +91,15 @@ func TestREADMEExamples(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if textPart, ok := part.AsText(); ok {
-			if textPart.Text != "Hello" {
-				t.Errorf("expected 'Hello', got %s", textPart.Text)
-			}
-		} else {
-			t.Error("expected AsText to succeed")
+		textPart, err := part.AsText()
+		if err != nil {
+			t.Fatalf("AsText error: %v", err)
+		}
+		if textPart == nil {
+			t.Fatal("expected AsText to succeed")
+		}
+		if textPart.Text != "Hello" {
+			t.Errorf("expected 'Hello', got %s", textPart.Text)
 		}
 	})
 
@@ -194,7 +200,7 @@ func TestREADMEExamples(t *testing.T) {
 					{
 						ID:          "tool_1",
 						Description: "Test tool",
-						Parameters:  map[string]interface{}{"type": "object"},
+						Parameters:  json.RawMessage(`{"type":"object"}`),
 					},
 				})
 			}

@@ -7,10 +7,10 @@ import (
 	"github.com/dominicnunez/opencode-sdk-go"
 )
 
-// TestSessionNewParams_DirectTypes verifies that required fields are direct types
+// TestSessionCreateParams_DirectTypes verifies that required fields are direct types
 // and optional fields are pointers with proper JSON marshaling
-func TestSessionNewParams_DirectTypes(t *testing.T) {
-	params := &opencode.SessionNewParams{
+func TestSessionCreateParams_DirectTypes(t *testing.T) {
+	params := &opencode.SessionCreateParams{
 		Directory: opencode.Ptr("/tmp/test"),
 		ParentID:  opencode.Ptr("parent123"),
 		Title:     opencode.Ptr("Test Session"),

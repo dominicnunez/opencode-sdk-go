@@ -39,8 +39,8 @@ func TestMessage_AsUser_ValidUserMessage(t *testing.T) {
 	}
 
 	// Test AsUser - should succeed
-	userMsg, ok := msg.AsUser()
-	if !ok {
+	userMsg, err := msg.AsUser()
+	if err != nil {
 		t.Fatal("AsUser should return true for user role")
 	}
 	if userMsg == nil {
@@ -57,8 +57,11 @@ func TestMessage_AsUser_ValidUserMessage(t *testing.T) {
 	}
 
 	// Test AsAssistant - should fail
-	assistantMsg, ok := msg.AsAssistant()
-	if ok {
+	assistantMsg, err := msg.AsAssistant()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if assistantMsg != nil {
 		t.Error("AsAssistant should return false for user role")
 	}
 	if assistantMsg != nil {
@@ -111,8 +114,8 @@ func TestMessage_AsAssistant_ValidAssistantMessage(t *testing.T) {
 	}
 
 	// Test AsAssistant - should succeed
-	assistantMsg, ok := msg.AsAssistant()
-	if !ok {
+	assistantMsg, err := msg.AsAssistant()
+	if err != nil {
 		t.Fatal("AsAssistant should return true for assistant role")
 	}
 	if assistantMsg == nil {
@@ -131,12 +134,15 @@ func TestMessage_AsAssistant_ValidAssistantMessage(t *testing.T) {
 		t.Errorf("expected 2 system items, got %d", len(assistantMsg.System))
 	}
 	if assistantMsg.Tokens.Input != 1000 {
-		t.Errorf("expected input tokens 1000, got %f", assistantMsg.Tokens.Input)
+		t.Errorf("expected input tokens 1000, got %d", assistantMsg.Tokens.Input)
 	}
 
 	// Test AsUser - should fail
-	userMsg, ok := msg.AsUser()
-	if ok {
+	userMsg, err := msg.AsUser()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if userMsg != nil {
 		t.Error("AsUser should return false for assistant role")
 	}
 	if userMsg != nil {
@@ -153,16 +159,22 @@ func TestMessage_InvalidJSON(t *testing.T) {
 	}
 
 	// Both As* methods should return false for invalid role
-	userMsg, ok := msg.AsUser()
-	if ok {
+	userMsg, err := msg.AsUser()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if userMsg != nil {
 		t.Error("AsUser should return false for invalid role")
 	}
 	if userMsg != nil {
 		t.Error("userMsg should be nil for invalid role")
 	}
 
-	assistantMsg, ok := msg.AsAssistant()
-	if ok {
+	assistantMsg, err := msg.AsAssistant()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if assistantMsg != nil {
 		t.Error("AsAssistant should return false for invalid role")
 	}
 	if assistantMsg != nil {
@@ -179,10 +191,10 @@ func TestMessage_MalformedJSON(t *testing.T) {
 		t.Fatalf("unmarshal should succeed for discriminator peek: %v", err)
 	}
 
-	// But AsUser should fail when trying to unmarshal the full UserMessage
-	userMsg, ok := msg.AsUser()
-	if ok {
-		t.Error("AsUser should return false when full unmarshal fails")
+	// AsUser should return error when trying to unmarshal the full UserMessage
+	userMsg, err := msg.AsUser()
+	if err == nil {
+		t.Fatal("AsUser should return error when full unmarshal fails")
 	}
 	if userMsg != nil {
 		t.Error("userMsg should be nil when unmarshal fails")
@@ -198,16 +210,22 @@ func TestMessage_EmptyJSON(t *testing.T) {
 	}
 
 	// Both As* methods should return false for empty role
-	userMsg, ok := msg.AsUser()
-	if ok {
+	userMsg, err := msg.AsUser()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if userMsg != nil {
 		t.Error("AsUser should return false for empty role")
 	}
 	if userMsg != nil {
 		t.Error("userMsg should be nil for empty role")
 	}
 
-	assistantMsg, ok := msg.AsAssistant()
-	if ok {
+	assistantMsg, err := msg.AsAssistant()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if assistantMsg != nil {
 		t.Error("AsAssistant should return false for empty role")
 	}
 	if assistantMsg != nil {
