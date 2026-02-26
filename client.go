@@ -51,7 +51,7 @@ type ClientOption func(*Client) error
 func NewClient(opts ...ClientOption) (*Client, error) {
 	c := &Client{
 		baseURL:    os.Getenv("OPENCODE_BASE_URL"),
-		httpClient: http.DefaultClient,
+		httpClient: &http.Client{},
 		maxRetries: DefaultMaxRetries,
 		timeout:    DefaultTimeout,
 	}
@@ -112,6 +112,9 @@ func WithHTTPClient(hc *http.Client) ClientOption {
 
 func WithTimeout(d time.Duration) ClientOption {
 	return func(c *Client) error {
+		if d <= 0 {
+			return errors.New("timeout must be positive")
+		}
 		c.timeout = d
 		return nil
 	}
@@ -139,6 +142,7 @@ func (c *Client) do(ctx context.Context, method, path string, params, result int
 	defer resp.Body.Close()
 
 	if result == nil {
+		_, _ = io.Copy(io.Discard, resp.Body)
 		return nil
 	}
 
@@ -146,6 +150,9 @@ func (c *Client) do(ctx context.Context, method, path string, params, result int
 }
 
 func (c *Client) doRaw(ctx context.Context, method, path string, params interface{}) (*http.Response, error) {
+	ctx, cancel := context.WithTimeout(ctx, c.timeout)
+	defer cancel()
+
 	u, err := url.Parse(c.baseURL)
 	if err != nil {
 		return nil, fmt.Errorf("parse base URL: %w", err)
@@ -262,5 +269,5 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 		return nil, fmt.Errorf("request failed after %d retries: %w", c.maxRetries, lastErr)
 	}
 
-	return resp, nil
+	return nil, &APIError{StatusCode: 0, Message: "request failed: retries exhausted"}
 }
