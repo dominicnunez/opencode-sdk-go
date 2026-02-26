@@ -33,7 +33,7 @@ func (s *McpService) Status(ctx context.Context, params *McpStatusParams) (*McpS
 	}
 
 	var result McpStatus
-	if err := s.client.do(ctx, http.MethodGet, "/mcp", params, &result); err != nil {
+	if err := s.client.do(ctx, http.MethodGet, "mcp", params, &result); err != nil {
 		return nil, err
 	}
 

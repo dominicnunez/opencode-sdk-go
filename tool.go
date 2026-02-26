@@ -57,7 +57,7 @@ func (s *ToolService) IDs(ctx context.Context, params *ToolIDsParams) (*ToolIDs,
 	}
 
 	var result ToolIDs
-	err := s.client.do(ctx, http.MethodGet, "/experimental/tool/ids", params, &result)
+	err := s.client.do(ctx, http.MethodGet, "experimental/tool/ids", params, &result)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +73,7 @@ func (s *ToolService) List(ctx context.Context, params *ToolListParams) (*ToolLi
 	}
 
 	var result ToolList
-	err := s.client.do(ctx, http.MethodGet, "/experimental/tool", params, &result)
+	err := s.client.do(ctx, http.MethodGet, "experimental/tool", params, &result)
 	if err != nil {
 		return nil, err
 	}
