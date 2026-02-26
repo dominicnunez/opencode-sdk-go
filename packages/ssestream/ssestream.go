@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"mime"
 	"net/http"
 	"strings"
 	"sync"
@@ -34,9 +35,9 @@ func NewDecoder(res *http.Response) Decoder {
 	}
 
 	var decoder Decoder
-	contentType := res.Header.Get("content-type")
+	mediaType, _, _ := mime.ParseMediaType(res.Header.Get("content-type"))
 	decoderTypesMu.RLock()
-	t, ok := decoderTypes[contentType]
+	t, ok := decoderTypes[mediaType]
 	decoderTypesMu.RUnlock()
 	if ok {
 		decoder = t(res.Body)
