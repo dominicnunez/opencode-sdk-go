@@ -193,11 +193,11 @@ func TestAssistantMessageError_AsAPI_ValidAPIError(t *testing.T) {
 	if apiErr.Data.Message != "Rate limit exceeded" {
 		t.Errorf("Expected message 'Rate limit exceeded', got '%s'", apiErr.Data.Message)
 	}
-	if apiErr.Data.StatusCode != 429 {
+	if apiErr.Data.StatusCode == nil || *apiErr.Data.StatusCode != 429 {
 		t.Errorf("Expected StatusCode 429, got %v", apiErr.Data.StatusCode)
 	}
-	if apiErr.Data.ResponseBody != "Too many requests" {
-		t.Errorf("Expected ResponseBody 'Too many requests', got '%s'", apiErr.Data.ResponseBody)
+	if apiErr.Data.ResponseBody == nil || *apiErr.Data.ResponseBody != "Too many requests" {
+		t.Errorf("Expected ResponseBody 'Too many requests', got %v", apiErr.Data.ResponseBody)
 	}
 	if apiErr.Data.ResponseHeaders["retry-after"] != "60" {
 		t.Errorf("Expected retry-after header '60', got '%s'", apiErr.Data.ResponseHeaders["retry-after"])
