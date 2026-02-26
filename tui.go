@@ -131,7 +131,7 @@ const (
 
 type TuiAppendPromptParams struct {
 	Text      string  `json:"text"`
-	Directory *string `query:"directory,omitempty"`
+	Directory *string `json:"-" query:"directory,omitempty"`
 }
 
 func (r TuiAppendPromptParams) URLQuery() (url.Values, error) {
@@ -148,7 +148,7 @@ func (r TuiClearPromptParams) URLQuery() (url.Values, error) {
 
 type TuiExecuteCommandParams struct {
 	Command   string  `json:"command"`
-	Directory *string `query:"directory,omitempty"`
+	Directory *string `json:"-" query:"directory,omitempty"`
 }
 
 func (r TuiExecuteCommandParams) URLQuery() (url.Values, error) {
@@ -191,7 +191,7 @@ type TuiShowToastParams struct {
 	Message   string       `json:"message"`
 	Variant   ToastVariant `json:"variant"`
 	Title     string       `json:"title,omitempty"`
-	Directory *string      `query:"directory,omitempty"`
+	Directory *string      `json:"-" query:"directory,omitempty"`
 }
 
 func (r TuiShowToastParams) URLQuery() (url.Values, error) {

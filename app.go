@@ -112,7 +112,7 @@ type AppLogParams struct {
 	Message   string                 `json:"message"`
 	Service   string                 `json:"service"`
 	Extra     map[string]interface{} `json:"extra,omitempty"`
-	Directory *string                `query:"directory,omitempty"`
+	Directory *string                `json:"-" query:"directory,omitempty"`
 }
 
 func (r AppLogParams) URLQuery() (url.Values, error) {

@@ -18,7 +18,7 @@ type McpStatus map[string]interface{}
 
 // McpStatusParams contains parameters for the Status method
 type McpStatusParams struct {
-	Directory *string `query:"directory"`
+	Directory *string `query:"directory,omitempty"`
 }
 
 // URLQuery serializes McpStatusParams into URL query parameters

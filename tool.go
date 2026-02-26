@@ -30,7 +30,7 @@ type ToolListItem struct {
 
 // ToolIDsParams are the parameters for GET /experimental/tool/ids
 type ToolIDsParams struct {
-	Directory *string `query:"directory"`
+	Directory *string `query:"directory,omitempty"`
 }
 
 // URLQuery returns the query parameters for ToolIDsParams
@@ -40,7 +40,7 @@ func (p ToolIDsParams) URLQuery() (url.Values, error) {
 
 // ToolListParams are the parameters for GET /experimental/tool
 type ToolListParams struct {
-	Directory *string `query:"directory"`
+	Directory *string `query:"directory,omitempty"`
 	Provider  string  `query:"provider,required"`
 	Model     string  `query:"model,required"`
 }
