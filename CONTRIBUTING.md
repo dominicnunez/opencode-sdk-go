@@ -7,7 +7,7 @@ go mod download
 go build ./...
 ```
 
-Requires [Go 1.22+](https://go.dev/doc/install).
+Requires [Go 1.25+](https://go.dev/doc/install).
 
 ## Project Structure
 
