@@ -48,6 +48,20 @@
 
 **Reason:** The audit claims `bufio.MaxScanTokenSize<<sseBufferMultiplier` (64KB << 9 = ~32MB) "could theoretically overflow on 32-bit systems." This is mathematically incorrect. The result is 33,554,432 bytes (~32MB), which is well under the 32-bit signed int maximum of 2,147,483,647 (~2.1GB). No overflow is possible.
 
+### Backoff bit-shift overflow on high retry counts
+
+**Location:** `client.go:246` — exponential backoff calculation
+**Date:** 2026-02-26
+
+**Reason:** The audit flags `initialBackoffMs*(1<<attempt)` as fragile if maxRetries were raised above ~22. However, `WithMaxRetries` hard-caps at 10, and the `maxBackoff` clamp catches any large value regardless. The overflow scenario requires violating an enforced invariant. The report itself concludes "No action needed."
+
+### SSE response body not closed when NewDecoder returns nil
+
+**Location:** `event.go:51-70` — ListStreaming success path
+**Date:** 2026-02-26
+
+**Reason:** The audit claims that if `NewDecoder` returns nil (because `res` or `res.Body` is nil at ssestream.go:31), the response body leaks. This scenario cannot occur in the `ListStreaming` code path. At event.go:51, `httpClient.Do(req)` returns successfully (no error), which guarantees both `resp` and `resp.Body` are non-nil per Go's `net/http` contract. `NewDecoder` will always receive a valid response and return a non-nil decoder. The general concern about callers needing to call `stream.Close()` is standard Go resource management (like `os.File.Close()`), not a code bug.
+
 ## Won't Fix
 
 <!-- Real findings not worth fixing — architectural cost, external constraints, etc. -->
@@ -73,6 +87,13 @@
 
 **Reason:** The Config struct fields (autoshare, mode, layout) reflect the upstream OpenAPI spec. The spec defines these fields as deprecated. Removing them would break deserialization of API responses that still include them. The deprecation comments are accurate and guide users to migrate.
 
+### Default base URL uses plaintext HTTP
+
+**Location:** `client.go:19` — DefaultBaseURL constant
+**Date:** 2026-02-26
+
+**Reason:** The SDK targets a local dev server (`localhost:54321`). The `WithBaseURL` validator intentionally allows `http://` for localhost usage. Adding hostname validation to reject non-localhost HTTP would be disproportionate: callers who set a remote `OPENCODE_BASE_URL` are explicitly overriding the default and responsible for their transport security. The SDK doesn't handle auth credentials itself — `AuthService.Set` is a passthrough to the server API.
+
 ### Bytes buffer allocation in SSE hot path
 
 **Location:** `packages/ssestream/ssestream.go:81`
@@ -83,6 +104,13 @@
 ## Intentional Design Decisions
 
 <!-- Findings that describe behavior which is correct by design -->
+
+### APIError.Body and Message contain the same value
+
+**Location:** `client.go:232-237`, `errors.go:17-22` — APIError construction
+**Date:** 2026-02-26
+
+**Reason:** `Body` preserves the raw HTTP response body for callers who need it (e.g. structured error parsing). `Message` is the human-readable error used by `Error()`. They happen to contain the same value today because the server returns plain-text errors, but they serve different semantic purposes. Collapsing them would prevent future differentiation without a breaking change.
 
 ### SSE stream error not returned directly
 
