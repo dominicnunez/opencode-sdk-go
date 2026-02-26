@@ -17,7 +17,7 @@ import opencode "github.com/dominicnunez/opencode-sdk-go"
 
 ## Requirements
 
-Go 1.22+
+Go 1.25+
 
 ## Usage
 
