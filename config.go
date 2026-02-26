@@ -105,7 +105,6 @@ type ConfigAgent struct {
 	Build       ConfigAgentBuild       `json:"build"`
 	General     ConfigAgentGeneral     `json:"general"`
 	Plan        ConfigAgentPlan        `json:"plan"`
-	ExtraFields map[string]ConfigAgent `json:"-"`
 }
 
 type ConfigAgentBuild struct {
@@ -119,7 +118,6 @@ type ConfigAgentBuild struct {
 	Temperature float64                    `json:"temperature"`
 	Tools       map[string]bool            `json:"tools"`
 	TopP        float64                    `json:"top_p"`
-	ExtraFields map[string]interface{}     `json:"-"`
 }
 
 type ConfigAgentBuildMode string
@@ -250,7 +248,6 @@ type ConfigAgentGeneral struct {
 	Temperature float64                      `json:"temperature"`
 	Tools       map[string]bool              `json:"tools"`
 	TopP        float64                      `json:"top_p"`
-	ExtraFields map[string]interface{}       `json:"-"`
 }
 
 type ConfigAgentGeneralMode string
@@ -381,7 +378,6 @@ type ConfigAgentPlan struct {
 	Temperature float64                   `json:"temperature"`
 	Tools       map[string]bool           `json:"tools"`
 	TopP        float64                   `json:"top_p"`
-	ExtraFields map[string]interface{}    `json:"-"`
 }
 
 type ConfigAgentPlanMode string
@@ -708,7 +704,6 @@ func (r ConfigMcpType) IsKnown() bool {
 type ConfigMode struct {
 	Build       ConfigModeBuild       `json:"build"`
 	Plan        ConfigModePlan        `json:"plan"`
-	ExtraFields map[string]ConfigMode `json:"-"`
 }
 
 
@@ -725,7 +720,6 @@ type ConfigModeBuild struct {
 	Temperature float64                   `json:"temperature"`
 	Tools       map[string]bool           `json:"tools"`
 	TopP        float64                   `json:"top_p"`
-	ExtraFields map[string]interface{}    `json:"-"`
 }
 
 
@@ -862,7 +856,6 @@ type ConfigModePlan struct {
 	Temperature float64                  `json:"temperature"`
 	Tools       map[string]bool          `json:"tools"`
 	TopP        float64                  `json:"top_p"`
-	ExtraFields map[string]interface{}   `json:"-"`
 }
 
 
@@ -1215,7 +1208,6 @@ type ConfigProviderOptions struct {
 	// Timeout in milliseconds for requests to this provider. Default is 300000 (5
 	// minutes). Set to false to disable timeout.
 	Timeout     ConfigProviderOptionsTimeoutUnion `json:"timeout"`
-	ExtraFields map[string]interface{}            `json:"-"`
 }
 
 
