@@ -135,6 +135,9 @@ func WithMaxRetries(n int) ClientOption {
 
 
 func (c *Client) do(ctx context.Context, method, path string, params, result interface{}) error {
+	ctx, cancel := context.WithTimeout(ctx, c.timeout)
+	defer cancel()
+
 	resp, err := c.doRaw(ctx, method, path, params)
 	if err != nil {
 		return err
@@ -150,9 +153,6 @@ func (c *Client) do(ctx context.Context, method, path string, params, result int
 }
 
 func (c *Client) doRaw(ctx context.Context, method, path string, params interface{}) (*http.Response, error) {
-	ctx, cancel := context.WithTimeout(ctx, c.timeout)
-	defer cancel()
-
 	u, err := url.Parse(c.baseURL)
 	if err != nil {
 		return nil, fmt.Errorf("parse base URL: %w", err)
