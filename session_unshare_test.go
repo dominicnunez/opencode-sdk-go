@@ -50,9 +50,9 @@ func TestSessionUnshare_Success(t *testing.T) {
 	if session.ID != "ses_123" {
 		t.Errorf("expected session ID ses_123, got %s", session.ID)
 	}
-	// Verify Share URL is empty after unsharing
-	if session.Share.URL != "" {
-		t.Errorf("expected Share URL to be empty after unsharing, got %s", session.Share.URL)
+	// Verify Share is nil after unsharing
+	if session.Share != nil {
+		t.Errorf("expected Share to be nil after unsharing, got %+v", session.Share)
 	}
 }
 

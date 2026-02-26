@@ -265,9 +265,9 @@ func TestSessionUnmarshal_OptionalFields(t *testing.T) {
 	if s.ID != "ses1" {
 		t.Errorf("ID = %q, want %q", s.ID, "ses1")
 	}
-	// ParentID should be zero value when not present
-	if s.ParentID != "" {
-		t.Errorf("ParentID = %q, want empty string", s.ParentID)
+	// ParentID should be nil when not present
+	if s.ParentID != nil {
+		t.Errorf("ParentID = %v, want nil", s.ParentID)
 	}
 }
 
@@ -294,7 +294,7 @@ func TestReasoningPartUnmarshal(t *testing.T) {
 	if rp.Time.Start != 100.0 {
 		t.Errorf("Time.Start = %v, want %v", rp.Time.Start, 100.0)
 	}
-	if rp.Time.End != 200.0 {
+	if rp.Time.End == nil || *rp.Time.End != 200.0 {
 		t.Errorf("Time.End = %v, want %v", rp.Time.End, 200.0)
 	}
 }
