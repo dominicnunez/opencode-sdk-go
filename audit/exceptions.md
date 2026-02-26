@@ -13,12 +13,26 @@
 
 <!-- Findings where the audit misread the code or described behavior that doesn't occur -->
 
-### Response body read lacks timeout protection after request completes
+### Retry loop body is not re-readable after first attempt
 
-**Location:** `internal/requestconfig/requestconfig.go:509,540`
-**Date:** 2026-02-22
+**Location:** `client.go:180-244` — retry loop body re-encoding
+**Date:** 2026-02-25
 
-**Reason:** The audit claims body reads at lines 509 and 540 lack timeout protection, but this is incorrect. When `RequestTimeout` is set, a context with deadline is created (line 444) and passed to the cloned request (line 453). Go's HTTP transport sets a connection deadline based on this context deadline. Reading from `res.Body` uses the same connection and respects this deadline — if the deadline is exceeded during body read, the operation fails with a timeout error. The body read IS protected by the transport-level deadline mechanism.
+**Reason:** The audit claims the final retry attempt (`attempt == c.maxRetries`) reuses a stale body because the re-encode block is guarded by `attempt < c.maxRetries`. This is incorrect. For HTTP error responses (status >= 400), when `attempt >= c.maxRetries` the code returns immediately at line 213-217 and never loops back. For transport errors, when `attempt == c.maxRetries` the re-encode block is skipped, but the loop counter increments to `attempt = c.maxRetries + 1` which fails the loop condition `attempt <= c.maxRetries`, so no further request is made with a stale body. In both cases, the body is never reused without re-encoding.
+
+### Retry on transport error reuses exhausted body reader
+
+**Location:** `client.go:180-244` — retry loop transport error path
+**Date:** 2026-02-25
+
+**Reason:** Same root misunderstanding as the previous finding. The audit claims the final attempt uses a stale body reader, but tracing the control flow shows: on the last iteration where `attempt == c.maxRetries`, the `attempt < c.maxRetries` guard prevents re-encoding, but also prevents delay. The loop then increments `attempt` past `c.maxRetries` and exits. No request is ever issued with an exhausted body.
+
+### ConfigProviderOptionsTimeoutUnion.AsInt accepts boolean JSON values
+
+**Location:** `config.go:1236-1241` — AsInt union accessor
+**Date:** 2026-02-25
+
+**Reason:** The audit claims `json.Unmarshal` into `int64` succeeds for JSON booleans (`true` → `1`, `false` → `0`). This is factually wrong. Go's `encoding/json` returns an error: "cannot unmarshal bool into Go value of type int64". Verified empirically. `AsInt()` correctly returns `(0, false)` for boolean input, and `AsBool()` correctly returns `(false, false)` for numeric input. The union discriminates types correctly.
 
 ### Inconsistent error message format for missing required parameters
 
@@ -26,31 +40,6 @@
 **Date:** 2026-02-22
 
 **Reason:** The audit claims error messages are "inconsistent with the pattern used elsewhere" and suggests "some use 'received empty string' while others might use different phrasing." However, all 17 error messages for missing required parameters in the codebase follow the exact same format: `missing required parameter 'X' (received empty string)`. The audit provides no evidence of actual inconsistency and cannot cite any examples of different phrasing because none exist.
-
-### GetBody error explicitly ignored in request body setup
-
-**Location:** `internal/requestconfig/requestconfig.go:402,409`
-**Date:** 2026-02-22
-
-**Reason:** The GetBody closures at lines 401 and 405 are defined inline and cannot fail:
-- Line 401 returns `io.NopCloser(bytes.NewReader(b)), nil` which always has nil error
-- Line 408 calls `body.Seek(0, 0)` on a `*bytes.Reader` which cannot fail
-
-The comparison to line 459 (where error is handled) is misleading because that's in the retry loop where GetBody could be any function, not the inline closures defined here.
-
-### Magic numbers in retry delay calculation
-
-**Location:** `internal/requestconfig/requestconfig.go:29-33`
-**Date:** 2026-02-22
-
-**Reason:** The values `maxRetryDelay = 8 * time.Second`, `initialDelayMultiplier = 0.5`, and `jitterDivisor = 4` are named constants with clear semantic names, not magic numbers. The audit conflates "lacks explanatory comment" with "magic number" - these are different concerns. Named constants are the standard solution for magic numbers.
-
-### Redundant nil check in interface type assertion
-
-**Location:** `option/requestoption.go:64-70`
-**Date:** 2026-02-22
-
-**Reason:** The audit title is factually incorrect - `if c, ok := client.(*http.Client); ok` is a type assertion, not a nil check. The "stale state" concern (else branch not clearing HTTPClient) doesn't affect behavior because `requestconfig.go:419-422` checks `if cfg.CustomHTTPDoer != nil` first, giving CustomHTTPDoer precedence. The code is consistent in practice.
 
 ### SSE buffer size integer overflow claim
 
@@ -63,19 +52,12 @@ The comparison to line 459 (where error is handled) is misleading because that's
 
 <!-- Real findings not worth fixing — architectural cost, external constraints, etc. -->
 
-### Named return values with naked returns in generated service code
+### Path parameters not URL-encoded in service methods
 
-**Location:** `client.go:47`, `config.go:34`, `agent.go:31`, `session.go:36` and similar patterns in other service files
-**Date:** 2026-02-22
+**Location:** `session.go`, `sessionpermission.go` — string concatenation for path segments
+**Date:** 2026-02-25
 
-**Reason:** These files are auto-generated by the Stainless OpenAPI code generator. The named return values combined with naked returns are a stylistic choice of the generator. Modifying the generated code would require changing the Stainless generator template, which is an external tool. The pattern, while not idiomatic, does not cause bugs in practice for these simple factory functions.
-
-### Path parameters not URL-encoded in generated service methods
-
-**Location:** `session.go:58,78,90,102,114,126,138,154,166,178,190,202,214,226,238,250` and similar patterns in other service files
-**Date:** 2026-02-22
-
-**Reason:** These files are auto-generated by the Stainless OpenAPI code generator. Adding `url.PathEscape()` would require modifying the generator template, which is an external tool. The session IDs in this SDK are server-generated UUIDs that do not contain special characters, so path injection is not a practical concern for normal usage.
+**Reason:** Path parameters (session IDs, permission IDs, message IDs) are constructed via string concatenation without `url.PathEscape()`. The IDs in this SDK are server-generated UUIDs that do not contain special characters, so path injection is not a practical concern for normal usage. Adding escaping to every path construction would add noise for no real-world benefit.
 
 ### httputil dump errors ignored in debugging methods
 
@@ -84,37 +66,12 @@ The comparison to line 459 (where error is handled) is misleading because that's
 
 **Reason:** The DumpRequest and DumpResponse methods are debugging utilities that return []byte. Adding error return values would be a breaking API change. For debugging purposes, returning empty output when the dump fails is acceptable behavior—the caller can inspect the returned bytes to determine if useful information was captured. Adding logging in library code is not idiomatic Go.
 
-### http.DefaultClient used without default timeout
-
-**Location:** `internal/requestconfig/requestconfig.go:174`
-**Date:** 2026-02-22
-
-**Reason:** The SDK intentionally uses http.DefaultClient as the default to give users full control over timeout behavior. Setting a default timeout could break existing code that relies on indefinite waits for long-running operations. Users can set a timeout via WithRequestTimeout(), WithHTTPClient(), or by passing a context with deadline. Documenting this is preferable to changing the default.
-
-### Panics in library code for input validation and internal invariants
-
-**Location:** `option/requestoption.go:103,106,262`, `internal/apiquery/encoder.go:265`, `internal/apijson/decoder.go:219`
-**Date:** 2026-02-22
-
-**Reason:** The remaining panics fall into two categories:
-
-1. **Input validation** (`option/requestoption.go`): Panics for invalid `WithMaxRetries`/`WithTimeout` arguments. This is idiomatic Go for configuration functions where the caller has violated a documented contract. Similar to `regexp.MustCompile`.
-
-2. **Internal invariants** (`apiquery/encoder.go:265`, `apijson/decoder.go:220`): These panics catch SDK maintainer errors during development (unknown ArrayFormat enum values, unregistered union types). They indicate bugs in the SDK itself, not user code. Failing fast helps catch these issues during development.
-
 ### Deprecated config fields still parsed
 
-**Location:** `config.go:53-54,68,73-74,1058`
+**Location:** `config.go:53-54,68,73-74`
 **Date:** 2026-02-22
 
-**Reason:** The Config struct and its deprecated fields (autoshare, mode, layout) are generated from the OpenAPI spec. We cannot control what fields the spec defines. The deprecation comments are accurate and users should migrate, but removing the fields would break the generated code contract with the API.
-
-### Global sync.Map for encoder/decoder caching grows unbounded
-
-**Location:** `internal/apijson/decoder.go:18`, `internal/apijson/encoder.go:19`, `internal/apiquery/encoder.go:15`
-**Date:** 2026-02-22
-
-**Reason:** This is a standard caching pattern for reflection-based serialization. The cache is bounded by the number of distinct types used, which in practice is limited and stable for a given application. Memory profiling would be needed to demonstrate an actual problem before adding complexity like LRU eviction.
+**Reason:** The Config struct fields (autoshare, mode, layout) reflect the upstream OpenAPI spec. The spec defines these fields as deprecated. Removing them would break deserialization of API responses that still include them. The deprecation comments are accurate and guide users to migrate.
 
 ### Bytes buffer allocation in SSE hot path
 
@@ -123,27 +80,13 @@ The comparison to line 459 (where error is handled) is misleading because that's
 
 **Reason:** The `bytes.NewBuffer(nil)` call per event is a minor allocation in a streaming context. For typical usage patterns, the GC overhead is negligible. Using `sync.Pool` would add complexity for an optimization that would only benefit extremely high-throughput scenarios. No performance issue has been reported or measured.
 
-### No limit on buffered request body size
-
-**Location:** `internal/requestconfig/requestconfig.go:111-157`
-**Date:** 2026-02-22
-
-**Reason:** When a request body is serialized, it is buffered in memory via `bytes.NewBuffer`. This is the same behavior as the standard library's `json.Marshal`, which also has no size limit. Adding a max body size configuration would add complexity for a hypothetical issue. Callers are responsible for not creating excessively large request bodies, just as they are when using `json.Marshal` directly. Memory exhaustion would indicate a bug in the caller's code, not the SDK.
-
 ## Intentional Design Decisions
 
 <!-- Findings that describe behavior which is correct by design -->
 
-### Debug middleware logs sensitive data
-
-**Location:** `option/middleware.go:23-33`
-**Date:** 2026-02-22
-
-**Reason:** The `WithDebugLog` function is explicitly documented as "for debugging and development purposes only" and "should not be used in production." Users must explicitly opt-in by passing this middleware. Adding header redaction would add complexity for a debugging tool and could hide issues that debugging is meant to reveal.
-
 ### SSE stream error not returned directly
 
-**Location:** `event.go:42-51`
+**Location:** `event.go:20-51`
 **Date:** 2026-02-22
 
 **Reason:** This is a standard pattern for streaming APIs in Go. The stream object must be returned so callers can iterate over events, and embedding the initial connection error in the stream allows a single return signature. The pattern is documented and callers are expected to check `stream.Err()` before iteration, similar to how database rows work.
