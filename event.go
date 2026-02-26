@@ -30,13 +30,11 @@ func (s *EventService) ListStreaming(ctx context.Context, params *EventListParam
 	}
 	fullURL := u.ResolveReference(&url.URL{Path: "event"})
 
-	if params != nil {
-		query, err := params.URLQuery()
-		if err != nil {
-			return ssestream.NewStream[Event](nil, err)
-		}
-		fullURL.RawQuery = query.Encode()
+	query, err := params.URLQuery()
+	if err != nil {
+		return ssestream.NewStream[Event](nil, err)
 	}
+	fullURL.RawQuery = query.Encode()
 
 	// Create request with SSE headers
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fullURL.String(), nil)
