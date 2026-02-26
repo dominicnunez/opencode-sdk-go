@@ -46,13 +46,13 @@ func Marshal(v interface{}) (url.Values, error) {
 		}
 
 		// Parse tag to extract name and options
-		name, _, _ := parseTag(tag)
+		name, _, omitempty := parseTag(tag)
 		if name == "" {
 			continue
 		}
 
 		// Add field value to params
-		if err := addFieldValue(params, name, field); err != nil {
+		if err := addFieldValue(params, name, field, omitempty); err != nil {
 			return nil, fmt.Errorf("queryparams: field %s: %w", typeField.Name, err)
 		}
 	}
@@ -76,9 +76,11 @@ func parseTag(tag string) (name string, required bool, omitempty bool) {
 	return
 }
 
-func addFieldValue(params url.Values, name string, field reflect.Value) error {
+func addFieldValue(params url.Values, name string, field reflect.Value, omitempty bool) error {
+	isPtr := field.Kind() == reflect.Ptr
+
 	// Handle pointer types
-	if field.Kind() == reflect.Ptr {
+	if isPtr {
 		if field.IsNil() {
 			return nil // omit nil pointers
 		}
@@ -93,8 +95,14 @@ func addFieldValue(params url.Values, name string, field reflect.Value) error {
 			params.Add(name, s)
 		}
 	case reflect.Int, reflect.Int64:
+		if omitempty && !isPtr && field.Int() == 0 {
+			return nil
+		}
 		params.Add(name, strconv.FormatInt(field.Int(), 10))
 	case reflect.Bool:
+		if omitempty && !isPtr && !field.Bool() {
+			return nil
+		}
 		params.Add(name, strconv.FormatBool(field.Bool()))
 	case reflect.Slice:
 		// Handle []string
@@ -104,8 +112,7 @@ func addFieldValue(params url.Values, name string, field reflect.Value) error {
 			}
 		}
 	default:
-		// Ignore unknown types
-		return nil
+		return fmt.Errorf("unsupported query param type: %v", field.Kind())
 	}
 
 	return nil
