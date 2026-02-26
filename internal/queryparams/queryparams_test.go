@@ -329,6 +329,22 @@ func TestMarshal_RealSDKParams(t *testing.T) {
 	}
 }
 
+func TestMarshal_RequiredValidation(t *testing.T) {
+	type params struct {
+		Query string `query:"query,required"`
+	}
+
+	_, err := Marshal(params{Query: ""})
+	if err == nil {
+		t.Fatal("expected error for empty required field")
+	}
+
+	_, err = Marshal(params{Query: "valid"})
+	if err != nil {
+		t.Fatalf("unexpected error for valid required field: %v", err)
+	}
+}
+
 func TestMarshal_URLEncoding(t *testing.T) {
 	type params struct {
 		Query string `query:"query"`

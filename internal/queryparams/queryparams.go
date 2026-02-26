@@ -46,13 +46,13 @@ func Marshal(v interface{}) (url.Values, error) {
 		}
 
 		// Parse tag to extract name and options
-		name, _, omitempty := parseTag(tag)
+		name, required, omitempty := parseTag(tag)
 		if name == "" {
 			continue
 		}
 
 		// Add field value to params
-		if err := addFieldValue(params, name, field, omitempty); err != nil {
+		if err := addFieldValue(params, name, field, required, omitempty); err != nil {
 			return nil, fmt.Errorf("queryparams: field %s: %w", typeField.Name, err)
 		}
 	}
@@ -76,12 +76,15 @@ func parseTag(tag string) (name string, required bool, omitempty bool) {
 	return
 }
 
-func addFieldValue(params url.Values, name string, field reflect.Value, omitempty bool) error {
+func addFieldValue(params url.Values, name string, field reflect.Value, required, omitempty bool) error {
 	isPtr := field.Kind() == reflect.Ptr
 
 	// Handle pointer types
 	if isPtr {
 		if field.IsNil() {
+			if required {
+				return fmt.Errorf("required query parameter %q is nil", name)
+			}
 			return nil // omit nil pointers
 		}
 		field = field.Elem()
@@ -91,9 +94,13 @@ func addFieldValue(params url.Values, name string, field reflect.Value, omitempt
 	switch field.Kind() {
 	case reflect.String:
 		s := field.String()
-		if s != "" {
-			params.Add(name, s)
+		if s == "" {
+			if required {
+				return fmt.Errorf("required query parameter %q is empty", name)
+			}
+			return nil
 		}
+		params.Add(name, s)
 	case reflect.Int, reflect.Int64:
 		if omitempty && !isPtr && field.Int() == 0 {
 			return nil
