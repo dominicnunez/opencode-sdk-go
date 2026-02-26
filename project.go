@@ -39,12 +39,12 @@ type Project struct {
 	ID       string     `json:"id"`
 	Time     ProjectTime `json:"time"`
 	Worktree string     `json:"worktree"`
-	Vcs      ProjectVcs `json:"vcs"`
+	Vcs      *ProjectVcs `json:"vcs,omitempty"`
 }
 
 type ProjectTime struct {
 	Created     float64 `json:"created"`
-	Initialized float64 `json:"initialized"`
+	Initialized *float64 `json:"initialized,omitempty"`
 }
 
 type ProjectVcs string
