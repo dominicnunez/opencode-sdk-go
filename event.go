@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 
@@ -48,7 +49,17 @@ func (s *EventService) ListStreaming(ctx context.Context, params *EventListParam
 
 	// Execute request
 	resp, err := s.client.httpClient.Do(req)
-	return ssestream.NewStream[Event](ssestream.NewDecoder(resp), err)
+	if err != nil {
+		return ssestream.NewStream[Event](nil, err)
+	}
+
+	if resp.StatusCode >= 400 {
+		defer resp.Body.Close()
+		body, _ := io.ReadAll(resp.Body)
+		return ssestream.NewStream[Event](nil, fmt.Errorf("HTTP %d: %s", resp.StatusCode, string(body)))
+	}
+
+	return ssestream.NewStream[Event](ssestream.NewDecoder(resp), nil)
 }
 
 type Event struct {
