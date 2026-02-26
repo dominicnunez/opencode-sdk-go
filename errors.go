@@ -11,6 +11,7 @@ var (
 	ErrRateLimited    = errors.New("rate limited")
 	ErrInvalidRequest = errors.New("invalid request")
 	ErrInternal       = errors.New("internal server error")
+	ErrWrongVariant   = errors.New("wrong union variant")
 )
 
 type APIError struct {

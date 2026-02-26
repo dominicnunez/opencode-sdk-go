@@ -2,6 +2,7 @@ package opencode
 
 import (
 	"encoding/json"
+	"errors"
 	"testing"
 )
 
@@ -116,10 +117,10 @@ func TestEvent_WrongType(t *testing.T) {
 		t.Fatalf("Failed to unmarshal: %v", err)
 	}
 
-	// Try to get as wrong type - should return (nil, nil)
+	// Try to get as wrong type - should return (nil, ErrWrongVariant)
 	evt, err := event.AsInstallationUpdated()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if !errors.Is(err, ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant, got: %v", err)
 	}
 	if evt != nil {
 		t.Error("Expected nil event when type doesn't match")
@@ -158,10 +159,10 @@ func TestEvent_MissingType(t *testing.T) {
 		t.Errorf("Expected empty type, got %s", event.Type)
 	}
 
-	// Trying to get any specific type should return (nil, nil)
+	// Trying to get any specific type should return (nil, ErrWrongVariant)
 	val, err := event.AsInstallationUpdated()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if !errors.Is(err, ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant, got: %v", err)
 	}
 	if val != nil {
 		t.Error("Expected AsInstallationUpdated to return nil when type is missing")

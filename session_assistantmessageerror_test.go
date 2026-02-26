@@ -2,6 +2,7 @@ package opencode
 
 import (
 	"encoding/json"
+	"errors"
 	"testing"
 )
 
@@ -37,10 +38,10 @@ func TestAssistantMessageError_AsProviderAuth_ValidProviderAuthError(t *testing.
 		t.Errorf("Expected providerID 'provider-123', got '%s'", providerAuthErr.Data.ProviderID)
 	}
 
-	// Wrong type should return (nil, nil)
+	// Wrong type should return (nil, ErrWrongVariant)
 	v, err := ame.AsUnknown()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if !errors.Is(err, ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant, got: %v", err)
 	}
 	if v != nil {
 		t.Error("AsUnknown() should return nil for ProviderAuthError")
@@ -75,10 +76,10 @@ func TestAssistantMessageError_AsUnknown_ValidUnknownError(t *testing.T) {
 		t.Errorf("Expected message 'Something went wrong', got '%s'", unknownErr.Data.Message)
 	}
 
-	// Wrong type should return (nil, nil)
+	// Wrong type should return (nil, ErrWrongVariant)
 	v, err := ame.AsAborted()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if !errors.Is(err, ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant, got: %v", err)
 	}
 	if v != nil {
 		t.Error("AsAborted() should return nil for UnknownError")
@@ -108,10 +109,10 @@ func TestAssistantMessageError_AsOutputLength_ValidOutputLengthError(t *testing.
 		t.Fatal("AsOutputLength() should return non-nil")
 	}
 
-	// Wrong type should return (nil, nil)
+	// Wrong type should return (nil, ErrWrongVariant)
 	v, err := ame.AsAPI()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if !errors.Is(err, ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant, got: %v", err)
 	}
 	if v != nil {
 		t.Error("AsAPI() should return nil for MessageOutputLengthError")
@@ -146,10 +147,10 @@ func TestAssistantMessageError_AsAborted_ValidAbortedError(t *testing.T) {
 		t.Errorf("Expected message 'Request aborted by user', got '%s'", abortedErr.Data.Message)
 	}
 
-	// Wrong type should return (nil, nil)
+	// Wrong type should return (nil, ErrWrongVariant)
 	v, err := ame.AsProviderAuth()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if !errors.Is(err, ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant, got: %v", err)
 	}
 	if v != nil {
 		t.Error("AsProviderAuth() should return nil for MessageAbortedError")
@@ -202,10 +203,10 @@ func TestAssistantMessageError_AsAPI_ValidAPIError(t *testing.T) {
 		t.Errorf("Expected retry-after header '60', got '%s'", apiErr.Data.ResponseHeaders["retry-after"])
 	}
 
-	// Wrong type should return (nil, nil)
+	// Wrong type should return (nil, ErrWrongVariant)
 	v, err := ame.AsOutputLength()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if !errors.Is(err, ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant, got: %v", err)
 	}
 	if v != nil {
 		t.Error("AsOutputLength() should return nil for APIError")
@@ -226,23 +227,23 @@ func TestAssistantMessageError_WrongType(t *testing.T) {
 		t.Fatalf("Unmarshal failed: %v", unmarshalErr)
 	}
 
-	if v, err := ame.AsUnknown(); err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if v, err := ame.AsUnknown(); !errors.Is(err, ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant, got: %v", err)
 	} else if v != nil {
 		t.Error("AsUnknown() should return nil for ProviderAuthError")
 	}
-	if v, err := ame.AsOutputLength(); err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if v, err := ame.AsOutputLength(); !errors.Is(err, ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant, got: %v", err)
 	} else if v != nil {
 		t.Error("AsOutputLength() should return nil for ProviderAuthError")
 	}
-	if v, err := ame.AsAborted(); err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if v, err := ame.AsAborted(); !errors.Is(err, ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant, got: %v", err)
 	} else if v != nil {
 		t.Error("AsAborted() should return nil for ProviderAuthError")
 	}
-	if v, err := ame.AsAPI(); err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if v, err := ame.AsAPI(); !errors.Is(err, ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant, got: %v", err)
 	} else if v != nil {
 		t.Error("AsAPI() should return nil for ProviderAuthError")
 	}
@@ -273,13 +274,13 @@ func TestAssistantMessageError_MissingName(t *testing.T) {
 		t.Errorf("Expected Name to be empty, got %s", ame.Name)
 	}
 
-	if v, err := ame.AsProviderAuth(); err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if v, err := ame.AsProviderAuth(); !errors.Is(err, ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant, got: %v", err)
 	} else if v != nil {
 		t.Error("AsProviderAuth() should return nil for missing name")
 	}
-	if v, err := ame.AsUnknown(); err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if v, err := ame.AsUnknown(); !errors.Is(err, ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant, got: %v", err)
 	} else if v != nil {
 		t.Error("AsUnknown() should return nil for missing name")
 	}
@@ -300,8 +301,8 @@ func TestAssistantMessageError_UnknownName(t *testing.T) {
 		t.Errorf("Expected Name to be 'UnknownErrorType', got %s", ame.Name)
 	}
 
-	if v, err := ame.AsProviderAuth(); err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if v, err := ame.AsProviderAuth(); !errors.Is(err, ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant, got: %v", err)
 	} else if v != nil {
 		t.Error("AsProviderAuth() should return nil for unknown name")
 	}

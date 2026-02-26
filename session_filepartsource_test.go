@@ -2,6 +2,7 @@ package opencode
 
 import (
 	"encoding/json"
+	"errors"
 	"testing"
 )
 
@@ -131,11 +132,8 @@ func TestFilePartSource_AsFile_WrongType(t *testing.T) {
 	}
 
 	fileSource, err := source.AsFile()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if fileSource != nil {
-		t.Error("AsFile() should fail for symbol type")
+	if !errors.Is(err, ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant, got: %v", err)
 	}
 	if fileSource != nil {
 		t.Error("AsFile() should return nil for symbol type")
@@ -159,11 +157,8 @@ func TestFilePartSource_AsSymbol_WrongType(t *testing.T) {
 	}
 
 	symbolSource, err := source.AsSymbol()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if symbolSource != nil {
-		t.Error("AsSymbol() should fail for file type")
+	if !errors.Is(err, ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant, got: %v", err)
 	}
 	if symbolSource != nil {
 		t.Error("AsSymbol() should return nil for file type")
@@ -186,12 +181,12 @@ func TestFilePartSource_InvalidJSON(t *testing.T) {
 		t.Errorf("Expected type %q, got %q", "invalid", source.Type)
 	}
 
-	// AsFile and AsSymbol should both fail for unknown type
-	if fileSource, err := source.AsFile(); err != nil || fileSource != nil {
-		t.Error("AsFile() should fail for unknown type")
+	// AsFile and AsSymbol should both return ErrWrongVariant for unknown type
+	if fileSource, err := source.AsFile(); !errors.Is(err, ErrWrongVariant) || fileSource != nil {
+		t.Error("AsFile() should return ErrWrongVariant for unknown type")
 	}
-	if symbolSource, err := source.AsSymbol(); err != nil || symbolSource != nil {
-		t.Error("AsSymbol() should fail for unknown type")
+	if symbolSource, err := source.AsSymbol(); !errors.Is(err, ErrWrongVariant) || symbolSource != nil {
+		t.Error("AsSymbol() should return ErrWrongVariant for unknown type")
 	}
 }
 
@@ -218,12 +213,12 @@ func TestFilePartSource_EmptyJSON(t *testing.T) {
 		t.Errorf("Expected empty type, got %q", source.Type)
 	}
 
-	// Both methods should fail
-	if fileSource, err := source.AsFile(); err != nil || fileSource != nil {
-		t.Error("AsFile() should fail for empty type")
+	// Both methods should return ErrWrongVariant
+	if fileSource, err := source.AsFile(); !errors.Is(err, ErrWrongVariant) || fileSource != nil {
+		t.Error("AsFile() should return ErrWrongVariant for empty type")
 	}
-	if symbolSource, err := source.AsSymbol(); err != nil || symbolSource != nil {
-		t.Error("AsSymbol() should fail for empty type")
+	if symbolSource, err := source.AsSymbol(); !errors.Is(err, ErrWrongVariant) || symbolSource != nil {
+		t.Error("AsSymbol() should return ErrWrongVariant for empty type")
 	}
 }
 
@@ -247,12 +242,12 @@ func TestFilePartSource_MissingType(t *testing.T) {
 		t.Errorf("Expected empty type, got %q", source.Type)
 	}
 
-	// Both methods should fail
-	if fileSource, err := source.AsFile(); err != nil || fileSource != nil {
-		t.Error("AsFile() should fail for missing type")
+	// Both methods should return ErrWrongVariant
+	if fileSource, err := source.AsFile(); !errors.Is(err, ErrWrongVariant) || fileSource != nil {
+		t.Error("AsFile() should return ErrWrongVariant for missing type")
 	}
-	if symbolSource, err := source.AsSymbol(); err != nil || symbolSource != nil {
-		t.Error("AsSymbol() should fail for missing type")
+	if symbolSource, err := source.AsSymbol(); !errors.Is(err, ErrWrongVariant) || symbolSource != nil {
+		t.Error("AsSymbol() should return ErrWrongVariant for missing type")
 	}
 }
 

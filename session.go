@@ -450,7 +450,7 @@ func (r *AssistantMessageError) UnmarshalJSON(data []byte) error {
 
 func (r AssistantMessageError) AsProviderAuth() (*shared.ProviderAuthError, error) {
 	if r.Name != AssistantMessageErrorNameProviderAuthError {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var err shared.ProviderAuthError
 	if err := json.Unmarshal(r.raw, &err); err != nil {
@@ -461,7 +461,7 @@ func (r AssistantMessageError) AsProviderAuth() (*shared.ProviderAuthError, erro
 
 func (r AssistantMessageError) AsUnknown() (*shared.UnknownError, error) {
 	if r.Name != AssistantMessageErrorNameUnknownError {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var err shared.UnknownError
 	if err := json.Unmarshal(r.raw, &err); err != nil {
@@ -472,7 +472,7 @@ func (r AssistantMessageError) AsUnknown() (*shared.UnknownError, error) {
 
 func (r AssistantMessageError) AsOutputLength() (*AssistantMessageErrorMessageOutputLengthError, error) {
 	if r.Name != AssistantMessageErrorNameMessageOutputLengthError {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var err AssistantMessageErrorMessageOutputLengthError
 	if err := json.Unmarshal(r.raw, &err); err != nil {
@@ -483,7 +483,7 @@ func (r AssistantMessageError) AsOutputLength() (*AssistantMessageErrorMessageOu
 
 func (r AssistantMessageError) AsAborted() (*shared.MessageAbortedError, error) {
 	if r.Name != AssistantMessageErrorNameMessageAbortedError {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var err shared.MessageAbortedError
 	if err := json.Unmarshal(r.raw, &err); err != nil {
@@ -494,7 +494,7 @@ func (r AssistantMessageError) AsAborted() (*shared.MessageAbortedError, error) 
 
 func (r AssistantMessageError) AsAPI() (*AssistantMessageErrorAPIError, error) {
 	if r.Name != AssistantMessageErrorNameAPIError {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var err AssistantMessageErrorAPIError
 	if err := json.Unmarshal(r.raw, &err); err != nil {
@@ -648,7 +648,7 @@ func (r *FilePartSource) UnmarshalJSON(data []byte) error {
 // AsFile returns the source as a FileSource if Type is "file".
 func (r FilePartSource) AsFile() (*FileSource, error) {
 	if r.Type != FilePartSourceTypeFile {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var src FileSource
 	if err := json.Unmarshal(r.raw, &src); err != nil {
@@ -660,7 +660,7 @@ func (r FilePartSource) AsFile() (*FileSource, error) {
 // AsSymbol returns the source as a SymbolSource if Type is "symbol".
 func (r FilePartSource) AsSymbol() (*SymbolSource, error) {
 	if r.Type != FilePartSourceTypeSymbol {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var src SymbolSource
 	if err := json.Unmarshal(r.raw, &src); err != nil {
@@ -769,7 +769,7 @@ func (r *Message) UnmarshalJSON(data []byte) error {
 // AsUser returns the UserMessage if the role is "user".
 func (r Message) AsUser() (*UserMessage, error) {
 	if r.Role != MessageRoleUser {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var msg UserMessage
 	if err := json.Unmarshal(r.raw, &msg); err != nil {
@@ -781,7 +781,7 @@ func (r Message) AsUser() (*UserMessage, error) {
 // AsAssistant returns the AssistantMessage if the role is "assistant".
 func (r Message) AsAssistant() (*AssistantMessage, error) {
 	if r.Role != MessageRoleAssistant {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var msg AssistantMessage
 	if err := json.Unmarshal(r.raw, &msg); err != nil {
@@ -837,7 +837,7 @@ func (r *Part) UnmarshalJSON(data []byte) error {
 // AsText returns the part as a TextPart if Type is "text".
 func (r Part) AsText() (*TextPart, error) {
 	if r.Type != PartTypeText {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var part TextPart
 	if err := json.Unmarshal(r.raw, &part); err != nil {
@@ -849,7 +849,7 @@ func (r Part) AsText() (*TextPart, error) {
 // AsReasoning returns the part as a ReasoningPart if Type is "reasoning".
 func (r Part) AsReasoning() (*ReasoningPart, error) {
 	if r.Type != PartTypeReasoning {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var part ReasoningPart
 	if err := json.Unmarshal(r.raw, &part); err != nil {
@@ -861,7 +861,7 @@ func (r Part) AsReasoning() (*ReasoningPart, error) {
 // AsFile returns the part as a FilePart if Type is "file".
 func (r Part) AsFile() (*FilePart, error) {
 	if r.Type != PartTypeFile {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var part FilePart
 	if err := json.Unmarshal(r.raw, &part); err != nil {
@@ -873,7 +873,7 @@ func (r Part) AsFile() (*FilePart, error) {
 // AsTool returns the part as a ToolPart if Type is "tool".
 func (r Part) AsTool() (*ToolPart, error) {
 	if r.Type != PartTypeTool {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var part ToolPart
 	if err := json.Unmarshal(r.raw, &part); err != nil {
@@ -885,7 +885,7 @@ func (r Part) AsTool() (*ToolPart, error) {
 // AsStepStart returns the part as a StepStartPart if Type is "step-start".
 func (r Part) AsStepStart() (*StepStartPart, error) {
 	if r.Type != PartTypeStepStart {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var part StepStartPart
 	if err := json.Unmarshal(r.raw, &part); err != nil {
@@ -897,7 +897,7 @@ func (r Part) AsStepStart() (*StepStartPart, error) {
 // AsStepFinish returns the part as a StepFinishPart if Type is "step-finish".
 func (r Part) AsStepFinish() (*StepFinishPart, error) {
 	if r.Type != PartTypeStepFinish {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var part StepFinishPart
 	if err := json.Unmarshal(r.raw, &part); err != nil {
@@ -909,7 +909,7 @@ func (r Part) AsStepFinish() (*StepFinishPart, error) {
 // AsSnapshot returns the part as a SnapshotPart if Type is "snapshot".
 func (r Part) AsSnapshot() (*SnapshotPart, error) {
 	if r.Type != PartTypeSnapshot {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var part SnapshotPart
 	if err := json.Unmarshal(r.raw, &part); err != nil {
@@ -921,7 +921,7 @@ func (r Part) AsSnapshot() (*SnapshotPart, error) {
 // AsPatch returns the part as a PartPatchPart if Type is "patch".
 func (r Part) AsPatch() (*PartPatchPart, error) {
 	if r.Type != PartTypePatch {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var part PartPatchPart
 	if err := json.Unmarshal(r.raw, &part); err != nil {
@@ -933,7 +933,7 @@ func (r Part) AsPatch() (*PartPatchPart, error) {
 // AsAgent returns the part as an AgentPart if Type is "agent".
 func (r Part) AsAgent() (*AgentPart, error) {
 	if r.Type != PartTypeAgent {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var part AgentPart
 	if err := json.Unmarshal(r.raw, &part); err != nil {
@@ -945,7 +945,7 @@ func (r Part) AsAgent() (*AgentPart, error) {
 // AsRetry returns the part as a PartRetryPart if Type is "retry".
 func (r Part) AsRetry() (*PartRetryPart, error) {
 	if r.Type != PartTypeRetry {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var part PartRetryPart
 	if err := json.Unmarshal(r.raw, &part); err != nil {
@@ -1365,7 +1365,7 @@ func (r *ToolPartState) UnmarshalJSON(data []byte) error {
 // AsPending returns the state as ToolStatePending if Status is "pending".
 func (r ToolPartState) AsPending() (*ToolStatePending, error) {
 	if r.Status != ToolPartStateStatusPending {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var state ToolStatePending
 	if err := json.Unmarshal(r.raw, &state); err != nil {
@@ -1377,7 +1377,7 @@ func (r ToolPartState) AsPending() (*ToolStatePending, error) {
 // AsRunning returns the state as ToolStateRunning if Status is "running".
 func (r ToolPartState) AsRunning() (*ToolStateRunning, error) {
 	if r.Status != ToolPartStateStatusRunning {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var state ToolStateRunning
 	if err := json.Unmarshal(r.raw, &state); err != nil {
@@ -1389,7 +1389,7 @@ func (r ToolPartState) AsRunning() (*ToolStateRunning, error) {
 // AsCompleted returns the state as ToolStateCompleted if Status is "completed".
 func (r ToolPartState) AsCompleted() (*ToolStateCompleted, error) {
 	if r.Status != ToolPartStateStatusCompleted {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var state ToolStateCompleted
 	if err := json.Unmarshal(r.raw, &state); err != nil {
@@ -1401,7 +1401,7 @@ func (r ToolPartState) AsCompleted() (*ToolStateCompleted, error) {
 // AsError returns the state as ToolStateError if Status is "error".
 func (r ToolPartState) AsError() (*ToolStateError, error) {
 	if r.Status != ToolPartStateStatusError {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var state ToolStateError
 	if err := json.Unmarshal(r.raw, &state); err != nil {
@@ -1517,7 +1517,7 @@ func (r ToolStatePendingStatus) IsKnown() bool {
 }
 
 type ToolStateRunning struct {
-	Input    interface{}            `json:"input"`
+	Input    map[string]interface{} `json:"input"`
 	Status   ToolStateRunningStatus `json:"status"`
 	Time     ToolStateRunningTime   `json:"time"`
 	Metadata map[string]interface{} `json:"metadata"`
@@ -1603,7 +1603,7 @@ type SessionPromptResponse struct {
 }
 
 type SessionCreateParams struct {
-	Directory *string `query:"directory,omitempty"`
+	Directory *string `json:"-" query:"directory,omitempty"`
 	ParentID *string `json:"parentID,omitempty"`
 	Title *string `json:"title,omitempty"`
 }
@@ -1614,7 +1614,7 @@ func (r SessionCreateParams) URLQuery() (url.Values, error) {
 }
 
 type SessionUpdateParams struct {
-	Directory *string `query:"directory,omitempty"`
+	Directory *string `json:"-" query:"directory,omitempty"`
 	Title *string `json:"title,omitempty"`
 }
 
@@ -1662,7 +1662,7 @@ func (r SessionChildrenParams) URLQuery() (url.Values, error) {
 type SessionCommandParams struct {
 	Arguments string `json:"arguments"`
 	Command string `json:"command"`
-	Directory *string `query:"directory,omitempty"`
+	Directory *string `json:"-" query:"directory,omitempty"`
 	Agent *string `json:"agent,omitempty"`
 	MessageID *string `json:"messageID,omitempty"`
 	Model *string `json:"model,omitempty"`
@@ -1685,7 +1685,7 @@ func (r SessionDiffParams) URLQuery() (url.Values, error) {
 
 type SessionForkParams struct {
 	MessageID string  `json:"messageID"`
-	Directory *string `query:"directory,omitempty"`
+	Directory *string `json:"-" query:"directory,omitempty"`
 }
 
 // URLQuery serializes [SessionForkParams]'s query parameters as `url.Values`.
@@ -1706,7 +1706,7 @@ type SessionInitParams struct {
 	MessageID string `json:"messageID"`
 	ModelID string `json:"modelID"`
 	ProviderID string `json:"providerID"`
-	Directory *string `query:"directory,omitempty"`
+	Directory *string `json:"-" query:"directory,omitempty"`
 }
 
 // URLQuery serializes [SessionInitParams]'s query parameters as `url.Values`.
@@ -1734,7 +1734,7 @@ func (r SessionMessagesParams) URLQuery() (url.Values, error) {
 
 type SessionPromptParams struct {
 	Parts []SessionPromptParamsPartUnion `json:"parts"`
-	Directory *string `query:"directory,omitempty"`
+	Directory *string `json:"-" query:"directory,omitempty"`
 	Agent *string `json:"agent,omitempty"`
 	MessageID *string `json:"messageID,omitempty"`
 	Model *SessionPromptParamsModel `json:"model,omitempty"`
@@ -1793,7 +1793,7 @@ type SessionPromptParamsModel struct {
 
 type SessionRevertParams struct {
 	MessageID string `json:"messageID"`
-	Directory *string `query:"directory,omitempty"`
+	Directory *string `json:"-" query:"directory,omitempty"`
 	PartID *string `json:"partID,omitempty"`
 }
 
@@ -1814,7 +1814,7 @@ func (r SessionShareParams) URLQuery() (url.Values, error) {
 type SessionShellParams struct {
 	Agent string `json:"agent"`
 	Command string `json:"command"`
-	Directory *string `query:"directory,omitempty"`
+	Directory *string `json:"-" query:"directory,omitempty"`
 }
 
 // URLQuery serializes [SessionShellParams]'s query parameters as `url.Values`.
@@ -1825,7 +1825,7 @@ func (r SessionShellParams) URLQuery() (url.Values, error) {
 type SessionSummarizeParams struct {
 	ModelID string `json:"modelID"`
 	ProviderID string `json:"providerID"`
-	Directory *string `query:"directory,omitempty"`
+	Directory *string `json:"-" query:"directory,omitempty"`
 }
 
 // URLQuery serializes [SessionSummarizeParams]'s query parameters as `url.Values`.

@@ -55,8 +55,16 @@ func (s *EventService) ListStreaming(ctx context.Context, params *EventListParam
 
 	if resp.StatusCode >= 400 {
 		defer resp.Body.Close()
-		body, _ := io.ReadAll(resp.Body)
-		return ssestream.NewStream[Event](nil, fmt.Errorf("HTTP %d: %s", resp.StatusCode, string(body)))
+		body, readErr := io.ReadAll(resp.Body)
+		msg := string(body)
+		if readErr != nil {
+			msg = fmt.Sprintf("(failed to read body: %v)", readErr)
+		}
+		return ssestream.NewStream[Event](nil, &APIError{
+			StatusCode: resp.StatusCode,
+			Message:    msg,
+			Body:       msg,
+		})
 	}
 
 	return ssestream.NewStream[Event](ssestream.NewDecoder(resp), nil)
@@ -83,7 +91,7 @@ func (e *Event) UnmarshalJSON(data []byte) error {
 // AsInstallationUpdated returns the event as EventInstallationUpdated if Type is "installation.updated".
 func (e Event) AsInstallationUpdated() (*EventInstallationUpdated, error) {
 	if e.Type != EventTypeInstallationUpdated {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var evt EventInstallationUpdated
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
@@ -95,7 +103,7 @@ func (e Event) AsInstallationUpdated() (*EventInstallationUpdated, error) {
 // AsLspClientDiagnostics returns the event as EventLspClientDiagnostics if Type is "lsp.client.diagnostics".
 func (e Event) AsLspClientDiagnostics() (*EventLspClientDiagnostics, error) {
 	if e.Type != EventTypeLspClientDiagnostics {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var evt EventLspClientDiagnostics
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
@@ -107,7 +115,7 @@ func (e Event) AsLspClientDiagnostics() (*EventLspClientDiagnostics, error) {
 // AsMessageUpdated returns the event as EventMessageUpdated if Type is "message.updated".
 func (e Event) AsMessageUpdated() (*EventMessageUpdated, error) {
 	if e.Type != EventTypeMessageUpdated {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var evt EventMessageUpdated
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
@@ -119,7 +127,7 @@ func (e Event) AsMessageUpdated() (*EventMessageUpdated, error) {
 // AsMessageRemoved returns the event as EventMessageRemoved if Type is "message.removed".
 func (e Event) AsMessageRemoved() (*EventMessageRemoved, error) {
 	if e.Type != EventTypeMessageRemoved {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var evt EventMessageRemoved
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
@@ -131,7 +139,7 @@ func (e Event) AsMessageRemoved() (*EventMessageRemoved, error) {
 // AsMessagePartUpdated returns the event as EventMessagePartUpdated if Type is "message.part.updated".
 func (e Event) AsMessagePartUpdated() (*EventMessagePartUpdated, error) {
 	if e.Type != EventTypeMessagePartUpdated {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var evt EventMessagePartUpdated
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
@@ -143,7 +151,7 @@ func (e Event) AsMessagePartUpdated() (*EventMessagePartUpdated, error) {
 // AsMessagePartRemoved returns the event as EventMessagePartRemoved if Type is "message.part.removed".
 func (e Event) AsMessagePartRemoved() (*EventMessagePartRemoved, error) {
 	if e.Type != EventTypeMessagePartRemoved {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var evt EventMessagePartRemoved
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
@@ -155,7 +163,7 @@ func (e Event) AsMessagePartRemoved() (*EventMessagePartRemoved, error) {
 // AsSessionCompacted returns the event as EventSessionCompacted if Type is "session.compacted".
 func (e Event) AsSessionCompacted() (*EventSessionCompacted, error) {
 	if e.Type != EventTypeSessionCompacted {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var evt EventSessionCompacted
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
@@ -167,7 +175,7 @@ func (e Event) AsSessionCompacted() (*EventSessionCompacted, error) {
 // AsPermissionUpdated returns the event as EventPermissionUpdated if Type is "permission.updated".
 func (e Event) AsPermissionUpdated() (*EventPermissionUpdated, error) {
 	if e.Type != EventTypePermissionUpdated {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var evt EventPermissionUpdated
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
@@ -179,7 +187,7 @@ func (e Event) AsPermissionUpdated() (*EventPermissionUpdated, error) {
 // AsPermissionReplied returns the event as EventPermissionReplied if Type is "permission.replied".
 func (e Event) AsPermissionReplied() (*EventPermissionReplied, error) {
 	if e.Type != EventTypePermissionReplied {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var evt EventPermissionReplied
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
@@ -191,7 +199,7 @@ func (e Event) AsPermissionReplied() (*EventPermissionReplied, error) {
 // AsFileEdited returns the event as EventFileEdited if Type is "file.edited".
 func (e Event) AsFileEdited() (*EventFileEdited, error) {
 	if e.Type != EventTypeFileEdited {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var evt EventFileEdited
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
@@ -203,7 +211,7 @@ func (e Event) AsFileEdited() (*EventFileEdited, error) {
 // AsFileWatcherUpdated returns the event as EventFileWatcherUpdated if Type is "file.watcher.updated".
 func (e Event) AsFileWatcherUpdated() (*EventFileWatcherUpdated, error) {
 	if e.Type != EventTypeFileWatcherUpdated {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var evt EventFileWatcherUpdated
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
@@ -215,7 +223,7 @@ func (e Event) AsFileWatcherUpdated() (*EventFileWatcherUpdated, error) {
 // AsTodoUpdated returns the event as EventTodoUpdated if Type is "todo.updated".
 func (e Event) AsTodoUpdated() (*EventTodoUpdated, error) {
 	if e.Type != EventTypeTodoUpdated {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var evt EventTodoUpdated
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
@@ -227,7 +235,7 @@ func (e Event) AsTodoUpdated() (*EventTodoUpdated, error) {
 // AsSessionIdle returns the event as EventSessionIdle if Type is "session.idle".
 func (e Event) AsSessionIdle() (*EventSessionIdle, error) {
 	if e.Type != EventTypeSessionIdle {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var evt EventSessionIdle
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
@@ -239,7 +247,7 @@ func (e Event) AsSessionIdle() (*EventSessionIdle, error) {
 // AsSessionCreated returns the event as EventSessionCreated if Type is "session.created".
 func (e Event) AsSessionCreated() (*EventSessionCreated, error) {
 	if e.Type != EventTypeSessionCreated {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var evt EventSessionCreated
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
@@ -251,7 +259,7 @@ func (e Event) AsSessionCreated() (*EventSessionCreated, error) {
 // AsSessionUpdated returns the event as EventSessionUpdated if Type is "session.updated".
 func (e Event) AsSessionUpdated() (*EventSessionUpdated, error) {
 	if e.Type != EventTypeSessionUpdated {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var evt EventSessionUpdated
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
@@ -263,7 +271,7 @@ func (e Event) AsSessionUpdated() (*EventSessionUpdated, error) {
 // AsSessionDeleted returns the event as EventSessionDeleted if Type is "session.deleted".
 func (e Event) AsSessionDeleted() (*EventSessionDeleted, error) {
 	if e.Type != EventTypeSessionDeleted {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var evt EventSessionDeleted
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
@@ -275,7 +283,7 @@ func (e Event) AsSessionDeleted() (*EventSessionDeleted, error) {
 // AsSessionError returns the event as EventSessionError if Type is "session.error".
 func (e Event) AsSessionError() (*EventSessionError, error) {
 	if e.Type != EventTypeSessionError {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var evt EventSessionError
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
@@ -287,7 +295,7 @@ func (e Event) AsSessionError() (*EventSessionError, error) {
 // AsServerConnected returns the event as EventServerConnected if Type is "server.connected".
 func (e Event) AsServerConnected() (*EventServerConnected, error) {
 	if e.Type != EventTypeServerConnected {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var evt EventServerConnected
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
@@ -299,7 +307,7 @@ func (e Event) AsServerConnected() (*EventServerConnected, error) {
 // AsIdeInstalled returns the event as EventIdeInstalled if Type is "ide.installed".
 func (e Event) AsIdeInstalled() (*EventIdeInstalled, error) {
 	if e.Type != EventTypeIdeInstalled {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var evt EventIdeInstalled
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
@@ -751,7 +759,7 @@ func (r *SessionError) UnmarshalJSON(data []byte) error {
 
 func (r SessionError) AsProviderAuth() (*shared.ProviderAuthError, error) {
 	if r.Name != SessionErrorNameProviderAuthError {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var v shared.ProviderAuthError
 	if err := json.Unmarshal(r.raw, &v); err != nil {
@@ -762,7 +770,7 @@ func (r SessionError) AsProviderAuth() (*shared.ProviderAuthError, error) {
 
 func (r SessionError) AsUnknown() (*shared.UnknownError, error) {
 	if r.Name != SessionErrorNameUnknownError {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var v shared.UnknownError
 	if err := json.Unmarshal(r.raw, &v); err != nil {
@@ -773,7 +781,7 @@ func (r SessionError) AsUnknown() (*shared.UnknownError, error) {
 
 func (r SessionError) AsOutputLength() (*MessageOutputLengthError, error) {
 	if r.Name != SessionErrorNameMessageOutputLengthError {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var v MessageOutputLengthError
 	if err := json.Unmarshal(r.raw, &v); err != nil {
@@ -784,7 +792,7 @@ func (r SessionError) AsOutputLength() (*MessageOutputLengthError, error) {
 
 func (r SessionError) AsAborted() (*shared.MessageAbortedError, error) {
 	if r.Name != SessionErrorNameMessageAbortedError {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var v shared.MessageAbortedError
 	if err := json.Unmarshal(r.raw, &v); err != nil {
@@ -795,7 +803,7 @@ func (r SessionError) AsAborted() (*shared.MessageAbortedError, error) {
 
 func (r SessionError) AsAPI() (*SessionAPIError, error) {
 	if r.Name != SessionErrorNameAPIError {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var v SessionAPIError
 	if err := json.Unmarshal(r.raw, &v); err != nil {
@@ -833,7 +841,7 @@ type SessionAPIErrorData struct {
 	Message         string            `json:"message"`
 	ResponseBody    *string           `json:"responseBody,omitempty"`
 	ResponseHeaders map[string]string `json:"responseHeaders,omitempty"`
-	StatusCode      *float64          `json:"statusCode,omitempty"`
+	StatusCode      *int              `json:"statusCode,omitempty"`
 }
 
 type SessionAPIErrorName string
@@ -883,7 +891,7 @@ func (r EventSessionErrorType) IsKnown() bool {
 }
 
 type EventServerConnected struct {
-	Data interface{}              `json:"properties"`
+	Data json.RawMessage          `json:"properties"`
 	Type EventServerConnectedType `json:"type"`
 }
 

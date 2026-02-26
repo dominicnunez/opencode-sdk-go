@@ -2,6 +2,7 @@ package opencode
 
 import (
 	"encoding/json"
+	"errors"
 	"testing"
 )
 
@@ -137,23 +138,23 @@ func TestSessionError_WrongType_ReturnsNilNil(t *testing.T) {
 		t.Fatalf("Unmarshal failed: %v", e)
 	}
 
-	if v, err := sessErr.AsUnknown(); err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if v, err := sessErr.AsUnknown(); !errors.Is(err, ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant, got: %v", err)
 	} else if v != nil {
 		t.Error("Expected AsUnknown to return nil for ProviderAuthError")
 	}
-	if v, err := sessErr.AsOutputLength(); err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if v, err := sessErr.AsOutputLength(); !errors.Is(err, ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant, got: %v", err)
 	} else if v != nil {
 		t.Error("Expected AsOutputLength to return nil for ProviderAuthError")
 	}
-	if v, err := sessErr.AsAborted(); err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if v, err := sessErr.AsAborted(); !errors.Is(err, ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant, got: %v", err)
 	} else if v != nil {
 		t.Error("Expected AsAborted to return nil for ProviderAuthError")
 	}
-	if v, err := sessErr.AsAPI(); err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if v, err := sessErr.AsAPI(); !errors.Is(err, ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant, got: %v", err)
 	} else if v != nil {
 		t.Error("Expected AsAPI to return nil for ProviderAuthError")
 	}
@@ -191,8 +192,8 @@ func TestSessionError_MissingName(t *testing.T) {
 		t.Errorf("Expected empty name, got %s", sessErr.Name)
 	}
 
-	if v, err := sessErr.AsProviderAuth(); err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if v, err := sessErr.AsProviderAuth(); !errors.Is(err, ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant, got: %v", err)
 	} else if v != nil {
 		t.Error("Expected AsProviderAuth to return nil for empty name")
 	}
@@ -212,8 +213,8 @@ func TestSessionError_UnknownName(t *testing.T) {
 		t.Error("Expected IsKnown to return false for unknown error name")
 	}
 
-	if v, err := sessErr.AsProviderAuth(); err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if v, err := sessErr.AsProviderAuth(); !errors.Is(err, ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant, got: %v", err)
 	} else if v != nil {
 		t.Error("Expected AsProviderAuth to return nil for unknown name")
 	}
@@ -230,8 +231,8 @@ func TestSessionError_EmptyJSON(t *testing.T) {
 		t.Errorf("Expected empty name, got %s", sessErr.Name)
 	}
 
-	if v, err := sessErr.AsUnknown(); err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if v, err := sessErr.AsUnknown(); !errors.Is(err, ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant, got: %v", err)
 	} else if v != nil {
 		t.Error("Expected AsUnknown to return nil for empty JSON")
 	}

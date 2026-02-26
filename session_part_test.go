@@ -2,6 +2,7 @@ package opencode
 
 import (
 	"encoding/json"
+	"errors"
 	"testing"
 )
 
@@ -324,11 +325,8 @@ func TestPart_WrongTypeReturnsNil(t *testing.T) {
 
 	// Try to get as reasoning when it's actually text
 	reasoningPart, err := part.AsReasoning()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if reasoningPart != nil {
-		t.Error("AsReasoning() should return false for type=text")
+	if !errors.Is(err, ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant, got: %v", err)
 	}
 	if reasoningPart != nil {
 		t.Error("AsReasoning() should return nil for wrong type")
@@ -336,11 +334,8 @@ func TestPart_WrongTypeReturnsNil(t *testing.T) {
 
 	// Try to get as file when it's actually text
 	filePart, err := part.AsFile()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if filePart != nil {
-		t.Error("AsFile() should return false for type=text")
+	if !errors.Is(err, ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant, got: %v", err)
 	}
 	if filePart != nil {
 		t.Error("AsFile() should return nil for wrong type")
@@ -374,14 +369,14 @@ func TestPart_MissingDiscriminator(t *testing.T) {
 		t.Errorf("Expected empty type, got %s", part.Type)
 	}
 
-	// All As* methods should return (nil, nil) for wrong type
-	if v, err := part.AsText(); err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	// All As* methods should return (nil, ErrWrongVariant) for wrong type
+	if v, err := part.AsText(); !errors.Is(err, ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant, got: %v", err)
 	} else if v != nil {
 		t.Error("AsText() should return nil for empty type")
 	}
-	if v, err := part.AsReasoning(); err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if v, err := part.AsReasoning(); !errors.Is(err, ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant, got: %v", err)
 	} else if v != nil {
 		t.Error("AsReasoning() should return nil for empty type")
 	}
@@ -404,13 +399,13 @@ func TestPart_UnknownType(t *testing.T) {
 		t.Errorf("Expected type unknown-type, got %s", part.Type)
 	}
 
-	if v, err := part.AsText(); err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if v, err := part.AsText(); !errors.Is(err, ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant, got: %v", err)
 	} else if v != nil {
 		t.Error("AsText() should return nil for unknown type")
 	}
-	if v, err := part.AsTool(); err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if v, err := part.AsTool(); !errors.Is(err, ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant, got: %v", err)
 	} else if v != nil {
 		t.Error("AsTool() should return nil for unknown type")
 	}

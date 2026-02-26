@@ -2,6 +2,7 @@ package opencode_test
 
 import (
 	"encoding/json"
+	"errors"
 	"testing"
 
 	"github.com/dominicnunez/opencode-sdk-go"
@@ -56,13 +57,10 @@ func TestMessage_AsUser_ValidUserMessage(t *testing.T) {
 		t.Errorf("expected body 'test body', got %s", userMsg.Summary.Body)
 	}
 
-	// Test AsAssistant - should fail
+	// Test AsAssistant - should return ErrWrongVariant
 	assistantMsg, err := msg.AsAssistant()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if assistantMsg != nil {
-		t.Error("AsAssistant should return false for user role")
+	if !errors.Is(err, opencode.ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant, got: %v", err)
 	}
 	if assistantMsg != nil {
 		t.Error("assistantMsg should be nil for user role")
@@ -137,13 +135,10 @@ func TestMessage_AsAssistant_ValidAssistantMessage(t *testing.T) {
 		t.Errorf("expected input tokens 1000, got %d", assistantMsg.Tokens.Input)
 	}
 
-	// Test AsUser - should fail
+	// Test AsUser - should return ErrWrongVariant
 	userMsg, err := msg.AsUser()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if userMsg != nil {
-		t.Error("AsUser should return false for assistant role")
+	if !errors.Is(err, opencode.ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant, got: %v", err)
 	}
 	if userMsg != nil {
 		t.Error("userMsg should be nil for assistant role")
@@ -158,24 +153,18 @@ func TestMessage_InvalidJSON(t *testing.T) {
 		t.Fatalf("unmarshal should not fail on unknown role: %v", err)
 	}
 
-	// Both As* methods should return false for invalid role
+	// Both As* methods should return ErrWrongVariant for invalid role
 	userMsg, err := msg.AsUser()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if userMsg != nil {
-		t.Error("AsUser should return false for invalid role")
+	if !errors.Is(err, opencode.ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant, got: %v", err)
 	}
 	if userMsg != nil {
 		t.Error("userMsg should be nil for invalid role")
 	}
 
 	assistantMsg, err := msg.AsAssistant()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if assistantMsg != nil {
-		t.Error("AsAssistant should return false for invalid role")
+	if !errors.Is(err, opencode.ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant, got: %v", err)
 	}
 	if assistantMsg != nil {
 		t.Error("assistantMsg should be nil for invalid role")
@@ -209,24 +198,18 @@ func TestMessage_EmptyJSON(t *testing.T) {
 		t.Fatalf("unmarshal should not fail on empty object: %v", err)
 	}
 
-	// Both As* methods should return false for empty role
+	// Both As* methods should return ErrWrongVariant for empty role
 	userMsg, err := msg.AsUser()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if userMsg != nil {
-		t.Error("AsUser should return false for empty role")
+	if !errors.Is(err, opencode.ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant, got: %v", err)
 	}
 	if userMsg != nil {
 		t.Error("userMsg should be nil for empty role")
 	}
 
 	assistantMsg, err := msg.AsAssistant()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if assistantMsg != nil {
-		t.Error("AsAssistant should return false for empty role")
+	if !errors.Is(err, opencode.ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant, got: %v", err)
 	}
 	if assistantMsg != nil {
 		t.Error("assistantMsg should be nil for empty role")
