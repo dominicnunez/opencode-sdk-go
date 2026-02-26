@@ -105,7 +105,7 @@ func TestSessionDeleteWithOptionalParams(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create client: %v", err)
 	}
-	err = client.Session.Delete(
+	_, err = client.Session.Delete(
 		context.TODO(),
 		"sesJ!",
 		&opencode.SessionDeleteParams{
@@ -134,7 +134,7 @@ func TestSessionAbortWithOptionalParams(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create client: %v", err)
 	}
-	err = client.Session.Abort(
+	_, err = client.Session.Abort(
 		context.TODO(),
 		"id",
 		&opencode.SessionAbortParams{

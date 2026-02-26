@@ -283,7 +283,8 @@ func TestSessionDelete_Success(t *testing.T) {
 			t.Errorf("Expected path /session/sess_123, got %s", r.URL.Path)
 		}
 
-		w.WriteHeader(http.StatusNoContent)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte("true"))
 	}))
 	defer server.Close()
 
@@ -292,7 +293,7 @@ func TestSessionDelete_Success(t *testing.T) {
 		t.Fatalf("Failed to create client: %v", err)
 	}
 
-	err = client.Session.Delete(context.Background(), "sess_123", nil)
+	_, err = client.Session.Delete(context.Background(), "sess_123", nil)
 	if err != nil {
 		t.Fatalf("Delete failed: %v", err)
 	}
@@ -306,7 +307,8 @@ func TestSessionDelete_WithDirectoryParam(t *testing.T) {
 			t.Errorf("Expected directory query param /custom/dir, got %s", queryDir)
 		}
 
-		w.WriteHeader(http.StatusNoContent)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte("true"))
 	}))
 	defer server.Close()
 
@@ -316,7 +318,7 @@ func TestSessionDelete_WithDirectoryParam(t *testing.T) {
 	}
 
 	dir := "/custom/dir"
-	err = client.Session.Delete(context.Background(), "sess_123", &SessionDeleteParams{
+	_, err = client.Session.Delete(context.Background(), "sess_123", &SessionDeleteParams{
 		Directory: &dir,
 	})
 	if err != nil {
@@ -331,7 +333,7 @@ func TestSessionDelete_MissingID(t *testing.T) {
 		t.Fatalf("Failed to create client: %v", err)
 	}
 
-	err = client.Session.Delete(context.Background(), "", nil)
+	_, err = client.Session.Delete(context.Background(), "", nil)
 	if err == nil {
 		t.Fatal("Expected error for missing ID, got nil")
 	}
@@ -353,7 +355,7 @@ func TestSessionDelete_ServerError(t *testing.T) {
 		t.Fatalf("Failed to create client: %v", err)
 	}
 
-	err = client.Session.Delete(context.Background(), "sess_123", nil)
+	_, err = client.Session.Delete(context.Background(), "sess_123", nil)
 	if err == nil {
 		t.Fatal("Expected error for server error, got nil")
 	}
