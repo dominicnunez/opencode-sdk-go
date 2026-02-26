@@ -37,7 +37,7 @@ func TestClientDo_Success(t *testing.T) {
 	}
 
 	_, err = client.Session.Create(context.Background(), &opencode.SessionNewParams{
-		ParentID: opencode.PtrString("test-parent"),
+		ParentID: opencode.Ptr("test-parent"),
 	})
 	// Just check that the request was made successfully
 	if err != nil {
@@ -119,7 +119,7 @@ func TestClientDo_QueryParams(t *testing.T) {
 	}
 
 	params := &opencode.SessionListParams{
-		Directory: opencode.PtrString("/test"),
+		Directory: opencode.Ptr("/test"),
 	}
 	_, err = client.Session.List(context.Background(), params)
 	if err != nil {
@@ -154,7 +154,7 @@ func TestClientDo_PostWithBody(t *testing.T) {
 	}
 
 	_, err = client.Session.Create(context.Background(), &opencode.SessionNewParams{
-		ParentID: opencode.PtrString("test-parent"),
+		ParentID: opencode.Ptr("test-parent"),
 	})
 	if err != nil {
 		t.Fatalf("Session.Create failed: %v", err)

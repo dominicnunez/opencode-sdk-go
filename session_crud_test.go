@@ -374,7 +374,7 @@ func TestSessionUpdateParams_URLQuery(t *testing.T) {
 		{
 			name: "With directory",
 			params: SessionUpdateParams{
-				Directory: PtrString("/test/dir"),
+				Directory: Ptr("/test/dir"),
 			},
 			expect: "directory=%2Ftest%2Fdir",
 		},
@@ -410,7 +410,7 @@ func TestSessionDeleteParams_URLQuery(t *testing.T) {
 		{
 			name: "With directory",
 			params: SessionDeleteParams{
-				Directory: PtrString("/test/dir"),
+				Directory: Ptr("/test/dir"),
 			},
 			expect: "directory=%2Ftest%2Fdir",
 		},
@@ -446,7 +446,7 @@ func TestSessionGetParams_URLQuery(t *testing.T) {
 		{
 			name: "With directory",
 			params: SessionGetParams{
-				Directory: PtrString("/test/dir"),
+				Directory: Ptr("/test/dir"),
 			},
 			expect: "directory=%2Ftest%2Fdir",
 		},

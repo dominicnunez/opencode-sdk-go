@@ -11,9 +11,9 @@ import (
 // and optional fields are pointers with proper JSON marshaling
 func TestSessionNewParams_DirectTypes(t *testing.T) {
 	params := &opencode.SessionNewParams{
-		Directory: opencode.PtrString("/tmp/test"),
-		ParentID:  opencode.PtrString("parent123"),
-		Title:     opencode.PtrString("Test Session"),
+		Directory: opencode.Ptr("/tmp/test"),
+		ParentID:  opencode.Ptr("parent123"),
+		Title:     opencode.Ptr("Test Session"),
 	}
 
 	data, err := json.Marshal(params)
@@ -40,8 +40,8 @@ func TestSessionCommandParams_RequiredFields(t *testing.T) {
 	params := &opencode.SessionCommandParams{
 		Arguments: "test args",
 		Command:   "test command",
-		Directory: opencode.PtrString("/tmp"),
-		Agent:     opencode.PtrString("agent1"),
+		Directory: opencode.Ptr("/tmp"),
+		Agent:     opencode.Ptr("agent1"),
 	}
 
 	data, err := json.Marshal(params)
@@ -76,7 +76,7 @@ func TestSessionPromptParams_ComplexTypes(t *testing.T) {
 			opencode.AgentPartInputParam{
 				Name:   "test-agent",
 				Type:   opencode.AgentPartInputTypeAgent,
-				ID:     opencode.PtrString("agent1"),
+				ID:     opencode.Ptr("agent1"),
 				Source: &opencode.AgentPartInputSourceParam{
 					End:   100,
 					Start: 0,
@@ -84,12 +84,12 @@ func TestSessionPromptParams_ComplexTypes(t *testing.T) {
 				},
 			},
 		},
-		Agent: opencode.PtrString("test-agent"),
+		Agent: opencode.Ptr("test-agent"),
 		Model: &opencode.SessionPromptParamsModel{
 			ModelID:    "gpt-4",
 			ProviderID: "openai",
 		},
-		NoReply: opencode.PtrBool(false),
+		NoReply: opencode.Ptr(false),
 	}
 
 	data, err := json.Marshal(params)
@@ -135,7 +135,7 @@ func TestSessionInitParams_MixedRequiredOptional(t *testing.T) {
 		MessageID:  "msg123",
 		ModelID:    "gpt-4",
 		ProviderID: "openai",
-		Directory:  opencode.PtrString("/tmp/test"),
+		Directory:  opencode.Ptr("/tmp/test"),
 	}
 
 	data, err := json.Marshal(params)

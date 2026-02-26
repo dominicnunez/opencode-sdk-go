@@ -262,7 +262,7 @@ func TestAuthSetParams_URLQuery(t *testing.T) {
 			name: "with directory",
 			params: AuthSetParams{
 				Auth:      Auth{Type: AuthTypeAPI},
-				Directory: PtrString("/test/dir"),
+				Directory: Ptr("/test/dir"),
 			},
 			expected: url.Values{"directory": []string{"/test/dir"}},
 		},

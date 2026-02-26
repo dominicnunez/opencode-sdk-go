@@ -24,9 +24,9 @@ func TestSessionNewWithOptionalParams(t *testing.T) {
 		t.Fatalf("failed to create client: %v", err)
 	}
 	_, err = client.Session.Create(context.TODO(), &opencode.SessionNewParams{
-		Directory: opencode.PtrString("directory"),
-		ParentID:  opencode.PtrString("sesJ!"),
-		Title:     opencode.PtrString("title"),
+		Directory: opencode.Ptr("directory"),
+		ParentID:  opencode.Ptr("sesJ!"),
+		Title:     opencode.Ptr("title"),
 	})
 	if err != nil {
 		var apierr *opencode.Error
@@ -54,8 +54,8 @@ func TestSessionUpdateWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"id",
 		&opencode.SessionUpdateParams{
-			Directory: opencode.PtrString("directory"),
-			Title:     opencode.PtrString("title"),
+			Directory: opencode.Ptr("directory"),
+			Title:     opencode.Ptr("title"),
 		},
 	)
 	if err != nil {
@@ -81,7 +81,7 @@ func TestSessionListWithOptionalParams(t *testing.T) {
 		t.Fatalf("failed to create client: %v", err)
 	}
 	_, err = client.Session.List(context.TODO(), &opencode.SessionListParams{
-		Directory: opencode.PtrString("directory"),
+		Directory: opencode.Ptr("directory"),
 	})
 	if err != nil {
 		var apierr *opencode.Error
@@ -109,7 +109,7 @@ func TestSessionDeleteWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"sesJ!",
 		&opencode.SessionDeleteParams{
-			Directory: opencode.PtrString("directory"),
+			Directory: opencode.Ptr("directory"),
 		},
 	)
 	if err != nil {
@@ -138,7 +138,7 @@ func TestSessionAbortWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"id",
 		&opencode.SessionAbortParams{
-			Directory: opencode.PtrString("directory"),
+			Directory: opencode.Ptr("directory"),
 		},
 	)
 	if err != nil {
@@ -167,7 +167,7 @@ func TestSessionChildrenWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"sesJ!",
 		&opencode.SessionChildrenParams{
-			Directory: opencode.PtrString("directory"),
+			Directory: opencode.Ptr("directory"),
 		},
 	)
 	if err != nil {
@@ -198,10 +198,10 @@ func TestSessionCommandWithOptionalParams(t *testing.T) {
 		&opencode.SessionCommandParams{
 			Arguments: "arguments",
 			Command: "command",
-			Directory: opencode.PtrString("directory"),
-			Agent:     opencode.PtrString("agent"),
-			MessageID: opencode.PtrString("msgJ!"),
-			Model:     opencode.PtrString("model"),
+			Directory: opencode.Ptr("directory"),
+			Agent:     opencode.Ptr("agent"),
+			MessageID: opencode.Ptr("msgJ!"),
+			Model:     opencode.Ptr("model"),
 		},
 	)
 	if err != nil {
@@ -230,7 +230,7 @@ func TestSessionGetWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"sesJ!",
 		&opencode.SessionGetParams{
-			Directory: opencode.PtrString("directory"),
+			Directory: opencode.Ptr("directory"),
 		},
 	)
 	if err != nil {
@@ -262,7 +262,7 @@ func TestSessionInitWithOptionalParams(t *testing.T) {
 			MessageID: "msgJ!",
 			ModelID: "modelID",
 			ProviderID: "providerID",
-			Directory:  opencode.PtrString("directory"),
+			Directory:  opencode.Ptr("directory"),
 		},
 	)
 	if err != nil {
@@ -292,7 +292,7 @@ func TestSessionMessageWithOptionalParams(t *testing.T) {
 		"id",
 		"messageID",
 		&opencode.SessionMessageParams{
-			Directory: opencode.PtrString("directory"),
+			Directory: opencode.Ptr("directory"),
 		},
 	)
 	if err != nil {
@@ -321,7 +321,7 @@ func TestSessionMessagesWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"id",
 		&opencode.SessionMessagesParams{
-			Directory: opencode.PtrString("directory"),
+			Directory: opencode.Ptr("directory"),
 		},
 	)
 	if err != nil {
@@ -353,25 +353,25 @@ func TestSessionPromptWithOptionalParams(t *testing.T) {
 			Parts: []opencode.SessionPromptParamsPartUnion{opencode.TextPartInputParam{
 				Text: "text",
 				Type: opencode.TextPartInputTypeText,
-				ID:   opencode.PtrString("id"),
+				ID:   opencode.Ptr("id"),
 				Metadata: &map[string]interface{}{
 					"foo": "bar",
 				},
-				Synthetic: opencode.PtrBool(true),
+				Synthetic: opencode.Ptr(true),
 				Time: &opencode.TextPartInputTimeParam{
 					Start: 0.000000,
-					End:   opencode.PtrFloat(0.000000),
+					End:   opencode.Ptr(0.000000),
 				},
 			}},
-			Directory: opencode.PtrString("directory"),
-			Agent:     opencode.PtrString("agent"),
-			MessageID: opencode.PtrString("msgJ!"),
+			Directory: opencode.Ptr("directory"),
+			Agent:     opencode.Ptr("agent"),
+			MessageID: opencode.Ptr("msgJ!"),
 			Model: &opencode.SessionPromptParamsModel{
 				ModelID:    "modelID",
 				ProviderID: "providerID",
 			},
-			NoReply: opencode.PtrBool(true),
-			System:  opencode.PtrString("system"),
+			NoReply: opencode.Ptr(true),
+			System:  opencode.Ptr("system"),
 			Tools: &map[string]bool{
 				"foo": true,
 			},
@@ -404,8 +404,8 @@ func TestSessionRevertWithOptionalParams(t *testing.T) {
 		"id",
 		&opencode.SessionRevertParams{
 			MessageID: "msgJ!",
-			Directory: opencode.PtrString("directory"),
-			PartID:    opencode.PtrString("prtJ!"),
+			Directory: opencode.Ptr("directory"),
+			PartID:    opencode.Ptr("prtJ!"),
 		},
 	)
 	if err != nil {
@@ -434,7 +434,7 @@ func TestSessionShareWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"id",
 		&opencode.SessionShareParams{
-			Directory: opencode.PtrString("directory"),
+			Directory: opencode.Ptr("directory"),
 		},
 	)
 	if err != nil {
