@@ -261,7 +261,7 @@ func TestAuthSetParams_URLQuery(t *testing.T) {
 		{
 			name: "with directory",
 			params: AuthSetParams{
-				Auth:      Auth{Type: AuthTypeAPI},
+				Auth:      ApiAuth{Type: AuthTypeAPI, Key: "k"},
 				Directory: Ptr("/test/dir"),
 			},
 			expected: url.Values{"directory": []string{"/test/dir"}},
@@ -269,7 +269,7 @@ func TestAuthSetParams_URLQuery(t *testing.T) {
 		{
 			name: "without directory",
 			params: AuthSetParams{
-				Auth: Auth{Type: AuthTypeAPI},
+				Auth: ApiAuth{Type: AuthTypeAPI, Key: "k"},
 			},
 			expected: url.Values{},
 		},

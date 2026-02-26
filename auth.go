@@ -34,11 +34,14 @@ func (s *AuthService) Set(ctx context.Context, id string, params *AuthSetParams)
 	return result, nil
 }
 
+// AuthSetParamsAuthUnion is satisfied by [OAuth], [ApiAuth], and [WellKnownAuth].
+type AuthSetParamsAuthUnion interface {
+	implementsAuthSetParamsAuthUnion()
+}
+
 type AuthSetParams struct {
-	// Auth union: one of OAuth, ApiAuth, or WellKnownAuth
-	// Use the concrete types when calling Set
-	Auth      interface{} `json:"-"`
-	Directory *string     `query:"directory,omitempty"`
+	Auth      AuthSetParamsAuthUnion `json:"-"`
+	Directory *string                `query:"directory,omitempty"`
 }
 
 // URLQuery serializes [AuthSetParams]'s query parameters as `url.Values`.

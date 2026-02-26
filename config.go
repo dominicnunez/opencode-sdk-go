@@ -1525,11 +1525,15 @@ type OAuth struct {
 	Expires int64    `json:"expires"`
 }
 
+func (OAuth) implementsAuthSetParamsAuthUnion() {}
+
 // ApiAuth represents API key authentication
 type ApiAuth struct {
 	Type AuthType `json:"type"`
 	Key  string   `json:"key"`
 }
+
+func (ApiAuth) implementsAuthSetParamsAuthUnion() {}
 
 // WellKnownAuth represents well-known authentication
 type WellKnownAuth struct {
@@ -1537,6 +1541,8 @@ type WellKnownAuth struct {
 	Key   string   `json:"key"`
 	Token string   `json:"token"`
 }
+
+func (WellKnownAuth) implementsAuthSetParamsAuthUnion() {}
 
 type ConfigGetParams struct {
 	Directory *string `query:"directory,omitempty"`

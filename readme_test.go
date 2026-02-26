@@ -124,9 +124,12 @@ func TestREADMEExamples(t *testing.T) {
 	t.Run("Authentication", func(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if r.URL.Path == "/auth/provider-id" && r.Method == http.MethodPut {
-				var authParams AuthSetParams
-				if err := json.NewDecoder(r.Body).Decode(&authParams.Auth); err != nil {
+				var body map[string]interface{}
+				if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 					t.Fatal(err)
+				}
+				if body["type"] != string(AuthTypeOAuth) {
+					t.Fatalf("expected oauth type, got %v", body["type"])
 				}
 				w.Header().Set("Content-Type", "application/json")
 				_, _ = w.Write([]byte("true"))
