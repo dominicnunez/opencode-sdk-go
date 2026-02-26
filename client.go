@@ -20,8 +20,9 @@ const (
 	DefaultTimeout    = 30 * time.Second
 	DefaultMaxRetries = 2
 
-	initialBackoffMs = 500
-	maxBackoff       = 8 * time.Second
+	initialBackoffMs     = 500
+	maxBackoff           = 8 * time.Second
+	maxErrorBodySize     = 1 << 20 // 1 MB
 )
 
 type Client struct {
@@ -221,7 +222,7 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 				resp.StatusCode >= http.StatusInternalServerError
 
 			if !shouldRetry || attempt >= c.maxRetries {
-				bodyBytes, readErr := io.ReadAll(resp.Body)
+				bodyBytes, readErr := io.ReadAll(io.LimitReader(resp.Body, maxErrorBodySize))
 				resp.Body.Close()
 
 				msg := string(bodyBytes)

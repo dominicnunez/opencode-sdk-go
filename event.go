@@ -53,7 +53,7 @@ func (s *EventService) ListStreaming(ctx context.Context, params *EventListParam
 
 	if resp.StatusCode >= 400 {
 		defer resp.Body.Close()
-		body, readErr := io.ReadAll(resp.Body)
+		body, readErr := io.ReadAll(io.LimitReader(resp.Body, maxErrorBodySize))
 		msg := string(body)
 		if readErr != nil {
 			msg = fmt.Sprintf("(failed to read body: %v)", readErr)
