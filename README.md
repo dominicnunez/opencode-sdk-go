@@ -4,7 +4,7 @@
 
 An idiomatic Go SDK for the [OpenCode](https://opencode.ai) REST API. Built with Go's standard library — no generated code, no heavy dependencies.
 
-> **Note:** This SDK is for **OpenCode** by [Anomaly Co](https://anomaly.co), not OpenAI Codex. They are completely different products.
+> **Note:** This SDK is for **OpenCode** by [Anomaly Co](https://github.com/anomalyco), not OpenAI Codex. They are completely different products.
 
 ## Installation
 
@@ -168,6 +168,3 @@ This package follows [SemVer](https://semver.org/spec/v2.0.0.html). Minor versio
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
-## License
-
-MIT
