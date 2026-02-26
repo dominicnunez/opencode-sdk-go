@@ -81,231 +81,231 @@ func (e *Event) UnmarshalJSON(data []byte) error {
 }
 
 // AsInstallationUpdated returns the event as EventInstallationUpdated if Type is "installation.updated".
-func (e Event) AsInstallationUpdated() (*EventInstallationUpdated, bool) {
+func (e Event) AsInstallationUpdated() (*EventInstallationUpdated, error) {
 	if e.Type != EventTypeInstallationUpdated {
-		return nil, false
+		return nil, nil
 	}
 	var evt EventInstallationUpdated
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
-		return nil, false
+		return nil, fmt.Errorf("unmarshal %s Type: %w", e.Type, err)
 	}
-	return &evt, true
+	return &evt, nil
 }
 
 // AsLspClientDiagnostics returns the event as EventLspClientDiagnostics if Type is "lsp.client.diagnostics".
-func (e Event) AsLspClientDiagnostics() (*EventLspClientDiagnostics, bool) {
+func (e Event) AsLspClientDiagnostics() (*EventLspClientDiagnostics, error) {
 	if e.Type != EventTypeLspClientDiagnostics {
-		return nil, false
+		return nil, nil
 	}
 	var evt EventLspClientDiagnostics
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
-		return nil, false
+		return nil, fmt.Errorf("unmarshal %s Type: %w", e.Type, err)
 	}
-	return &evt, true
+	return &evt, nil
 }
 
 // AsMessageUpdated returns the event as EventMessageUpdated if Type is "message.updated".
-func (e Event) AsMessageUpdated() (*EventMessageUpdated, bool) {
+func (e Event) AsMessageUpdated() (*EventMessageUpdated, error) {
 	if e.Type != EventTypeMessageUpdated {
-		return nil, false
+		return nil, nil
 	}
 	var evt EventMessageUpdated
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
-		return nil, false
+		return nil, fmt.Errorf("unmarshal %s Type: %w", e.Type, err)
 	}
-	return &evt, true
+	return &evt, nil
 }
 
 // AsMessageRemoved returns the event as EventMessageRemoved if Type is "message.removed".
-func (e Event) AsMessageRemoved() (*EventMessageRemoved, bool) {
+func (e Event) AsMessageRemoved() (*EventMessageRemoved, error) {
 	if e.Type != EventTypeMessageRemoved {
-		return nil, false
+		return nil, nil
 	}
 	var evt EventMessageRemoved
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
-		return nil, false
+		return nil, fmt.Errorf("unmarshal %s Type: %w", e.Type, err)
 	}
-	return &evt, true
+	return &evt, nil
 }
 
 // AsMessagePartUpdated returns the event as EventMessagePartUpdated if Type is "message.part.updated".
-func (e Event) AsMessagePartUpdated() (*EventMessagePartUpdated, bool) {
+func (e Event) AsMessagePartUpdated() (*EventMessagePartUpdated, error) {
 	if e.Type != EventTypeMessagePartUpdated {
-		return nil, false
+		return nil, nil
 	}
 	var evt EventMessagePartUpdated
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
-		return nil, false
+		return nil, fmt.Errorf("unmarshal %s Type: %w", e.Type, err)
 	}
-	return &evt, true
+	return &evt, nil
 }
 
 // AsMessagePartRemoved returns the event as EventMessagePartRemoved if Type is "message.part.removed".
-func (e Event) AsMessagePartRemoved() (*EventMessagePartRemoved, bool) {
+func (e Event) AsMessagePartRemoved() (*EventMessagePartRemoved, error) {
 	if e.Type != EventTypeMessagePartRemoved {
-		return nil, false
+		return nil, nil
 	}
 	var evt EventMessagePartRemoved
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
-		return nil, false
+		return nil, fmt.Errorf("unmarshal %s Type: %w", e.Type, err)
 	}
-	return &evt, true
+	return &evt, nil
 }
 
 // AsSessionCompacted returns the event as EventSessionCompacted if Type is "session.compacted".
-func (e Event) AsSessionCompacted() (*EventSessionCompacted, bool) {
+func (e Event) AsSessionCompacted() (*EventSessionCompacted, error) {
 	if e.Type != EventTypeSessionCompacted {
-		return nil, false
+		return nil, nil
 	}
 	var evt EventSessionCompacted
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
-		return nil, false
+		return nil, fmt.Errorf("unmarshal %s Type: %w", e.Type, err)
 	}
-	return &evt, true
+	return &evt, nil
 }
 
 // AsPermissionUpdated returns the event as EventPermissionUpdated if Type is "permission.updated".
-func (e Event) AsPermissionUpdated() (*EventPermissionUpdated, bool) {
+func (e Event) AsPermissionUpdated() (*EventPermissionUpdated, error) {
 	if e.Type != EventTypePermissionUpdated {
-		return nil, false
+		return nil, nil
 	}
 	var evt EventPermissionUpdated
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
-		return nil, false
+		return nil, fmt.Errorf("unmarshal %s Type: %w", e.Type, err)
 	}
-	return &evt, true
+	return &evt, nil
 }
 
 // AsPermissionReplied returns the event as EventPermissionReplied if Type is "permission.replied".
-func (e Event) AsPermissionReplied() (*EventPermissionReplied, bool) {
+func (e Event) AsPermissionReplied() (*EventPermissionReplied, error) {
 	if e.Type != EventTypePermissionReplied {
-		return nil, false
+		return nil, nil
 	}
 	var evt EventPermissionReplied
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
-		return nil, false
+		return nil, fmt.Errorf("unmarshal %s Type: %w", e.Type, err)
 	}
-	return &evt, true
+	return &evt, nil
 }
 
 // AsFileEdited returns the event as EventFileEdited if Type is "file.edited".
-func (e Event) AsFileEdited() (*EventFileEdited, bool) {
+func (e Event) AsFileEdited() (*EventFileEdited, error) {
 	if e.Type != EventTypeFileEdited {
-		return nil, false
+		return nil, nil
 	}
 	var evt EventFileEdited
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
-		return nil, false
+		return nil, fmt.Errorf("unmarshal %s Type: %w", e.Type, err)
 	}
-	return &evt, true
+	return &evt, nil
 }
 
 // AsFileWatcherUpdated returns the event as EventFileWatcherUpdated if Type is "file.watcher.updated".
-func (e Event) AsFileWatcherUpdated() (*EventFileWatcherUpdated, bool) {
+func (e Event) AsFileWatcherUpdated() (*EventFileWatcherUpdated, error) {
 	if e.Type != EventTypeFileWatcherUpdated {
-		return nil, false
+		return nil, nil
 	}
 	var evt EventFileWatcherUpdated
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
-		return nil, false
+		return nil, fmt.Errorf("unmarshal %s Type: %w", e.Type, err)
 	}
-	return &evt, true
+	return &evt, nil
 }
 
 // AsTodoUpdated returns the event as EventTodoUpdated if Type is "todo.updated".
-func (e Event) AsTodoUpdated() (*EventTodoUpdated, bool) {
+func (e Event) AsTodoUpdated() (*EventTodoUpdated, error) {
 	if e.Type != EventTypeTodoUpdated {
-		return nil, false
+		return nil, nil
 	}
 	var evt EventTodoUpdated
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
-		return nil, false
+		return nil, fmt.Errorf("unmarshal %s Type: %w", e.Type, err)
 	}
-	return &evt, true
+	return &evt, nil
 }
 
 // AsSessionIdle returns the event as EventSessionIdle if Type is "session.idle".
-func (e Event) AsSessionIdle() (*EventSessionIdle, bool) {
+func (e Event) AsSessionIdle() (*EventSessionIdle, error) {
 	if e.Type != EventTypeSessionIdle {
-		return nil, false
+		return nil, nil
 	}
 	var evt EventSessionIdle
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
-		return nil, false
+		return nil, fmt.Errorf("unmarshal %s Type: %w", e.Type, err)
 	}
-	return &evt, true
+	return &evt, nil
 }
 
 // AsSessionCreated returns the event as EventSessionCreated if Type is "session.created".
-func (e Event) AsSessionCreated() (*EventSessionCreated, bool) {
+func (e Event) AsSessionCreated() (*EventSessionCreated, error) {
 	if e.Type != EventTypeSessionCreated {
-		return nil, false
+		return nil, nil
 	}
 	var evt EventSessionCreated
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
-		return nil, false
+		return nil, fmt.Errorf("unmarshal %s Type: %w", e.Type, err)
 	}
-	return &evt, true
+	return &evt, nil
 }
 
 // AsSessionUpdated returns the event as EventSessionUpdated if Type is "session.updated".
-func (e Event) AsSessionUpdated() (*EventSessionUpdated, bool) {
+func (e Event) AsSessionUpdated() (*EventSessionUpdated, error) {
 	if e.Type != EventTypeSessionUpdated {
-		return nil, false
+		return nil, nil
 	}
 	var evt EventSessionUpdated
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
-		return nil, false
+		return nil, fmt.Errorf("unmarshal %s Type: %w", e.Type, err)
 	}
-	return &evt, true
+	return &evt, nil
 }
 
 // AsSessionDeleted returns the event as EventSessionDeleted if Type is "session.deleted".
-func (e Event) AsSessionDeleted() (*EventSessionDeleted, bool) {
+func (e Event) AsSessionDeleted() (*EventSessionDeleted, error) {
 	if e.Type != EventTypeSessionDeleted {
-		return nil, false
+		return nil, nil
 	}
 	var evt EventSessionDeleted
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
-		return nil, false
+		return nil, fmt.Errorf("unmarshal %s Type: %w", e.Type, err)
 	}
-	return &evt, true
+	return &evt, nil
 }
 
 // AsSessionError returns the event as EventSessionError if Type is "session.error".
-func (e Event) AsSessionError() (*EventSessionError, bool) {
+func (e Event) AsSessionError() (*EventSessionError, error) {
 	if e.Type != EventTypeSessionError {
-		return nil, false
+		return nil, nil
 	}
 	var evt EventSessionError
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
-		return nil, false
+		return nil, fmt.Errorf("unmarshal %s Type: %w", e.Type, err)
 	}
-	return &evt, true
+	return &evt, nil
 }
 
 // AsServerConnected returns the event as EventServerConnected if Type is "server.connected".
-func (e Event) AsServerConnected() (*EventServerConnected, bool) {
+func (e Event) AsServerConnected() (*EventServerConnected, error) {
 	if e.Type != EventTypeServerConnected {
-		return nil, false
+		return nil, nil
 	}
 	var evt EventServerConnected
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
-		return nil, false
+		return nil, fmt.Errorf("unmarshal %s Type: %w", e.Type, err)
 	}
-	return &evt, true
+	return &evt, nil
 }
 
 // AsIdeInstalled returns the event as EventIdeInstalled if Type is "ide.installed".
-func (e Event) AsIdeInstalled() (*EventIdeInstalled, bool) {
+func (e Event) AsIdeInstalled() (*EventIdeInstalled, error) {
 	if e.Type != EventTypeIdeInstalled {
-		return nil, false
+		return nil, nil
 	}
 	var evt EventIdeInstalled
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
-		return nil, false
+		return nil, fmt.Errorf("unmarshal %s Type: %w", e.Type, err)
 	}
-	return &evt, true
+	return &evt, nil
 }
 
 type EventInstallationUpdated struct {
@@ -749,63 +749,63 @@ func (r *SessionError) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (r SessionError) AsProviderAuth() (*shared.ProviderAuthError, bool) {
+func (r SessionError) AsProviderAuth() (*shared.ProviderAuthError, error) {
 	if r.Name != SessionErrorNameProviderAuthError {
-		return nil, false
+		return nil, nil
 	}
-	var err shared.ProviderAuthError
-	if e := json.Unmarshal(r.raw, &err); e != nil {
-		return nil, false
+	var v shared.ProviderAuthError
+	if err := json.Unmarshal(r.raw, &v); err != nil {
+		return nil, fmt.Errorf("unmarshal %s error: %w", r.Name, err)
 	}
-	return &err, true
+	return &v, nil
 }
 
-func (r SessionError) AsUnknown() (*shared.UnknownError, bool) {
+func (r SessionError) AsUnknown() (*shared.UnknownError, error) {
 	if r.Name != SessionErrorNameUnknownError {
-		return nil, false
+		return nil, nil
 	}
-	var err shared.UnknownError
-	if e := json.Unmarshal(r.raw, &err); e != nil {
-		return nil, false
+	var v shared.UnknownError
+	if err := json.Unmarshal(r.raw, &v); err != nil {
+		return nil, fmt.Errorf("unmarshal %s error: %w", r.Name, err)
 	}
-	return &err, true
+	return &v, nil
 }
 
-func (r SessionError) AsOutputLength() (*MessageOutputLengthError, bool) {
+func (r SessionError) AsOutputLength() (*MessageOutputLengthError, error) {
 	if r.Name != SessionErrorNameMessageOutputLengthError {
-		return nil, false
+		return nil, nil
 	}
-	var err MessageOutputLengthError
-	if e := json.Unmarshal(r.raw, &err); e != nil {
-		return nil, false
+	var v MessageOutputLengthError
+	if err := json.Unmarshal(r.raw, &v); err != nil {
+		return nil, fmt.Errorf("unmarshal %s error: %w", r.Name, err)
 	}
-	return &err, true
+	return &v, nil
 }
 
-func (r SessionError) AsAborted() (*shared.MessageAbortedError, bool) {
+func (r SessionError) AsAborted() (*shared.MessageAbortedError, error) {
 	if r.Name != SessionErrorNameMessageAbortedError {
-		return nil, false
+		return nil, nil
 	}
-	var err shared.MessageAbortedError
-	if e := json.Unmarshal(r.raw, &err); e != nil {
-		return nil, false
+	var v shared.MessageAbortedError
+	if err := json.Unmarshal(r.raw, &v); err != nil {
+		return nil, fmt.Errorf("unmarshal %s error: %w", r.Name, err)
 	}
-	return &err, true
+	return &v, nil
 }
 
-func (r SessionError) AsAPI() (*SessionAPIError, bool) {
+func (r SessionError) AsAPI() (*SessionAPIError, error) {
 	if r.Name != SessionErrorNameAPIError {
-		return nil, false
+		return nil, nil
 	}
-	var err SessionAPIError
-	if e := json.Unmarshal(r.raw, &err); e != nil {
-		return nil, false
+	var v SessionAPIError
+	if err := json.Unmarshal(r.raw, &v); err != nil {
+		return nil, fmt.Errorf("unmarshal %s error: %w", r.Name, err)
 	}
-	return &err, true
+	return &v, nil
 }
 
 type MessageOutputLengthError struct {
-	Data interface{}                  `json:"data"`
+	Data json.RawMessage              `json:"data"`
 	Name MessageOutputLengthErrorName `json:"name"`
 }
 

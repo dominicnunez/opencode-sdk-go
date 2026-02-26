@@ -1,5 +1,3 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
-
 package opencode
 
 import (
@@ -51,7 +49,7 @@ func (s *FindService) Text(ctx context.Context, params *FindTextParams) ([]FindT
 }
 
 type Symbol struct {
-	Kind     float64        `json:"kind"`
+	Kind     int64          `json:"kind"`
 	Location SymbolLocation `json:"location"`
 	Name     string         `json:"name"`
 }
@@ -67,18 +65,18 @@ type SymbolLocationRange struct {
 }
 
 type SymbolLocationRangeEnd struct {
-	Character float64 `json:"character"`
-	Line      float64 `json:"line"`
+	Character int64 `json:"character"`
+	Line      int64 `json:"line"`
 }
 
 type SymbolLocationRangeStart struct {
-	Character float64 `json:"character"`
-	Line      float64 `json:"line"`
+	Character int64 `json:"character"`
+	Line      int64 `json:"line"`
 }
 
 type FindTextResponse struct {
-	AbsoluteOffset float64                    `json:"absolute_offset"`
-	LineNumber     float64                    `json:"line_number"`
+	AbsoluteOffset int64                      `json:"absolute_offset"`
+	LineNumber     int64                      `json:"line_number"`
 	Lines          FindTextResponseLines      `json:"lines"`
 	Path           FindTextResponsePath       `json:"path"`
 	Submatches     []FindTextResponseSubmatch `json:"submatches"`
@@ -93,9 +91,9 @@ type FindTextResponsePath struct {
 }
 
 type FindTextResponseSubmatch struct {
-	End   float64                         `json:"end"`
+	End   int64                           `json:"end"`
 	Match FindTextResponseSubmatchesMatch `json:"match"`
-	Start float64                         `json:"start"`
+	Start int64                           `json:"start"`
 }
 
 type FindTextResponseSubmatchesMatch struct {

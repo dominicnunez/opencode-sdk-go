@@ -2,6 +2,7 @@ package opencode
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"net/url"
@@ -24,7 +25,7 @@ type ToolList []ToolListItem
 type ToolListItem struct {
 	ID          string      `json:"id"`
 	Description string      `json:"description"`
-	Parameters  interface{} `json:"parameters"`
+	Parameters  json.RawMessage `json:"parameters"`
 }
 
 // ToolIDsParams are the parameters for GET /experimental/tool/ids

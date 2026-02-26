@@ -30,12 +30,10 @@ Response Types:
 
 - <a href="https://pkg.go.dev/github.com/dominicnunez/opencode-sdk-go">opencode</a>.<a href="https://pkg.go.dev/github.com/dominicnunez/opencode-sdk-go#Model">Model</a>
 - <a href="https://pkg.go.dev/github.com/dominicnunez/opencode-sdk-go">opencode</a>.<a href="https://pkg.go.dev/github.com/dominicnunez/opencode-sdk-go#Provider">Provider</a>
-- <a href="https://pkg.go.dev/github.com/dominicnunez/opencode-sdk-go">opencode</a>.<a href="https://pkg.go.dev/github.com/dominicnunez/opencode-sdk-go#AppProvidersResponse">AppProvidersResponse</a>
 
 Methods:
 
 - <code title="post /log">client.App.<a href="https://pkg.go.dev/github.com/dominicnunez/opencode-sdk-go#AppService.Log">Log</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, params <a href="https://pkg.go.dev/github.com/dominicnunez/opencode-sdk-go">opencode</a>.<a href="https://pkg.go.dev/github.com/dominicnunez/opencode-sdk-go#AppLogParams">AppLogParams</a>) (<a href="https://pkg.go.dev/builtin#bool">bool</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
-- <code title="get /config/providers">client.App.<a href="https://pkg.go.dev/github.com/dominicnunez/opencode-sdk-go#AppService.Providers">Providers</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, query <a href="https://pkg.go.dev/github.com/dominicnunez/opencode-sdk-go">opencode</a>.<a href="https://pkg.go.dev/github.com/dominicnunez/opencode-sdk-go#AppProvidersParams">AppProvidersParams</a>) (<a href="https://pkg.go.dev/github.com/dominicnunez/opencode-sdk-go">opencode</a>.<a href="https://pkg.go.dev/github.com/dominicnunez/opencode-sdk-go#AppProvidersResponse">AppProvidersResponse</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 
 # Agent
 

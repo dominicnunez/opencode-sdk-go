@@ -17,9 +17,9 @@ type SessionService struct {
 	Permissions *SessionPermissionService
 }
 
-func (s *SessionService) Create(ctx context.Context, params *SessionNewParams) (*Session, error) {
+func (s *SessionService) Create(ctx context.Context, params *SessionCreateParams) (*Session, error) {
 	if params == nil {
-		params = &SessionNewParams{}
+		params = &SessionCreateParams{}
 	}
 	var result Session
 	err := s.client.do(ctx, http.MethodPost, "session", params, &result)
@@ -234,7 +234,7 @@ func (s *SessionService) Fork(ctx context.Context, id string, params *SessionFor
 		return nil, errors.New("missing required id parameter")
 	}
 	if params == nil {
-		return nil, errors.New("missing required params")
+		return nil, errors.New("params is required")
 	}
 	var result Session
 	err := s.client.do(ctx, http.MethodPost, "session/"+id+"/fork", params, &result)
@@ -249,7 +249,7 @@ func (s *SessionService) Shell(ctx context.Context, id string, params *SessionSh
 		return nil, errors.New("missing required id parameter")
 	}
 	if params == nil {
-		return nil, errors.New("missing required params")
+		return nil, errors.New("params is required")
 	}
 	var result AssistantMessage
 	err := s.client.do(ctx, http.MethodPost, "session/"+id+"/shell", params, &result)
@@ -264,7 +264,7 @@ func (s *SessionService) Summarize(ctx context.Context, id string, params *Sessi
 		return false, errors.New("missing required id parameter")
 	}
 	if params == nil {
-		return false, errors.New("missing required params")
+		return false, errors.New("params is required")
 	}
 	var result bool
 	err := s.client.do(ctx, http.MethodPost, "session/"+id+"/summarize", params, &result)
@@ -420,14 +420,14 @@ type AssistantMessageTime struct {
 
 type AssistantMessageTokens struct {
 	Cache     AssistantMessageTokensCache `json:"cache"`
-	Input     float64                     `json:"input"`
-	Output    float64                     `json:"output"`
-	Reasoning float64                     `json:"reasoning"`
+	Input     int64                     `json:"input"`
+	Output    int64                     `json:"output"`
+	Reasoning int64                     `json:"reasoning"`
 }
 
 type AssistantMessageTokensCache struct {
-	Read  float64                         `json:"read"`
-	Write float64                         `json:"write"`
+	Read  int64                         `json:"read"`
+	Write int64                         `json:"write"`
 }
 
 type AssistantMessageError struct {
@@ -448,63 +448,63 @@ func (r *AssistantMessageError) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (r AssistantMessageError) AsProviderAuth() (*shared.ProviderAuthError, bool) {
+func (r AssistantMessageError) AsProviderAuth() (*shared.ProviderAuthError, error) {
 	if r.Name != AssistantMessageErrorNameProviderAuthError {
-		return nil, false
+		return nil, nil
 	}
 	var err shared.ProviderAuthError
 	if err := json.Unmarshal(r.raw, &err); err != nil {
-		return nil, false
+		return nil, fmt.Errorf("unmarshal %s Name: %w", r.Name, err)
 	}
-	return &err, true
+	return &err, nil
 }
 
-func (r AssistantMessageError) AsUnknown() (*shared.UnknownError, bool) {
+func (r AssistantMessageError) AsUnknown() (*shared.UnknownError, error) {
 	if r.Name != AssistantMessageErrorNameUnknownError {
-		return nil, false
+		return nil, nil
 	}
 	var err shared.UnknownError
 	if err := json.Unmarshal(r.raw, &err); err != nil {
-		return nil, false
+		return nil, fmt.Errorf("unmarshal %s Name: %w", r.Name, err)
 	}
-	return &err, true
+	return &err, nil
 }
 
-func (r AssistantMessageError) AsOutputLength() (*AssistantMessageErrorMessageOutputLengthError, bool) {
+func (r AssistantMessageError) AsOutputLength() (*AssistantMessageErrorMessageOutputLengthError, error) {
 	if r.Name != AssistantMessageErrorNameMessageOutputLengthError {
-		return nil, false
+		return nil, nil
 	}
 	var err AssistantMessageErrorMessageOutputLengthError
 	if err := json.Unmarshal(r.raw, &err); err != nil {
-		return nil, false
+		return nil, fmt.Errorf("unmarshal %s Name: %w", r.Name, err)
 	}
-	return &err, true
+	return &err, nil
 }
 
-func (r AssistantMessageError) AsAborted() (*shared.MessageAbortedError, bool) {
+func (r AssistantMessageError) AsAborted() (*shared.MessageAbortedError, error) {
 	if r.Name != AssistantMessageErrorNameMessageAbortedError {
-		return nil, false
+		return nil, nil
 	}
 	var err shared.MessageAbortedError
 	if err := json.Unmarshal(r.raw, &err); err != nil {
-		return nil, false
+		return nil, fmt.Errorf("unmarshal %s Name: %w", r.Name, err)
 	}
-	return &err, true
+	return &err, nil
 }
 
-func (r AssistantMessageError) AsAPI() (*AssistantMessageErrorAPIError, bool) {
+func (r AssistantMessageError) AsAPI() (*AssistantMessageErrorAPIError, error) {
 	if r.Name != AssistantMessageErrorNameAPIError {
-		return nil, false
+		return nil, nil
 	}
 	var err AssistantMessageErrorAPIError
 	if err := json.Unmarshal(r.raw, &err); err != nil {
-		return nil, false
+		return nil, fmt.Errorf("unmarshal %s Name: %w", r.Name, err)
 	}
-	return &err, true
+	return &err, nil
 }
 
 type AssistantMessageErrorMessageOutputLengthError struct {
-	Data interface{}                                       `json:"data"`
+	Data json.RawMessage                                       `json:"data"`
 	Name AssistantMessageErrorMessageOutputLengthErrorName `json:"name"`
 }
 
@@ -532,7 +532,7 @@ type AssistantMessageErrorAPIErrorData struct {
 	Message         string                                `json:"message"`
 	ResponseBody    string                                `json:"responseBody"`
 	ResponseHeaders map[string]string                     `json:"responseHeaders"`
-	StatusCode      float64                               `json:"statusCode"`
+	StatusCode      int                               `json:"statusCode"`
 }
 
 type AssistantMessageErrorAPIErrorName string
@@ -596,8 +596,8 @@ type FileDiff struct {
 	File      string  `json:"file"`
 	Before    string  `json:"before"`
 	After     string  `json:"after"`
-	Additions float64 `json:"additions"`
-	Deletions float64 `json:"deletions"`
+	Additions int64 `json:"additions"`
+	Deletions int64 `json:"deletions"`
 }
 
 type FilePartInputParam struct {
@@ -629,7 +629,7 @@ func (r FilePartInputType) IsKnown() bool {
 type FilePartSource struct {
 	Type FilePartSourceType `json:"type"`
 	// Embed raw JSON for lazy decode
-	raw []byte `json:"-"`
+	raw json.RawMessage `json:"-"`
 }
 
 func (r *FilePartSource) UnmarshalJSON(data []byte) error {
@@ -646,27 +646,27 @@ func (r *FilePartSource) UnmarshalJSON(data []byte) error {
 }
 
 // AsFile returns the source as a FileSource if Type is "file".
-func (r FilePartSource) AsFile() (*FileSource, bool) {
+func (r FilePartSource) AsFile() (*FileSource, error) {
 	if r.Type != FilePartSourceTypeFile {
-		return nil, false
+		return nil, nil
 	}
 	var src FileSource
 	if err := json.Unmarshal(r.raw, &src); err != nil {
-		return nil, false
+		return nil, fmt.Errorf("unmarshal %s Type: %w", r.Type, err)
 	}
-	return &src, true
+	return &src, nil
 }
 
 // AsSymbol returns the source as a SymbolSource if Type is "symbol".
-func (r FilePartSource) AsSymbol() (*SymbolSource, bool) {
+func (r FilePartSource) AsSymbol() (*SymbolSource, error) {
 	if r.Type != FilePartSourceTypeSymbol {
-		return nil, false
+		return nil, nil
 	}
 	var src SymbolSource
 	if err := json.Unmarshal(r.raw, &src); err != nil {
-		return nil, false
+		return nil, fmt.Errorf("unmarshal %s Type: %w", r.Type, err)
 	}
-	return &src, true
+	return &src, nil
 }
 
 type FilePartSourceType string
@@ -767,27 +767,27 @@ func (r *Message) UnmarshalJSON(data []byte) error {
 }
 
 // AsUser returns the UserMessage if the role is "user".
-func (r Message) AsUser() (*UserMessage, bool) {
+func (r Message) AsUser() (*UserMessage, error) {
 	if r.Role != MessageRoleUser {
-		return nil, false
+		return nil, nil
 	}
 	var msg UserMessage
 	if err := json.Unmarshal(r.raw, &msg); err != nil {
-		return nil, false
+		return nil, fmt.Errorf("unmarshal %s Role: %w", r.Role, err)
 	}
-	return &msg, true
+	return &msg, nil
 }
 
 // AsAssistant returns the AssistantMessage if the role is "assistant".
-func (r Message) AsAssistant() (*AssistantMessage, bool) {
+func (r Message) AsAssistant() (*AssistantMessage, error) {
 	if r.Role != MessageRoleAssistant {
-		return nil, false
+		return nil, nil
 	}
 	var msg AssistantMessage
 	if err := json.Unmarshal(r.raw, &msg); err != nil {
-		return nil, false
+		return nil, fmt.Errorf("unmarshal %s Role: %w", r.Role, err)
 	}
-	return &msg, true
+	return &msg, nil
 }
 
 type MessageRole string
@@ -835,123 +835,123 @@ func (r *Part) UnmarshalJSON(data []byte) error {
 }
 
 // AsText returns the part as a TextPart if Type is "text".
-func (r Part) AsText() (*TextPart, bool) {
+func (r Part) AsText() (*TextPart, error) {
 	if r.Type != PartTypeText {
-		return nil, false
+		return nil, nil
 	}
 	var part TextPart
 	if err := json.Unmarshal(r.raw, &part); err != nil {
-		return nil, false
+		return nil, fmt.Errorf("unmarshal %s Type: %w", r.Type, err)
 	}
-	return &part, true
+	return &part, nil
 }
 
 // AsReasoning returns the part as a ReasoningPart if Type is "reasoning".
-func (r Part) AsReasoning() (*ReasoningPart, bool) {
+func (r Part) AsReasoning() (*ReasoningPart, error) {
 	if r.Type != PartTypeReasoning {
-		return nil, false
+		return nil, nil
 	}
 	var part ReasoningPart
 	if err := json.Unmarshal(r.raw, &part); err != nil {
-		return nil, false
+		return nil, fmt.Errorf("unmarshal %s Type: %w", r.Type, err)
 	}
-	return &part, true
+	return &part, nil
 }
 
 // AsFile returns the part as a FilePart if Type is "file".
-func (r Part) AsFile() (*FilePart, bool) {
+func (r Part) AsFile() (*FilePart, error) {
 	if r.Type != PartTypeFile {
-		return nil, false
+		return nil, nil
 	}
 	var part FilePart
 	if err := json.Unmarshal(r.raw, &part); err != nil {
-		return nil, false
+		return nil, fmt.Errorf("unmarshal %s Type: %w", r.Type, err)
 	}
-	return &part, true
+	return &part, nil
 }
 
 // AsTool returns the part as a ToolPart if Type is "tool".
-func (r Part) AsTool() (*ToolPart, bool) {
+func (r Part) AsTool() (*ToolPart, error) {
 	if r.Type != PartTypeTool {
-		return nil, false
+		return nil, nil
 	}
 	var part ToolPart
 	if err := json.Unmarshal(r.raw, &part); err != nil {
-		return nil, false
+		return nil, fmt.Errorf("unmarshal %s Type: %w", r.Type, err)
 	}
-	return &part, true
+	return &part, nil
 }
 
 // AsStepStart returns the part as a StepStartPart if Type is "step-start".
-func (r Part) AsStepStart() (*StepStartPart, bool) {
+func (r Part) AsStepStart() (*StepStartPart, error) {
 	if r.Type != PartTypeStepStart {
-		return nil, false
+		return nil, nil
 	}
 	var part StepStartPart
 	if err := json.Unmarshal(r.raw, &part); err != nil {
-		return nil, false
+		return nil, fmt.Errorf("unmarshal %s Type: %w", r.Type, err)
 	}
-	return &part, true
+	return &part, nil
 }
 
 // AsStepFinish returns the part as a StepFinishPart if Type is "step-finish".
-func (r Part) AsStepFinish() (*StepFinishPart, bool) {
+func (r Part) AsStepFinish() (*StepFinishPart, error) {
 	if r.Type != PartTypeStepFinish {
-		return nil, false
+		return nil, nil
 	}
 	var part StepFinishPart
 	if err := json.Unmarshal(r.raw, &part); err != nil {
-		return nil, false
+		return nil, fmt.Errorf("unmarshal %s Type: %w", r.Type, err)
 	}
-	return &part, true
+	return &part, nil
 }
 
 // AsSnapshot returns the part as a SnapshotPart if Type is "snapshot".
-func (r Part) AsSnapshot() (*SnapshotPart, bool) {
+func (r Part) AsSnapshot() (*SnapshotPart, error) {
 	if r.Type != PartTypeSnapshot {
-		return nil, false
+		return nil, nil
 	}
 	var part SnapshotPart
 	if err := json.Unmarshal(r.raw, &part); err != nil {
-		return nil, false
+		return nil, fmt.Errorf("unmarshal %s Type: %w", r.Type, err)
 	}
-	return &part, true
+	return &part, nil
 }
 
 // AsPatch returns the part as a PartPatchPart if Type is "patch".
-func (r Part) AsPatch() (*PartPatchPart, bool) {
+func (r Part) AsPatch() (*PartPatchPart, error) {
 	if r.Type != PartTypePatch {
-		return nil, false
+		return nil, nil
 	}
 	var part PartPatchPart
 	if err := json.Unmarshal(r.raw, &part); err != nil {
-		return nil, false
+		return nil, fmt.Errorf("unmarshal %s Type: %w", r.Type, err)
 	}
-	return &part, true
+	return &part, nil
 }
 
 // AsAgent returns the part as an AgentPart if Type is "agent".
-func (r Part) AsAgent() (*AgentPart, bool) {
+func (r Part) AsAgent() (*AgentPart, error) {
 	if r.Type != PartTypeAgent {
-		return nil, false
+		return nil, nil
 	}
 	var part AgentPart
 	if err := json.Unmarshal(r.raw, &part); err != nil {
-		return nil, false
+		return nil, fmt.Errorf("unmarshal %s Type: %w", r.Type, err)
 	}
-	return &part, true
+	return &part, nil
 }
 
 // AsRetry returns the part as a PartRetryPart if Type is "retry".
-func (r Part) AsRetry() (*PartRetryPart, bool) {
+func (r Part) AsRetry() (*PartRetryPart, error) {
 	if r.Type != PartTypeRetry {
-		return nil, false
+		return nil, nil
 	}
 	var part PartRetryPart
 	if err := json.Unmarshal(r.raw, &part); err != nil {
-		return nil, false
+		return nil, fmt.Errorf("unmarshal %s Type: %w", r.Type, err)
 	}
-	return &part, true
+	return &part, nil
 }
 
 type PartPatchPart struct {
@@ -979,7 +979,7 @@ func (r PartPatchPartType) IsKnown() bool {
 
 type PartRetryPart struct {
 	ID        string             `json:"id"`
-	Attempt   float64            `json:"attempt"`
+	Attempt   int            `json:"attempt"`
 	Error     PartRetryPartError `json:"error"`
 	MessageID string             `json:"messageID"`
 	SessionID string             `json:"sessionID"`
@@ -997,7 +997,7 @@ type PartRetryPartErrorData struct {
 	Message         string                     `json:"message"`
 	ResponseBody    string                     `json:"responseBody"`
 	ResponseHeaders map[string]string          `json:"responseHeaders"`
-	StatusCode      float64                    `json:"statusCode"`
+	StatusCode      int                    `json:"statusCode"`
 }
 
 type PartRetryPartErrorName string
@@ -1119,10 +1119,10 @@ type SessionSummary struct {
 }
 
 type SessionSummaryDiff struct {
-	Additions float64                `json:"additions"`
+	Additions int64                `json:"additions"`
 	After     string                 `json:"after"`
 	Before    string                 `json:"before"`
-	Deletions float64                `json:"deletions"`
+	Deletions int64                `json:"deletions"`
 	File      string                 `json:"file"`
 }
 
@@ -1161,14 +1161,14 @@ type StepFinishPart struct {
 
 type StepFinishPartTokens struct {
 	Cache     StepFinishPartTokensCache `json:"cache"`
-	Input     float64                   `json:"input"`
-	Output    float64                   `json:"output"`
-	Reasoning float64                   `json:"reasoning"`
+	Input     int64                   `json:"input"`
+	Output    int64                   `json:"output"`
+	Reasoning int64                   `json:"reasoning"`
 }
 
 type StepFinishPartTokensCache struct {
-	Read  float64                       `json:"read"`
-	Write float64                       `json:"write"`
+	Read  int64                       `json:"read"`
+	Write int64                       `json:"write"`
 }
 
 type StepFinishPartType string
@@ -1222,13 +1222,13 @@ type SymbolSourceRange struct {
 }
 
 type SymbolSourceRangeEnd struct {
-	Character float64                  `json:"character"`
-	Line      float64                  `json:"line"`
+	Character int64                  `json:"character"`
+	Line      int64                  `json:"line"`
 }
 
 type SymbolSourceRangeStart struct {
-	Character float64                    `json:"character"`
-	Line      float64                    `json:"line"`
+	Character int64                    `json:"character"`
+	Line      int64                    `json:"line"`
 }
 
 type SymbolSourceType string
@@ -1262,13 +1262,13 @@ type SymbolSourceRangeParam struct {
 }
 
 type SymbolSourceRangeEndParam struct {
-	Character float64 `json:"character"`
-	Line float64 `json:"line"`
+	Character int64 `json:"character"`
+	Line int64 `json:"line"`
 }
 
 type SymbolSourceRangeStartParam struct {
-	Character float64 `json:"character"`
-	Line float64 `json:"line"`
+	Character int64 `json:"character"`
+	Line int64 `json:"line"`
 }
 
 type TextPart struct {
@@ -1363,51 +1363,51 @@ func (r *ToolPartState) UnmarshalJSON(data []byte) error {
 }
 
 // AsPending returns the state as ToolStatePending if Status is "pending".
-func (r ToolPartState) AsPending() (*ToolStatePending, bool) {
+func (r ToolPartState) AsPending() (*ToolStatePending, error) {
 	if r.Status != ToolPartStateStatusPending {
-		return nil, false
+		return nil, nil
 	}
 	var state ToolStatePending
 	if err := json.Unmarshal(r.raw, &state); err != nil {
-		return nil, false
+		return nil, fmt.Errorf("unmarshal %s Status: %w", r.Status, err)
 	}
-	return &state, true
+	return &state, nil
 }
 
 // AsRunning returns the state as ToolStateRunning if Status is "running".
-func (r ToolPartState) AsRunning() (*ToolStateRunning, bool) {
+func (r ToolPartState) AsRunning() (*ToolStateRunning, error) {
 	if r.Status != ToolPartStateStatusRunning {
-		return nil, false
+		return nil, nil
 	}
 	var state ToolStateRunning
 	if err := json.Unmarshal(r.raw, &state); err != nil {
-		return nil, false
+		return nil, fmt.Errorf("unmarshal %s Status: %w", r.Status, err)
 	}
-	return &state, true
+	return &state, nil
 }
 
 // AsCompleted returns the state as ToolStateCompleted if Status is "completed".
-func (r ToolPartState) AsCompleted() (*ToolStateCompleted, bool) {
+func (r ToolPartState) AsCompleted() (*ToolStateCompleted, error) {
 	if r.Status != ToolPartStateStatusCompleted {
-		return nil, false
+		return nil, nil
 	}
 	var state ToolStateCompleted
 	if err := json.Unmarshal(r.raw, &state); err != nil {
-		return nil, false
+		return nil, fmt.Errorf("unmarshal %s Status: %w", r.Status, err)
 	}
-	return &state, true
+	return &state, nil
 }
 
 // AsError returns the state as ToolStateError if Status is "error".
-func (r ToolPartState) AsError() (*ToolStateError, bool) {
+func (r ToolPartState) AsError() (*ToolStateError, error) {
 	if r.Status != ToolPartStateStatusError {
-		return nil, false
+		return nil, nil
 	}
 	var state ToolStateError
 	if err := json.Unmarshal(r.raw, &state); err != nil {
-		return nil, false
+		return nil, fmt.Errorf("unmarshal %s Status: %w", r.Status, err)
 	}
-	return &state, true
+	return &state, nil
 }
 
 type ToolPartStateStatus string
@@ -1575,10 +1575,10 @@ type UserMessageSummary struct {
 }
 
 type UserMessageSummaryDiff struct {
-	Additions float64                    `json:"additions"`
+	Additions int64                    `json:"additions"`
 	After     string                     `json:"after"`
 	Before    string                     `json:"before"`
-	Deletions float64                    `json:"deletions"`
+	Deletions int64                    `json:"deletions"`
 	File      string                     `json:"file"`
 }
 
@@ -1602,14 +1602,14 @@ type SessionPromptResponse struct {
 	Parts []Part                    `json:"parts"`
 }
 
-type SessionNewParams struct {
+type SessionCreateParams struct {
 	Directory *string `query:"directory,omitempty"`
 	ParentID *string `json:"parentID,omitempty"`
 	Title *string `json:"title,omitempty"`
 }
 
-// URLQuery serializes [SessionNewParams]'s query parameters as `url.Values`.
-func (r SessionNewParams) URLQuery() (url.Values, error) {
+// URLQuery serializes [SessionCreateParams]'s query parameters as `url.Values`.
+func (r SessionCreateParams) URLQuery() (url.Values, error) {
 	return queryparams.Marshal(r)
 }
 

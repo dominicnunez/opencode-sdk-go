@@ -69,21 +69,21 @@ func (p *PermissionPattern) UnmarshalJSON(data []byte) error {
 }
 
 // AsString returns the pattern as a string if it is a string, or ("", false) if it is an array.
-func (p PermissionPattern) AsString() (string, bool) {
+func (p PermissionPattern) AsString() (string, error) {
 	var s string
 	if err := json.Unmarshal(p.raw, &s); err != nil {
-		return "", false
+		return "", err
 	}
-	return s, true
+	return s, nil
 }
 
 // AsArray returns the pattern as an array of strings if it is an array, or (nil, false) if it is a string.
-func (p PermissionPattern) AsArray() ([]string, bool) {
+func (p PermissionPattern) AsArray() ([]string, error) {
 	var arr []string
 	if err := json.Unmarshal(p.raw, &arr); err != nil {
-		return nil, false
+		return nil, err
 	}
-	return arr, true
+	return arr, nil
 }
 
 type SessionPermissionRespondParams struct {

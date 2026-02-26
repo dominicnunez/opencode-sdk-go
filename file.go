@@ -1,5 +1,3 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
-
 package opencode
 
 import (
@@ -143,10 +141,10 @@ type FileReadResponsePatch struct {
 
 type FileReadResponsePatchHunk struct {
 	Lines    []string `json:"lines"`
-	NewLines float64  `json:"newLines"`
-	NewStart float64  `json:"newStart"`
-	OldLines float64  `json:"oldLines"`
-	OldStart float64  `json:"oldStart"`
+	NewLines int64    `json:"newLines"`
+	NewStart int64    `json:"newStart"`
+	OldLines int64    `json:"oldLines"`
+	OldStart int64    `json:"oldStart"`
 }
 
 type FileListParams struct {

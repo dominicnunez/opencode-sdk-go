@@ -154,21 +154,21 @@ func (p *ConfigAgentBuildPermissionBashUnion) UnmarshalJSON(data []byte) error {
 }
 
 // AsString returns the value as a string if it is a string, or ("", false) if it is a map.
-func (p ConfigAgentBuildPermissionBashUnion) AsString() (ConfigAgentBuildPermissionBashString, bool) {
+func (p ConfigAgentBuildPermissionBashUnion) AsString() (ConfigAgentBuildPermissionBashString, error) {
 	var s ConfigAgentBuildPermissionBashString
 	if err := json.Unmarshal(p.raw, &s); err != nil {
-		return "", false
+		return "", err
 	}
-	return s, true
+	return s, nil
 }
 
 // AsMap returns the value as a map if it is a map, or (nil, false) if it is a string.
-func (p ConfigAgentBuildPermissionBashUnion) AsMap() (ConfigAgentBuildPermissionBashMap, bool) {
+func (p ConfigAgentBuildPermissionBashUnion) AsMap() (ConfigAgentBuildPermissionBashMap, error) {
 	var m ConfigAgentBuildPermissionBashMap
 	if err := json.Unmarshal(p.raw, &m); err != nil {
-		return nil, false
+		return nil, err
 	}
-	return m, true
+	return m, nil
 }
 
 type ConfigAgentBuildPermissionBashString string
@@ -284,21 +284,21 @@ func (p *ConfigAgentGeneralPermissionBashUnion) UnmarshalJSON(data []byte) error
 }
 
 // AsString returns the value as a string if it is a string, or ("", false) if it is a map.
-func (p ConfigAgentGeneralPermissionBashUnion) AsString() (ConfigAgentGeneralPermissionBashString, bool) {
+func (p ConfigAgentGeneralPermissionBashUnion) AsString() (ConfigAgentGeneralPermissionBashString, error) {
 	var s ConfigAgentGeneralPermissionBashString
 	if err := json.Unmarshal(p.raw, &s); err != nil {
-		return "", false
+		return "", err
 	}
-	return s, true
+	return s, nil
 }
 
 // AsMap returns the value as a map if it is a map, or (nil, false) if it is a string.
-func (p ConfigAgentGeneralPermissionBashUnion) AsMap() (ConfigAgentGeneralPermissionBashMap, bool) {
+func (p ConfigAgentGeneralPermissionBashUnion) AsMap() (ConfigAgentGeneralPermissionBashMap, error) {
 	var m ConfigAgentGeneralPermissionBashMap
 	if err := json.Unmarshal(p.raw, &m); err != nil {
-		return nil, false
+		return nil, err
 	}
-	return m, true
+	return m, nil
 }
 
 type ConfigAgentGeneralPermissionBashString string
@@ -414,21 +414,21 @@ func (p *ConfigAgentPlanPermissionBashUnion) UnmarshalJSON(data []byte) error {
 }
 
 // AsString returns the value as a string if it is a string, or ("", false) if it is a map.
-func (p ConfigAgentPlanPermissionBashUnion) AsString() (ConfigAgentPlanPermissionBashString, bool) {
+func (p ConfigAgentPlanPermissionBashUnion) AsString() (ConfigAgentPlanPermissionBashString, error) {
 	var s ConfigAgentPlanPermissionBashString
 	if err := json.Unmarshal(p.raw, &s); err != nil {
-		return "", false
+		return "", err
 	}
-	return s, true
+	return s, nil
 }
 
 // AsMap returns the value as a map if it is a map, or (nil, false) if it is a string.
-func (p ConfigAgentPlanPermissionBashUnion) AsMap() (ConfigAgentPlanPermissionBashMap, bool) {
+func (p ConfigAgentPlanPermissionBashUnion) AsMap() (ConfigAgentPlanPermissionBashMap, error) {
 	var m ConfigAgentPlanPermissionBashMap
 	if err := json.Unmarshal(p.raw, &m); err != nil {
-		return nil, false
+		return nil, err
 	}
-	return m, true
+	return m, nil
 }
 
 type ConfigAgentPlanPermissionBashString string
@@ -564,11 +564,11 @@ func (r *ConfigLsp) UnmarshalJSON(data []byte) error {
 
 // AsDisabled returns the config as ConfigLspDisabled if it has disabled=true without command field.
 // Returns (nil, false) if it's not a disabled config or unmarshaling fails.
-func (r ConfigLsp) AsDisabled() (*ConfigLspDisabled, bool) {
+func (r ConfigLsp) AsDisabled() (*ConfigLspDisabled, error) {
 	// Try to unmarshal as ConfigLspDisabled
 	var disabled ConfigLspDisabled
 	if err := json.Unmarshal(r.raw, &disabled); err != nil {
-		return nil, false
+		return nil, err
 	}
 
 	// Check if it has the disabled field set to true and no command field
@@ -577,37 +577,37 @@ func (r ConfigLsp) AsDisabled() (*ConfigLspDisabled, bool) {
 		Disabled bool        `json:"disabled"`
 	}
 	if err := json.Unmarshal(r.raw, &peek); err != nil {
-		return nil, false
+		return nil, err
 	}
 
 	// If command field exists, it's not a disabled config
 	if peek.Command != nil {
-		return nil, false
+		return nil, nil
 	}
 
 	// Must have disabled=true
 	if !peek.Disabled {
-		return nil, false
+		return nil, nil
 	}
 
-	return &disabled, true
+	return &disabled, nil
 }
 
 // AsObject returns the config as ConfigLspObject if it has a command field.
 // Returns (nil, false) if it's not an object config or unmarshaling fails.
-func (r ConfigLsp) AsObject() (*ConfigLspObject, bool) {
+func (r ConfigLsp) AsObject() (*ConfigLspObject, error) {
 	// Try to unmarshal as ConfigLspObject
 	var obj ConfigLspObject
 	if err := json.Unmarshal(r.raw, &obj); err != nil {
-		return nil, false
+		return nil, err
 	}
 
 	// Must have command field
 	if len(obj.Command) == 0 {
-		return nil, false
+		return nil, nil
 	}
 
-	return &obj, true
+	return &obj, nil
 }
 
 type ConfigLspDisabled struct {
@@ -660,28 +660,28 @@ func (r *ConfigMcp) UnmarshalJSON(data []byte) error {
 
 // AsLocal returns the config as McpLocalConfig if type is "local".
 // Returns (nil, false) if the type is not "local" or unmarshaling fails.
-func (r ConfigMcp) AsLocal() (*McpLocalConfig, bool) {
+func (r ConfigMcp) AsLocal() (*McpLocalConfig, error) {
 	if r.Type != ConfigMcpTypeLocal {
-		return nil, false
+		return nil, nil
 	}
 	var local McpLocalConfig
 	if err := json.Unmarshal(r.raw, &local); err != nil {
-		return nil, false
+		return nil, err
 	}
-	return &local, true
+	return &local, nil
 }
 
 // AsRemote returns the config as McpRemoteConfig if type is "remote".
 // Returns (nil, false) if the type is not "remote" or unmarshaling fails.
-func (r ConfigMcp) AsRemote() (*McpRemoteConfig, bool) {
+func (r ConfigMcp) AsRemote() (*McpRemoteConfig, error) {
 	if r.Type != ConfigMcpTypeRemote {
-		return nil, false
+		return nil, nil
 	}
 	var remote McpRemoteConfig
 	if err := json.Unmarshal(r.raw, &remote); err != nil {
-		return nil, false
+		return nil, err
 	}
-	return &remote, true
+	return &remote, nil
 }
 
 // Type of MCP server connection
@@ -762,21 +762,21 @@ func (p *ConfigModeBuildPermissionBashUnion) UnmarshalJSON(data []byte) error {
 }
 
 // AsString returns the value as a string if it is a string, or ("", false) if it is a map.
-func (p ConfigModeBuildPermissionBashUnion) AsString() (ConfigModeBuildPermissionBashString, bool) {
+func (p ConfigModeBuildPermissionBashUnion) AsString() (ConfigModeBuildPermissionBashString, error) {
 	var s ConfigModeBuildPermissionBashString
 	if err := json.Unmarshal(p.raw, &s); err != nil {
-		return "", false
+		return "", err
 	}
-	return s, true
+	return s, nil
 }
 
 // AsMap returns the value as a map if it is a map, or (nil, false) if it is a string.
-func (p ConfigModeBuildPermissionBashUnion) AsMap() (ConfigModeBuildPermissionBashMap, bool) {
+func (p ConfigModeBuildPermissionBashUnion) AsMap() (ConfigModeBuildPermissionBashMap, error) {
 	var m ConfigModeBuildPermissionBashMap
 	if err := json.Unmarshal(p.raw, &m); err != nil {
-		return nil, false
+		return nil, err
 	}
-	return m, true
+	return m, nil
 }
 
 type ConfigModeBuildPermissionBashString string
@@ -898,21 +898,21 @@ func (p *ConfigModePlanPermissionBashUnion) UnmarshalJSON(data []byte) error {
 }
 
 // AsString returns the value as a string if it is a string, or ("", false) if it is a map.
-func (p ConfigModePlanPermissionBashUnion) AsString() (ConfigModePlanPermissionBashString, bool) {
+func (p ConfigModePlanPermissionBashUnion) AsString() (ConfigModePlanPermissionBashString, error) {
 	var s ConfigModePlanPermissionBashString
 	if err := json.Unmarshal(p.raw, &s); err != nil {
-		return "", false
+		return "", err
 	}
-	return s, true
+	return s, nil
 }
 
 // AsMap returns the value as a map if it is a map, or (nil, false) if it is a string.
-func (p ConfigModePlanPermissionBashUnion) AsMap() (ConfigModePlanPermissionBashMap, bool) {
+func (p ConfigModePlanPermissionBashUnion) AsMap() (ConfigModePlanPermissionBashMap, error) {
 	var m ConfigModePlanPermissionBashMap
 	if err := json.Unmarshal(p.raw, &m); err != nil {
-		return nil, false
+		return nil, err
 	}
-	return m, true
+	return m, nil
 }
 
 type ConfigModePlanPermissionBashString string
@@ -1002,21 +1002,21 @@ func (p *ConfigPermissionBashUnion) UnmarshalJSON(data []byte) error {
 }
 
 // AsString returns the value as a string if it is a string, or ("", false) if it is a map.
-func (p ConfigPermissionBashUnion) AsString() (ConfigPermissionBashString, bool) {
+func (p ConfigPermissionBashUnion) AsString() (ConfigPermissionBashString, error) {
 	var s ConfigPermissionBashString
 	if err := json.Unmarshal(p.raw, &s); err != nil {
-		return "", false
+		return "", err
 	}
-	return s, true
+	return s, nil
 }
 
 // AsMap returns the value as a map if it is a map, or (nil, false) if it is a string.
-func (p ConfigPermissionBashUnion) AsMap() (ConfigPermissionBashMap, bool) {
+func (p ConfigPermissionBashUnion) AsMap() (ConfigPermissionBashMap, error) {
 	var m ConfigPermissionBashMap
 	if err := json.Unmarshal(p.raw, &m); err != nil {
-		return nil, false
+		return nil, err
 	}
-	return m, true
+	return m, nil
 }
 
 type ConfigPermissionBashString string
@@ -1225,21 +1225,21 @@ func (p *ConfigProviderOptionsTimeoutUnion) UnmarshalJSON(data []byte) error {
 }
 
 // AsInt returns the timeout as an int64 if it is a number, or (0, false) if it is a bool.
-func (p ConfigProviderOptionsTimeoutUnion) AsInt() (int64, bool) {
+func (p ConfigProviderOptionsTimeoutUnion) AsInt() (int64, error) {
 	var i int64
 	if err := json.Unmarshal(p.raw, &i); err != nil {
-		return 0, false
+		return 0, err
 	}
-	return i, true
+	return i, nil
 }
 
 // AsBool returns the timeout as a bool if it is a bool, or (false, false) if it is a number.
-func (p ConfigProviderOptionsTimeoutUnion) AsBool() (bool, bool) {
+func (p ConfigProviderOptionsTimeoutUnion) AsBool() (bool, error) {
 	var b bool
 	if err := json.Unmarshal(p.raw, &b); err != nil {
-		return false, false
+		return false, err
 	}
-	return b, true
+	return b, nil
 }
 
 // Control sharing behavior:'manual' allows manual sharing via commands, 'auto'
@@ -1482,39 +1482,39 @@ func (a *Auth) UnmarshalJSON(data []byte) error {
 }
 
 // AsOAuth returns the OAuth variant if the type is oauth
-func (a Auth) AsOAuth() (*OAuth, bool) {
+func (a Auth) AsOAuth() (*OAuth, error) {
 	if a.Type != AuthTypeOAuth {
-		return nil, false
+		return nil, nil
 	}
 	var oauth OAuth
 	if err := json.Unmarshal(a.raw, &oauth); err != nil {
-		return nil, false
+		return nil, err
 	}
-	return &oauth, true
+	return &oauth, nil
 }
 
 // AsAPI returns the ApiAuth variant if the type is api
-func (a Auth) AsAPI() (*ApiAuth, bool) {
+func (a Auth) AsAPI() (*ApiAuth, error) {
 	if a.Type != AuthTypeAPI {
-		return nil, false
+		return nil, nil
 	}
 	var apiAuth ApiAuth
 	if err := json.Unmarshal(a.raw, &apiAuth); err != nil {
-		return nil, false
+		return nil, err
 	}
-	return &apiAuth, true
+	return &apiAuth, nil
 }
 
 // AsWellKnown returns the WellKnownAuth variant if the type is wellknown
-func (a Auth) AsWellKnown() (*WellKnownAuth, bool) {
+func (a Auth) AsWellKnown() (*WellKnownAuth, error) {
 	if a.Type != AuthTypeWellKnown {
-		return nil, false
+		return nil, nil
 	}
 	var wellKnown WellKnownAuth
 	if err := json.Unmarshal(a.raw, &wellKnown); err != nil {
-		return nil, false
+		return nil, err
 	}
-	return &wellKnown, true
+	return &wellKnown, nil
 }
 
 // OAuth represents OAuth authentication credentials

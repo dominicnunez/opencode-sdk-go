@@ -24,18 +24,6 @@ func (s *AppService) Log(ctx context.Context, params *AppLogParams) (bool, error
 	return result, nil
 }
 
-func (s *AppService) Providers(ctx context.Context, params *AppProvidersParams) (*AppProvidersResponse, error) {
-	if params == nil {
-		params = &AppProvidersParams{}
-	}
-	var result AppProvidersResponse
-	err := s.client.do(ctx, http.MethodGet, "config/providers", params, &result)
-	if err != nil {
-		return nil, err
-	}
-	return &result, nil
-}
-
 type LogLevel string
 
 const (
@@ -70,8 +58,8 @@ type ModelCost struct {
 }
 
 type ModelLimit struct {
-	Context float64 `json:"context"`
-	Output  float64 `json:"output"`
+	Context int64 `json:"context"`
+	Output  int64 `json:"output"`
 }
 
 type ModelModalities struct {
@@ -119,11 +107,6 @@ type Provider struct {
 	Npm    string           `json:"npm,omitempty"`
 }
 
-type AppProvidersResponse struct {
-	Default   map[string]string `json:"default"`
-	Providers []Provider        `json:"providers"`
-}
-
 type AppLogParams struct {
 	Level     LogLevel               `json:"level"`
 	Message   string                 `json:"message"`
@@ -136,10 +119,3 @@ func (r AppLogParams) URLQuery() (url.Values, error) {
 	return queryparams.Marshal(r)
 }
 
-type AppProvidersParams struct {
-	Directory *string `query:"directory,omitempty"`
-}
-
-func (r AppProvidersParams) URLQuery() (url.Values, error) {
-	return queryparams.Marshal(r)
-}
