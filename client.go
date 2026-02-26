@@ -211,10 +211,20 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 				resp.StatusCode >= http.StatusInternalServerError
 
 			if !shouldRetry || attempt >= c.maxRetries {
-				// Read error body
-				bodyBytes, _ := io.ReadAll(resp.Body)
+				bodyBytes, readErr := io.ReadAll(resp.Body)
 				resp.Body.Close()
-				return nil, fmt.Errorf("HTTP %d: %s", resp.StatusCode, string(bodyBytes))
+
+				msg := string(bodyBytes)
+				if readErr != nil {
+					msg = fmt.Sprintf("(failed to read response body: %v)", readErr)
+				}
+
+				return nil, &APIError{
+					StatusCode: resp.StatusCode,
+					Message:    msg,
+					RequestID:  resp.Header.Get("X-Request-Id"),
+					Body:       msg,
+				}
 			}
 
 			// Close body before retry
