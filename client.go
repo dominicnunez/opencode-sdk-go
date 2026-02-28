@@ -20,6 +20,7 @@ const (
 	DefaultTimeout    = 30 * time.Second
 	DefaultMaxRetries = 2
 
+	maxRetryCap      = 10
 	initialBackoffMs = 500
 	maxBackoff       = 8 * time.Second
 	maxErrorBodySize = 1 << 20 // 1 MB
@@ -126,8 +127,8 @@ func WithMaxRetries(n int) ClientOption {
 		if n < 0 {
 			return errors.New("max retries cannot be negative")
 		}
-		if n > 10 {
-			return errors.New("max retries cannot exceed 10")
+		if n > maxRetryCap {
+			return fmt.Errorf("max retries cannot exceed %d", maxRetryCap)
 		}
 		c.maxRetries = n
 		return nil
