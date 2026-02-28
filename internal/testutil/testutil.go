@@ -13,19 +13,17 @@ const testServerTimeout = 5 * time.Second
 func CheckTestServer(t *testing.T, url string) bool {
 	client := &http.Client{Timeout: testServerTimeout}
 	if _, err := client.Get(url); err != nil {
-		const SKIP_MOCK_TESTS = "SKIP_MOCK_TESTS"
-		if str, ok := os.LookupEnv(SKIP_MOCK_TESTS); ok {
+		const skipEnvVar = "SKIP_MOCK_TESTS"
+		if str, ok := os.LookupEnv(skipEnvVar); ok {
 			skip, err := strconv.ParseBool(str)
 			if err != nil {
-				t.Errorf("strconv.ParseBool(os.LookupEnv(%s)) failed: %s", SKIP_MOCK_TESTS, err)
-				return false
+				t.Fatalf("invalid %s value %q: %s", skipEnvVar, str, err)
 			}
 			if !skip {
-				t.Errorf("The test will not run without a mock Prism server running against your OpenAPI spec. You can set the environment variable %s to true to skip running any tests that require the mock server", SKIP_MOCK_TESTS)
-				return false
+				t.Fatalf("mock server not running and %s=false; start the server or set %s=true to skip", skipEnvVar, skipEnvVar)
 			}
 		}
-		t.Skip("The test will not run without a mock Prism server running against your OpenAPI spec")
+		t.Skip("mock server not running; set SKIP_MOCK_TESTS=true to skip")
 		return false
 	}
 	return true
