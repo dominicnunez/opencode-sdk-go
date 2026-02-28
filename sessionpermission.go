@@ -81,6 +81,9 @@ func (p *PermissionPattern) UnmarshalJSON(data []byte) error {
 
 // AsString returns the pattern as a string if it is a string, or ("", error) if it is an array.
 func (p PermissionPattern) AsString() (string, error) {
+	if p.raw == nil {
+		return "", ErrWrongVariant
+	}
 	var s string
 	if err := json.Unmarshal(p.raw, &s); err != nil {
 		return "", err
@@ -90,6 +93,9 @@ func (p PermissionPattern) AsString() (string, error) {
 
 // AsArray returns the pattern as an array of strings if it is an array, or (nil, error) if it is a string.
 func (p PermissionPattern) AsArray() ([]string, error) {
+	if p.raw == nil {
+		return nil, ErrWrongVariant
+	}
 	var arr []string
 	if err := json.Unmarshal(p.raw, &arr); err != nil {
 		return nil, err

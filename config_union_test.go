@@ -2,6 +2,7 @@ package opencode
 
 import (
 	"encoding/json"
+	"errors"
 	"testing"
 )
 
@@ -282,6 +283,38 @@ func TestConfigModePlanPermissionBashUnion(t *testing.T) {
 		}
 		if m["test"] != ConfigModePlanPermissionBashMapDeny {
 			t.Errorf("Expected test='deny', got %q", m["test"])
+		}
+	})
+}
+
+func TestZeroValueUnion_AsReturnsErrWrongVariant(t *testing.T) {
+	t.Run("ConfigAgentBuildPermissionBashUnion", func(t *testing.T) {
+		var u ConfigAgentBuildPermissionBashUnion
+		if _, err := u.AsString(); !errors.Is(err, ErrWrongVariant) {
+			t.Errorf("AsString() = %v, want ErrWrongVariant", err)
+		}
+		if _, err := u.AsMap(); !errors.Is(err, ErrWrongVariant) {
+			t.Errorf("AsMap() = %v, want ErrWrongVariant", err)
+		}
+	})
+
+	t.Run("ConfigProviderOptionsTimeoutUnion", func(t *testing.T) {
+		var u ConfigProviderOptionsTimeoutUnion
+		if _, err := u.AsInt(); !errors.Is(err, ErrWrongVariant) {
+			t.Errorf("AsInt() = %v, want ErrWrongVariant", err)
+		}
+		if _, err := u.AsBool(); !errors.Is(err, ErrWrongVariant) {
+			t.Errorf("AsBool() = %v, want ErrWrongVariant", err)
+		}
+	})
+
+	t.Run("PermissionPattern", func(t *testing.T) {
+		var p PermissionPattern
+		if _, err := p.AsString(); !errors.Is(err, ErrWrongVariant) {
+			t.Errorf("AsString() = %v, want ErrWrongVariant", err)
+		}
+		if _, err := p.AsArray(); !errors.Is(err, ErrWrongVariant) {
+			t.Errorf("AsArray() = %v, want ErrWrongVariant", err)
 		}
 	})
 }

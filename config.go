@@ -159,6 +159,9 @@ func (p *ConfigAgentBuildPermissionBashUnion) UnmarshalJSON(data []byte) error {
 
 // AsString returns the value as a string if it is a string, or ("", error) if it is a map.
 func (p ConfigAgentBuildPermissionBashUnion) AsString() (ConfigAgentBuildPermissionBashString, error) {
+	if p.raw == nil {
+		return "", ErrWrongVariant
+	}
 	var s ConfigAgentBuildPermissionBashString
 	if err := json.Unmarshal(p.raw, &s); err != nil {
 		return "", err
@@ -168,6 +171,9 @@ func (p ConfigAgentBuildPermissionBashUnion) AsString() (ConfigAgentBuildPermiss
 
 // AsMap returns the value as a map if it is a map, or (nil, error) if it is a string.
 func (p ConfigAgentBuildPermissionBashUnion) AsMap() (ConfigAgentBuildPermissionBashMap, error) {
+	if p.raw == nil {
+		return nil, ErrWrongVariant
+	}
 	var m ConfigAgentBuildPermissionBashMap
 	if err := json.Unmarshal(p.raw, &m); err != nil {
 		return nil, err
@@ -299,6 +305,9 @@ func (p *ConfigAgentGeneralPermissionBashUnion) UnmarshalJSON(data []byte) error
 
 // AsString returns the value as a string if it is a string, or ("", error) if it is a map.
 func (p ConfigAgentGeneralPermissionBashUnion) AsString() (ConfigAgentGeneralPermissionBashString, error) {
+	if p.raw == nil {
+		return "", ErrWrongVariant
+	}
 	var s ConfigAgentGeneralPermissionBashString
 	if err := json.Unmarshal(p.raw, &s); err != nil {
 		return "", err
@@ -308,6 +317,9 @@ func (p ConfigAgentGeneralPermissionBashUnion) AsString() (ConfigAgentGeneralPer
 
 // AsMap returns the value as a map if it is a map, or (nil, error) if it is a string.
 func (p ConfigAgentGeneralPermissionBashUnion) AsMap() (ConfigAgentGeneralPermissionBashMap, error) {
+	if p.raw == nil {
+		return nil, ErrWrongVariant
+	}
 	var m ConfigAgentGeneralPermissionBashMap
 	if err := json.Unmarshal(p.raw, &m); err != nil {
 		return nil, err
@@ -439,6 +451,9 @@ func (p *ConfigAgentPlanPermissionBashUnion) UnmarshalJSON(data []byte) error {
 
 // AsString returns the value as a string if it is a string, or ("", error) if it is a map.
 func (p ConfigAgentPlanPermissionBashUnion) AsString() (ConfigAgentPlanPermissionBashString, error) {
+	if p.raw == nil {
+		return "", ErrWrongVariant
+	}
 	var s ConfigAgentPlanPermissionBashString
 	if err := json.Unmarshal(p.raw, &s); err != nil {
 		return "", err
@@ -448,6 +463,9 @@ func (p ConfigAgentPlanPermissionBashUnion) AsString() (ConfigAgentPlanPermissio
 
 // AsMap returns the value as a map if it is a map, or (nil, error) if it is a string.
 func (p ConfigAgentPlanPermissionBashUnion) AsMap() (ConfigAgentPlanPermissionBashMap, error) {
+	if p.raw == nil {
+		return nil, ErrWrongVariant
+	}
 	var m ConfigAgentPlanPermissionBashMap
 	if err := json.Unmarshal(p.raw, &m); err != nil {
 		return nil, err
@@ -800,6 +818,9 @@ func (p *ConfigModeBuildPermissionBashUnion) UnmarshalJSON(data []byte) error {
 
 // AsString returns the value as a string if it is a string, or ("", error) if it is a map.
 func (p ConfigModeBuildPermissionBashUnion) AsString() (ConfigModeBuildPermissionBashString, error) {
+	if p.raw == nil {
+		return "", ErrWrongVariant
+	}
 	var s ConfigModeBuildPermissionBashString
 	if err := json.Unmarshal(p.raw, &s); err != nil {
 		return "", err
@@ -809,6 +830,9 @@ func (p ConfigModeBuildPermissionBashUnion) AsString() (ConfigModeBuildPermissio
 
 // AsMap returns the value as a map if it is a map, or (nil, error) if it is a string.
 func (p ConfigModeBuildPermissionBashUnion) AsMap() (ConfigModeBuildPermissionBashMap, error) {
+	if p.raw == nil {
+		return nil, ErrWrongVariant
+	}
 	var m ConfigModeBuildPermissionBashMap
 	if err := json.Unmarshal(p.raw, &m); err != nil {
 		return nil, err
@@ -940,6 +964,9 @@ func (p *ConfigModePlanPermissionBashUnion) UnmarshalJSON(data []byte) error {
 
 // AsString returns the value as a string if it is a string, or ("", error) if it is a map.
 func (p ConfigModePlanPermissionBashUnion) AsString() (ConfigModePlanPermissionBashString, error) {
+	if p.raw == nil {
+		return "", ErrWrongVariant
+	}
 	var s ConfigModePlanPermissionBashString
 	if err := json.Unmarshal(p.raw, &s); err != nil {
 		return "", err
@@ -949,6 +976,9 @@ func (p ConfigModePlanPermissionBashUnion) AsString() (ConfigModePlanPermissionB
 
 // AsMap returns the value as a map if it is a map, or (nil, error) if it is a string.
 func (p ConfigModePlanPermissionBashUnion) AsMap() (ConfigModePlanPermissionBashMap, error) {
+	if p.raw == nil {
+		return nil, ErrWrongVariant
+	}
 	var m ConfigModePlanPermissionBashMap
 	if err := json.Unmarshal(p.raw, &m); err != nil {
 		return nil, err
@@ -1051,6 +1081,9 @@ func (p *ConfigPermissionBashUnion) UnmarshalJSON(data []byte) error {
 
 // AsString returns the value as a string if it is a string, or ("", error) if it is a map.
 func (p ConfigPermissionBashUnion) AsString() (ConfigPermissionBashString, error) {
+	if p.raw == nil {
+		return "", ErrWrongVariant
+	}
 	var s ConfigPermissionBashString
 	if err := json.Unmarshal(p.raw, &s); err != nil {
 		return "", err
@@ -1060,6 +1093,9 @@ func (p ConfigPermissionBashUnion) AsString() (ConfigPermissionBashString, error
 
 // AsMap returns the value as a map if it is a map, or (nil, error) if it is a string.
 func (p ConfigPermissionBashUnion) AsMap() (ConfigPermissionBashMap, error) {
+	if p.raw == nil {
+		return nil, ErrWrongVariant
+	}
 	var m ConfigPermissionBashMap
 	if err := json.Unmarshal(p.raw, &m); err != nil {
 		return nil, err
@@ -1263,6 +1299,9 @@ func (p *ConfigProviderOptionsTimeoutUnion) UnmarshalJSON(data []byte) error {
 
 // AsInt returns the timeout as an int64 if it is a number, or (0, error) if it is a bool.
 func (p ConfigProviderOptionsTimeoutUnion) AsInt() (int64, error) {
+	if p.raw == nil {
+		return 0, ErrWrongVariant
+	}
 	var i int64
 	if err := json.Unmarshal(p.raw, &i); err != nil {
 		return 0, err
@@ -1272,6 +1311,9 @@ func (p ConfigProviderOptionsTimeoutUnion) AsInt() (int64, error) {
 
 // AsBool returns the timeout as a bool if it is a bool, or (false, error) if it is a number.
 func (p ConfigProviderOptionsTimeoutUnion) AsBool() (bool, error) {
+	if p.raw == nil {
+		return false, ErrWrongVariant
+	}
 	var b bool
 	if err := json.Unmarshal(p.raw, &b); err != nil {
 		return false, err
