@@ -149,7 +149,10 @@ func (c *Client) do(ctx context.Context, method, path string, params, result int
 		return nil
 	}
 
-	return json.NewDecoder(resp.Body).Decode(result)
+	if err := json.NewDecoder(resp.Body).Decode(result); err != nil {
+		return fmt.Errorf("decode response body: %w", err)
+	}
+	return nil
 }
 
 func (c *Client) doRaw(ctx context.Context, method, path string, params interface{}) (*http.Response, error) {
@@ -202,6 +205,12 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 
 		// Execute request
 		resp, lastErr = c.httpClient.Do(req)
+
+		// Close body from transport errors that still return a response
+		// (e.g., custom HTTP clients that don't follow stdlib's contract)
+		if lastErr != nil && resp != nil {
+			_ = resp.Body.Close()
+		}
 
 		// Check context cancellation
 		if ctx.Err() != nil {
