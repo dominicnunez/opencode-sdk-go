@@ -102,9 +102,9 @@ type Config struct {
 
 // Agent configuration, see https://opencode.ai/docs/agent
 type ConfigAgent struct {
-	Build       ConfigAgentBuild       `json:"build"`
-	General     ConfigAgentGeneral     `json:"general"`
-	Plan        ConfigAgentPlan        `json:"plan"`
+	Build   ConfigAgentBuild   `json:"build"`
+	General ConfigAgentGeneral `json:"general"`
+	Plan    ConfigAgentPlan    `json:"plan"`
 }
 
 type ConfigAgentBuild struct {
@@ -153,7 +153,7 @@ func (p *ConfigAgentBuildPermissionBashUnion) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// AsString returns the value as a string if it is a string, or ("", false) if it is a map.
+// AsString returns the value as a string if it is a string, or ("", error) if it is a map.
 func (p ConfigAgentBuildPermissionBashUnion) AsString() (ConfigAgentBuildPermissionBashString, error) {
 	var s ConfigAgentBuildPermissionBashString
 	if err := json.Unmarshal(p.raw, &s); err != nil {
@@ -162,7 +162,7 @@ func (p ConfigAgentBuildPermissionBashUnion) AsString() (ConfigAgentBuildPermiss
 	return s, nil
 }
 
-// AsMap returns the value as a map if it is a map, or (nil, false) if it is a string.
+// AsMap returns the value as a map if it is a map, or (nil, error) if it is a string.
 func (p ConfigAgentBuildPermissionBashUnion) AsMap() (ConfigAgentBuildPermissionBashMap, error) {
 	var m ConfigAgentBuildPermissionBashMap
 	if err := json.Unmarshal(p.raw, &m); err != nil {
@@ -283,7 +283,7 @@ func (p *ConfigAgentGeneralPermissionBashUnion) UnmarshalJSON(data []byte) error
 	return nil
 }
 
-// AsString returns the value as a string if it is a string, or ("", false) if it is a map.
+// AsString returns the value as a string if it is a string, or ("", error) if it is a map.
 func (p ConfigAgentGeneralPermissionBashUnion) AsString() (ConfigAgentGeneralPermissionBashString, error) {
 	var s ConfigAgentGeneralPermissionBashString
 	if err := json.Unmarshal(p.raw, &s); err != nil {
@@ -292,7 +292,7 @@ func (p ConfigAgentGeneralPermissionBashUnion) AsString() (ConfigAgentGeneralPer
 	return s, nil
 }
 
-// AsMap returns the value as a map if it is a map, or (nil, false) if it is a string.
+// AsMap returns the value as a map if it is a map, or (nil, error) if it is a string.
 func (p ConfigAgentGeneralPermissionBashUnion) AsMap() (ConfigAgentGeneralPermissionBashMap, error) {
 	var m ConfigAgentGeneralPermissionBashMap
 	if err := json.Unmarshal(p.raw, &m); err != nil {
@@ -413,7 +413,7 @@ func (p *ConfigAgentPlanPermissionBashUnion) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// AsString returns the value as a string if it is a string, or ("", false) if it is a map.
+// AsString returns the value as a string if it is a string, or ("", error) if it is a map.
 func (p ConfigAgentPlanPermissionBashUnion) AsString() (ConfigAgentPlanPermissionBashString, error) {
 	var s ConfigAgentPlanPermissionBashString
 	if err := json.Unmarshal(p.raw, &s); err != nil {
@@ -422,7 +422,7 @@ func (p ConfigAgentPlanPermissionBashUnion) AsString() (ConfigAgentPlanPermissio
 	return s, nil
 }
 
-// AsMap returns the value as a map if it is a map, or (nil, false) if it is a string.
+// AsMap returns the value as a map if it is a map, or (nil, error) if it is a string.
 func (p ConfigAgentPlanPermissionBashUnion) AsMap() (ConfigAgentPlanPermissionBashMap, error) {
 	var m ConfigAgentPlanPermissionBashMap
 	if err := json.Unmarshal(p.raw, &m); err != nil {
@@ -498,11 +498,11 @@ func (r ConfigAgentPlanPermissionWebfetch) IsKnown() bool {
 }
 
 type ConfigCommand struct {
-	Template    string            `json:"template"`
-	Agent       string            `json:"agent"`
-	Description string            `json:"description"`
-	Model       string            `json:"model"`
-	Subtask     bool              `json:"subtask"`
+	Template    string `json:"template"`
+	Agent       string `json:"agent"`
+	Description string `json:"description"`
+	Model       string `json:"model"`
+	Subtask     bool   `json:"subtask"`
 }
 
 type ConfigExperimental struct {
@@ -516,20 +516,20 @@ type ConfigExperimentalHook struct {
 }
 
 type ConfigExperimentalHookFileEdited struct {
-	Command     []string                             `json:"command"`
-	Environment map[string]string                    `json:"environment"`
+	Command     []string          `json:"command"`
+	Environment map[string]string `json:"environment"`
 }
 
 type ConfigExperimentalHookSessionCompleted struct {
-	Command     []string                                   `json:"command"`
-	Environment map[string]string                          `json:"environment"`
+	Command     []string          `json:"command"`
+	Environment map[string]string `json:"environment"`
 }
 
 type ConfigFormatter struct {
-	Command     []string            `json:"command"`
-	Disabled    bool                `json:"disabled"`
-	Environment map[string]string   `json:"environment"`
-	Extensions  []string            `json:"extensions"`
+	Command     []string          `json:"command"`
+	Disabled    bool              `json:"disabled"`
+	Environment map[string]string `json:"environment"`
+	Extensions  []string          `json:"extensions"`
 }
 
 // @deprecated Always uses stretch layout.
@@ -702,12 +702,9 @@ func (r ConfigMcpType) IsKnown() bool {
 
 // @deprecated Use `agent` field instead.
 type ConfigMode struct {
-	Build       ConfigModeBuild       `json:"build"`
-	Plan        ConfigModePlan        `json:"plan"`
+	Build ConfigModeBuild `json:"build"`
+	Plan  ConfigModePlan  `json:"plan"`
 }
-
-
-
 
 type ConfigModeBuild struct {
 	// Description of when to use the agent
@@ -721,9 +718,6 @@ type ConfigModeBuild struct {
 	Tools       map[string]bool           `json:"tools"`
 	TopP        float64                   `json:"top_p"`
 }
-
-
-
 
 type ConfigModeBuildMode string
 
@@ -747,9 +741,6 @@ type ConfigModeBuildPermission struct {
 	Webfetch ConfigModeBuildPermissionWebfetch  `json:"webfetch"`
 }
 
-
-
-
 // ConfigModeBuildPermissionBashUnion can be either a string or a map.
 // Use AsString() or AsMap() to access the value.
 type ConfigModeBuildPermissionBashUnion struct {
@@ -761,7 +752,7 @@ func (p *ConfigModeBuildPermissionBashUnion) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// AsString returns the value as a string if it is a string, or ("", false) if it is a map.
+// AsString returns the value as a string if it is a string, or ("", error) if it is a map.
 func (p ConfigModeBuildPermissionBashUnion) AsString() (ConfigModeBuildPermissionBashString, error) {
 	var s ConfigModeBuildPermissionBashString
 	if err := json.Unmarshal(p.raw, &s); err != nil {
@@ -770,7 +761,7 @@ func (p ConfigModeBuildPermissionBashUnion) AsString() (ConfigModeBuildPermissio
 	return s, nil
 }
 
-// AsMap returns the value as a map if it is a map, or (nil, false) if it is a string.
+// AsMap returns the value as a map if it is a map, or (nil, error) if it is a string.
 func (p ConfigModeBuildPermissionBashUnion) AsMap() (ConfigModeBuildPermissionBashMap, error) {
 	var m ConfigModeBuildPermissionBashMap
 	if err := json.Unmarshal(p.raw, &m); err != nil {
@@ -858,9 +849,6 @@ type ConfigModePlan struct {
 	TopP        float64                  `json:"top_p"`
 }
 
-
-
-
 type ConfigModePlanMode string
 
 const (
@@ -883,9 +871,6 @@ type ConfigModePlanPermission struct {
 	Webfetch ConfigModePlanPermissionWebfetch  `json:"webfetch"`
 }
 
-
-
-
 // ConfigModePlanPermissionBashUnion can be either a string or a map.
 // Use AsString() or AsMap() to access the value.
 type ConfigModePlanPermissionBashUnion struct {
@@ -897,7 +882,7 @@ func (p *ConfigModePlanPermissionBashUnion) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// AsString returns the value as a string if it is a string, or ("", false) if it is a map.
+// AsString returns the value as a string if it is a string, or ("", error) if it is a map.
 func (p ConfigModePlanPermissionBashUnion) AsString() (ConfigModePlanPermissionBashString, error) {
 	var s ConfigModePlanPermissionBashString
 	if err := json.Unmarshal(p.raw, &s); err != nil {
@@ -906,7 +891,7 @@ func (p ConfigModePlanPermissionBashUnion) AsString() (ConfigModePlanPermissionB
 	return s, nil
 }
 
-// AsMap returns the value as a map if it is a map, or (nil, false) if it is a string.
+// AsMap returns the value as a map if it is a map, or (nil, error) if it is a string.
 func (p ConfigModePlanPermissionBashUnion) AsMap() (ConfigModePlanPermissionBashMap, error) {
 	var m ConfigModePlanPermissionBashMap
 	if err := json.Unmarshal(p.raw, &m); err != nil {
@@ -987,9 +972,6 @@ type ConfigPermission struct {
 	Webfetch ConfigPermissionWebfetch  `json:"webfetch"`
 }
 
-
-
-
 // ConfigPermissionBashUnion can be either a string or a map.
 // Use AsString() or AsMap() to access the value.
 type ConfigPermissionBashUnion struct {
@@ -1001,7 +983,7 @@ func (p *ConfigPermissionBashUnion) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// AsString returns the value as a string if it is a string, or ("", false) if it is a map.
+// AsString returns the value as a string if it is a string, or ("", error) if it is a map.
 func (p ConfigPermissionBashUnion) AsString() (ConfigPermissionBashString, error) {
 	var s ConfigPermissionBashString
 	if err := json.Unmarshal(p.raw, &s); err != nil {
@@ -1010,7 +992,7 @@ func (p ConfigPermissionBashUnion) AsString() (ConfigPermissionBashString, error
 	return s, nil
 }
 
-// AsMap returns the value as a map if it is a map, or (nil, false) if it is a string.
+// AsMap returns the value as a map if it is a map, or (nil, error) if it is a string.
 func (p ConfigPermissionBashUnion) AsMap() (ConfigPermissionBashMap, error) {
 	var m ConfigPermissionBashMap
 	if err := json.Unmarshal(p.raw, &m); err != nil {
@@ -1095,9 +1077,6 @@ type ConfigProvider struct {
 	Options ConfigProviderOptions          `json:"options"`
 }
 
-
-
-
 type ConfigProviderModel struct {
 	ID           string                         `json:"id"`
 	Attachment   bool                           `json:"attachment"`
@@ -1115,34 +1094,22 @@ type ConfigProviderModel struct {
 	ToolCall     bool                           `json:"tool_call"`
 }
 
-
-
-
 type ConfigProviderModelsCost struct {
-	Input      float64                      `json:"input"`
-	Output     float64                      `json:"output"`
-	CacheRead  float64                      `json:"cache_read"`
-	CacheWrite float64                      `json:"cache_write"`
+	Input      float64 `json:"input"`
+	Output     float64 `json:"output"`
+	CacheRead  float64 `json:"cache_read"`
+	CacheWrite float64 `json:"cache_write"`
 }
-
-
-
 
 type ConfigProviderModelsLimit struct {
-	Context float64                       `json:"context"`
-	Output  float64                       `json:"output"`
+	Context float64 `json:"context"`
+	Output  float64 `json:"output"`
 }
-
-
-
 
 type ConfigProviderModelsModalities struct {
 	Input  []ConfigProviderModelsModalitiesInput  `json:"input"`
 	Output []ConfigProviderModelsModalitiesOutput `json:"output"`
 }
-
-
-
 
 type ConfigProviderModelsModalitiesInput string
 
@@ -1181,11 +1148,8 @@ func (r ConfigProviderModelsModalitiesOutput) IsKnown() bool {
 }
 
 type ConfigProviderModelsProvider struct {
-	Npm  string                           `json:"npm"`
+	Npm string `json:"npm"`
 }
-
-
-
 
 type ConfigProviderModelsStatus string
 
@@ -1207,11 +1171,8 @@ type ConfigProviderOptions struct {
 	BaseURL string `json:"baseURL"`
 	// Timeout in milliseconds for requests to this provider. Default is 300000 (5
 	// minutes). Set to false to disable timeout.
-	Timeout     ConfigProviderOptionsTimeoutUnion `json:"timeout"`
+	Timeout ConfigProviderOptionsTimeoutUnion `json:"timeout"`
 }
-
-
-
 
 // ConfigProviderOptionsTimeoutUnion can be either an int64 or a bool.
 // Use AsInt() or AsBool() to access the value.
@@ -1263,18 +1224,12 @@ func (r ConfigShare) IsKnown() bool {
 // TUI specific settings
 type ConfigTui struct {
 	// TUI scroll speed
-	ScrollSpeed float64       `json:"scroll_speed"`
+	ScrollSpeed float64 `json:"scroll_speed"`
 }
-
-
-
 
 type ConfigWatcher struct {
-	Ignore []string          `json:"ignore"`
+	Ignore []string `json:"ignore"`
 }
-
-
-
 
 // Custom keybind configurations
 type KeybindsConfig struct {
@@ -1375,11 +1330,8 @@ type KeybindsConfig struct {
 	// Toggle thinking blocks
 	ThinkingBlocks string `json:"thinking_blocks"`
 	// Toggle tool details
-	ToolDetails string             `json:"tool_details"`
+	ToolDetails string `json:"tool_details"`
 }
-
-
-
 
 type McpLocalConfig struct {
 	// Command and arguments to run the MCP server
@@ -1389,12 +1341,8 @@ type McpLocalConfig struct {
 	// Enable or disable the MCP server on startup
 	Enabled bool `json:"enabled"`
 	// Environment variables to set when running the MCP server
-	Environment map[string]string  `json:"environment"`
+	Environment map[string]string `json:"environment"`
 }
-
-
-
-
 
 // Type of MCP server connection
 type McpLocalConfigType string
@@ -1419,12 +1367,8 @@ type McpRemoteConfig struct {
 	// Enable or disable the MCP server on startup
 	Enabled bool `json:"enabled"`
 	// Headers to send with the request
-	Headers map[string]string   `json:"headers"`
+	Headers map[string]string `json:"headers"`
 }
-
-
-
-
 
 // Type of MCP server connection
 type McpRemoteConfigType string
@@ -1454,9 +1398,9 @@ type Auth struct {
 type AuthType string
 
 const (
-	AuthTypeOAuth      AuthType = "oauth"
-	AuthTypeAPI        AuthType = "api"
-	AuthTypeWellKnown  AuthType = "wellknown"
+	AuthTypeOAuth     AuthType = "oauth"
+	AuthTypeAPI       AuthType = "api"
+	AuthTypeWellKnown AuthType = "wellknown"
 )
 
 func (r AuthType) IsKnown() bool {
