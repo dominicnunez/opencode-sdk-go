@@ -2,6 +2,7 @@ package opencode
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/url"
 
@@ -14,7 +15,7 @@ type AppService struct {
 
 func (s *AppService) Log(ctx context.Context, params *AppLogParams) (bool, error) {
 	if params == nil {
-		params = &AppLogParams{}
+		return false, errors.New("params is required")
 	}
 	var result bool
 	err := s.client.do(ctx, http.MethodPost, "log", params, &result)

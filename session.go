@@ -121,7 +121,7 @@ func (s *SessionService) Command(ctx context.Context, id string, params *Session
 		return nil, errors.New("missing required id parameter")
 	}
 	if params == nil {
-		params = &SessionCommandParams{}
+		return nil, errors.New("params is required")
 	}
 	var result SessionCommandResponse
 	err := s.client.do(ctx, http.MethodPost, "session/"+id+"/command", params, &result)
@@ -136,7 +136,7 @@ func (s *SessionService) Init(ctx context.Context, id string, params *SessionIni
 		return false, errors.New("missing required id parameter")
 	}
 	if params == nil {
-		params = &SessionInitParams{}
+		return false, errors.New("params is required")
 	}
 	var result bool
 	err := s.client.do(ctx, http.MethodPost, "session/"+id+"/init", params, &result)
@@ -184,7 +184,7 @@ func (s *SessionService) Prompt(ctx context.Context, id string, params *SessionP
 		return nil, errors.New("missing required id parameter")
 	}
 	if params == nil {
-		params = &SessionPromptParams{}
+		return nil, errors.New("params is required")
 	}
 	var result SessionPromptResponse
 	err := s.client.do(ctx, http.MethodPost, "session/"+id+"/message", params, &result)
@@ -199,7 +199,7 @@ func (s *SessionService) Revert(ctx context.Context, id string, params *SessionR
 		return nil, errors.New("missing required id parameter")
 	}
 	if params == nil {
-		params = &SessionRevertParams{}
+		return nil, errors.New("params is required")
 	}
 	var result Session
 	err := s.client.do(ctx, http.MethodPost, "session/"+id+"/revert", params, &result)

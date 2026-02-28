@@ -23,7 +23,7 @@ func (s *SessionPermissionService) Respond(ctx context.Context, id string, permi
 		return false, errors.New("missing required permissionID parameter")
 	}
 	if params == nil {
-		params = &SessionPermissionRespondParams{}
+		return false, errors.New("params is required")
 	}
 	var result bool
 	err := s.client.do(ctx, http.MethodPost, fmt.Sprintf("session/%s/permissions/%s", id, permissionID), params, &result)

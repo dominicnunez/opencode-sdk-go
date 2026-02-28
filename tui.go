@@ -2,6 +2,7 @@ package opencode
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/url"
 
@@ -14,7 +15,7 @@ type TuiService struct {
 
 func (s *TuiService) AppendPrompt(ctx context.Context, params *TuiAppendPromptParams) (bool, error) {
 	if params == nil {
-		params = &TuiAppendPromptParams{}
+		return false, errors.New("params is required")
 	}
 	var result bool
 	err := s.client.do(ctx, http.MethodPost, "tui/append-prompt", params, &result)
@@ -38,7 +39,7 @@ func (s *TuiService) ClearPrompt(ctx context.Context, params *TuiClearPromptPara
 
 func (s *TuiService) ExecuteCommand(ctx context.Context, params *TuiExecuteCommandParams) (bool, error) {
 	if params == nil {
-		params = &TuiExecuteCommandParams{}
+		return false, errors.New("params is required")
 	}
 	var result bool
 	err := s.client.do(ctx, http.MethodPost, "tui/execute-command", params, &result)
@@ -98,7 +99,7 @@ func (s *TuiService) OpenThemes(ctx context.Context, params *TuiOpenThemesParams
 
 func (s *TuiService) ShowToast(ctx context.Context, params *TuiShowToastParams) (bool, error) {
 	if params == nil {
-		params = &TuiShowToastParams{}
+		return false, errors.New("params is required")
 	}
 	var result bool
 	err := s.client.do(ctx, http.MethodPost, "tui/show-toast", params, &result)

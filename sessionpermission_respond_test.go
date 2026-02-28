@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 )
 
@@ -222,46 +223,22 @@ func TestSessionPermissionService_Respond_MissingPermissionID(t *testing.T) {
 }
 
 func TestSessionPermissionService_Respond_NilParams(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Verify request body has empty response field (zero value)
-		body, err := io.ReadAll(r.Body)
-		if err != nil {
-			t.Fatalf("Failed to read request body: %v", err)
-		}
-		var params struct {
-			Response PermissionResponse `json:"response"`
-		}
-		if err := json.Unmarshal(body, &params); err != nil {
-			t.Fatalf("Failed to unmarshal request body: %v", err)
-		}
-		// Zero value for PermissionResponse is empty string
-		if params.Response != "" {
-			t.Errorf("Expected empty response, got %s", params.Response)
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		_ = json.NewEncoder(w).Encode(true)
-	}))
-	defer server.Close()
-
-	client, err := NewClient(WithBaseURL(server.URL))
+	client, err := NewClient(WithBaseURL("http://localhost:0"))
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
 
-	result, err := client.Session.Permissions.Respond(
+	_, err = client.Session.Permissions.Respond(
 		context.Background(),
 		"sess-123",
 		"perm-456",
 		nil,
 	)
-	if err != nil {
-		t.Fatalf("Unexpected error: %v", err)
+	if err == nil {
+		t.Fatal("expected error for nil params, got nil")
 	}
-
-	if !result {
-		t.Errorf("Expected result true, got false")
+	if !strings.Contains(err.Error(), "params is required") {
+		t.Errorf("expected error containing %q, got %q", "params is required", err.Error())
 	}
 }
 
