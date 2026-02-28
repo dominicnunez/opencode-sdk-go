@@ -266,9 +266,11 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 			if delay <= 0 || delay > maxBackoff {
 				delay = maxBackoff
 			}
+			timer := time.NewTimer(delay)
 			select {
-			case <-time.After(delay):
+			case <-timer.C:
 			case <-ctx.Done():
+				timer.Stop()
 				return nil, ctx.Err()
 			}
 
