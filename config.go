@@ -1626,7 +1626,8 @@ func (r ConfigGetParams) URLQuery() (url.Values, error) {
 }
 
 type ConfigUpdateParams struct {
-	// Full Config struct to update
+	// Config is the request body. The json:"-" tag prevents double-encoding
+	// because MarshalJSON serializes this field as the top-level JSON object.
 	Config    Config  `json:"-"`
 	Directory *string `query:"directory,omitempty"`
 }
