@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 
@@ -54,21 +53,7 @@ func (s *EventService) ListStreaming(ctx context.Context, params *EventListParam
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		defer func() { _ = resp.Body.Close() }()
-		body, readErr := io.ReadAll(io.LimitReader(resp.Body, maxErrorBodySize))
-		msg := string(body)
-		if msg == "" {
-			msg = http.StatusText(resp.StatusCode)
-		}
-		if readErr != nil {
-			msg += fmt.Sprintf(" (read error: %v)", readErr)
-		}
-		return ssestream.NewStream[Event](nil, &APIError{
-			StatusCode: resp.StatusCode,
-			RequestID:  resp.Header.Get("X-Request-Id"),
-			Message:    msg,
-			Body:       msg,
-		})
+		return ssestream.NewStream[Event](nil, readAPIError(resp, maxErrorBodySize))
 	}
 
 	return ssestream.NewStream[Event](ssestream.NewDecoder(resp), nil)

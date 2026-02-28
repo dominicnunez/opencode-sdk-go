@@ -253,23 +253,7 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 				resp.StatusCode >= http.StatusInternalServerError
 
 			if !shouldRetry || attempt >= c.maxRetries {
-				bodyBytes, readErr := io.ReadAll(io.LimitReader(resp.Body, maxErrorBodySize))
-				_ = resp.Body.Close()
-
-				msg := string(bodyBytes)
-				if msg == "" {
-					msg = http.StatusText(resp.StatusCode)
-				}
-				if readErr != nil {
-					msg += fmt.Sprintf(" (read error: %v)", readErr)
-				}
-
-				return nil, &APIError{
-					StatusCode: resp.StatusCode,
-					Message:    msg,
-					RequestID:  resp.Header.Get("X-Request-Id"),
-					Body:       msg,
-				}
+				return nil, readAPIError(resp, maxErrorBodySize)
 			}
 
 			// Drain and close body before retry to enable connection reuse

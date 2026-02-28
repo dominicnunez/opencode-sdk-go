@@ -3,6 +3,7 @@ package opencode
 import (
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 )
 
@@ -66,6 +67,28 @@ func IsRetryableError(err error) bool {
 		return apiErr.IsRetryable()
 	}
 	return false
+}
+
+// readAPIError reads the response body (up to limit bytes), constructs an
+// *APIError, and closes the body. The caller should not use resp.Body after.
+func readAPIError(resp *http.Response, bodyLimit int64) *APIError {
+	bodyBytes, readErr := io.ReadAll(io.LimitReader(resp.Body, bodyLimit))
+	_ = resp.Body.Close()
+
+	msg := string(bodyBytes)
+	if msg == "" {
+		msg = http.StatusText(resp.StatusCode)
+	}
+	if readErr != nil {
+		msg += fmt.Sprintf(" (read error: %v)", readErr)
+	}
+
+	return &APIError{
+		StatusCode: resp.StatusCode,
+		Message:    msg,
+		RequestID:  resp.Header.Get("X-Request-Id"),
+		Body:       msg,
+	}
 }
 
 func IsNotFoundError(err error) bool       { return errors.Is(err, ErrNotFound) }
