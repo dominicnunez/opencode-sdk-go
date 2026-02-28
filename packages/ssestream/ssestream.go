@@ -120,6 +120,17 @@ func (s *eventStreamDecoder) Next() bool {
 
 	if s.scn.Err() != nil {
 		s.err = s.scn.Err()
+		return false
+	}
+
+	// Per the SSE spec, dispatch any buffered event data when the
+	// connection closes without a trailing blank line.
+	if data.Len() > 0 {
+		s.evt = Event{
+			Type: event,
+			Data: data.Bytes(),
+		}
+		return true
 	}
 
 	return false
