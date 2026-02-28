@@ -13,17 +13,17 @@ const testServerTimeout = 5 * time.Second
 func CheckTestServer(t *testing.T, url string) bool {
 	client := &http.Client{Timeout: testServerTimeout}
 	if _, err := client.Get(url); err != nil {
-		const skipEnvVar = "SKIP_MOCK_TESTS"
-		if str, ok := os.LookupEnv(skipEnvVar); ok {
-			skip, err := strconv.ParseBool(str)
-			if err != nil {
-				t.Fatalf("invalid %s value %q: %s", skipEnvVar, str, err)
+		const envVar = "REQUIRE_MOCK_SERVER"
+		if str, ok := os.LookupEnv(envVar); ok {
+			require, parseErr := strconv.ParseBool(str)
+			if parseErr != nil {
+				t.Fatalf("invalid %s value %q: %s", envVar, str, parseErr)
 			}
-			if !skip {
-				t.Fatalf("mock server not running and %s=false; start the server or set %s=true to skip", skipEnvVar, skipEnvVar)
+			if require {
+				t.Fatalf("mock server not running and %s=true", envVar)
 			}
 		}
-		t.Skip("mock server not running; set SKIP_MOCK_TESTS=true to skip")
+		t.Skip("mock server not running; set REQUIRE_MOCK_SERVER=true to fail instead of skip")
 		return false
 	}
 	return true
