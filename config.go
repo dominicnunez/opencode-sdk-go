@@ -575,15 +575,9 @@ func (r *ConfigLsp) UnmarshalJSON(data []byte) error {
 }
 
 // AsDisabled returns the config as ConfigLspDisabled if it has disabled=true without command field.
-// Returns (nil, false) if it's not a disabled config or unmarshaling fails.
+// Returns (nil, ErrWrongVariant) if it's not a disabled config.
 func (r ConfigLsp) AsDisabled() (*ConfigLspDisabled, error) {
-	// Try to unmarshal as ConfigLspDisabled
-	var disabled ConfigLspDisabled
-	if err := json.Unmarshal(r.raw, &disabled); err != nil {
-		return nil, err
-	}
-
-	// Check if it has the disabled field set to true and no command field
+	// Peek at discriminating fields first to avoid unnecessary unmarshal
 	var peek struct {
 		Command  interface{} `json:"command"`
 		Disabled bool        `json:"disabled"`
@@ -594,29 +588,31 @@ func (r ConfigLsp) AsDisabled() (*ConfigLspDisabled, error) {
 
 	// If command field exists, it's not a disabled config
 	if peek.Command != nil {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 
 	// Must have disabled=true
 	if !peek.Disabled {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 
+	var disabled ConfigLspDisabled
+	if err := json.Unmarshal(r.raw, &disabled); err != nil {
+		return nil, err
+	}
 	return &disabled, nil
 }
 
 // AsObject returns the config as ConfigLspObject if it has a command field.
-// Returns (nil, false) if it's not an object config or unmarshaling fails.
+// Returns (nil, ErrWrongVariant) if it's not an object config.
 func (r ConfigLsp) AsObject() (*ConfigLspObject, error) {
-	// Try to unmarshal as ConfigLspObject
 	var obj ConfigLspObject
 	if err := json.Unmarshal(r.raw, &obj); err != nil {
 		return nil, err
 	}
 
-	// Must have command field
 	if len(obj.Command) == 0 {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 
 	return &obj, nil

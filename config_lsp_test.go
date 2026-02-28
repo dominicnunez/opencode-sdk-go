@@ -2,6 +2,7 @@ package opencode
 
 import (
 	"encoding/json"
+	"errors"
 	"testing"
 )
 
@@ -118,8 +119,8 @@ func TestConfigLsp_WrongType_DisabledAsObject(t *testing.T) {
 	}
 
 	obj, err := lsp.AsObject()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if !errors.Is(err, ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant, got: %v", err)
 	}
 	if obj != nil {
 		t.Error("AsObject() should return nil for disabled config")
@@ -135,8 +136,8 @@ func TestConfigLsp_WrongType_ObjectAsDisabled(t *testing.T) {
 	}
 
 	disabled, err := lsp.AsDisabled()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if !errors.Is(err, ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant, got: %v", err)
 	}
 	if disabled != nil {
 		t.Error("AsDisabled() should return nil for object config")
@@ -169,18 +170,17 @@ func TestConfigLsp_EmptyJSON(t *testing.T) {
 		t.Fatalf("Unmarshal failed: %v", err)
 	}
 
-	// Empty JSON should not match either type
 	obj, err := lsp.AsObject()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if !errors.Is(err, ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant for AsObject on empty JSON, got: %v", err)
 	}
 	if obj != nil {
 		t.Error("AsObject() should return nil for empty JSON")
 	}
 
 	disabled, err := lsp.AsDisabled()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if !errors.Is(err, ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant for AsDisabled on empty JSON, got: %v", err)
 	}
 	if disabled != nil {
 		t.Error("AsDisabled() should return nil for empty JSON")
@@ -236,8 +236,8 @@ func TestConfigLsp_ObjectWithDisabledTrue(t *testing.T) {
 
 	// Should not be treated as Disabled since command field exists
 	disabled, err := lsp.AsDisabled()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if !errors.Is(err, ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant, got: %v", err)
 	}
 	if disabled != nil {
 		t.Error("AsDisabled() should return nil when command field exists")
