@@ -107,3 +107,70 @@ func TestEventStreamDecoder_EmptyStream_ReturnsFalse(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
+
+func TestEventStreamDecoder_EmptyDataFieldAtEOF_DispatchesEvent(t *testing.T) {
+	// Stream ends with "data: " (data field with empty value after colon+space).
+	// Per SSE spec, "data:" seen = hasData = true, so event should dispatch at EOF
+	// even though the data value is empty.
+	raw := "event: foo\ndata: \n"
+	dec := NewDecoder(newSSEResponse(raw))
+	defer func() { _ = dec.Close() }()
+
+	if !dec.Next() {
+		t.Fatal("expected Next() to return true for event with empty data field")
+	}
+
+	evt := dec.Event()
+	if evt.Type != "foo" {
+		t.Fatalf("expected event type %q, got %q", "foo", evt.Type)
+	}
+	if len(evt.Data) != 0 {
+		t.Fatalf("expected empty data, got %q", string(evt.Data))
+	}
+
+	if dec.Next() {
+		t.Fatal("expected Next() to return false after final event")
+	}
+	if err := dec.Err(); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestEventStreamDecoder_EventTypeOnlyNoDataField_NoDispatchAtEOF(t *testing.T) {
+	// Stream ends with event type only, no "data:" field at all.
+	// Per SSE spec, no data field seen = hasData = false, so no event should dispatch.
+	raw := "event: foo\n"
+	dec := NewDecoder(newSSEResponse(raw))
+	defer func() { _ = dec.Close() }()
+
+	if dec.Next() {
+		t.Fatal("expected Next() to return false when no data field present")
+	}
+	if err := dec.Err(); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestStream_DoubleClose_BothReturnNil(t *testing.T) {
+	// After first Close(), decoder is set to nil. Second Close() should
+	// return nil (not panic or error) since decoder is nil.
+	dec := &mockDecoder{}
+	stream := NewStream[interface{}](dec, nil)
+
+	// First Close() should succeed.
+	err1 := stream.Close()
+	if err1 != nil {
+		t.Fatalf("expected first Close() to return nil, got %v", err1)
+	}
+
+	// Verify decoder is nil after first Close().
+	if stream.decoder != nil {
+		t.Fatal("expected decoder to be nil after Close()")
+	}
+
+	// Second Close() should also return nil (not panic).
+	err2 := stream.Close()
+	if err2 != nil {
+		t.Fatalf("expected second Close() to return nil, got %v", err2)
+	}
+}

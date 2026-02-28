@@ -78,6 +78,7 @@ func (s *eventStreamDecoder) Next() bool {
 
 	event := ""
 	data := bytes.NewBuffer(nil)
+	hasData := false
 
 	for s.scn.Scan() {
 		txt := s.scn.Bytes()
@@ -105,6 +106,7 @@ func (s *eventStreamDecoder) Next() bool {
 		case "event":
 			event = string(value)
 		case "data":
+			hasData = true
 			if data.Len() > 0 {
 				_, s.err = data.WriteRune('\n')
 				if s.err != nil {
@@ -123,9 +125,10 @@ func (s *eventStreamDecoder) Next() bool {
 		return false
 	}
 
-	// Per the SSE spec, dispatch any buffered event data when the
-	// connection closes without a trailing blank line.
-	if data.Len() > 0 {
+	// Per the SSE spec, dispatch any buffered event when the connection
+	// closes without a trailing blank line. Use hasData (not data.Len)
+	// because "data:" with an empty value is a valid event with empty data.
+	if hasData {
 		s.evt = Event{
 			Type: event,
 			Data: data.Bytes(),
@@ -208,8 +211,9 @@ func (s *Stream[T]) Err() error {
 
 func (s *Stream[T]) Close() error {
 	if s.decoder == nil {
-		// already closed
 		return nil
 	}
-	return s.decoder.Close()
+	err := s.decoder.Close()
+	s.decoder = nil
+	return err
 }
