@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 
@@ -149,6 +150,9 @@ type ConfigAgentBuildPermissionBashUnion struct {
 }
 
 func (p *ConfigAgentBuildPermissionBashUnion) UnmarshalJSON(data []byte) error {
+	if !json.Valid(data) {
+		return fmt.Errorf("invalid JSON for ConfigAgentBuildPermissionBashUnion")
+	}
 	p.raw = data
 	return nil
 }
@@ -279,6 +283,9 @@ type ConfigAgentGeneralPermissionBashUnion struct {
 }
 
 func (p *ConfigAgentGeneralPermissionBashUnion) UnmarshalJSON(data []byte) error {
+	if !json.Valid(data) {
+		return fmt.Errorf("invalid JSON for ConfigAgentGeneralPermissionBashUnion")
+	}
 	p.raw = data
 	return nil
 }
@@ -409,6 +416,9 @@ type ConfigAgentPlanPermissionBashUnion struct {
 }
 
 func (p *ConfigAgentPlanPermissionBashUnion) UnmarshalJSON(data []byte) error {
+	if !json.Valid(data) {
+		return fmt.Errorf("invalid JSON for ConfigAgentPlanPermissionBashUnion")
+	}
 	p.raw = data
 	return nil
 }
@@ -557,7 +567,9 @@ type ConfigLsp struct {
 }
 
 func (r *ConfigLsp) UnmarshalJSON(data []byte) error {
-	// Store raw JSON for lazy unmarshaling
+	if !json.Valid(data) {
+		return fmt.Errorf("invalid JSON for ConfigLsp")
+	}
 	r.raw = data
 	return nil
 }
@@ -748,6 +760,9 @@ type ConfigModeBuildPermissionBashUnion struct {
 }
 
 func (p *ConfigModeBuildPermissionBashUnion) UnmarshalJSON(data []byte) error {
+	if !json.Valid(data) {
+		return fmt.Errorf("invalid JSON for ConfigModeBuildPermissionBashUnion")
+	}
 	p.raw = data
 	return nil
 }
@@ -878,6 +893,9 @@ type ConfigModePlanPermissionBashUnion struct {
 }
 
 func (p *ConfigModePlanPermissionBashUnion) UnmarshalJSON(data []byte) error {
+	if !json.Valid(data) {
+		return fmt.Errorf("invalid JSON for ConfigModePlanPermissionBashUnion")
+	}
 	p.raw = data
 	return nil
 }
@@ -979,6 +997,9 @@ type ConfigPermissionBashUnion struct {
 }
 
 func (p *ConfigPermissionBashUnion) UnmarshalJSON(data []byte) error {
+	if !json.Valid(data) {
+		return fmt.Errorf("invalid JSON for ConfigPermissionBashUnion")
+	}
 	p.raw = data
 	return nil
 }
