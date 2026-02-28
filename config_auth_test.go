@@ -2,6 +2,7 @@ package opencode
 
 import (
 	"encoding/json"
+	"errors"
 	"testing"
 )
 
@@ -116,8 +117,8 @@ func TestAuth_AsOAuth_WrongType(t *testing.T) {
 	}
 
 	oauth, err := auth.AsOAuth()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if !errors.Is(err, ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant, got: %v", err)
 	}
 	if oauth != nil {
 		t.Error("AsOAuth() should return nil for api type")
@@ -133,8 +134,8 @@ func TestAuth_AsAPI_WrongType(t *testing.T) {
 	}
 
 	apiAuth, err := auth.AsAPI()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if !errors.Is(err, ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant, got: %v", err)
 	}
 	if apiAuth != nil {
 		t.Error("AsAPI() should return nil for oauth type")
@@ -150,8 +151,8 @@ func TestAuth_AsWellKnown_WrongType(t *testing.T) {
 	}
 
 	wellKnown, err := auth.AsWellKnown()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if !errors.Is(err, ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant, got: %v", err)
 	}
 	if wellKnown != nil {
 		t.Error("AsWellKnown() should return nil for api type")
@@ -179,20 +180,14 @@ func TestAuth_MissingType(t *testing.T) {
 		t.Errorf("Expected empty type, got %s", auth.Type)
 	}
 
-	if oauth, err := auth.AsOAuth(); err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	} else if oauth != nil {
-		t.Error("AsOAuth() should return nil for missing type")
+	if oauth, err := auth.AsOAuth(); !errors.Is(err, ErrWrongVariant) || oauth != nil {
+		t.Errorf("AsOAuth() should return (nil, ErrWrongVariant) for missing type, got (%v, %v)", oauth, err)
 	}
-	if apiAuth, err := auth.AsAPI(); err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	} else if apiAuth != nil {
-		t.Error("AsAPI() should return nil for missing type")
+	if apiAuth, err := auth.AsAPI(); !errors.Is(err, ErrWrongVariant) || apiAuth != nil {
+		t.Errorf("AsAPI() should return (nil, ErrWrongVariant) for missing type, got (%v, %v)", apiAuth, err)
 	}
-	if wellKnown, err := auth.AsWellKnown(); err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	} else if wellKnown != nil {
-		t.Error("AsWellKnown() should return nil for missing type")
+	if wellKnown, err := auth.AsWellKnown(); !errors.Is(err, ErrWrongVariant) || wellKnown != nil {
+		t.Errorf("AsWellKnown() should return (nil, ErrWrongVariant) for missing type, got (%v, %v)", wellKnown, err)
 	}
 }
 
@@ -208,20 +203,14 @@ func TestAuth_UnknownType(t *testing.T) {
 		t.Error("IsKnown() should return false for unknown type")
 	}
 
-	if oauth, err := auth.AsOAuth(); err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	} else if oauth != nil {
-		t.Error("AsOAuth() should return nil for unknown type")
+	if oauth, err := auth.AsOAuth(); !errors.Is(err, ErrWrongVariant) || oauth != nil {
+		t.Errorf("AsOAuth() should return (nil, ErrWrongVariant) for unknown type, got (%v, %v)", oauth, err)
 	}
-	if apiAuth, err := auth.AsAPI(); err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	} else if apiAuth != nil {
-		t.Error("AsAPI() should return nil for unknown type")
+	if apiAuth, err := auth.AsAPI(); !errors.Is(err, ErrWrongVariant) || apiAuth != nil {
+		t.Errorf("AsAPI() should return (nil, ErrWrongVariant) for unknown type, got (%v, %v)", apiAuth, err)
 	}
-	if wellKnown, err := auth.AsWellKnown(); err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	} else if wellKnown != nil {
-		t.Error("AsWellKnown() should return nil for unknown type")
+	if wellKnown, err := auth.AsWellKnown(); !errors.Is(err, ErrWrongVariant) || wellKnown != nil {
+		t.Errorf("AsWellKnown() should return (nil, ErrWrongVariant) for unknown type, got (%v, %v)", wellKnown, err)
 	}
 }
 
@@ -260,10 +249,8 @@ func TestAuth_EmptyJSON(t *testing.T) {
 		t.Errorf("Expected empty type, got %s", auth.Type)
 	}
 
-	if oauth, err := auth.AsOAuth(); err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	} else if oauth != nil {
-		t.Error("AsOAuth() should return nil for empty JSON")
+	if oauth, err := auth.AsOAuth(); !errors.Is(err, ErrWrongVariant) || oauth != nil {
+		t.Errorf("AsOAuth() should return (nil, ErrWrongVariant) for empty JSON, got (%v, %v)", oauth, err)
 	}
 }
 

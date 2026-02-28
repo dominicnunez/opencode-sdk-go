@@ -1428,7 +1428,7 @@ func (a *Auth) UnmarshalJSON(data []byte) error {
 // AsOAuth returns the OAuth variant if the type is oauth
 func (a Auth) AsOAuth() (*OAuth, error) {
 	if a.Type != AuthTypeOAuth {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var oauth OAuth
 	if err := json.Unmarshal(a.raw, &oauth); err != nil {
@@ -1440,7 +1440,7 @@ func (a Auth) AsOAuth() (*OAuth, error) {
 // AsAPI returns the ApiAuth variant if the type is api
 func (a Auth) AsAPI() (*ApiAuth, error) {
 	if a.Type != AuthTypeAPI {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var apiAuth ApiAuth
 	if err := json.Unmarshal(a.raw, &apiAuth); err != nil {
@@ -1452,7 +1452,7 @@ func (a Auth) AsAPI() (*ApiAuth, error) {
 // AsWellKnown returns the WellKnownAuth variant if the type is wellknown
 func (a Auth) AsWellKnown() (*WellKnownAuth, error) {
 	if a.Type != AuthTypeWellKnown {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var wellKnown WellKnownAuth
 	if err := json.Unmarshal(a.raw, &wellKnown); err != nil {
