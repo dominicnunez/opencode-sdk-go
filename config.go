@@ -1205,7 +1205,7 @@ func (p *ConfigProviderOptionsTimeoutUnion) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// AsInt returns the timeout as an int64 if it is a number, or (0, false) if it is a bool.
+// AsInt returns the timeout as an int64 if it is a number, or (0, error) if it is a bool.
 func (p ConfigProviderOptionsTimeoutUnion) AsInt() (int64, error) {
 	var i int64
 	if err := json.Unmarshal(p.raw, &i); err != nil {
@@ -1214,7 +1214,7 @@ func (p ConfigProviderOptionsTimeoutUnion) AsInt() (int64, error) {
 	return i, nil
 }
 
-// AsBool returns the timeout as a bool if it is a bool, or (false, false) if it is a number.
+// AsBool returns the timeout as a bool if it is a bool, or (false, error) if it is a number.
 func (p ConfigProviderOptionsTimeoutUnion) AsBool() (bool, error) {
 	var b bool
 	if err := json.Unmarshal(p.raw, &b); err != nil {
