@@ -16,7 +16,9 @@ import (
 // - []string (array of strings)
 //
 // Empty non-pointer strings are always omitted from the output, regardless
-// of whether "omitempty" is set. To send an empty string value, use *string.
+// of whether "omitempty" is set. This means the "required" tag on a non-pointer
+// string enforces "required and non-empty". To send an empty string value,
+// use *string.
 func Marshal(v interface{}) (url.Values, error) {
 	if v == nil {
 		return url.Values{}, nil
