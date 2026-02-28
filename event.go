@@ -46,7 +46,7 @@ func (s *EventService) ListStreaming(ctx context.Context, params *EventListParam
 		return ssestream.NewStream[Event](nil, err)
 	}
 
-	if resp.StatusCode >= 400 {
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		defer func() { _ = resp.Body.Close() }()
 		body, readErr := io.ReadAll(io.LimitReader(resp.Body, maxErrorBodySize))
 		msg := string(body)
