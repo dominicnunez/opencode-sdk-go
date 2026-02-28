@@ -240,7 +240,7 @@ func TestMarshal_StringSlice(t *testing.T) {
 
 func TestMarshal_UnexportedFields(t *testing.T) {
 	type params struct {
-		Query     string `query:"query"`
+		Query      string `query:"query"`
 		unexported string `query:"unexported"` // should be ignored
 	}
 
@@ -259,10 +259,10 @@ func TestMarshal_UnexportedFields(t *testing.T) {
 
 func TestParseTag(t *testing.T) {
 	tests := []struct {
-		tag       string
-		wantName  string
-		wantReq   bool
-		wantOmit  bool
+		tag      string
+		wantName string
+		wantReq  bool
+		wantOmit bool
 	}{
 		{"query,required", "query", true, false},
 		{"directory,omitempty", "directory", false, true},
@@ -342,6 +342,30 @@ func TestMarshal_RequiredValidation(t *testing.T) {
 	_, err = Marshal(params{Query: "valid"})
 	if err != nil {
 		t.Fatalf("unexpected error for valid required field: %v", err)
+	}
+}
+
+func TestMarshal_RequiredSliceValidation(t *testing.T) {
+	type params struct {
+		Tags []string `query:"tags,required"`
+	}
+
+	_, err := Marshal(params{Tags: []string{}})
+	if err == nil {
+		t.Fatal("expected error for empty required slice")
+	}
+
+	_, err = Marshal(params{Tags: nil})
+	if err == nil {
+		t.Fatal("expected error for nil required slice")
+	}
+
+	result, err := Marshal(params{Tags: []string{"go"}})
+	if err != nil {
+		t.Fatalf("unexpected error for valid required slice: %v", err)
+	}
+	if got := result["tags"]; len(got) != 1 || got[0] != "go" {
+		t.Errorf("expected tags=[go], got %v", got)
 	}
 }
 

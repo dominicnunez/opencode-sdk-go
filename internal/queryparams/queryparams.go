@@ -113,6 +113,9 @@ func addFieldValue(params url.Values, name string, field reflect.Value, required
 		}
 		params.Add(name, strconv.FormatBool(field.Bool()))
 	case reflect.Slice:
+		if required && field.Len() == 0 {
+			return fmt.Errorf("required query parameter %q is empty", name)
+		}
 		// Handle []string
 		if field.Type().Elem().Kind() == reflect.String {
 			for j := 0; j < field.Len(); j++ {
