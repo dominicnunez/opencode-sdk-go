@@ -73,6 +73,24 @@ func TestPermissionPattern_AsString(t *testing.T) {
 			want:     "",
 			wantErr:  true,
 		},
+		{
+			name:     "number returns ErrWrongVariant",
+			jsonData: `123`,
+			want:     "",
+			wantErr:  true,
+		},
+		{
+			name:     "boolean returns ErrWrongVariant",
+			jsonData: `true`,
+			want:     "",
+			wantErr:  true,
+		},
+		{
+			name:     "null returns ErrWrongVariant",
+			jsonData: `null`,
+			want:     "",
+			wantErr:  true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -85,6 +103,9 @@ func TestPermissionPattern_AsString(t *testing.T) {
 			got, err := pattern.AsString()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("AsString() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if tt.wantErr && !errors.Is(err, opencode.ErrWrongVariant) {
+				t.Errorf("AsString() error = %v, want ErrWrongVariant", err)
 			}
 			if got != tt.want {
 				t.Errorf("AsString() = %q, want %q", got, tt.want)
@@ -130,6 +151,24 @@ func TestPermissionPattern_AsArray(t *testing.T) {
 			want:     nil,
 			wantErr:  true,
 		},
+		{
+			name:     "number returns ErrWrongVariant",
+			jsonData: `123`,
+			want:     nil,
+			wantErr:  true,
+		},
+		{
+			name:     "boolean returns ErrWrongVariant",
+			jsonData: `false`,
+			want:     nil,
+			wantErr:  true,
+		},
+		{
+			name:     "null returns ErrWrongVariant",
+			jsonData: `null`,
+			want:     nil,
+			wantErr:  true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -142,6 +181,9 @@ func TestPermissionPattern_AsArray(t *testing.T) {
 			got, err := pattern.AsArray()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("AsArray() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if tt.wantErr && !errors.Is(err, opencode.ErrWrongVariant) {
+				t.Errorf("AsArray() error = %v, want ErrWrongVariant", err)
 			}
 			if err == nil && !stringSlicesEqual(got, tt.want) {
 				t.Errorf("AsArray() = %v, want %v", got, tt.want)
