@@ -51,8 +51,8 @@ func TestConfigAgentBuildPermissionBashUnion(t *testing.T) {
 			t.Fatalf("Unmarshal failed: %v", err)
 		}
 		_, err := u.AsString()
-		if err == nil {
-			t.Error("AsString() should return error for map value")
+		if !errors.Is(err, ErrWrongVariant) {
+			t.Errorf("AsString() = %v, want ErrWrongVariant", err)
 		}
 	})
 
@@ -63,8 +63,8 @@ func TestConfigAgentBuildPermissionBashUnion(t *testing.T) {
 			t.Fatalf("Unmarshal failed: %v", err)
 		}
 		_, err := u.AsMap()
-		if err == nil {
-			t.Error("AsMap() should return error for string value")
+		if !errors.Is(err, ErrWrongVariant) {
+			t.Errorf("AsMap() = %v, want ErrWrongVariant", err)
 		}
 	})
 }
@@ -123,8 +123,8 @@ func TestConfigProviderOptionsTimeoutUnion(t *testing.T) {
 			t.Fatalf("Unmarshal failed: %v", err)
 		}
 		_, err := u.AsInt()
-		if err == nil {
-			t.Error("AsInt() should return error for bool value")
+		if !errors.Is(err, ErrWrongVariant) {
+			t.Errorf("AsInt() = %v, want ErrWrongVariant", err)
 		}
 	})
 
@@ -135,8 +135,8 @@ func TestConfigProviderOptionsTimeoutUnion(t *testing.T) {
 			t.Fatalf("Unmarshal failed: %v", err)
 		}
 		_, err := u.AsBool()
-		if err == nil {
-			t.Error("AsBool() should return error for int value")
+		if !errors.Is(err, ErrWrongVariant) {
+			t.Errorf("AsBool() = %v, want ErrWrongVariant", err)
 		}
 	})
 }
@@ -224,14 +224,9 @@ func TestConfigAgentPlanPermissionBashUnion(t *testing.T) {
 		if err := json.Unmarshal(data, &u); err != nil {
 			t.Fatalf("Unmarshal failed: %v", err)
 		}
-		// Note: json.Unmarshal treats null as empty string for string types
-		// This is expected stdlib behavior
-		s, err := u.AsString()
-		if err != nil {
-			t.Error("AsString() should return true for null (unmarshals to empty string)")
-		}
-		if s != "" {
-			t.Errorf("Expected empty string for null, got %q", s)
+		_, err := u.AsString()
+		if !errors.Is(err, ErrWrongVariant) {
+			t.Errorf("AsString() = %v, want ErrWrongVariant for null", err)
 		}
 	})
 }
