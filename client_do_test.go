@@ -132,6 +132,32 @@ func TestClientDo_QueryParams(t *testing.T) {
 	t.Logf("Received query: %s", receivedQuery)
 }
 
+func TestClientDo_BaseURLQueryParamsPreserved(t *testing.T) {
+	var receivedQuery string
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		receivedQuery = r.URL.RawQuery
+		w.WriteHeader(http.StatusOK)
+		_ = json.NewEncoder(w).Encode([]opencode.Session{})
+	}))
+	defer server.Close()
+
+	client, err := opencode.NewClient(opencode.WithBaseURL(server.URL + "?token=xyz"))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	// List with no query params of its own — base URL token should survive
+	_, err = client.Session.List(context.Background(), nil)
+	if err != nil {
+		t.Fatalf("Session.List failed: %v", err)
+	}
+
+	if receivedQuery != "token=xyz" {
+		t.Errorf("Expected base URL query params preserved, got %q", receivedQuery)
+	}
+}
+
 func TestClientDo_PostWithBody(t *testing.T) {
 	var receivedBody map[string]interface{}
 

@@ -167,8 +167,9 @@ func (c *Client) do(ctx context.Context, method, path string, params, result int
 }
 
 func (c *Client) doRaw(ctx context.Context, method, path string, params interface{}) (*http.Response, error) {
-	// Build full URL
+	// Build full URL, preserving any query params from the base URL
 	fullURL := c.baseURL.ResolveReference(&url.URL{Path: path})
+	fullURL.RawQuery = c.baseURL.RawQuery
 
 	var body io.Reader
 
@@ -179,7 +180,13 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 			if err != nil {
 				return nil, fmt.Errorf("encode query params: %w", err)
 			}
-			fullURL.RawQuery = query.Encode()
+			if len(query) > 0 {
+				if fullURL.RawQuery != "" {
+					fullURL.RawQuery += "&" + query.Encode()
+				} else {
+					fullURL.RawQuery = query.Encode()
+				}
+			}
 		}
 	}
 
