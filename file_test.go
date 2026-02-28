@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/dominicnunez/opencode-sdk-go"
@@ -102,7 +103,7 @@ func TestFileService_RequiredFieldValidation(t *testing.T) {
 				})
 				return err
 			},
-			expectedErrMsg: "missing required Path parameter",
+			expectedErrMsg: "required query parameter",
 		},
 		{
 			name: "Read with missing Path",
@@ -112,7 +113,7 @@ func TestFileService_RequiredFieldValidation(t *testing.T) {
 				})
 				return err
 			},
-			expectedErrMsg: "missing required Path parameter",
+			expectedErrMsg: "required query parameter",
 		},
 	}
 
@@ -127,8 +128,8 @@ func TestFileService_RequiredFieldValidation(t *testing.T) {
 			if err == nil {
 				t.Fatalf("Expected error for %s, got nil", tt.name)
 			}
-			if err.Error() != tt.expectedErrMsg {
-				t.Errorf("Expected error message %q, got %q", tt.expectedErrMsg, err.Error())
+			if !strings.Contains(err.Error(), tt.expectedErrMsg) {
+				t.Errorf("Expected error containing %q, got %q", tt.expectedErrMsg, err.Error())
 			}
 		})
 	}

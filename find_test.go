@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/dominicnunez/opencode-sdk-go"
@@ -103,7 +104,7 @@ func TestFindService_RequiredFieldValidation(t *testing.T) {
 				})
 				return err
 			},
-			expectedErrMsg: "missing required Query parameter",
+			expectedErrMsg: "required query parameter",
 		},
 		{
 			name: "Symbols with missing Query",
@@ -113,7 +114,7 @@ func TestFindService_RequiredFieldValidation(t *testing.T) {
 				})
 				return err
 			},
-			expectedErrMsg: "missing required Query parameter",
+			expectedErrMsg: "required query parameter",
 		},
 		{
 			name: "Text with missing Pattern",
@@ -123,7 +124,7 @@ func TestFindService_RequiredFieldValidation(t *testing.T) {
 				})
 				return err
 			},
-			expectedErrMsg: "missing required Pattern parameter",
+			expectedErrMsg: "required query parameter",
 		},
 	}
 
@@ -138,8 +139,8 @@ func TestFindService_RequiredFieldValidation(t *testing.T) {
 			if err == nil {
 				t.Fatalf("Expected error for %s, got nil", tt.name)
 			}
-			if err.Error() != tt.expectedErrMsg {
-				t.Errorf("Expected error message %q, got %q", tt.expectedErrMsg, err.Error())
+			if !strings.Contains(err.Error(), tt.expectedErrMsg) {
+				t.Errorf("Expected error containing %q, got %q", tt.expectedErrMsg, err.Error())
 			}
 		})
 	}

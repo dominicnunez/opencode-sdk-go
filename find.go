@@ -17,9 +17,6 @@ func (s *FindService) Files(ctx context.Context, params *FindFilesParams) ([]str
 	if params == nil {
 		return nil, errors.New("params is required")
 	}
-	if params.Query == "" {
-		return nil, errors.New("missing required Query parameter")
-	}
 	var result []string
 	err := s.client.do(ctx, http.MethodGet, "find/file", params, &result)
 	if err != nil {
@@ -32,9 +29,6 @@ func (s *FindService) Symbols(ctx context.Context, params *FindSymbolsParams) ([
 	if params == nil {
 		return nil, errors.New("params is required")
 	}
-	if params.Query == "" {
-		return nil, errors.New("missing required Query parameter")
-	}
 	var result []Symbol
 	err := s.client.do(ctx, http.MethodGet, "find/symbol", params, &result)
 	if err != nil {
@@ -46,9 +40,6 @@ func (s *FindService) Symbols(ctx context.Context, params *FindSymbolsParams) ([
 func (s *FindService) Text(ctx context.Context, params *FindTextParams) ([]FindTextResponse, error) {
 	if params == nil {
 		return nil, errors.New("params is required")
-	}
-	if params.Pattern == "" {
-		return nil, errors.New("missing required Pattern parameter")
 	}
 	var result []FindTextResponse
 	err := s.client.do(ctx, http.MethodGet, "find", params, &result)
