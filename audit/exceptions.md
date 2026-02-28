@@ -66,6 +66,14 @@
 
 <!-- Real findings not worth fixing — architectural cost, external constraints, etc. -->
 
+### apierror.Error is unused but exported as a public type alias
+
+**Location:** `internal/apierror/apierror.go:12-17` — aliased as `opencode.Error` in `aliases.go:8`
+**Date:** 2026-02-28
+
+**Reason:** `apierror.Error` is never constructed anywhere in the SDK — it's a Stainless leftover. However, it's exposed as the public type `opencode.Error`. Removing it would be a breaking API change for any caller that references the type. The type is inert (never returned by any SDK method), so it causes no runtime harm.
+
+
 ### Path parameters not URL-encoded in service methods
 
 **Location:** `session.go`, `sessionpermission.go` — string concatenation for path segments
@@ -104,6 +112,28 @@
 ## Intentional Design Decisions
 
 <!-- Findings that describe behavior which is correct by design -->
+
+### ListStreaming bypasses Client timeout and retry logic
+
+**Location:** `event.go:49` — uses httpClient.Do directly
+**Date:** 2026-02-28
+
+**Reason:** SSE streams are long-lived connections that remain open indefinitely while events arrive. Applying the client's default 30s timeout would prematurely kill every SSE connection. Retries are also inappropriate for streaming — the caller should reconnect at the application level. Callers who need a deadline can set one via `context.WithTimeout` on the context they pass in. This is consistent with how other Go SSE/WebSocket libraries handle timeouts.
+
+### ConfigProviderOptions exposes API key as a plain string field
+
+**Location:** `config.go:1206` — APIKey field
+**Date:** 2026-02-28
+
+**Reason:** The struct faithfully reflects the OpenAPI spec schema. The server includes API keys in config responses, and the SDK must deserialize them. Adding `json:"-"` would silently drop data the server returns, breaking callers who need the value. Redaction is a presentation concern that belongs in the caller's logging/serialization layer, not in the SDK's data types.
+
+### McpStatus is an untyped map
+
+**Location:** `mcp.go:17`
+**Date:** 2026-02-28
+
+**Reason:** The OpenAPI spec defines the MCP status response with an empty schema (`"schema": {}`), meaning the response shape is intentionally unspecified. `map[string]interface{}` is the correct Go representation of an unconstrained JSON object. Creating a typed struct would impose structure the spec does not guarantee.
+
 
 ### APIError.Body and Message contain the same value
 
