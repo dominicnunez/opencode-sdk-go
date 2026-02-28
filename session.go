@@ -646,7 +646,7 @@ func (r FilePartInputType) IsKnown() bool {
 type FilePartSource struct {
 	Type FilePartSourceType `json:"type"`
 	// Embed raw JSON for lazy decode
-	raw json.RawMessage `json:"-"`
+	raw json.RawMessage
 }
 
 func (r *FilePartSource) UnmarshalJSON(data []byte) error {
@@ -770,7 +770,7 @@ type Message struct {
 	Role      MessageRole `json:"role"`
 	SessionID string      `json:"sessionID"`
 	// Embed raw JSON for lazy decode
-	raw json.RawMessage `json:"-"`
+	raw json.RawMessage
 }
 
 func (r *Message) UnmarshalJSON(data []byte) error {
