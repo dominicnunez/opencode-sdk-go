@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 )
 
@@ -302,8 +301,8 @@ func TestToolService_List_MissingProvider(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error when Provider is empty")
 	}
-	if !strings.Contains(err.Error(), "required query parameter") {
-		t.Errorf("unexpected error: %v", err)
+	if err.Error() != "missing required provider parameter" {
+		t.Errorf("expected 'missing required provider parameter', got: %v", err)
 	}
 }
 
@@ -319,8 +318,8 @@ func TestToolService_List_MissingModel(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error when Model is empty")
 	}
-	if !strings.Contains(err.Error(), "required query parameter") {
-		t.Errorf("unexpected error: %v", err)
+	if err.Error() != "missing required model parameter" {
+		t.Errorf("expected 'missing required model parameter', got: %v", err)
 	}
 }
 
