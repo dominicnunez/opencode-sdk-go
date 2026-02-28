@@ -371,6 +371,66 @@ func TestStatusCode_BoundaryDistinctions(t *testing.T) {
 	})
 }
 
+// TestAPIError_IsRetryable verifies that IsRetryable correctly identifies
+// transient HTTP status codes.
+func TestAPIError_IsRetryable(t *testing.T) {
+	tests := []struct {
+		name       string
+		statusCode int
+		want       bool
+	}{
+		{"200 not retryable", http.StatusOK, false},
+		{"400 not retryable", http.StatusBadRequest, false},
+		{"401 not retryable", http.StatusUnauthorized, false},
+		{"403 not retryable", http.StatusForbidden, false},
+		{"404 not retryable", http.StatusNotFound, false},
+		{"408 retryable", http.StatusRequestTimeout, true},
+		{"429 retryable", http.StatusTooManyRequests, true},
+		{"500 retryable", http.StatusInternalServerError, true},
+		{"502 retryable", http.StatusBadGateway, true},
+		{"503 retryable", http.StatusServiceUnavailable, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := apiErr(tt.statusCode)
+			if got := err.IsRetryable(); got != tt.want {
+				t.Errorf("APIError{%d}.IsRetryable() = %v, want %v",
+					tt.statusCode, got, tt.want)
+			}
+		})
+	}
+}
+
+// TestIsRetryableError verifies the top-level helper function.
+func TestIsRetryableError(t *testing.T) {
+	tests := []struct {
+		name string
+		err  error
+		want bool
+	}{
+		{"nil error", nil, false},
+		{"unrelated error", errors.New("something"), false},
+		{"400 not retryable", apiErr(http.StatusBadRequest), false},
+		{"404 not retryable", apiErr(http.StatusNotFound), false},
+		{"408 retryable", apiErr(http.StatusRequestTimeout), true},
+		{"429 retryable", apiErr(http.StatusTooManyRequests), true},
+		{"500 retryable", apiErr(http.StatusInternalServerError), true},
+		{"502 retryable", apiErr(http.StatusBadGateway), true},
+		{"wrapped 429 retryable", fmt.Errorf("wrap: %w", apiErr(http.StatusTooManyRequests)), true},
+		{"wrapped 500 retryable", fmt.Errorf("wrap: %w", apiErr(http.StatusInternalServerError)), true},
+		{"wrapped 400 not retryable", fmt.Errorf("wrap: %w", apiErr(http.StatusBadRequest)), false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IsRetryableError(tt.err); got != tt.want {
+				t.Errorf("IsRetryableError(%v) = %v, want %v", tt.err, got, tt.want)
+			}
+		})
+	}
+}
+
 // contains is a local helper to avoid importing strings in tests.
 func contains(s, substr string) bool {
 	return len(substr) == 0 || (len(s) >= len(substr) && (s == substr || len(s) > 0 && containsAt(s, substr)))
