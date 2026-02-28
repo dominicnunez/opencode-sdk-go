@@ -315,6 +315,54 @@ func TestListStreaming_EmptyBody502_ReturnsAPIErrorWithStatusText(t *testing.T) 
 	_ = stream.Close()
 }
 
+func TestBaseURL_WithPathComponent_ResolvesCorrectly(t *testing.T) {
+	var receivedPath string
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		receivedPath = r.URL.Path
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte("[]"))
+	}))
+	defer server.Close()
+
+	client, err := opencode.NewClient(
+		opencode.WithBaseURL(server.URL + "/api/v1"),
+	)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	_, _ = client.Session.List(context.Background(), nil)
+
+	if receivedPath != "/api/v1/session" {
+		t.Errorf("expected path /api/v1/session, got %s", receivedPath)
+	}
+}
+
+func TestBaseURL_WithTrailingSlash_ResolvesCorrectly(t *testing.T) {
+	var receivedPath string
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		receivedPath = r.URL.Path
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte("[]"))
+	}))
+	defer server.Close()
+
+	client, err := opencode.NewClient(
+		opencode.WithBaseURL(server.URL + "/api/v1/"),
+	)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	_, _ = client.Session.List(context.Background(), nil)
+
+	if receivedPath != "/api/v1/session" {
+		t.Errorf("expected path /api/v1/session, got %s", receivedPath)
+	}
+}
+
 type readerFunc func([]byte) (int, error)
 
 func (f readerFunc) Read(p []byte) (int, error) { return f(p) }

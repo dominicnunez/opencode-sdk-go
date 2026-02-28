@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/dominicnunez/opencode-sdk-go/internal"
@@ -63,6 +64,9 @@ func NewClient(opts ...ClientOption) (*Client, error) {
 	if parsed.Scheme != "http" && parsed.Scheme != "https" {
 		return nil, fmt.Errorf("base URL must use http or https scheme, got %q", parsed.Scheme)
 	}
+	if !strings.HasSuffix(parsed.Path, "/") {
+		parsed.Path += "/"
+	}
 
 	c := &Client{
 		baseURL:    parsed,
@@ -106,6 +110,9 @@ func WithBaseURL(rawURL string) ClientOption {
 		}
 		if u.Scheme != "http" && u.Scheme != "https" {
 			return fmt.Errorf("base URL must use http or https scheme, got %q", u.Scheme)
+		}
+		if !strings.HasSuffix(u.Path, "/") {
+			u.Path += "/"
 		}
 		c.baseURL = u
 		return nil
