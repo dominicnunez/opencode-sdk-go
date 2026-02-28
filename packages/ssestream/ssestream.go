@@ -12,9 +12,9 @@ import (
 	"sync"
 )
 
-// Bit shift applied to bufio.MaxScanTokenSize to handle large SSE events.
-// 64KB << 9 = 32MB max token size.
-const sseBufferShift = 9
+// maxSSETokenSize is the maximum size for a single SSE event token.
+// bufio.MaxScanTokenSize (64KB) << 9 = 32MB.
+const maxSSETokenSize = bufio.MaxScanTokenSize << 9
 
 // ErrNilDecoder is returned by Stream.Next when the SSE decoder is nil,
 // indicating the response body was not available.
@@ -41,7 +41,7 @@ func NewDecoder(res *http.Response) Decoder {
 		decoder = t(res.Body)
 	} else {
 		scn := bufio.NewScanner(res.Body)
-		scn.Buffer(nil, bufio.MaxScanTokenSize<<sseBufferShift)
+		scn.Buffer(nil, maxSSETokenSize)
 		decoder = &eventStreamDecoder{rc: res.Body, scn: scn}
 	}
 	return decoder
