@@ -60,6 +60,7 @@ func (s *EventService) ListStreaming(ctx context.Context, params *EventListParam
 		}
 		return ssestream.NewStream[Event](nil, &APIError{
 			StatusCode: resp.StatusCode,
+			RequestID:  resp.Header.Get("X-Request-Id"),
 			Message:    msg,
 			Body:       msg,
 		})
