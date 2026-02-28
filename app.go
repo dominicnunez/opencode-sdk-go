@@ -33,6 +33,14 @@ const (
 	LogLevelError LogLevel = "error"
 )
 
+func (r LogLevel) IsKnown() bool {
+	switch r {
+	case LogLevelDebug, LogLevelInfo, LogLevelWarn, LogLevelError:
+		return true
+	}
+	return false
+}
+
 type Model struct {
 	ID           string                 `json:"id"`
 	Attachment   bool                   `json:"attachment"`
@@ -118,4 +126,3 @@ type AppLogParams struct {
 func (r AppLogParams) URLQuery() (url.Values, error) {
 	return queryparams.Marshal(r)
 }
-

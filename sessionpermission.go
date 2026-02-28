@@ -41,6 +41,14 @@ const (
 	PermissionResponseReject PermissionResponse = "reject"
 )
 
+func (r PermissionResponse) IsKnown() bool {
+	switch r {
+	case PermissionResponseOnce, PermissionResponseAlways, PermissionResponseReject:
+		return true
+	}
+	return false
+}
+
 type Permission struct {
 	ID        string                 `json:"id"`
 	MessageID string                 `json:"messageID"`

@@ -129,6 +129,14 @@ const (
 	ToastVariantError   ToastVariant = "error"
 )
 
+func (r ToastVariant) IsKnown() bool {
+	switch r {
+	case ToastVariantInfo, ToastVariantSuccess, ToastVariantWarning, ToastVariantError:
+		return true
+	}
+	return false
+}
+
 type TuiAppendPromptParams struct {
 	Text      string  `json:"text"`
 	Directory *string `json:"-" query:"directory,omitempty"`
