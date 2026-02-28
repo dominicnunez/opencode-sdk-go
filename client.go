@@ -60,6 +60,9 @@ func NewClient(opts ...ClientOption) (*Client, error) {
 	if err != nil {
 		return nil, fmt.Errorf("parse base URL: %w", err)
 	}
+	if parsed.Scheme != "http" && parsed.Scheme != "https" {
+		return nil, fmt.Errorf("base URL must use http or https scheme, got %q", parsed.Scheme)
+	}
 
 	c := &Client{
 		baseURL:    parsed,
@@ -217,6 +220,9 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 
 		// Check context cancellation
 		if ctx.Err() != nil {
+			if resp != nil {
+				_ = resp.Body.Close()
+			}
 			return nil, ctx.Err()
 		}
 
