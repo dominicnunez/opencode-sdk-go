@@ -1218,8 +1218,8 @@ type ConfigProviderModel struct {
 type ConfigProviderModelsCost struct {
 	Input      float64 `json:"input"`
 	Output     float64 `json:"output"`
-	CacheRead  float64 `json:"cache_read"`
-	CacheWrite float64 `json:"cache_write"`
+	CacheRead  float64 `json:"cache_read,omitempty"`
+	CacheWrite float64 `json:"cache_write,omitempty"`
 }
 
 type ConfigProviderModelsLimit struct {
@@ -1316,7 +1316,7 @@ func (p ConfigProviderOptionsTimeoutUnion) AsInt() (int64, error) {
 	}
 	var i int64
 	if err := json.Unmarshal(p.raw, &i); err != nil {
-		return 0, err
+		return 0, fmt.Errorf("timeout is not an integer: %w", err)
 	}
 	return i, nil
 }
@@ -1328,7 +1328,7 @@ func (p ConfigProviderOptionsTimeoutUnion) AsBool() (bool, error) {
 	}
 	var b bool
 	if err := json.Unmarshal(p.raw, &b); err != nil {
-		return false, err
+		return false, fmt.Errorf("timeout is not a boolean: %w", err)
 	}
 	return b, nil
 }

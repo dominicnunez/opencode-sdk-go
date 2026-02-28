@@ -548,7 +548,7 @@ type AssistantMessageErrorAPIErrorData struct {
 	IsRetryable     bool              `json:"isRetryable"`
 	Message         string            `json:"message"`
 	ResponseBody    *string           `json:"responseBody,omitempty"`
-	ResponseHeaders map[string]string `json:"responseHeaders"`
+	ResponseHeaders map[string]string `json:"responseHeaders,omitempty"`
 	StatusCode      *int              `json:"statusCode,omitempty"`
 }
 
@@ -1034,7 +1034,7 @@ type PartRetryPartErrorData struct {
 	IsRetryable     bool              `json:"isRetryable"`
 	Message         string            `json:"message"`
 	ResponseBody    *string           `json:"responseBody,omitempty"`
-	ResponseHeaders map[string]string `json:"responseHeaders"`
+	ResponseHeaders map[string]string `json:"responseHeaders,omitempty"`
 	StatusCode      *int              `json:"statusCode,omitempty"`
 }
 
@@ -1100,7 +1100,7 @@ type ReasoningPart struct {
 	Text      string                 `json:"text"`
 	Time      ReasoningPartTime      `json:"time"`
 	Type      ReasoningPartType      `json:"type"`
-	Metadata  map[string]interface{} `json:"metadata"`
+	Metadata  map[string]interface{} `json:"metadata,omitempty"`
 }
 
 type ReasoningPartTime struct {
@@ -1315,7 +1315,7 @@ type TextPart struct {
 	SessionID string                 `json:"sessionID"`
 	Text      string                 `json:"text"`
 	Type      TextPartType           `json:"type"`
-	Metadata  map[string]interface{} `json:"metadata"`
+	Metadata  map[string]interface{} `json:"metadata,omitempty"`
 	Synthetic bool                   `json:"synthetic"`
 	Time      TextPartTime           `json:"time"`
 }
@@ -1377,7 +1377,7 @@ type ToolPart struct {
 	State     ToolPartState          `json:"state"`
 	Tool      string                 `json:"tool"`
 	Type      ToolPartType           `json:"type"`
-	Metadata  map[string]interface{} `json:"metadata"`
+	Metadata  map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // ToolPartState is a discriminated union type representing the state of a tool.
@@ -1521,7 +1521,7 @@ type ToolStateError struct {
 	Input    map[string]interface{} `json:"input"`
 	Status   ToolStateErrorStatus   `json:"status"`
 	Time     ToolStateErrorTime     `json:"time"`
-	Metadata map[string]interface{} `json:"metadata"`
+	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
 
 type ToolStateErrorStatus string
@@ -1565,7 +1565,7 @@ type ToolStateRunning struct {
 	Input    interface{}            `json:"input"`
 	Status   ToolStateRunningStatus `json:"status"`
 	Time     ToolStateRunningTime   `json:"time"`
-	Metadata map[string]interface{} `json:"metadata"`
+	Metadata map[string]interface{} `json:"metadata,omitempty"`
 	Title    string                 `json:"title"`
 }
 
