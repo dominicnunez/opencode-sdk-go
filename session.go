@@ -462,55 +462,55 @@ func (r AssistantMessageError) AsProviderAuth() (*shared.ProviderAuthError, erro
 	if r.Name != AssistantMessageErrorNameProviderAuthError {
 		return nil, ErrWrongVariant
 	}
-	var err shared.ProviderAuthError
-	if err := json.Unmarshal(r.raw, &err); err != nil {
+	var v shared.ProviderAuthError
+	if err := json.Unmarshal(r.raw, &v); err != nil {
 		return nil, fmt.Errorf("unmarshal %s Name: %w", r.Name, err)
 	}
-	return &err, nil
+	return &v, nil
 }
 
 func (r AssistantMessageError) AsUnknown() (*shared.UnknownError, error) {
 	if r.Name != AssistantMessageErrorNameUnknownError {
 		return nil, ErrWrongVariant
 	}
-	var err shared.UnknownError
-	if err := json.Unmarshal(r.raw, &err); err != nil {
+	var v shared.UnknownError
+	if err := json.Unmarshal(r.raw, &v); err != nil {
 		return nil, fmt.Errorf("unmarshal %s Name: %w", r.Name, err)
 	}
-	return &err, nil
+	return &v, nil
 }
 
 func (r AssistantMessageError) AsOutputLength() (*AssistantMessageErrorMessageOutputLengthError, error) {
 	if r.Name != AssistantMessageErrorNameMessageOutputLengthError {
 		return nil, ErrWrongVariant
 	}
-	var err AssistantMessageErrorMessageOutputLengthError
-	if err := json.Unmarshal(r.raw, &err); err != nil {
+	var v AssistantMessageErrorMessageOutputLengthError
+	if err := json.Unmarshal(r.raw, &v); err != nil {
 		return nil, fmt.Errorf("unmarshal %s Name: %w", r.Name, err)
 	}
-	return &err, nil
+	return &v, nil
 }
 
 func (r AssistantMessageError) AsAborted() (*shared.MessageAbortedError, error) {
 	if r.Name != AssistantMessageErrorNameMessageAbortedError {
 		return nil, ErrWrongVariant
 	}
-	var err shared.MessageAbortedError
-	if err := json.Unmarshal(r.raw, &err); err != nil {
+	var v shared.MessageAbortedError
+	if err := json.Unmarshal(r.raw, &v); err != nil {
 		return nil, fmt.Errorf("unmarshal %s Name: %w", r.Name, err)
 	}
-	return &err, nil
+	return &v, nil
 }
 
 func (r AssistantMessageError) AsAPI() (*AssistantMessageErrorAPIError, error) {
 	if r.Name != AssistantMessageErrorNameAPIError {
 		return nil, ErrWrongVariant
 	}
-	var err AssistantMessageErrorAPIError
-	if err := json.Unmarshal(r.raw, &err); err != nil {
+	var v AssistantMessageErrorAPIError
+	if err := json.Unmarshal(r.raw, &v); err != nil {
 		return nil, fmt.Errorf("unmarshal %s Name: %w", r.Name, err)
 	}
-	return &err, nil
+	return &v, nil
 }
 
 func (r AssistantMessageError) MarshalJSON() ([]byte, error) {
