@@ -283,10 +283,7 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 		}
 	}
 
-	// All retries exhausted
-	if lastErr != nil {
-		return nil, fmt.Errorf("request failed after %d retries: %w", c.maxRetries, lastErr)
-	}
-
-	return nil, errors.New("request failed: retries exhausted")
+	// All retries exhausted — only reachable via transport errors (lastErr != nil).
+	// HTTP errors return structured *APIError inside the loop.
+	return nil, fmt.Errorf("request failed after %d retries: %w", c.maxRetries, lastErr)
 }
