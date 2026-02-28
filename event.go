@@ -51,7 +51,7 @@ func (s *EventService) ListStreaming(ctx context.Context, params *EventListParam
 		body, readErr := io.ReadAll(io.LimitReader(resp.Body, maxErrorBodySize))
 		msg := string(body)
 		if readErr != nil {
-			msg = fmt.Sprintf("(failed to read body: %v)", readErr)
+			msg += fmt.Sprintf(" (read error: %v)", readErr)
 		}
 		return ssestream.NewStream[Event](nil, &APIError{
 			StatusCode: resp.StatusCode,

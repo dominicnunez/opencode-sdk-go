@@ -244,7 +244,7 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 
 				msg := string(bodyBytes)
 				if readErr != nil {
-					msg = fmt.Sprintf("(failed to read response body: %v)", readErr)
+					msg += fmt.Sprintf(" (read error: %v)", readErr)
 				}
 
 				return nil, &APIError{
