@@ -171,12 +171,12 @@ func TestToolService_List_Success(t *testing.T) {
 			{
 				ID:          "Read",
 				Description: "Read a file from the filesystem",
-				Parameters: json.RawMessage(`{"type":"object","properties":{"file_path":{"type":"string","description":"The path to the file"}},"required":["file_path"]}`),
+				Parameters:  json.RawMessage(`{"type":"object","properties":{"file_path":{"type":"string","description":"The path to the file"}},"required":["file_path"]}`),
 			},
 			{
 				ID:          "Write",
 				Description: "Write a file to the filesystem",
-				Parameters: json.RawMessage(`{"type":"object","properties":{"file_path":{"type":"string","description":"The path to the file"},"content":{"type":"string","description":"The content to write"}},"required":["file_path","content"]}`),
+				Parameters:  json.RawMessage(`{"type":"object","properties":{"file_path":{"type":"string","description":"The path to the file"},"content":{"type":"string","description":"The content to write"}},"required":["file_path","content"]}`),
 			},
 		})
 	}))
@@ -286,6 +286,40 @@ func TestToolService_List_NilParams(t *testing.T) {
 
 	if tools != nil {
 		t.Errorf("expected nil ToolList on error, got %v", tools)
+	}
+}
+
+func TestToolService_List_MissingProvider(t *testing.T) {
+	client, err := NewClient()
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	_, err = client.Tool.List(context.Background(), &ToolListParams{
+		Model: "claude-3-opus",
+	})
+	if err == nil {
+		t.Fatal("expected error when Provider is empty")
+	}
+	if err.Error() != "missing required Provider parameter" {
+		t.Errorf("unexpected error: %v", err)
+	}
+}
+
+func TestToolService_List_MissingModel(t *testing.T) {
+	client, err := NewClient()
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	_, err = client.Tool.List(context.Background(), &ToolListParams{
+		Provider: "anthropic",
+	})
+	if err == nil {
+		t.Fatal("expected error when Model is empty")
+	}
+	if err.Error() != "missing required Model parameter" {
+		t.Errorf("unexpected error: %v", err)
 	}
 }
 

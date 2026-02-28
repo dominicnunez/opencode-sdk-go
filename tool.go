@@ -23,8 +23,8 @@ type ToolList []ToolListItem
 
 // ToolListItem represents a single tool with its ID, description, and parameter schema
 type ToolListItem struct {
-	ID          string      `json:"id"`
-	Description string      `json:"description"`
+	ID          string          `json:"id"`
+	Description string          `json:"description"`
 	Parameters  json.RawMessage `json:"parameters"`
 }
 
@@ -71,6 +71,12 @@ func (s *ToolService) IDs(ctx context.Context, params *ToolIDsParams) (*ToolIDs,
 func (s *ToolService) List(ctx context.Context, params *ToolListParams) (*ToolList, error) {
 	if params == nil {
 		return nil, errors.New("params is required")
+	}
+	if params.Provider == "" {
+		return nil, errors.New("missing required Provider parameter")
+	}
+	if params.Model == "" {
+		return nil, errors.New("missing required Model parameter")
 	}
 
 	var result ToolList
