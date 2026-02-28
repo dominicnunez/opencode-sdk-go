@@ -39,7 +39,7 @@
 **Location:** `session.go:54-55,74-75,86-87,98-99` and other service files
 **Date:** 2026-02-22
 
-**Reason:** The audit claims error messages are "inconsistent with the pattern used elsewhere" and suggests "some use 'received empty string' while others might use different phrasing." However, all 17 error messages for missing required parameters in the codebase follow the exact same format: `missing required parameter 'X' (received empty string)`. The audit provides no evidence of actual inconsistency and cannot cite any examples of different phrasing because none exist.
+**Reason:** The audit claims error messages are "inconsistent with the pattern used elsewhere." However, all parameter validation messages in the codebase follow the same format: `missing required X parameter`. The audit provides no evidence of actual inconsistency and cannot cite any examples of different phrasing because none exist.
 
 ### SSE buffer size integer overflow claim
 
@@ -131,6 +131,20 @@
 **Date:** 2026-02-28
 
 **Reason:** The audit claims three structurally identical types exist: `AssistantMessageErrorAPIErrorData`, `SessionAPIErrorData`, and `PartRetryPartErrorData`. However, `SessionAPIErrorData` does not exist anywhere in the codebase (line 830-841 contains `MessageRole` and the `Part` union type, not an error data struct). The audit also claims an `omitempty` tag difference between the types, but the two types that do exist (`AssistantMessageErrorAPIErrorData` at line 547 and `PartRetryPartErrorData` at line 1033) have identical struct tags. The finding's cited locations, type count, and tag variance claim are all factually wrong.
+
+### Retries-exhausted on HTTP error returns untyped string instead of structured error
+
+**Location:** `client.go:283` — retry loop exit path
+**Date:** 2026-02-28
+
+**Reason:** The audit claims that when all retries are exhausted on retryable HTTP errors (408, 429, 5xx),
+the code falls through to line 283 and returns `errors.New("request failed: retries exhausted")`. This is
+factually wrong. Tracing the control flow: on the final iteration (`attempt == maxRetries`) with a retryable
+HTTP status, the condition `!shouldRetry || attempt >= c.maxRetries` at line 233 evaluates to true, so the
+code enters the block and returns a structured `*APIError` at line 242-247 with status code, message, request
+ID, and body. Line 283 is dead code — it can only be reached if the loop completes without either a transport
+error (`lastErr != nil` returns at line 280) or an HTTP error (returns at line 242). In practice, every
+iteration produces one of those two outcomes.
 
 ### CI fork filter described as inverted but uses the standard anti-duplication pattern
 
@@ -264,6 +278,13 @@ actually cause same-repo PRs to run CI twice — once from push, once from pull_
 **Date:** 2026-02-28
 
 **Reason:** `FilePartSourceParam` is the catch-all variant of `FilePartSourceUnionParam` (alongside typed `FileSourceParam` and `SymbolSourceParam`). The Range field is only relevant for symbol sources, and the typed `SymbolSourceParam` already has a concrete `SymbolSourceRange` type. Typing Range concretely on the catch-all would force callers to use the range type even when constructing non-symbol sources where Range is irrelevant.
+
+### queryparams omitempty check uses isPtr indirection instead of a comment
+
+**Location:** `internal/queryparams/queryparams.go:108-116` — addFieldValue int/bool cases
+**Date:** 2026-02-28
+
+**Reason:** The `!isPtr` guard in the omitempty checks is the correct logic — pointer-to-zero is intentional, non-pointer zero is omitted. The audit acknowledges the code is correct and only asks for a clarifying comment. The `isPtr` variable name and its usage make the intent clear enough; adding a comment would be documenting what the code already says.
 
 ### SSE decoder does not store id or retry fields from the event stream
 
