@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"reflect"
 	"strconv"
+	"strings"
 )
 
 // Marshal converts a struct with query:"name" tags to url.Values.
@@ -60,19 +61,19 @@ func Marshal(v interface{}) (url.Values, error) {
 	return params, nil
 }
 
-// parseTag parses a struct tag like "name,required" or "name,omitempty"
+// parseTag parses a struct tag like "name,required", "name,omitempty", or "name,required,omitempty"
 // Returns: name, required, omitempty
 func parseTag(tag string) (name string, required bool, omitempty bool) {
-	for i, part := range []byte(tag) {
-		if part == ',' {
-			name = tag[:i]
-			rest := tag[i+1:]
-			required = rest == "required"
-			omitempty = rest == "omitempty"
-			return
+	parts := strings.Split(tag, ",")
+	name = parts[0]
+	for _, opt := range parts[1:] {
+		switch opt {
+		case "required":
+			required = true
+		case "omitempty":
+			omitempty = true
 		}
 	}
-	name = tag
 	return
 }
 
