@@ -186,8 +186,12 @@ func (s *Stream[T]) Next() bool {
 	}
 
 	for s.decoder.Next() {
+		data := s.decoder.Event().Data
+		if len(data) == 0 {
+			continue
+		}
 		var nxt T
-		s.err = json.Unmarshal(s.decoder.Event().Data, &nxt)
+		s.err = json.Unmarshal(data, &nxt)
 		if s.err != nil {
 			return false
 		}

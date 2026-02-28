@@ -151,6 +151,33 @@ func TestEventStreamDecoder_EventTypeOnlyNoDataField_NoDispatchAtEOF(t *testing.
 	}
 }
 
+func TestStream_SkipsEmptyDataEvents(t *testing.T) {
+	// An empty-data event (e.g. keep-alive) between two valid events should
+	// be silently skipped instead of killing the stream with an unmarshal error.
+	raw := "event: ping\ndata: \n\nevent: msg\ndata: {\"ok\":true}\n\n"
+	dec := NewDecoder(newSSEResponse(raw))
+
+	type payload struct {
+		OK bool `json:"ok"`
+	}
+	stream := NewStream[payload](dec, nil)
+	defer func() { _ = stream.Close() }()
+
+	if !stream.Next() {
+		t.Fatalf("expected Next() to return true, got false; err=%v", stream.Err())
+	}
+	if !stream.Current().OK {
+		t.Fatal("expected Current().OK to be true")
+	}
+
+	if stream.Next() {
+		t.Fatal("expected Next() to return false after all events consumed")
+	}
+	if stream.Err() != nil {
+		t.Fatalf("unexpected error: %v", stream.Err())
+	}
+}
+
 func TestStream_DoubleClose_BothReturnNil(t *testing.T) {
 	// After first Close(), decoder is set to nil. Second Close() should
 	// return nil (not panic or error) since decoder is nil.
