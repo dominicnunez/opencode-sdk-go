@@ -34,11 +34,26 @@ func Marshal(v interface{}) (url.Values, error) {
 	}
 
 	params := url.Values{}
+	if err := marshalFields(params, val); err != nil {
+		return nil, err
+	}
+	return params, nil
+}
+
+func marshalFields(params url.Values, val reflect.Value) error {
 	typ := val.Type()
 
 	for i := 0; i < val.NumField(); i++ {
 		field := val.Field(i)
 		typeField := typ.Field(i)
+
+		// Recurse into embedded structs
+		if typeField.Anonymous && field.Kind() == reflect.Struct {
+			if err := marshalFields(params, field); err != nil {
+				return err
+			}
+			continue
+		}
 
 		// Skip unexported fields
 		if !typeField.IsExported() {
@@ -59,11 +74,11 @@ func Marshal(v interface{}) (url.Values, error) {
 
 		// Add field value to params
 		if err := addFieldValue(params, name, field, required, omitempty); err != nil {
-			return nil, fmt.Errorf("queryparams: field %s: %w", typeField.Name, err)
+			return fmt.Errorf("queryparams: field %s: %w", typeField.Name, err)
 		}
 	}
 
-	return params, nil
+	return nil
 }
 
 // parseTag parses a struct tag like "name,required", "name,omitempty", or "name,required,omitempty"

@@ -369,6 +369,35 @@ func TestMarshal_RequiredSliceValidation(t *testing.T) {
 	}
 }
 
+func TestMarshal_EmbeddedStruct(t *testing.T) {
+	type pagination struct {
+		Limit  int `query:"limit,omitempty"`
+		Offset int `query:"offset,omitempty"`
+	}
+	type params struct {
+		pagination
+		Query string `query:"query,required"`
+	}
+
+	result, err := Marshal(params{
+		pagination: pagination{Limit: 10, Offset: 20},
+		Query:      "test",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if got := result.Get("query"); got != "test" {
+		t.Errorf("expected query=%q, got %q", "test", got)
+	}
+	if got := result.Get("limit"); got != "10" {
+		t.Errorf("expected limit=10, got %q", got)
+	}
+	if got := result.Get("offset"); got != "20" {
+		t.Errorf("expected offset=20, got %q", got)
+	}
+}
+
 func TestMarshal_URLEncoding(t *testing.T) {
 	type params struct {
 		Query string `query:"query"`
