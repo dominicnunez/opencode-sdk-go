@@ -13,6 +13,20 @@
 
 <!-- Findings where the audit misread the code or described behavior that doesn't occur -->
 
+### Reusing bytes.Buffer across retry iterations is fragile
+
+**Location:** `client.go:192-284` — retry loop body encoding
+**Date:** 2026-02-28
+
+**Reason:** The audit describes the buffer reuse pattern as "fragile" but acknowledges the code is correct today: the re-encode block at line 278-284 creates a fresh buffer on every retry, guarded by the same method check as the initial encode at line 187. The described "bug" is purely hypothetical — "any future refactor that adjusts the re-encode guard independently would silently send empty bodies." The current code has no bug; the two guards are structurally identical and correct. This is speculative fragility, not a real defect.
+
+### McpRemoteConfig.Headers exposes auth tokens in plain struct fields
+
+**Location:** `config.go:1491` — Headers field
+**Date:** 2026-02-28
+
+**Reason:** This is a duplicate of the existing intentional design decision "ConfigProviderOptions exposes API key as a plain string field." The audit itself acknowledges "the same rationale from the APIKey exception applies." The struct reflects the OpenAPI spec schema, and redaction is a caller concern. Already categorized.
+
 ### Retry loop body is not re-readable after first attempt
 
 **Location:** `client.go:180-244` — retry loop body re-encoding
