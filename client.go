@@ -279,5 +279,5 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 		return nil, fmt.Errorf("request failed after %d retries: %w", c.maxRetries, lastErr)
 	}
 
-	return nil, &APIError{StatusCode: 0, Message: "request failed: retries exhausted"}
+	return nil, errors.New("request failed: retries exhausted")
 }
