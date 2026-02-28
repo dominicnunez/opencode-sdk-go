@@ -132,6 +132,17 @@
 
 **Reason:** The audit claims three structurally identical types exist: `AssistantMessageErrorAPIErrorData`, `SessionAPIErrorData`, and `PartRetryPartErrorData`. However, `SessionAPIErrorData` does not exist anywhere in the codebase (line 830-841 contains `MessageRole` and the `Part` union type, not an error data struct). The audit also claims an `omitempty` tag difference between the types, but the two types that do exist (`AssistantMessageErrorAPIErrorData` at line 547 and `PartRetryPartErrorData` at line 1033) have identical struct tags. The finding's cited locations, type count, and tag variance claim are all factually wrong.
 
+### CI fork filter described as inverted but uses the standard anti-duplication pattern
+
+**Location:** `.github/workflows/ci.yml:11,27` — job-level `if` condition
+**Date:** 2026-02-28
+
+**Reason:** The condition `github.event_name == 'push' || github.event.pull_request.head.repo.fork` is the standard
+pattern to avoid duplicate CI runs. Same-repo PRs already receive CI from the `push` event (which fires for
+every branch push). Fork PRs don't trigger `push` events, so the fork check ensures they still get CI via
+the `pull_request` event. The audit's suggested "fix" (`!github.event.pull_request.head.repo.fork`) would
+actually cause same-repo PRs to run CI twice — once from push, once from pull_request.
+
 ## Won't Fix
 
 <!-- Real findings not worth fixing — architectural cost, external constraints, etc. -->
