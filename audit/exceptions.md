@@ -197,3 +197,24 @@
 **Date:** 2026-02-22
 
 **Reason:** This is a standard pattern for streaming APIs in Go. The stream object must be returned so callers can iterate over events, and embedding the initial connection error in the stream allows a single return signature. The pattern is documented and callers are expected to check `stream.Err()` before iteration, similar to how database rows work.
+
+### POST params serialized as both query string and JSON body
+
+**Location:** `client.go:170-187` — doRaw query and body encoding
+**Date:** 2026-02-28
+
+**Reason:** When a params struct implements `URLQuery()` and is used with a POST method, `doRaw` encodes it as both query parameters and JSON body. This works correctly because `queryparams.Marshal` only encodes fields with `query:` tags, and body-only fields use `json:` tags (with `json:"-"` on query-only fields). The separation is enforced by struct tags, not by type splitting. Splitting every params struct into separate query and body types would be a large refactor with no behavioral benefit — the current contract is consistent across all endpoints.
+
+### SessionPromptParamsPart uses `any` for optional fields
+
+**Location:** `session.go:1792-1798` — Metadata, Source, Time fields
+**Date:** 2026-02-28
+
+**Reason:** `SessionPromptParamsPart` is the escape-hatch catch-all variant of `SessionPromptParamsPartUnion`. Callers who want type safety should use the typed variants (`TextPartInputParam`, `FilePartInputParam`, `AgentPartInputParam`). The `any` fields exist so callers can construct parts without importing every nested type. The typed variants already provide compile-time safety for callers who want it.
+
+### FilePartSourceParam.Range typed as `any`
+
+**Location:** `session.go:717` — Range field
+**Date:** 2026-02-28
+
+**Reason:** `FilePartSourceParam` is the catch-all variant of `FilePartSourceUnionParam` (alongside typed `FileSourceParam` and `SymbolSourceParam`). The Range field is only relevant for symbol sources, and the typed `SymbolSourceParam` already has a concrete `SymbolSourceRange` type. Typing Range concretely on the catch-all would force callers to use the range type even when constructing non-symbol sources where Range is irrelevant.
