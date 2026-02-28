@@ -55,6 +55,27 @@
 
 **Reason:** The audit flags `initialBackoffMs*(1<<attempt)` as fragile if maxRetries were raised above ~22. However, `WithMaxRetries` hard-caps at 10, and the `maxBackoff` clamp catches any large value regardless. The overflow scenario requires violating an enforced invariant. The report itself concludes "No action needed."
 
+### APIError.Is() does not match other APIError instances via errors.Is()
+
+**Location:** `errors.go:31-45` — APIError.Is implementation
+**Date:** 2026-02-28
+
+**Reason:** The `Is()` implementation is correct and idiomatic. Its purpose is to map HTTP status codes to sentinel errors (`ErrNotFound`, `ErrRateLimited`, etc.) so callers can write `errors.Is(err, ErrNotFound)`. The audit's claim that `Is` should also match other `*APIError` values by status code is not standard Go practice — that would make two distinct error instances with the same status code semantically "equal", which is confusing. Callers who need type matching use `errors.As`. Go's `errors.Is` already handles pointer equality before calling the custom `Is` method, so identical pointers work. The implementation correctly supplements the default behavior.
+
+### Event.UnmarshalJSON silently accepts unknown event types
+
+**Location:** `event.go:77-88` — UnmarshalJSON discriminator handling
+**Date:** 2026-02-28
+
+**Reason:** The audit itself concludes "No code change needed." Accepting unknown event types is intentional forward-compatibility — the SDK must handle server-side additions gracefully without breaking existing callers. Callers can check `e.Type.IsKnown()` or use a default case in type switches. All other union types in the codebase behave identically. This is standard practice for SDKs that consume versioned APIs.
+
+### Ptr helper function appears unused
+
+**Location:** `ptr.go:4-6` — generic Ptr[T] function
+**Date:** 2026-02-28
+
+**Reason:** The audit claims `Ptr[T]` is unused, but it's exercised in `readme_test.go` (lines 312, 318, 324). More importantly, it's a public API convenience helper intended for SDK consumers who need pointer values for optional fields (e.g., `opencode.Ptr("value")` for `*string` params). Internal non-usage is expected — the SDK itself doesn't need the helper because it constructs structs directly.
+
 ### SSE response body not closed when NewDecoder returns nil
 
 **Location:** `event.go:51-70` — ListStreaming success path
@@ -141,6 +162,13 @@
 **Date:** 2026-02-26
 
 **Reason:** `Body` preserves the raw HTTP response body for callers who need it (e.g. structured error parsing). `Message` is the human-readable error used by `Error()`. They happen to contain the same value today because the server returns plain-text errors, but they serve different semantic purposes. Collapsing them would prevent future differentiation without a breaking change.
+
+### Stream is not safe for concurrent use across goroutines
+
+**Location:** `packages/ssestream/ssestream.go:164-204` — Stream.Next() and Stream.Close()
+**Date:** 2026-02-28
+
+**Reason:** `Stream` follows the same contract as `bufio.Scanner`, `sql.Rows`, and other Go iterators: single-goroutine use. Adding `sync.Mutex` synchronization would add overhead to every `Next()` call for a usage pattern (calling `Close()` from a different goroutine) that is not the primary design intent. Callers who need cross-goroutine cancellation should use `context.WithCancel` on the context passed to the streaming method, which will unblock the underlying read.
 
 ### SSE stream error not returned directly
 
