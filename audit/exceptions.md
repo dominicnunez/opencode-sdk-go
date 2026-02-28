@@ -104,6 +104,13 @@
 
 **Reason:** The finding itself acknowledges this is already documented as won't-fix in exceptions.md — `apierror.Error` is never constructed anywhere in the SDK (it's a Stainless leftover exposed as `opencode.Error`). Since the type is inert, the references can never pin memory in practice. This is a duplicate of the existing "apierror.Error is unused but exported as a public type alias" won't-fix entry.
 
+### ConfigProviderListResponse described as a map type alias but is actually a struct
+
+**Location:** `config.go:1657-1660` — ConfigProviderListResponse type definition
+**Date:** 2026-02-28
+
+**Reason:** The audit claims `ConfigProviderListResponse` is "a `map[string]Provider`" and flags a naming mismatch between the type name suggesting a wrapper and it being "a type alias for a map." This is factually wrong. `ConfigProviderListResponse` is defined as a struct with `Default map[string]string` and `Providers []ConfigProvider` fields — it is a proper response wrapper struct, not a map alias. The finding's premise is entirely incorrect.
+
 ### ConfigProviderModelsLimit uses float64 instead of int64 for token limits
 
 **Location:** `config.go:1213-1216` — Context and Output fields
@@ -232,3 +239,10 @@
 **Date:** 2026-02-28
 
 **Reason:** `FilePartSourceParam` is the catch-all variant of `FilePartSourceUnionParam` (alongside typed `FileSourceParam` and `SymbolSourceParam`). The Range field is only relevant for symbol sources, and the typed `SymbolSourceParam` already has a concrete `SymbolSourceRange` type. Typing Range concretely on the catch-all would force callers to use the range type even when constructing non-symbol sources where Range is irrelevant.
+
+### SSE decoder does not store id or retry fields from the event stream
+
+**Location:** `packages/ssestream/ssestream.go:102-118` — eventStreamDecoder switch statement
+**Date:** 2026-02-28
+
+**Reason:** The SSE spec defines `id` and `retry` as standard fields, but this SDK has no reconnection logic — SSE streams are consumed once and callers manage reconnection at the application level. Adding `ID` and `Retry` fields to the `Event` struct would expand the public API surface for a feature the SDK does not use. The `id` field's purpose is `Last-Event-ID` for reconnection, and `retry` sets a reconnection interval — both are meaningless without built-in reconnection. Callers who need reconnection semantics should implement a custom decoder via `RegisterDecoder`.
