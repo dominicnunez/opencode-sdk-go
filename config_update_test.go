@@ -207,6 +207,40 @@ func TestConfigUpdateParams_MarshalJSON(t *testing.T) {
 	}
 }
 
+func TestConfigUpdateParams_MarshalJSON_OmitsZeroValues(t *testing.T) {
+	params := ConfigUpdateParams{
+		Config: Config{
+			Theme: "dark",
+		},
+	}
+
+	data, err := json.Marshal(params)
+	if err != nil {
+		t.Fatalf("MarshalJSON failed: %v", err)
+	}
+
+	var raw map[string]interface{}
+	if err := json.Unmarshal(data, &raw); err != nil {
+		t.Fatalf("Unmarshal into map failed: %v", err)
+	}
+
+	if raw["theme"] != "dark" {
+		t.Errorf("Expected theme=dark, got %v", raw["theme"])
+	}
+	if _, ok := raw["autoshare"]; ok {
+		t.Error("Zero-value bool 'autoshare' should be omitted from PATCH body")
+	}
+	if _, ok := raw["autoupdate"]; ok {
+		t.Error("Zero-value bool 'autoupdate' should be omitted from PATCH body")
+	}
+	if _, ok := raw["snapshot"]; ok {
+		t.Error("Zero-value bool 'snapshot' should be omitted from PATCH body")
+	}
+	if _, ok := raw["model"]; ok {
+		t.Error("Zero-value string 'model' should be omitted from PATCH body")
+	}
+}
+
 func TestConfigUpdateParams_URLQuery(t *testing.T) {
 	tests := []struct {
 		name      string
@@ -252,4 +286,3 @@ func TestConfigUpdateParams_URLQuery(t *testing.T) {
 		})
 	}
 }
-

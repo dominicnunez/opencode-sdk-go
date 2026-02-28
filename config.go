@@ -53,52 +53,52 @@ func (s *ConfigService) Providers(ctx context.Context, params *ConfigProviderLis
 
 type Config struct {
 	// JSON schema reference for configuration validation
-	Schema string `json:"$schema"`
+	Schema string `json:"$schema,omitempty"`
 	// Agent configuration, see https://opencode.ai/docs/agent
-	Agent ConfigAgent `json:"agent"`
+	Agent ConfigAgent `json:"agent,omitempty"`
 	// @deprecated Use 'share' field instead. Share newly created sessions
 	// automatically
-	Autoshare bool `json:"autoshare"`
+	Autoshare bool `json:"autoshare,omitempty"`
 	// Automatically update to the latest version
-	Autoupdate bool `json:"autoupdate"`
+	Autoupdate bool `json:"autoupdate,omitempty"`
 	// Command configuration, see https://opencode.ai/docs/commands
-	Command map[string]ConfigCommand `json:"command"`
+	Command map[string]ConfigCommand `json:"command,omitempty"`
 	// Disable providers that are loaded automatically
-	DisabledProviders []string                   `json:"disabled_providers"`
-	Experimental      ConfigExperimental         `json:"experimental"`
-	Formatter         map[string]ConfigFormatter `json:"formatter"`
+	DisabledProviders []string                   `json:"disabled_providers,omitempty"`
+	Experimental      ConfigExperimental         `json:"experimental,omitempty"`
+	Formatter         map[string]ConfigFormatter `json:"formatter,omitempty"`
 	// Additional instruction files or patterns to include
-	Instructions []string `json:"instructions"`
+	Instructions []string `json:"instructions,omitempty"`
 	// Custom keybind configurations
-	Keybinds KeybindsConfig `json:"keybinds"`
+	Keybinds KeybindsConfig `json:"keybinds,omitempty"`
 	// @deprecated Always uses stretch layout.
-	Layout ConfigLayout         `json:"layout"`
-	Lsp    map[string]ConfigLsp `json:"lsp"`
+	Layout ConfigLayout         `json:"layout,omitempty"`
+	Lsp    map[string]ConfigLsp `json:"lsp,omitempty"`
 	// MCP (Model Context Protocol) server configurations
-	Mcp map[string]ConfigMcp `json:"mcp"`
+	Mcp map[string]ConfigMcp `json:"mcp,omitempty"`
 	// @deprecated Use `agent` field instead.
-	Mode ConfigMode `json:"mode"`
+	Mode ConfigMode `json:"mode,omitempty"`
 	// Model to use in the format of provider/model, eg anthropic/claude-2
-	Model      string           `json:"model"`
-	Permission ConfigPermission `json:"permission"`
-	Plugin     []string         `json:"plugin"`
+	Model      string           `json:"model,omitempty"`
+	Permission ConfigPermission `json:"permission,omitempty"`
+	Plugin     []string         `json:"plugin,omitempty"`
 	// Custom provider configurations and model overrides
-	Provider map[string]ConfigProvider `json:"provider"`
+	Provider map[string]ConfigProvider `json:"provider,omitempty"`
 	// Control sharing behavior:'manual' allows manual sharing via commands, 'auto'
 	// enables automatic sharing, 'disabled' disables all sharing
-	Share ConfigShare `json:"share"`
+	Share ConfigShare `json:"share,omitempty"`
 	// Small model to use for tasks like title generation in the format of
 	// provider/model
-	SmallModel string `json:"small_model"`
-	Snapshot   bool   `json:"snapshot"`
+	SmallModel string `json:"small_model,omitempty"`
+	Snapshot   bool   `json:"snapshot,omitempty"`
 	// Theme name to use for the interface
-	Theme string          `json:"theme"`
-	Tools map[string]bool `json:"tools"`
+	Theme string          `json:"theme,omitempty"`
+	Tools map[string]bool `json:"tools,omitempty"`
 	// TUI specific settings
-	Tui ConfigTui `json:"tui"`
+	Tui ConfigTui `json:"tui,omitempty"`
 	// Custom username to display in conversations instead of system username
-	Username string        `json:"username"`
-	Watcher  ConfigWatcher `json:"watcher"`
+	Username string        `json:"username,omitempty"`
+	Watcher  ConfigWatcher `json:"watcher,omitempty"`
 }
 
 // Agent configuration, see https://opencode.ai/docs/agent
