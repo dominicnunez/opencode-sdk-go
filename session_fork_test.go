@@ -141,18 +141,24 @@ func TestSessionFork_MissingID(t *testing.T) {
 	}
 }
 
-func TestSessionFork_MissingParams(t *testing.T) {
-	client, err := NewClient()
+func TestSessionFork_NilParams(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"id":"ses_fork","title":"forked"}`))
+	}))
+	defer server.Close()
+
+	client, err := NewClient(WithBaseURL(server.URL))
 	if err != nil {
 		t.Fatalf("failed to create client: %v", err)
 	}
 
-	_, err = client.Session.Fork(context.Background(), "ses_123", nil)
-	if err == nil {
-		t.Error("expected error for missing params, got nil")
+	result, err := client.Session.Fork(context.Background(), "ses_123", nil)
+	if err != nil {
+		t.Fatalf("unexpected error for nil params: %v", err)
 	}
-	if err.Error() != "params is required" {
-		t.Errorf("expected 'missing required params', got %s", err.Error())
+	if result.ID != "ses_fork" {
+		t.Errorf("expected id 'ses_fork', got %q", result.ID)
 	}
 }
 

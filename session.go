@@ -244,7 +244,7 @@ func (s *SessionService) Fork(ctx context.Context, id string, params *SessionFor
 		return nil, errors.New("missing required id parameter")
 	}
 	if params == nil {
-		return nil, errors.New("params is required")
+		params = &SessionForkParams{}
 	}
 	var result Session
 	err := s.client.do(ctx, http.MethodPost, "session/"+id+"/fork", params, &result)
@@ -1017,7 +1017,7 @@ func (r PartPatchPartType) IsKnown() bool {
 
 type PartRetryPart struct {
 	ID        string             `json:"id"`
-	Attempt   int                `json:"attempt"`
+	Attempt   int64              `json:"attempt"`
 	Error     PartRetryPartError `json:"error"`
 	MessageID string             `json:"messageID"`
 	SessionID string             `json:"sessionID"`
@@ -1679,7 +1679,7 @@ func (r SessionDeleteParams) URLQuery() (url.Values, error) {
 }
 
 type SessionAbortParams struct {
-	Directory *string `query:"directory,omitempty"`
+	Directory *string `json:"-" query:"directory,omitempty"`
 }
 
 // URLQuery serializes [SessionAbortParams]'s query parameters as `url.Values`.
@@ -1840,7 +1840,7 @@ func (r SessionRevertParams) URLQuery() (url.Values, error) {
 }
 
 type SessionShareParams struct {
-	Directory *string `query:"directory,omitempty"`
+	Directory *string `json:"-" query:"directory,omitempty"`
 }
 
 // URLQuery serializes [SessionShareParams]'s query parameters as `url.Values`.
@@ -1880,7 +1880,7 @@ func (r SessionTodoParams) URLQuery() (url.Values, error) {
 }
 
 type SessionUnrevertParams struct {
-	Directory *string `query:"directory,omitempty"`
+	Directory *string `json:"-" query:"directory,omitempty"`
 }
 
 // URLQuery serializes [SessionUnrevertParams]'s query parameters as `url.Values`.
