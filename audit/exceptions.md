@@ -167,6 +167,41 @@ iteration produces one of those two outcomes.
 
 **Reason:** The audit claims a decoder registered under the empty-string key "can never match because `mime.ParseMediaType("")` returns an error, making `mediaType` empty." This is factually wrong. `mime.ParseMediaType("")` does return an error, but the error is discarded at line 36 (`mediaType, _, _ := mime.ParseMediaType(...)`), and the returned `mediaType` is the empty string `""`. This means `decoderTypes[""]` WOULD match when a response has an empty or missing Content-Type header. The decoder is reachable, not unreachable. The finding's premise — that this is dead/unreachable registration — is incorrect.
 
+### Timer not stopped on normal completion in retry backoff
+
+**Location:** `client.go:279-285` — backoff timer select
+**Date:** 2026-02-28
+
+**Reason:** The finding acknowledges the code is correct: after a timer fires via `<-timer.C`, calling `Stop()` is a documented no-op in Go. The timer's internal goroutine exits upon firing. The finding's own suggested fix is "No action needed." The inconsistency with the `ctx.Done()` branch is stylistic, not a bug.
+
+### Non-pointer string fields always omitted when empty in queryparams
+
+**Location:** `internal/queryparams/queryparams.go:124-131` — addFieldValue string case
+**Date:** 2026-02-28
+
+**Reason:** The behavior is explicitly documented in the `Marshal` doc comment (lines 18-21): "Empty non-pointer strings are always omitted from the output, regardless of whether 'omitempty' is set." The `omitempty` tag being redundant on string fields is intentional — the finding describes documented, working-as-designed behavior and concludes "No code change needed."
+
+### Session.Delete returns bool but may fail on empty response body
+
+**Location:** `session.go:74-80` — Delete method
+**Date:** 2026-02-28
+
+**Reason:** The OpenAPI spec (`specs/openapi.yml:449-455`) defines the DELETE session endpoint as returning HTTP 200 with `application/json` body of type `boolean`. The server returns JSON `true`/`false`, not 204 No Content. The `json.Decoder.Decode` call correctly deserializes this into a `bool`. The finding's concern about 204 No Content is based on a general assumption about DELETE endpoints, not the actual spec.
+
+### Redundant SessionPromptParamsPart catch-all type duplicates union interface
+
+**Location:** `session.go:1788-1813` — SessionPromptParamsPart
+**Date:** 2026-02-28
+
+**Reason:** The finding itself concludes "This is intentional per the exceptions doc. No action needed." The catch-all type is a documented escape hatch for SDK consumers who need to construct parts without importing every nested type. The typed variants provide compile-time safety for callers who want it.
+
+### queryparams.Marshal accepts non-struct values after pointer dereference
+
+**Location:** `internal/queryparams/queryparams.go:28-34` — Marshal type check
+**Date:** 2026-02-28
+
+**Reason:** The finding describes behavior with inputs that no call site uses (`**SomeStruct`, `*string`). All call sites pass structs or `*struct`. The error message for unsupported types is correct ("expected struct, got X"). The finding itself concludes "No action needed — all call sites pass structs or `*struct`. The error message is adequate." This is a theoretical concern with no practical impact.
+
 ### CI fork filter described as inverted but uses the standard anti-duplication pattern
 
 **Location:** `.github/workflows/ci.yml:11,27` — job-level `if` condition
@@ -195,6 +230,13 @@ actually cause same-repo PRs to run CI twice — once from push, once from pull_
 ## Won't Fix
 
 <!-- Real findings not worth fixing — architectural cost, external constraints, etc. -->
+
+### Union types cannot be constructed programmatically for serialization
+
+**Location:** `config.go`, `event.go`, `session.go` — all union types using `raw json.RawMessage`
+**Date:** 2026-02-28
+
+**Reason:** Adding constructor functions (e.g. `NewConfigMcpLocal`) for every union type would expand the public API surface significantly. The current approach stores `json.RawMessage` internally and provides `As*()` accessors for deserialization. Callers who need to construct unions can JSON-roundtrip through the variant type. Response-only unions (Event, Part) don't need constructors at all. The few request unions (ConfigMcp, ConfigUpdateParams) are low-traffic enough that a JSON roundtrip is acceptable.
 
 ### apierror.Error is unused but exported as a public type alias
 
