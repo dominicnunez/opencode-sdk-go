@@ -125,6 +125,13 @@
 
 **Reason:** The audit claims these scripts don't exist, stating "only `scripts/check-spec-update.sh` exists in the repository." This is factually wrong. All three scripts (`scripts/lint`, `scripts/bootstrap`, `scripts/test`) exist in the repository alongside `scripts/check-spec-update.sh`, `scripts/format`, and `scripts/mock`.
 
+### Duplicate error struct types for APIError data across session types
+
+**Location:** `session.go:542-553, session.go:1028-1039` — APIError data structs
+**Date:** 2026-02-28
+
+**Reason:** The audit claims three structurally identical types exist: `AssistantMessageErrorAPIErrorData`, `SessionAPIErrorData`, and `PartRetryPartErrorData`. However, `SessionAPIErrorData` does not exist anywhere in the codebase (line 830-841 contains `MessageRole` and the `Part` union type, not an error data struct). The audit also claims an `omitempty` tag difference between the types, but the two types that do exist (`AssistantMessageErrorAPIErrorData` at line 547 and `PartRetryPartErrorData` at line 1033) have identical struct tags. The finding's cited locations, type count, and tag variance claim are all factually wrong.
+
 ## Won't Fix
 
 <!-- Real findings not worth fixing — architectural cost, external constraints, etc. -->
@@ -175,6 +182,13 @@
 ## Intentional Design Decisions
 
 <!-- Findings that describe behavior which is correct by design -->
+
+### Event struct Data field maps to JSON key "properties"
+
+**Location:** `event.go:326,349,377` — all EventXxx structs
+**Date:** 2026-02-28
+
+**Reason:** The Go field is named `Data` for call-site ergonomics (`evt.Data.Version` reads better than `evt.Properties.Version`). The JSON tag `json:"properties"` correctly matches the server's wire format per the OpenAPI spec. Renaming the Go field to `Properties` would make the SDK surface less intuitive, and renaming the JSON tag would break deserialization. The naming mismatch is an intentional tradeoff favoring Go-side readability.
 
 ### ListStreaming bypasses Client timeout and retry logic
 
