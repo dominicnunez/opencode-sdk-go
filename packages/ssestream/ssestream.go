@@ -57,8 +57,12 @@ var (
 )
 
 func RegisterDecoder(contentType string, decoder func(io.ReadCloser) Decoder) {
+	mediaType, _, _ := mime.ParseMediaType(contentType)
+	if mediaType == "" {
+		mediaType = strings.ToLower(contentType)
+	}
 	decoderTypesMu.Lock()
-	decoderTypes[strings.ToLower(contentType)] = decoder
+	decoderTypes[mediaType] = decoder
 	decoderTypesMu.Unlock()
 }
 
