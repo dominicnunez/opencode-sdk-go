@@ -197,7 +197,7 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 		}
 
 		// Set headers
-		if body != nil {
+		if method != http.MethodGet && method != http.MethodDelete {
 			req.Header.Set("Content-Type", "application/json")
 		}
 		req.Header.Set("Accept", "application/json")
