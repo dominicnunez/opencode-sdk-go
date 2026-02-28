@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -45,8 +47,6 @@ func TestUserAgentHeader(t *testing.T) {
 		t.Errorf("Expected User-Agent to be correct, but got: %#v", userAgent)
 	}
 }
-
-
 
 func TestRetryAfterMs(t *testing.T) {
 	attempts := 0
@@ -214,6 +214,66 @@ func TestContextDeadlineStreaming(t *testing.T) {
 	}
 }
 
+func TestListStreaming_BaseURLQueryParamsPreservedWithMethodParams(t *testing.T) {
+	var receivedQuery string
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		receivedQuery = r.URL.RawQuery
+		w.WriteHeader(http.StatusOK)
+		// Return empty body — stream will error, but we only care about the URL
+	}))
+	defer server.Close()
+
+	client, err := opencode.NewClient(
+		opencode.WithBaseURL(server.URL+"?token=abc"),
+		opencode.WithHTTPClient(server.Client()),
+	)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	stream := client.Event.ListStreaming(context.Background(), &opencode.EventListParams{
+		Directory: opencode.Ptr("/test"),
+	})
+	// Drain the stream so the request is made
+	for stream.Next() {
+	}
+	_ = stream.Close()
+
+	if !strings.Contains(receivedQuery, "token=abc") {
+		t.Errorf("expected query to contain token=abc, got %q", receivedQuery)
+	}
+	if !strings.Contains(receivedQuery, "directory=%2Ftest") {
+		t.Errorf("expected query to contain directory=%%2Ftest, got %q", receivedQuery)
+	}
+}
+
+func TestListStreaming_BaseURLQueryParamsPreservedWithNoMethodParams(t *testing.T) {
+	var receivedQuery string
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		receivedQuery = r.URL.RawQuery
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	client, err := opencode.NewClient(
+		opencode.WithBaseURL(server.URL+"?token=abc"),
+		opencode.WithHTTPClient(server.Client()),
+	)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	stream := client.Event.ListStreaming(context.Background(), nil)
+	for stream.Next() {
+	}
+	_ = stream.Close()
+
+	if receivedQuery != "token=abc" {
+		t.Errorf("expected query to be %q, got %q", "token=abc", receivedQuery)
+	}
+}
 
 type readerFunc func([]byte) (int, error)
 

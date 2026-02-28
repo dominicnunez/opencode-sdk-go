@@ -22,14 +22,21 @@ func (s *EventService) ListStreaming(ctx context.Context, params *EventListParam
 		params = &EventListParams{}
 	}
 
-	// Build URL with query params
+	// Build URL with query params, preserving any query params from the base URL
 	fullURL := s.client.baseURL.ResolveReference(&url.URL{Path: "event"})
+	fullURL.RawQuery = s.client.baseURL.RawQuery
 
 	query, err := params.URLQuery()
 	if err != nil {
 		return ssestream.NewStream[Event](nil, err)
 	}
-	fullURL.RawQuery = query.Encode()
+	if encoded := query.Encode(); encoded != "" {
+		if fullURL.RawQuery != "" {
+			fullURL.RawQuery += "&" + encoded
+		} else {
+			fullURL.RawQuery = encoded
+		}
+	}
 
 	// Create request with SSE headers
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fullURL.String(), nil)
