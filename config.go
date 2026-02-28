@@ -616,6 +616,9 @@ func (r *ConfigLsp) UnmarshalJSON(data []byte) error {
 // AsDisabled returns the config as ConfigLspDisabled if it has disabled=true without command field.
 // Returns (nil, ErrWrongVariant) if it's not a disabled config.
 func (r ConfigLsp) AsDisabled() (*ConfigLspDisabled, error) {
+	if r.raw == nil {
+		return nil, ErrWrongVariant
+	}
 	// Peek at discriminating fields first to avoid unnecessary unmarshal
 	var peek struct {
 		Command  interface{} `json:"command"`
@@ -645,6 +648,9 @@ func (r ConfigLsp) AsDisabled() (*ConfigLspDisabled, error) {
 // AsObject returns the config as ConfigLspObject if it has a command field.
 // Returns (nil, ErrWrongVariant) if it's not an object config.
 func (r ConfigLsp) AsObject() (*ConfigLspObject, error) {
+	if r.raw == nil {
+		return nil, ErrWrongVariant
+	}
 	var obj ConfigLspObject
 	if err := json.Unmarshal(r.raw, &obj); err != nil {
 		return nil, err
@@ -715,6 +721,9 @@ func (r *ConfigMcp) UnmarshalJSON(data []byte) error {
 // AsLocal returns the config as McpLocalConfig if type is "local".
 // Returns (nil, ErrWrongVariant) if the type is not "local".
 func (r ConfigMcp) AsLocal() (*McpLocalConfig, error) {
+	if r.raw == nil {
+		return nil, ErrWrongVariant
+	}
 	if r.Type != ConfigMcpTypeLocal {
 		return nil, ErrWrongVariant
 	}
@@ -728,6 +737,9 @@ func (r ConfigMcp) AsLocal() (*McpLocalConfig, error) {
 // AsRemote returns the config as McpRemoteConfig if type is "remote".
 // Returns (nil, ErrWrongVariant) if the type is not "remote".
 func (r ConfigMcp) AsRemote() (*McpRemoteConfig, error) {
+	if r.raw == nil {
+		return nil, ErrWrongVariant
+	}
 	if r.Type != ConfigMcpTypeRemote {
 		return nil, ErrWrongVariant
 	}
@@ -1538,6 +1550,9 @@ func (r AuthType) IsKnown() bool {
 
 // UnmarshalJSON implements json.Unmarshaler for Auth
 func (a *Auth) UnmarshalJSON(data []byte) error {
+	if !json.Valid(data) {
+		return fmt.Errorf("invalid JSON for Auth")
+	}
 	// Peek at discriminator
 	var peek struct {
 		Type AuthType `json:"type"`
