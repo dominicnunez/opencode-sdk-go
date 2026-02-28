@@ -1452,7 +1452,7 @@ func (a Auth) AsOAuth() (*OAuth, error) {
 	}
 	var oauth OAuth
 	if err := json.Unmarshal(a.raw, &oauth); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unmarshal %s Type: %w", a.Type, err)
 	}
 	return &oauth, nil
 }
@@ -1464,7 +1464,7 @@ func (a Auth) AsAPI() (*ApiAuth, error) {
 	}
 	var apiAuth ApiAuth
 	if err := json.Unmarshal(a.raw, &apiAuth); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unmarshal %s Type: %w", a.Type, err)
 	}
 	return &apiAuth, nil
 }
@@ -1476,7 +1476,7 @@ func (a Auth) AsWellKnown() (*WellKnownAuth, error) {
 	}
 	var wellKnown WellKnownAuth
 	if err := json.Unmarshal(a.raw, &wellKnown); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unmarshal %s Type: %w", a.Type, err)
 	}
 	return &wellKnown, nil
 }
