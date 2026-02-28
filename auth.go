@@ -19,10 +19,13 @@ type AuthService struct {
 // Endpoint: PUT /auth/{id}
 func (s *AuthService) Set(ctx context.Context, id string, params *AuthSetParams) (bool, error) {
 	if id == "" {
-		return false, errors.New("id is required")
+		return false, errors.New("missing required id parameter")
 	}
 	if params == nil {
 		return false, errors.New("params is required")
+	}
+	if params.Auth == nil {
+		return false, errors.New("missing required Auth field")
 	}
 
 	path := fmt.Sprintf("auth/%s", id)

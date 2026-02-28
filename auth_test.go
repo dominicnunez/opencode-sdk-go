@@ -103,8 +103,8 @@ func TestAuthService_Set_MissingID(t *testing.T) {
 	if err == nil {
 		t.Fatal("Expected error for missing id, got nil")
 	}
-	if err.Error() != "id is required" {
-		t.Errorf("Expected 'id is required' error, got %v", err)
+	if err.Error() != "missing required id parameter" {
+		t.Errorf("Expected 'missing required id parameter' error, got %v", err)
 	}
 }
 
@@ -121,6 +121,22 @@ func TestAuthService_Set_MissingParams(t *testing.T) {
 	}
 	if err.Error() != "params is required" {
 		t.Errorf("Expected 'params is required' error, got %v", err)
+	}
+}
+
+func TestAuthService_Set_MissingAuth(t *testing.T) {
+	client, err := NewClient()
+	if err != nil {
+		t.Fatalf("Failed to create client: %v", err)
+	}
+
+	_, err = client.Auth.Set(context.Background(), "provider-id", &AuthSetParams{})
+
+	if err == nil {
+		t.Fatal("Expected error for nil Auth, got nil")
+	}
+	if err.Error() != "missing required Auth field" {
+		t.Errorf("Expected 'missing required Auth field' error, got %v", err)
 	}
 }
 
