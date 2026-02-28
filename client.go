@@ -263,7 +263,7 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 		// Wait before retry (exponential backoff)
 		if attempt < c.maxRetries {
 			delay := initialBackoff * (1 << attempt)
-			if delay > maxBackoff {
+			if delay <= 0 || delay > maxBackoff {
 				delay = maxBackoff
 			}
 			select {
