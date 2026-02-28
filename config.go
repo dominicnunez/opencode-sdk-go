@@ -1181,6 +1181,9 @@ type ConfigProviderOptionsTimeoutUnion struct {
 }
 
 func (p *ConfigProviderOptionsTimeoutUnion) UnmarshalJSON(data []byte) error {
+	if !json.Valid(data) {
+		return errors.New("invalid JSON for ConfigProviderOptionsTimeoutUnion")
+	}
 	p.raw = data
 	return nil
 }
