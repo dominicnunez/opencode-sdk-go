@@ -150,9 +150,6 @@ type ConfigAgentBuildPermissionBashUnion struct {
 }
 
 func (p *ConfigAgentBuildPermissionBashUnion) UnmarshalJSON(data []byte) error {
-	if !json.Valid(data) {
-		return fmt.Errorf("invalid JSON for ConfigAgentBuildPermissionBashUnion")
-	}
 	p.raw = append(json.RawMessage(nil), data...)
 	return nil
 }
@@ -296,9 +293,6 @@ type ConfigAgentGeneralPermissionBashUnion struct {
 }
 
 func (p *ConfigAgentGeneralPermissionBashUnion) UnmarshalJSON(data []byte) error {
-	if !json.Valid(data) {
-		return fmt.Errorf("invalid JSON for ConfigAgentGeneralPermissionBashUnion")
-	}
 	p.raw = append(json.RawMessage(nil), data...)
 	return nil
 }
@@ -442,9 +436,6 @@ type ConfigAgentPlanPermissionBashUnion struct {
 }
 
 func (p *ConfigAgentPlanPermissionBashUnion) UnmarshalJSON(data []byte) error {
-	if !json.Valid(data) {
-		return fmt.Errorf("invalid JSON for ConfigAgentPlanPermissionBashUnion")
-	}
 	p.raw = append(json.RawMessage(nil), data...)
 	return nil
 }
@@ -606,9 +597,6 @@ type ConfigLsp struct {
 }
 
 func (r *ConfigLsp) UnmarshalJSON(data []byte) error {
-	if !json.Valid(data) {
-		return fmt.Errorf("invalid JSON for ConfigLsp")
-	}
 	r.raw = append(json.RawMessage(nil), data...)
 	return nil
 }
@@ -821,9 +809,6 @@ type ConfigModeBuildPermissionBashUnion struct {
 }
 
 func (p *ConfigModeBuildPermissionBashUnion) UnmarshalJSON(data []byte) error {
-	if !json.Valid(data) {
-		return fmt.Errorf("invalid JSON for ConfigModeBuildPermissionBashUnion")
-	}
 	p.raw = append(json.RawMessage(nil), data...)
 	return nil
 }
@@ -967,9 +952,6 @@ type ConfigModePlanPermissionBashUnion struct {
 }
 
 func (p *ConfigModePlanPermissionBashUnion) UnmarshalJSON(data []byte) error {
-	if !json.Valid(data) {
-		return fmt.Errorf("invalid JSON for ConfigModePlanPermissionBashUnion")
-	}
 	p.raw = append(json.RawMessage(nil), data...)
 	return nil
 }
@@ -1084,9 +1066,6 @@ type ConfigPermissionBashUnion struct {
 }
 
 func (p *ConfigPermissionBashUnion) UnmarshalJSON(data []byte) error {
-	if !json.Valid(data) {
-		return fmt.Errorf("invalid JSON for ConfigPermissionBashUnion")
-	}
 	p.raw = append(json.RawMessage(nil), data...)
 	return nil
 }
@@ -1302,9 +1281,6 @@ type ConfigProviderOptionsTimeoutUnion struct {
 }
 
 func (p *ConfigProviderOptionsTimeoutUnion) UnmarshalJSON(data []byte) error {
-	if !json.Valid(data) {
-		return errors.New("invalid JSON for ConfigProviderOptionsTimeoutUnion")
-	}
 	p.raw = append(json.RawMessage(nil), data...)
 	return nil
 }
@@ -1558,9 +1534,6 @@ func (r AuthType) IsKnown() bool {
 
 // UnmarshalJSON implements json.Unmarshaler for Auth
 func (a *Auth) UnmarshalJSON(data []byte) error {
-	if !json.Valid(data) {
-		return fmt.Errorf("invalid JSON for Auth")
-	}
 	// Peek at discriminator
 	var peek struct {
 		Type AuthType `json:"type"`
