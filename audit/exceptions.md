@@ -164,6 +164,20 @@ every branch push). Fork PRs don't trigger `push` events, so the fork check ensu
 the `pull_request` event. The audit's suggested "fix" (`!github.event.pull_request.head.repo.fork`) would
 actually cause same-repo PRs to run CI twice — once from push, once from pull_request.
 
+### doRaw has no timeout guard, allowing future non-streaming callers to lack timeout protection
+
+**Location:** `client.go:149,169` — `do` vs `doRaw` timeout inconsistency
+**Date:** 2026-02-28
+
+**Reason:** The finding claims `ListStreaming` calls `doRaw` directly, creating an inconsistency where `doRaw` callers have no timeout. This is factually wrong — `ListStreaming` (event.go:44) uses `s.client.httpClient.Do(req)` directly, not `doRaw`. `doRaw` is only ever called by `do` (client.go:152), which always wraps the context with `WithTimeout`. The concern about future callers of `doRaw` lacking timeout is speculative and already covered by the "ListStreaming bypasses Client timeout and retry logic" intentional design entry.
+
+### apierror.Error has overlapping StatusCode field that is never read
+
+**Location:** `internal/apierror/apierror.go:13-16` — redundant StatusCode field
+**Date:** 2026-02-28
+
+**Reason:** The finding correctly identifies that `Error()` reads `Response.StatusCode` instead of the `StatusCode` field, but the finding itself concludes "no action needed" since the type is a Stainless leftover. This is already tracked in the Won't Fix section as "apierror.Error is unused but exported as a public type alias" — the type is never constructed anywhere in the SDK, making the field overlap entirely theoretical.
+
 ## Won't Fix
 
 <!-- Real findings not worth fixing — architectural cost, external constraints, etc. -->
