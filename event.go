@@ -83,7 +83,7 @@ func (e *Event) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	e.Type = peek.Type
-	e.raw = data
+	e.raw = append(json.RawMessage(nil), data...)
 	return nil
 }
 
@@ -742,7 +742,7 @@ func (r *SessionError) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	r.Name = peek.Name
-	r.raw = data
+	r.raw = append(json.RawMessage(nil), data...)
 	return nil
 }
 

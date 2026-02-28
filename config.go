@@ -153,7 +153,7 @@ func (p *ConfigAgentBuildPermissionBashUnion) UnmarshalJSON(data []byte) error {
 	if !json.Valid(data) {
 		return fmt.Errorf("invalid JSON for ConfigAgentBuildPermissionBashUnion")
 	}
-	p.raw = data
+	p.raw = append(json.RawMessage(nil), data...)
 	return nil
 }
 
@@ -299,7 +299,7 @@ func (p *ConfigAgentGeneralPermissionBashUnion) UnmarshalJSON(data []byte) error
 	if !json.Valid(data) {
 		return fmt.Errorf("invalid JSON for ConfigAgentGeneralPermissionBashUnion")
 	}
-	p.raw = data
+	p.raw = append(json.RawMessage(nil), data...)
 	return nil
 }
 
@@ -445,7 +445,7 @@ func (p *ConfigAgentPlanPermissionBashUnion) UnmarshalJSON(data []byte) error {
 	if !json.Valid(data) {
 		return fmt.Errorf("invalid JSON for ConfigAgentPlanPermissionBashUnion")
 	}
-	p.raw = data
+	p.raw = append(json.RawMessage(nil), data...)
 	return nil
 }
 
@@ -609,7 +609,7 @@ func (r *ConfigLsp) UnmarshalJSON(data []byte) error {
 	if !json.Valid(data) {
 		return fmt.Errorf("invalid JSON for ConfigLsp")
 	}
-	r.raw = data
+	r.raw = append(json.RawMessage(nil), data...)
 	return nil
 }
 
@@ -708,7 +708,7 @@ func (r *ConfigMcp) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	r.Type = peek.Type
-	r.raw = data
+	r.raw = append(json.RawMessage(nil), data...)
 	return nil
 }
 
@@ -812,7 +812,7 @@ func (p *ConfigModeBuildPermissionBashUnion) UnmarshalJSON(data []byte) error {
 	if !json.Valid(data) {
 		return fmt.Errorf("invalid JSON for ConfigModeBuildPermissionBashUnion")
 	}
-	p.raw = data
+	p.raw = append(json.RawMessage(nil), data...)
 	return nil
 }
 
@@ -958,7 +958,7 @@ func (p *ConfigModePlanPermissionBashUnion) UnmarshalJSON(data []byte) error {
 	if !json.Valid(data) {
 		return fmt.Errorf("invalid JSON for ConfigModePlanPermissionBashUnion")
 	}
-	p.raw = data
+	p.raw = append(json.RawMessage(nil), data...)
 	return nil
 }
 
@@ -1075,7 +1075,7 @@ func (p *ConfigPermissionBashUnion) UnmarshalJSON(data []byte) error {
 	if !json.Valid(data) {
 		return fmt.Errorf("invalid JSON for ConfigPermissionBashUnion")
 	}
-	p.raw = data
+	p.raw = append(json.RawMessage(nil), data...)
 	return nil
 }
 
@@ -1293,7 +1293,7 @@ func (p *ConfigProviderOptionsTimeoutUnion) UnmarshalJSON(data []byte) error {
 	if !json.Valid(data) {
 		return errors.New("invalid JSON for ConfigProviderOptionsTimeoutUnion")
 	}
-	p.raw = data
+	p.raw = append(json.RawMessage(nil), data...)
 	return nil
 }
 
@@ -1546,7 +1546,7 @@ func (a *Auth) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	a.Type = peek.Type
-	a.raw = data
+	a.raw = append(json.RawMessage(nil), data...)
 	return nil
 }
 

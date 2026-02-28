@@ -454,7 +454,7 @@ func (r *AssistantMessageError) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	r.Name = peek.Name
-	r.raw = data
+	r.raw = append(json.RawMessage(nil), data...)
 	return nil
 }
 
@@ -658,7 +658,7 @@ func (r *FilePartSource) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	r.Type = peek.Type
-	r.raw = data
+	r.raw = append(json.RawMessage(nil), data...)
 	return nil
 }
 
@@ -786,7 +786,7 @@ func (r *Message) UnmarshalJSON(data []byte) error {
 	r.ID = peek.ID
 	r.Role = peek.Role
 	r.SessionID = peek.SessionID
-	r.raw = data
+	r.raw = append(json.RawMessage(nil), data...)
 	return nil
 }
 
@@ -861,7 +861,7 @@ func (r *Part) UnmarshalJSON(data []byte) error {
 	r.MessageID = peek.MessageID
 	r.SessionID = peek.SessionID
 	r.Type = peek.Type
-	r.raw = data
+	r.raw = append(json.RawMessage(nil), data...)
 	return nil
 }
 
@@ -1396,7 +1396,7 @@ func (r *ToolPartState) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	r.Status = peek.Status
-	r.raw = data
+	r.raw = append(json.RawMessage(nil), data...)
 	return nil
 }
 

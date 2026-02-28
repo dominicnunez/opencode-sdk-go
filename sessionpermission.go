@@ -75,7 +75,7 @@ func (p *PermissionPattern) UnmarshalJSON(data []byte) error {
 	if !json.Valid(data) {
 		return fmt.Errorf("invalid JSON for PermissionPattern")
 	}
-	p.raw = data
+	p.raw = append(json.RawMessage(nil), data...)
 	return nil
 }
 
