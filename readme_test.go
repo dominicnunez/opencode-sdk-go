@@ -185,7 +185,7 @@ func TestREADMEExamples(t *testing.T) {
 		}
 
 		stream := client.Event.ListStreaming(context.TODO(), &EventListParams{})
-		defer stream.Close()
+		defer func() { _ = stream.Close() }()
 
 		if stream == nil {
 			t.Error("expected non-nil stream")

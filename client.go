@@ -20,9 +20,9 @@ const (
 	DefaultTimeout    = 30 * time.Second
 	DefaultMaxRetries = 2
 
-	initialBackoffMs     = 500
-	maxBackoff           = 8 * time.Second
-	maxErrorBodySize     = 1 << 20 // 1 MB
+	initialBackoffMs = 500
+	maxBackoff       = 8 * time.Second
+	maxErrorBodySize = 1 << 20 // 1 MB
 )
 
 type Client struct {
@@ -134,7 +134,6 @@ func WithMaxRetries(n int) ClientOption {
 	}
 }
 
-
 func (c *Client) do(ctx context.Context, method, path string, params, result interface{}) error {
 	ctx, cancel := context.WithTimeout(ctx, c.timeout)
 	defer cancel()
@@ -143,7 +142,7 @@ func (c *Client) do(ctx context.Context, method, path string, params, result int
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if result == nil {
 		_, _ = io.Copy(io.Discard, resp.Body)
@@ -223,7 +222,7 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 
 			if !shouldRetry || attempt >= c.maxRetries {
 				bodyBytes, readErr := io.ReadAll(io.LimitReader(resp.Body, maxErrorBodySize))
-				resp.Body.Close()
+				_ = resp.Body.Close()
 
 				msg := string(bodyBytes)
 				if readErr != nil {
@@ -239,7 +238,7 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 			}
 
 			// Close body before retry
-			resp.Body.Close()
+			_ = resp.Body.Close()
 		}
 
 		// Wait before retry (exponential backoff)

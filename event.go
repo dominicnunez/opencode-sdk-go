@@ -52,7 +52,7 @@ func (s *EventService) ListStreaming(ctx context.Context, params *EventListParam
 	}
 
 	if resp.StatusCode >= 400 {
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 		body, readErr := io.ReadAll(io.LimitReader(resp.Body, maxErrorBodySize))
 		msg := string(body)
 		if readErr != nil {
@@ -315,10 +315,9 @@ func (e Event) AsIdeInstalled() (*EventIdeInstalled, error) {
 }
 
 type EventInstallationUpdated struct {
-	Data EventInstallationUpdatedData   `json:"properties"`
-	Type EventInstallationUpdatedType   `json:"type"`
+	Data EventInstallationUpdatedData `json:"properties"`
+	Type EventInstallationUpdatedType `json:"type"`
 }
-
 
 type EventInstallationUpdatedData struct {
 	Version string `json:"version"`
@@ -339,10 +338,9 @@ func (r EventInstallationUpdatedType) IsKnown() bool {
 }
 
 type EventLspClientDiagnostics struct {
-	Data EventLspClientDiagnosticsData  `json:"properties"`
-	Type EventLspClientDiagnosticsType  `json:"type"`
+	Data EventLspClientDiagnosticsData `json:"properties"`
+	Type EventLspClientDiagnosticsType `json:"type"`
 }
-
 
 type EventLspClientDiagnosticsData struct {
 	Path     string `json:"path"`
@@ -368,7 +366,6 @@ type EventMessageUpdated struct {
 	Type EventMessageUpdatedType `json:"type"`
 }
 
-
 type EventMessageUpdatedData struct {
 	Info Message `json:"info"`
 }
@@ -391,7 +388,6 @@ type EventMessageRemoved struct {
 	Data EventMessageRemovedData `json:"properties"`
 	Type EventMessageRemovedType `json:"type"`
 }
-
 
 type EventMessageRemovedData struct {
 	MessageID string `json:"messageID"`
@@ -417,7 +413,6 @@ type EventMessagePartUpdated struct {
 	Type EventMessagePartUpdatedType `json:"type"`
 }
 
-
 type EventMessagePartUpdatedData struct {
 	Part  Part    `json:"part"`
 	Delta *string `json:"delta,omitempty"`
@@ -441,7 +436,6 @@ type EventMessagePartRemoved struct {
 	Data EventMessagePartRemovedData `json:"properties"`
 	Type EventMessagePartRemovedType `json:"type"`
 }
-
 
 type EventMessagePartRemovedData struct {
 	MessageID string `json:"messageID"`
@@ -468,7 +462,6 @@ type EventSessionCompacted struct {
 	Type EventSessionCompactedType `json:"type"`
 }
 
-
 type EventSessionCompactedData struct {
 	SessionID string `json:"sessionID"`
 }
@@ -488,10 +481,9 @@ func (r EventSessionCompactedType) IsKnown() bool {
 }
 
 type EventPermissionUpdated struct {
-	Data Permission                `json:"properties"`
+	Data Permission                 `json:"properties"`
 	Type EventPermissionUpdatedType `json:"type"`
 }
-
 
 type EventPermissionUpdatedType string
 
@@ -511,7 +503,6 @@ type EventPermissionReplied struct {
 	Data EventPermissionRepliedData `json:"properties"`
 	Type EventPermissionRepliedType `json:"type"`
 }
-
 
 type EventPermissionRepliedData struct {
 	PermissionID string `json:"permissionID"`
@@ -538,7 +529,6 @@ type EventFileEdited struct {
 	Type EventFileEditedType `json:"type"`
 }
 
-
 type EventFileEditedData struct {
 	File string `json:"file"`
 }
@@ -561,7 +551,6 @@ type EventFileWatcherUpdated struct {
 	Data EventFileWatcherUpdatedData `json:"properties"`
 	Type EventFileWatcherUpdatedType `json:"type"`
 }
-
 
 type EventFileWatcherUpdatedData struct {
 	Event EventFileWatcherUpdatedDataEvent `json:"event"`
@@ -603,7 +592,6 @@ type EventTodoUpdated struct {
 	Type EventTodoUpdatedType `json:"type"`
 }
 
-
 type EventTodoUpdatedData struct {
 	SessionID string `json:"sessionID"`
 	Todos     []Todo `json:"todos"`
@@ -635,7 +623,6 @@ type EventSessionIdle struct {
 	Type EventSessionIdleType `json:"type"`
 }
 
-
 type EventSessionIdleData struct {
 	SessionID string `json:"sessionID"`
 }
@@ -658,7 +645,6 @@ type EventSessionCreated struct {
 	Data EventSessionCreatedData `json:"properties"`
 	Type EventSessionCreatedType `json:"type"`
 }
-
 
 type EventSessionCreatedData struct {
 	Info Session `json:"info"`
@@ -683,7 +669,6 @@ type EventSessionUpdated struct {
 	Type EventSessionUpdatedType `json:"type"`
 }
 
-
 type EventSessionUpdatedData struct {
 	Info Session `json:"info"`
 }
@@ -707,7 +692,6 @@ type EventSessionDeleted struct {
 	Type EventSessionDeletedType `json:"type"`
 }
 
-
 type EventSessionDeletedData struct {
 	Info Session `json:"info"`
 }
@@ -730,7 +714,6 @@ type EventSessionError struct {
 	Data EventSessionErrorData `json:"properties"`
 	Type EventSessionErrorType `json:"type"`
 }
-
 
 type EventSessionErrorData struct {
 	Error     *SessionError `json:"error,omitempty"`
@@ -893,7 +876,6 @@ type EventServerConnected struct {
 	Type EventServerConnectedType `json:"type"`
 }
 
-
 type EventServerConnectedType string
 
 const (
@@ -912,7 +894,6 @@ type EventIdeInstalled struct {
 	Data EventIdeInstalledData `json:"properties"`
 	Type EventIdeInstalledType `json:"type"`
 }
-
 
 type EventIdeInstalledData struct {
 	Ide string `json:"ide"`
