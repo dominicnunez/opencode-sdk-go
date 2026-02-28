@@ -14,6 +14,9 @@ import (
 // - int, int64 and *int, *int64 (optional)
 // - bool and *bool (optional)
 // - []string (array of strings)
+//
+// Empty non-pointer strings are always omitted from the output, regardless
+// of whether "omitempty" is set. To send an empty string value, use *string.
 func Marshal(v interface{}) (url.Values, error) {
 	if v == nil {
 		return url.Values{}, nil
