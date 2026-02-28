@@ -671,27 +671,27 @@ func (r *ConfigMcp) UnmarshalJSON(data []byte) error {
 }
 
 // AsLocal returns the config as McpLocalConfig if type is "local".
-// Returns (nil, false) if the type is not "local" or unmarshaling fails.
+// Returns (nil, ErrWrongVariant) if the type is not "local".
 func (r ConfigMcp) AsLocal() (*McpLocalConfig, error) {
 	if r.Type != ConfigMcpTypeLocal {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var local McpLocalConfig
 	if err := json.Unmarshal(r.raw, &local); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unmarshal %s Type: %w", r.Type, err)
 	}
 	return &local, nil
 }
 
 // AsRemote returns the config as McpRemoteConfig if type is "remote".
-// Returns (nil, false) if the type is not "remote" or unmarshaling fails.
+// Returns (nil, ErrWrongVariant) if the type is not "remote".
 func (r ConfigMcp) AsRemote() (*McpRemoteConfig, error) {
 	if r.Type != ConfigMcpTypeRemote {
-		return nil, nil
+		return nil, ErrWrongVariant
 	}
 	var remote McpRemoteConfig
 	if err := json.Unmarshal(r.raw, &remote); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unmarshal %s Type: %w", r.Type, err)
 	}
 	return &remote, nil
 }

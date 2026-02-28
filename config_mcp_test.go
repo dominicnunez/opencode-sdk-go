@@ -2,6 +2,7 @@ package opencode
 
 import (
 	"encoding/json"
+	"errors"
 	"testing"
 )
 
@@ -118,14 +119,11 @@ func TestConfigMcp_AsLocal_WrongType(t *testing.T) {
 	}
 
 	local, err := mcp.AsLocal()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if !errors.Is(err, ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant, got: %v", err)
 	}
 	if local != nil {
 		t.Error("AsLocal() should return nil for remote type")
-	}
-	if local != nil {
-		t.Error("AsLocal() returned non-nil for remote type")
 	}
 }
 
@@ -141,14 +139,11 @@ func TestConfigMcp_AsRemote_WrongType(t *testing.T) {
 	}
 
 	remote, err := mcp.AsRemote()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if !errors.Is(err, ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant, got: %v", err)
 	}
 	if remote != nil {
 		t.Error("AsRemote() should return nil for local type")
-	}
-	if remote != nil {
-		t.Error("AsRemote() returned non-nil for local type")
 	}
 }
 
@@ -190,32 +185,24 @@ func TestConfigMcp_MissingType(t *testing.T) {
 		t.Fatalf("Failed to unmarshal ConfigMcp: %v", err)
 	}
 
-	// Type should be empty string
 	if mcp.Type != "" {
 		t.Errorf("Expected empty type, got %q", mcp.Type)
 	}
 
-	// Both AsLocal and AsRemote should return false
 	local, err := mcp.AsLocal()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if !errors.Is(err, ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant, got: %v", err)
 	}
 	if local != nil {
 		t.Error("AsLocal() should return nil for missing type")
 	}
-	if local != nil {
-		t.Error("AsLocal() returned non-nil for missing type")
-	}
 
 	remote, err := mcp.AsRemote()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if !errors.Is(err, ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant, got: %v", err)
 	}
 	if remote != nil {
 		t.Error("AsRemote() should return nil for missing type")
-	}
-	if remote != nil {
-		t.Error("AsRemote() returned non-nil for missing type")
 	}
 }
 
@@ -229,32 +216,24 @@ func TestConfigMcp_UnknownType(t *testing.T) {
 		t.Fatalf("Failed to unmarshal ConfigMcp: %v", err)
 	}
 
-	// Type should be set but not match known types
 	if mcp.Type == ConfigMcpTypeLocal || mcp.Type == ConfigMcpTypeRemote {
 		t.Errorf("Expected unknown type, got %q", mcp.Type)
 	}
 
-	// Both AsLocal and AsRemote should return false
 	local, err := mcp.AsLocal()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if !errors.Is(err, ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant, got: %v", err)
 	}
 	if local != nil {
 		t.Error("AsLocal() should return nil for unknown type")
 	}
-	if local != nil {
-		t.Error("AsLocal() returned non-nil for unknown type")
-	}
 
 	remote, err := mcp.AsRemote()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if !errors.Is(err, ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant, got: %v", err)
 	}
 	if remote != nil {
 		t.Error("AsRemote() should return nil for unknown type")
-	}
-	if remote != nil {
-		t.Error("AsRemote() returned non-nil for unknown type")
 	}
 }
 
@@ -266,32 +245,24 @@ func TestConfigMcp_EmptyJSON(t *testing.T) {
 		t.Fatalf("Failed to unmarshal ConfigMcp: %v", err)
 	}
 
-	// Type should be empty
 	if mcp.Type != "" {
 		t.Errorf("Expected empty type, got %q", mcp.Type)
 	}
 
-	// Both AsLocal and AsRemote should return false
 	local, err := mcp.AsLocal()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if !errors.Is(err, ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant, got: %v", err)
 	}
 	if local != nil {
 		t.Error("AsLocal() should return nil for empty JSON")
 	}
-	if local != nil {
-		t.Error("AsLocal() returned non-nil for empty JSON")
-	}
 
 	remote, err := mcp.AsRemote()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if !errors.Is(err, ErrWrongVariant) {
+		t.Fatalf("expected ErrWrongVariant, got: %v", err)
 	}
 	if remote != nil {
 		t.Error("AsRemote() should return nil for empty JSON")
-	}
-	if remote != nil {
-		t.Error("AsRemote() returned non-nil for empty JSON")
 	}
 }
 
