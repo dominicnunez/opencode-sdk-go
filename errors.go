@@ -33,65 +33,24 @@ func (e *APIError) Error() string {
 func (e *APIError) Is(target error) bool {
 	switch {
 	case e.StatusCode == http.StatusNotFound:
-		return errors.Is(target, ErrNotFound)
+		return target == ErrNotFound
 	case e.StatusCode == http.StatusUnauthorized:
-		return errors.Is(target, ErrUnauthorized)
+		return target == ErrUnauthorized
 	case e.StatusCode == http.StatusForbidden:
-		return errors.Is(target, ErrForbidden)
+		return target == ErrForbidden
 	case e.StatusCode == http.StatusTooManyRequests:
-		return errors.Is(target, ErrRateLimited)
+		return target == ErrRateLimited
 	case e.StatusCode >= http.StatusBadRequest && e.StatusCode < http.StatusInternalServerError:
-		return errors.Is(target, ErrInvalidRequest)
+		return target == ErrInvalidRequest
 	case e.StatusCode >= http.StatusInternalServerError:
-		return errors.Is(target, ErrInternal)
+		return target == ErrInternal
 	}
 	return false
 }
 
-func IsNotFoundError(err error) bool {
-	var apiErr *APIError
-	if errors.As(err, &apiErr) {
-		return apiErr.StatusCode == http.StatusNotFound
-	}
-	return errors.Is(err, ErrNotFound)
-}
-
-func IsUnauthorizedError(err error) bool {
-	var apiErr *APIError
-	if errors.As(err, &apiErr) {
-		return apiErr.StatusCode == http.StatusUnauthorized
-	}
-	return errors.Is(err, ErrUnauthorized)
-}
-
-func IsForbiddenError(err error) bool {
-	var apiErr *APIError
-	if errors.As(err, &apiErr) {
-		return apiErr.StatusCode == http.StatusForbidden
-	}
-	return errors.Is(err, ErrForbidden)
-}
-
-func IsRateLimitedError(err error) bool {
-	var apiErr *APIError
-	if errors.As(err, &apiErr) {
-		return apiErr.StatusCode == http.StatusTooManyRequests
-	}
-	return errors.Is(err, ErrRateLimited)
-}
-
-func IsInvalidRequestError(err error) bool {
-	var apiErr *APIError
-	if errors.As(err, &apiErr) {
-		return apiErr.StatusCode >= http.StatusBadRequest && apiErr.StatusCode < http.StatusInternalServerError
-	}
-	return errors.Is(err, ErrInvalidRequest)
-}
-
-func IsInternalError(err error) bool {
-	var apiErr *APIError
-	if errors.As(err, &apiErr) {
-		return apiErr.StatusCode >= http.StatusInternalServerError
-	}
-	return errors.Is(err, ErrInternal)
-}
+func IsNotFoundError(err error) bool       { return errors.Is(err, ErrNotFound) }
+func IsUnauthorizedError(err error) bool   { return errors.Is(err, ErrUnauthorized) }
+func IsForbiddenError(err error) bool      { return errors.Is(err, ErrForbidden) }
+func IsRateLimitedError(err error) bool    { return errors.Is(err, ErrRateLimited) }
+func IsInvalidRequestError(err error) bool { return errors.Is(err, ErrInvalidRequest) }
+func IsInternalError(err error) bool       { return errors.Is(err, ErrInternal) }
