@@ -12,7 +12,8 @@ const testServerTimeout = 5 * time.Second
 
 func CheckTestServer(t *testing.T, url string) bool {
 	client := &http.Client{Timeout: testServerTimeout}
-	if _, err := client.Get(url); err != nil {
+	resp, err := client.Get(url) //nolint:noctx // health check only, no context needed
+	if err != nil {
 		const envVar = "REQUIRE_MOCK_SERVER"
 		if str, ok := os.LookupEnv(envVar); ok {
 			require, parseErr := strconv.ParseBool(str)
@@ -26,5 +27,6 @@ func CheckTestServer(t *testing.T, url string) bool {
 		t.Skip("mock server not running; set REQUIRE_MOCK_SERVER=true to fail instead of skip")
 		return false
 	}
+	_ = resp.Body.Close()
 	return true
 }
