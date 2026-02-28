@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/dominicnunez/opencode-sdk-go/internal"
 	"github.com/dominicnunez/opencode-sdk-go/internal/queryparams"
 	"github.com/dominicnunez/opencode-sdk-go/packages/ssestream"
 	"github.com/dominicnunez/opencode-sdk-go/shared"
@@ -39,7 +38,7 @@ func (s *EventService) ListStreaming(ctx context.Context, params *EventListParam
 	}
 
 	req.Header.Set("Accept", "text/event-stream")
-	req.Header.Set("User-Agent", fmt.Sprintf("Opencode/Go %s", internal.PackageVersion))
+	req.Header.Set("User-Agent", s.client.userAgent)
 
 	// Execute request
 	resp, err := s.client.httpClient.Do(req)
