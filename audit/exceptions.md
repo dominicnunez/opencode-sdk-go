@@ -146,6 +146,13 @@ ID, and body. Line 283 is dead code — it can only be reached if the loop compl
 error (`lastErr != nil` returns at line 280) or an HTTP error (returns at line 242). In practice, every
 iteration produces one of those two outcomes.
 
+### RegisterDecoder silently accepts empty content type, creating unreachable decoder
+
+**Location:** `packages/ssestream/ssestream.go:55-58` — RegisterDecoder with empty string
+**Date:** 2026-02-28
+
+**Reason:** The audit claims a decoder registered under the empty-string key "can never match because `mime.ParseMediaType("")` returns an error, making `mediaType` empty." This is factually wrong. `mime.ParseMediaType("")` does return an error, but the error is discarded at line 36 (`mediaType, _, _ := mime.ParseMediaType(...)`), and the returned `mediaType` is the empty string `""`. This means `decoderTypes[""]` WOULD match when a response has an empty or missing Content-Type header. The decoder is reachable, not unreachable. The finding's premise — that this is dead/unreachable registration — is incorrect.
+
 ### CI fork filter described as inverted but uses the standard anti-duplication pattern
 
 **Location:** `.github/workflows/ci.yml:11,27` — job-level `if` condition
