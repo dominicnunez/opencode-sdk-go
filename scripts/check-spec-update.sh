@@ -21,7 +21,7 @@ UPSTREAM_URL=$(echo "$STATS" | grep 'openapi_spec_url' | awk '{print $2}')
 UPSTREAM_ENDPOINTS=$(echo "$STATS" | grep 'configured_endpoints' | awk '{print $2}')
 
 # Hash our local spec
-LOCAL_HASH=$(md5sum "$LOCAL_SPEC" | awk '{print $1}')
+LOCAL_HASH=$(shasum -a 256 "$LOCAL_SPEC" | awk '{print $1}')
 
 echo "Upstream hash:    $UPSTREAM_HASH"
 echo "Local hash:       $LOCAL_HASH"
@@ -40,7 +40,7 @@ echo ""
 if [ "${1:-}" = "--update" ]; then
     echo "Downloading updated spec..."
     curl -sL "$UPSTREAM_URL" -o "$LOCAL_SPEC"
-    NEW_HASH=$(md5sum "$LOCAL_SPEC" | awk '{print $1}')
+    NEW_HASH=$(shasum -a 256 "$LOCAL_SPEC" | awk '{print $1}')
     echo "New local hash: $NEW_HASH"
     echo "✅ Spec updated. Review changes with: git diff specs/openapi.yml"
     echo ""
