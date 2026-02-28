@@ -21,16 +21,17 @@ const (
 	DefaultMaxRetries = 2
 
 	maxRetryCap      = 10
-	initialBackoffMs = 500
+	initialBackoff   = 500 * time.Millisecond
 	maxBackoff       = 8 * time.Second
 	maxErrorBodySize = 1 << 20 // 1 MB
 )
 
 type Client struct {
-	baseURL    string
+	baseURL    *url.URL
 	httpClient *http.Client
 	maxRetries int
 	timeout    time.Duration
+	userAgent  string
 
 	Session *SessionService
 	Event   *EventService
@@ -51,15 +52,21 @@ type Client struct {
 type ClientOption func(*Client) error
 
 func NewClient(opts ...ClientOption) (*Client, error) {
+	rawURL := os.Getenv("OPENCODE_BASE_URL")
+	if rawURL == "" {
+		rawURL = DefaultBaseURL
+	}
+	parsed, err := url.Parse(rawURL)
+	if err != nil {
+		return nil, fmt.Errorf("parse base URL: %w", err)
+	}
+
 	c := &Client{
-		baseURL:    os.Getenv("OPENCODE_BASE_URL"),
+		baseURL:    parsed,
 		httpClient: &http.Client{},
 		maxRetries: DefaultMaxRetries,
 		timeout:    DefaultTimeout,
-	}
-
-	if c.baseURL == "" {
-		c.baseURL = DefaultBaseURL
+		userAgent:  "Opencode/Go " + internal.PackageVersion,
 	}
 
 	for _, opt := range opts {
@@ -97,7 +104,7 @@ func WithBaseURL(rawURL string) ClientOption {
 		if u.Scheme != "http" && u.Scheme != "https" {
 			return fmt.Errorf("base URL must use http or https scheme, got %q", u.Scheme)
 		}
-		c.baseURL = rawURL
+		c.baseURL = u
 		return nil
 	}
 }
@@ -157,13 +164,8 @@ func (c *Client) do(ctx context.Context, method, path string, params, result int
 }
 
 func (c *Client) doRaw(ctx context.Context, method, path string, params interface{}) (*http.Response, error) {
-	u, err := url.Parse(c.baseURL)
-	if err != nil {
-		return nil, fmt.Errorf("parse base URL: %w", err)
-	}
-
 	// Build full URL
-	fullURL := u.ResolveReference(&url.URL{Path: path})
+	fullURL := c.baseURL.ResolveReference(&url.URL{Path: path})
 
 	var body io.Reader
 
@@ -202,7 +204,7 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 			req.Header.Set("Content-Type", "application/json")
 		}
 		req.Header.Set("Accept", "application/json")
-		req.Header.Set("User-Agent", fmt.Sprintf("Opencode/Go %s", internal.PackageVersion))
+		req.Header.Set("User-Agent", c.userAgent)
 
 		// Execute request
 		resp, lastErr = c.httpClient.Do(req)
@@ -254,7 +256,7 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 
 		// Wait before retry (exponential backoff)
 		if attempt < c.maxRetries {
-			delay := time.Duration(initialBackoffMs*(1<<attempt)) * time.Millisecond
+			delay := initialBackoff * (1 << attempt)
 			if delay > maxBackoff {
 				delay = maxBackoff
 			}

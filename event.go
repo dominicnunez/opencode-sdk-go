@@ -24,11 +24,7 @@ func (s *EventService) ListStreaming(ctx context.Context, params *EventListParam
 	}
 
 	// Build URL with query params
-	u, err := url.Parse(s.client.baseURL)
-	if err != nil {
-		return ssestream.NewStream[Event](nil, err)
-	}
-	fullURL := u.ResolveReference(&url.URL{Path: "event"})
+	fullURL := s.client.baseURL.ResolveReference(&url.URL{Path: "event"})
 
 	query, err := params.URLQuery()
 	if err != nil {
