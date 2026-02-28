@@ -90,6 +90,10 @@ const (
 	SymbolKindTypeParameter SymbolKind = 26
 )
 
+func (r SymbolKind) IsKnown() bool {
+	return r >= SymbolKindFile && r <= SymbolKindTypeParameter
+}
+
 type Symbol struct {
 	Kind     SymbolKind     `json:"kind"`
 	Location SymbolLocation `json:"location"`

@@ -86,6 +86,14 @@ const (
 	ModelModalityInputPdf   ModelModalityInput = "pdf"
 )
 
+func (r ModelModalityInput) IsKnown() bool {
+	switch r {
+	case ModelModalityInputText, ModelModalityInputAudio, ModelModalityInputImage, ModelModalityInputVideo, ModelModalityInputPdf:
+		return true
+	}
+	return false
+}
+
 type ModelModalityOutput string
 
 const (
@@ -95,6 +103,14 @@ const (
 	ModelModalityOutputVideo ModelModalityOutput = "video"
 	ModelModalityOutputPdf   ModelModalityOutput = "pdf"
 )
+
+func (r ModelModalityOutput) IsKnown() bool {
+	switch r {
+	case ModelModalityOutputText, ModelModalityOutputAudio, ModelModalityOutputImage, ModelModalityOutputVideo, ModelModalityOutputPdf:
+		return true
+	}
+	return false
+}
 
 type ModelProvider struct {
 	Npm string `json:"npm"`
@@ -106,6 +122,14 @@ const (
 	ModelStatusAlpha ModelStatus = "alpha"
 	ModelStatusBeta  ModelStatus = "beta"
 )
+
+func (r ModelStatus) IsKnown() bool {
+	switch r {
+	case ModelStatusAlpha, ModelStatusBeta:
+		return true
+	}
+	return false
+}
 
 type Provider struct {
 	ID     string           `json:"id"`
