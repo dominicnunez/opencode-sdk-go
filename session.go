@@ -513,6 +513,13 @@ func (r AssistantMessageError) AsAPI() (*AssistantMessageErrorAPIError, error) {
 	return &err, nil
 }
 
+func (r AssistantMessageError) MarshalJSON() ([]byte, error) {
+	if r.raw == nil {
+		return []byte("null"), nil
+	}
+	return r.raw, nil
+}
+
 type AssistantMessageErrorMessageOutputLengthError struct {
 	Data json.RawMessage                                   `json:"data"`
 	Name AssistantMessageErrorMessageOutputLengthErrorName `json:"name"`
@@ -679,6 +686,13 @@ func (r FilePartSource) AsSymbol() (*SymbolSource, error) {
 	return &src, nil
 }
 
+func (r FilePartSource) MarshalJSON() ([]byte, error) {
+	if r.raw == nil {
+		return []byte("null"), nil
+	}
+	return r.raw, nil
+}
+
 type FilePartSourceType string
 
 const (
@@ -798,6 +812,13 @@ func (r Message) AsAssistant() (*AssistantMessage, error) {
 		return nil, fmt.Errorf("unmarshal %s Role: %w", r.Role, err)
 	}
 	return &msg, nil
+}
+
+func (r Message) MarshalJSON() ([]byte, error) {
+	if r.raw == nil {
+		return []byte("null"), nil
+	}
+	return r.raw, nil
 }
 
 type MessageRole string
@@ -962,6 +983,13 @@ func (r Part) AsRetry() (*PartRetryPart, error) {
 		return nil, fmt.Errorf("unmarshal %s Type: %w", r.Type, err)
 	}
 	return &part, nil
+}
+
+func (r Part) MarshalJSON() ([]byte, error) {
+	if r.raw == nil {
+		return []byte("null"), nil
+	}
+	return r.raw, nil
 }
 
 type PartPatchPart struct {
@@ -1418,6 +1446,13 @@ func (r ToolPartState) AsError() (*ToolStateError, error) {
 		return nil, fmt.Errorf("unmarshal %s Status: %w", r.Status, err)
 	}
 	return &state, nil
+}
+
+func (r ToolPartState) MarshalJSON() ([]byte, error) {
+	if r.raw == nil {
+		return []byte("null"), nil
+	}
+	return r.raw, nil
 }
 
 type ToolPartStateStatus string

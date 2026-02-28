@@ -97,6 +97,13 @@ func (p PermissionPattern) AsArray() ([]string, error) {
 	return arr, nil
 }
 
+func (p PermissionPattern) MarshalJSON() ([]byte, error) {
+	if p.raw == nil {
+		return []byte("null"), nil
+	}
+	return p.raw, nil
+}
+
 type SessionPermissionRespondParams struct {
 	Response  PermissionResponse `json:"response"`
 	Directory *string            `query:"directory,omitempty"`

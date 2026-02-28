@@ -87,6 +87,13 @@ func (e *Event) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+func (e Event) MarshalJSON() ([]byte, error) {
+	if e.raw == nil {
+		return []byte("null"), nil
+	}
+	return e.raw, nil
+}
+
 // AsInstallationUpdated returns the event as EventInstallationUpdated if Type is "installation.updated".
 func (e Event) AsInstallationUpdated() (*EventInstallationUpdated, error) {
 	if e.Type != EventTypeInstallationUpdated {
@@ -737,6 +744,13 @@ func (r *SessionError) UnmarshalJSON(data []byte) error {
 	r.Name = peek.Name
 	r.raw = data
 	return nil
+}
+
+func (r SessionError) MarshalJSON() ([]byte, error) {
+	if r.raw == nil {
+		return []byte("null"), nil
+	}
+	return r.raw, nil
 }
 
 func (r SessionError) AsProviderAuth() (*shared.ProviderAuthError, error) {

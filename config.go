@@ -175,6 +175,13 @@ func (p ConfigAgentBuildPermissionBashUnion) AsMap() (ConfigAgentBuildPermission
 	return m, nil
 }
 
+func (p ConfigAgentBuildPermissionBashUnion) MarshalJSON() ([]byte, error) {
+	if p.raw == nil {
+		return []byte("null"), nil
+	}
+	return p.raw, nil
+}
+
 type ConfigAgentBuildPermissionBashString string
 
 const (
@@ -308,6 +315,13 @@ func (p ConfigAgentGeneralPermissionBashUnion) AsMap() (ConfigAgentGeneralPermis
 	return m, nil
 }
 
+func (p ConfigAgentGeneralPermissionBashUnion) MarshalJSON() ([]byte, error) {
+	if p.raw == nil {
+		return []byte("null"), nil
+	}
+	return p.raw, nil
+}
+
 type ConfigAgentGeneralPermissionBashString string
 
 const (
@@ -439,6 +453,13 @@ func (p ConfigAgentPlanPermissionBashUnion) AsMap() (ConfigAgentPlanPermissionBa
 		return nil, err
 	}
 	return m, nil
+}
+
+func (p ConfigAgentPlanPermissionBashUnion) MarshalJSON() ([]byte, error) {
+	if p.raw == nil {
+		return []byte("null"), nil
+	}
+	return p.raw, nil
 }
 
 type ConfigAgentPlanPermissionBashString string
@@ -618,6 +639,13 @@ func (r ConfigLsp) AsObject() (*ConfigLspObject, error) {
 	return &obj, nil
 }
 
+func (r ConfigLsp) MarshalJSON() ([]byte, error) {
+	if r.raw == nil {
+		return []byte("null"), nil
+	}
+	return r.raw, nil
+}
+
 type ConfigLspDisabled struct {
 	Disabled ConfigLspDisabledDisabled `json:"disabled"`
 }
@@ -690,6 +718,13 @@ func (r ConfigMcp) AsRemote() (*McpRemoteConfig, error) {
 		return nil, fmt.Errorf("unmarshal %s Type: %w", r.Type, err)
 	}
 	return &remote, nil
+}
+
+func (r ConfigMcp) MarshalJSON() ([]byte, error) {
+	if r.raw == nil {
+		return []byte("null"), nil
+	}
+	return r.raw, nil
 }
 
 // Type of MCP server connection
@@ -779,6 +814,13 @@ func (p ConfigModeBuildPermissionBashUnion) AsMap() (ConfigModeBuildPermissionBa
 		return nil, err
 	}
 	return m, nil
+}
+
+func (p ConfigModeBuildPermissionBashUnion) MarshalJSON() ([]byte, error) {
+	if p.raw == nil {
+		return []byte("null"), nil
+	}
+	return p.raw, nil
 }
 
 type ConfigModeBuildPermissionBashString string
@@ -914,6 +956,13 @@ func (p ConfigModePlanPermissionBashUnion) AsMap() (ConfigModePlanPermissionBash
 	return m, nil
 }
 
+func (p ConfigModePlanPermissionBashUnion) MarshalJSON() ([]byte, error) {
+	if p.raw == nil {
+		return []byte("null"), nil
+	}
+	return p.raw, nil
+}
+
 type ConfigModePlanPermissionBashString string
 
 const (
@@ -1016,6 +1065,13 @@ func (p ConfigPermissionBashUnion) AsMap() (ConfigPermissionBashMap, error) {
 		return nil, err
 	}
 	return m, nil
+}
+
+func (p ConfigPermissionBashUnion) MarshalJSON() ([]byte, error) {
+	if p.raw == nil {
+		return []byte("null"), nil
+	}
+	return p.raw, nil
 }
 
 type ConfigPermissionBashString string
@@ -1221,6 +1277,13 @@ func (p ConfigProviderOptionsTimeoutUnion) AsBool() (bool, error) {
 		return false, err
 	}
 	return b, nil
+}
+
+func (p ConfigProviderOptionsTimeoutUnion) MarshalJSON() ([]byte, error) {
+	if p.raw == nil {
+		return []byte("null"), nil
+	}
+	return p.raw, nil
 }
 
 // Control sharing behavior:'manual' allows manual sharing via commands, 'auto'
@@ -1479,6 +1542,13 @@ func (a Auth) AsWellKnown() (*WellKnownAuth, error) {
 		return nil, fmt.Errorf("unmarshal %s Type: %w", a.Type, err)
 	}
 	return &wellKnown, nil
+}
+
+func (a Auth) MarshalJSON() ([]byte, error) {
+	if a.raw == nil {
+		return []byte("null"), nil
+	}
+	return a.raw, nil
 }
 
 // OAuth represents OAuth authentication credentials
