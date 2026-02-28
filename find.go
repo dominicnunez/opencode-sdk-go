@@ -2,6 +2,7 @@ package opencode
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/url"
 
@@ -14,7 +15,7 @@ type FindService struct {
 
 func (s *FindService) Files(ctx context.Context, params *FindFilesParams) ([]string, error) {
 	if params == nil {
-		params = &FindFilesParams{}
+		return nil, errors.New("params is required")
 	}
 	var result []string
 	err := s.client.do(ctx, http.MethodGet, "find/file", params, &result)
@@ -26,7 +27,7 @@ func (s *FindService) Files(ctx context.Context, params *FindFilesParams) ([]str
 
 func (s *FindService) Symbols(ctx context.Context, params *FindSymbolsParams) ([]Symbol, error) {
 	if params == nil {
-		params = &FindSymbolsParams{}
+		return nil, errors.New("params is required")
 	}
 	var result []Symbol
 	err := s.client.do(ctx, http.MethodGet, "find/symbol", params, &result)
@@ -38,7 +39,7 @@ func (s *FindService) Symbols(ctx context.Context, params *FindSymbolsParams) ([
 
 func (s *FindService) Text(ctx context.Context, params *FindTextParams) ([]FindTextResponse, error) {
 	if params == nil {
-		params = &FindTextParams{}
+		return nil, errors.New("params is required")
 	}
 	var result []FindTextResponse
 	err := s.client.do(ctx, http.MethodGet, "find", params, &result)

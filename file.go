@@ -2,8 +2,10 @@ package opencode
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/url"
+
 	"github.com/dominicnunez/opencode-sdk-go/internal/queryparams"
 )
 
@@ -13,7 +15,7 @@ type FileService struct {
 
 func (s *FileService) List(ctx context.Context, params *FileListParams) ([]FileNode, error) {
 	if params == nil {
-		params = &FileListParams{}
+		return nil, errors.New("params is required")
 	}
 	var result []FileNode
 	err := s.client.do(ctx, http.MethodGet, "file", params, &result)
@@ -25,7 +27,7 @@ func (s *FileService) List(ctx context.Context, params *FileListParams) ([]FileN
 
 func (s *FileService) Read(ctx context.Context, params *FileReadParams) (*FileReadResponse, error) {
 	if params == nil {
-		params = &FileReadParams{}
+		return nil, errors.New("params is required")
 	}
 	var result FileReadResponse
 	err := s.client.do(ctx, http.MethodGet, "file/content", params, &result)
