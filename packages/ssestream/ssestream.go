@@ -12,9 +12,13 @@ import (
 	"sync"
 )
 
+// sseBufferMultiplier is the bit-shift applied to bufio.MaxScanTokenSize
+// to produce the SSE token buffer size. 1 << 9 = 512x multiplier.
+const sseBufferMultiplier = 9
+
 // maxSSETokenSize is the maximum size for a single SSE event token.
 // bufio.MaxScanTokenSize (64KB) << 9 = 32MB.
-const maxSSETokenSize = bufio.MaxScanTokenSize << 9
+const maxSSETokenSize = bufio.MaxScanTokenSize << sseBufferMultiplier
 
 // ErrNilDecoder is returned by Stream.Next when the SSE decoder is nil,
 // indicating the response body was not available.
@@ -83,8 +87,13 @@ func (s *eventStreamDecoder) Next() bool {
 	for s.scn.Scan() {
 		txt := s.scn.Bytes()
 
-		// Dispatch event on an empty line
+		// Per SSE spec §9.2.6: on a blank line, dispatch only if data
+		// was received. Otherwise reset the event type and continue.
 		if len(txt) == 0 {
+			if !hasData {
+				event = ""
+				continue
+			}
 			s.evt = Event{
 				Type: event,
 				Data: data.Bytes(),

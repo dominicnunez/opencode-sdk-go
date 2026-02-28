@@ -151,6 +151,52 @@ func TestEventStreamDecoder_EventTypeOnlyNoDataField_NoDispatchAtEOF(t *testing.
 	}
 }
 
+func TestEventStreamDecoder_EventTypeOnlyWithBlankLine_DropsEvent(t *testing.T) {
+	// An event block with only "event:" and no "data:" field, followed by
+	// a blank line, should be silently dropped per SSE spec §9.2.6.
+	// The next valid event (with data) should still be dispatched.
+	raw := "event: ping\n\nevent: msg\ndata: {\"ok\":true}\n\n"
+	dec := NewDecoder(newSSEResponse(raw))
+	defer func() { _ = dec.Close() }()
+
+	if !dec.Next() {
+		t.Fatal("expected Next() to return true for the second event")
+	}
+	evt := dec.Event()
+	if evt.Type != "msg" {
+		t.Fatalf("expected event type %q, got %q", "msg", evt.Type)
+	}
+	if string(evt.Data) != `{"ok":true}` {
+		t.Fatalf("expected data %q, got %q", `{"ok":true}`, string(evt.Data))
+	}
+
+	if dec.Next() {
+		t.Fatal("expected Next() to return false after all events consumed")
+	}
+	if err := dec.Err(); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestEventStreamDecoder_EventTypeResetAfterDrop(t *testing.T) {
+	// After dropping an event-only block (no data), the event type must
+	// be reset. A subsequent data-only block should have an empty type.
+	raw := "event: ping\n\ndata: hello\n\n"
+	dec := NewDecoder(newSSEResponse(raw))
+	defer func() { _ = dec.Close() }()
+
+	if !dec.Next() {
+		t.Fatal("expected Next() to return true")
+	}
+	evt := dec.Event()
+	if evt.Type != "" {
+		t.Fatalf("expected empty event type after reset, got %q", evt.Type)
+	}
+	if string(evt.Data) != "hello" {
+		t.Fatalf("expected data %q, got %q", "hello", string(evt.Data))
+	}
+}
+
 func TestStream_SkipsEmptyDataEvents(t *testing.T) {
 	// An empty-data event (e.g. keep-alive) between two valid events should
 	// be silently skipped instead of killing the stream with an unmarshal error.
