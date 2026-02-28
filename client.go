@@ -150,7 +150,7 @@ func (c *Client) do(ctx context.Context, method, path string, params, result int
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(result); err != nil {
-		return fmt.Errorf("decode response body: %w", err)
+		return fmt.Errorf("decode %s %s response: %w", method, path, err)
 	}
 	return nil
 }
@@ -246,7 +246,8 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 				}
 			}
 
-			// Close body before retry
+			// Drain and close body before retry to enable connection reuse
+			_, _ = io.Copy(io.Discard, resp.Body)
 			_ = resp.Body.Close()
 		}
 
