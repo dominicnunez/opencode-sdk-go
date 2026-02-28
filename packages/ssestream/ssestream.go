@@ -105,11 +105,13 @@ func (s *eventStreamDecoder) Next() bool {
 		case "event":
 			event = string(value)
 		case "data":
-			_, s.err = data.Write(value)
-			if s.err != nil {
-				return false
+			if data.Len() > 0 {
+				_, s.err = data.WriteRune('\n')
+				if s.err != nil {
+					return false
+				}
 			}
-			_, s.err = data.WriteRune('\n')
+			_, s.err = data.Write(value)
 			if s.err != nil {
 				return false
 			}
