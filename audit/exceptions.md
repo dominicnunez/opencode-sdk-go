@@ -204,6 +204,13 @@ actually cause same-repo PRs to run CI twice — once from push, once from pull_
 
 **Reason:** The `bytes.NewBuffer(nil)` call per event is a minor allocation in a streaming context. For typical usage patterns, the GC overhead is negligible. Using `sync.Pool` would add complexity for an optimization that would only benefit extremely high-throughput scenarios. No performance issue has been reported or measured.
 
+### POST methods with query-only params send an empty JSON body
+
+**Location:** `tui.go` — TuiClearPromptParams, TuiOpenHelpParams, etc.
+**Date:** 2026-02-28
+
+**Reason:** When a params struct has only `query:` tagged fields and no `json:` fields, `doRaw` serializes it as `{}`. The server accepts empty bodies, and the overhead is a few bytes per request. Eliminating this would require splitting the query/body encoding path in `doRaw` or special-casing these methods, which adds complexity for no behavioral benefit.
+
 ## Intentional Design Decisions
 
 <!-- Findings that describe behavior which is correct by design -->
