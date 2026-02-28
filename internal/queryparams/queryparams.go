@@ -47,12 +47,20 @@ func marshalFields(params url.Values, val reflect.Value) error {
 		field := val.Field(i)
 		typeField := typ.Field(i)
 
-		// Recurse into embedded structs
-		if typeField.Anonymous && field.Kind() == reflect.Struct {
-			if err := marshalFields(params, field); err != nil {
-				return err
+		// Recurse into embedded structs (including pointer-to-struct)
+		if typeField.Anonymous {
+			if field.Kind() == reflect.Ptr && field.Type().Elem().Kind() == reflect.Struct {
+				if field.IsNil() {
+					continue
+				}
+				field = field.Elem()
 			}
-			continue
+			if field.Kind() == reflect.Struct {
+				if err := marshalFields(params, field); err != nil {
+					return err
+				}
+				continue
+			}
 		}
 
 		// Skip unexported fields
