@@ -8,16 +8,21 @@
   outputs =
     { self, nixpkgs }:
     let
-      system = "x86_64-linux";
-      pkgs = nixpkgs.legacyPackages.${system};
+      supportedSystems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
+      forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
     in
     {
-      devShells.${system}.default = pkgs.mkShell {
-        packages = with pkgs; [
-          go
-          golangci-lint
-          gopls
-        ];
-      };
+      devShells = forAllSystems (system:
+        let pkgs = nixpkgs.legacyPackages.${system}; in
+        {
+          default = pkgs.mkShell {
+            packages = with pkgs; [
+              go
+              golangci-lint
+              gopls
+            ];
+          };
+        }
+      );
     };
 }
