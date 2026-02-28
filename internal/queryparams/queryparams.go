@@ -121,6 +121,8 @@ func addFieldValue(params url.Values, name string, field reflect.Value, required
 			for j := 0; j < field.Len(); j++ {
 				params.Add(name, field.Index(j).String())
 			}
+		} else {
+			return fmt.Errorf("unsupported slice element type: %v", field.Type().Elem().Kind())
 		}
 	default:
 		return fmt.Errorf("unsupported query param type: %v", field.Kind())
