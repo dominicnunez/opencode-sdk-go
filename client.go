@@ -250,10 +250,10 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 				_ = resp.Body.Close()
 
 				msg := string(bodyBytes)
+				if msg == "" {
+					msg = http.StatusText(resp.StatusCode)
+				}
 				if readErr != nil {
-					if msg == "" {
-						msg = http.StatusText(resp.StatusCode)
-					}
 					msg += fmt.Sprintf(" (read error: %v)", readErr)
 				}
 

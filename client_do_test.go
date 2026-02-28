@@ -3,6 +3,7 @@ package opencode_test
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -254,5 +255,40 @@ func TestClientDo_ExponentialBackoff(t *testing.T) {
 		if delay < 400*time.Millisecond {
 			t.Errorf("Expected delay >= 400ms between attempts, got %v", delay)
 		}
+	}
+}
+
+func TestClientDo_EmptyBody502_ReturnsAPIErrorWithStatusText(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusBadGateway)
+		// No body written
+	}))
+	defer server.Close()
+
+	client, err := opencode.NewClient(
+		opencode.WithBaseURL(server.URL),
+		opencode.WithMaxRetries(0),
+	)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	_, err = client.Session.List(context.Background(), nil)
+	if err == nil {
+		t.Fatal("expected error for 502 response")
+	}
+
+	var apiErr *opencode.APIError
+	if !errors.As(err, &apiErr) {
+		t.Fatalf("expected *opencode.APIError, got %T: %v", err, err)
+	}
+	if apiErr.Message == "" {
+		t.Error("expected non-empty Message on APIError for empty body 502")
+	}
+	if apiErr.Message != "Bad Gateway" {
+		t.Errorf("expected Message to be %q, got %q", "Bad Gateway", apiErr.Message)
+	}
+	if apiErr.StatusCode != http.StatusBadGateway {
+		t.Errorf("expected StatusCode %d, got %d", http.StatusBadGateway, apiErr.StatusCode)
 	}
 }

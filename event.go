@@ -57,10 +57,10 @@ func (s *EventService) ListStreaming(ctx context.Context, params *EventListParam
 		defer func() { _ = resp.Body.Close() }()
 		body, readErr := io.ReadAll(io.LimitReader(resp.Body, maxErrorBodySize))
 		msg := string(body)
+		if msg == "" {
+			msg = http.StatusText(resp.StatusCode)
+		}
 		if readErr != nil {
-			if msg == "" {
-				msg = http.StatusText(resp.StatusCode)
-			}
 			msg += fmt.Sprintf(" (read error: %v)", readErr)
 		}
 		return ssestream.NewStream[Event](nil, &APIError{

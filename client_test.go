@@ -2,6 +2,7 @@ package opencode_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -273,6 +274,45 @@ func TestListStreaming_BaseURLQueryParamsPreservedWithNoMethodParams(t *testing.
 	if receivedQuery != "token=abc" {
 		t.Errorf("expected query to be %q, got %q", "token=abc", receivedQuery)
 	}
+}
+
+func TestListStreaming_EmptyBody502_ReturnsAPIErrorWithStatusText(t *testing.T) {
+	client, err := opencode.NewClient(
+		opencode.WithHTTPClient(&http.Client{
+			Transport: &closureTransport{
+				fn: func(req *http.Request) (*http.Response, error) {
+					return &http.Response{
+						StatusCode: http.StatusBadGateway,
+						Status:     "502 Bad Gateway",
+						Header:     http.Header{},
+						Body:       io.NopCloser(strings.NewReader("")),
+					}, nil
+				},
+			},
+		}),
+	)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	stream := client.Event.ListStreaming(context.Background(), nil)
+	for stream.Next() {
+	}
+
+	var apiErr *opencode.APIError
+	if !errors.As(stream.Err(), &apiErr) {
+		t.Fatalf("expected *opencode.APIError, got %T: %v", stream.Err(), stream.Err())
+	}
+	if apiErr.Message == "" {
+		t.Error("expected non-empty Message on APIError for empty body 502")
+	}
+	if apiErr.Message != "Bad Gateway" {
+		t.Errorf("expected Message to be %q, got %q", "Bad Gateway", apiErr.Message)
+	}
+	if apiErr.StatusCode != http.StatusBadGateway {
+		t.Errorf("expected StatusCode %d, got %d", http.StatusBadGateway, apiErr.StatusCode)
+	}
+	_ = stream.Close()
 }
 
 type readerFunc func([]byte) (int, error)
