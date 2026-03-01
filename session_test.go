@@ -29,9 +29,9 @@ func TestSessionNewWithOptionalParams(t *testing.T) {
 		Title:     opencode.Ptr("title"),
 	})
 	if err != nil {
-		var apierr *opencode.Error
+		var apierr *opencode.APIError
 		if errors.As(err, &apierr) {
-			t.Log(string(apierr.DumpRequest(true)))
+			t.Log(apierr.Error())
 		}
 		t.Fatalf("err should be nil: %s", err.Error())
 	}
@@ -59,9 +59,9 @@ func TestSessionUpdateWithOptionalParams(t *testing.T) {
 		},
 	)
 	if err != nil {
-		var apierr *opencode.Error
+		var apierr *opencode.APIError
 		if errors.As(err, &apierr) {
-			t.Log(string(apierr.DumpRequest(true)))
+			t.Log(apierr.Error())
 		}
 		t.Fatalf("err should be nil: %s", err.Error())
 	}
@@ -84,9 +84,9 @@ func TestSessionListWithOptionalParams(t *testing.T) {
 		Directory: opencode.Ptr("directory"),
 	})
 	if err != nil {
-		var apierr *opencode.Error
+		var apierr *opencode.APIError
 		if errors.As(err, &apierr) {
-			t.Log(string(apierr.DumpRequest(true)))
+			t.Log(apierr.Error())
 		}
 		t.Fatalf("err should be nil: %s", err.Error())
 	}
@@ -113,9 +113,9 @@ func TestSessionDeleteWithOptionalParams(t *testing.T) {
 		},
 	)
 	if err != nil {
-		var apierr *opencode.Error
+		var apierr *opencode.APIError
 		if errors.As(err, &apierr) {
-			t.Log(string(apierr.DumpRequest(true)))
+			t.Log(apierr.Error())
 		}
 		t.Fatalf("err should be nil: %s", err.Error())
 	}
@@ -142,9 +142,9 @@ func TestSessionAbortWithOptionalParams(t *testing.T) {
 		},
 	)
 	if err != nil {
-		var apierr *opencode.Error
+		var apierr *opencode.APIError
 		if errors.As(err, &apierr) {
-			t.Log(string(apierr.DumpRequest(true)))
+			t.Log(apierr.Error())
 		}
 		t.Fatalf("err should be nil: %s", err.Error())
 	}
@@ -171,9 +171,9 @@ func TestSessionChildrenWithOptionalParams(t *testing.T) {
 		},
 	)
 	if err != nil {
-		var apierr *opencode.Error
+		var apierr *opencode.APIError
 		if errors.As(err, &apierr) {
-			t.Log(string(apierr.DumpRequest(true)))
+			t.Log(apierr.Error())
 		}
 		t.Fatalf("err should be nil: %s", err.Error())
 	}
@@ -197,7 +197,7 @@ func TestSessionCommandWithOptionalParams(t *testing.T) {
 		"id",
 		&opencode.SessionCommandParams{
 			Arguments: "arguments",
-			Command: "command",
+			Command:   "command",
 			Directory: opencode.Ptr("directory"),
 			Agent:     opencode.Ptr("agent"),
 			MessageID: opencode.Ptr("msgJ!"),
@@ -205,9 +205,9 @@ func TestSessionCommandWithOptionalParams(t *testing.T) {
 		},
 	)
 	if err != nil {
-		var apierr *opencode.Error
+		var apierr *opencode.APIError
 		if errors.As(err, &apierr) {
-			t.Log(string(apierr.DumpRequest(true)))
+			t.Log(apierr.Error())
 		}
 		t.Fatalf("err should be nil: %s", err.Error())
 	}
@@ -234,9 +234,9 @@ func TestSessionGetWithOptionalParams(t *testing.T) {
 		},
 	)
 	if err != nil {
-		var apierr *opencode.Error
+		var apierr *opencode.APIError
 		if errors.As(err, &apierr) {
-			t.Log(string(apierr.DumpRequest(true)))
+			t.Log(apierr.Error())
 		}
 		t.Fatalf("err should be nil: %s", err.Error())
 	}
@@ -259,16 +259,16 @@ func TestSessionInitWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"id",
 		&opencode.SessionInitParams{
-			MessageID: "msgJ!",
-			ModelID: "modelID",
+			MessageID:  "msgJ!",
+			ModelID:    "modelID",
 			ProviderID: "providerID",
 			Directory:  opencode.Ptr("directory"),
 		},
 	)
 	if err != nil {
-		var apierr *opencode.Error
+		var apierr *opencode.APIError
 		if errors.As(err, &apierr) {
-			t.Log(string(apierr.DumpRequest(true)))
+			t.Log(apierr.Error())
 		}
 		t.Fatalf("err should be nil: %s", err.Error())
 	}
@@ -296,9 +296,9 @@ func TestSessionMessageWithOptionalParams(t *testing.T) {
 		},
 	)
 	if err != nil {
-		var apierr *opencode.Error
+		var apierr *opencode.APIError
 		if errors.As(err, &apierr) {
-			t.Log(string(apierr.DumpRequest(true)))
+			t.Log(apierr.Error())
 		}
 		t.Fatalf("err should be nil: %s", err.Error())
 	}
@@ -325,9 +325,9 @@ func TestSessionMessagesWithOptionalParams(t *testing.T) {
 		},
 	)
 	if err != nil {
-		var apierr *opencode.Error
+		var apierr *opencode.APIError
 		if errors.As(err, &apierr) {
-			t.Log(string(apierr.DumpRequest(true)))
+			t.Log(apierr.Error())
 		}
 		t.Fatalf("err should be nil: %s", err.Error())
 	}
@@ -378,9 +378,9 @@ func TestSessionPromptWithOptionalParams(t *testing.T) {
 		},
 	)
 	if err != nil {
-		var apierr *opencode.Error
+		var apierr *opencode.APIError
 		if errors.As(err, &apierr) {
-			t.Log(string(apierr.DumpRequest(true)))
+			t.Log(apierr.Error())
 		}
 		t.Fatalf("err should be nil: %s", err.Error())
 	}
@@ -409,9 +409,9 @@ func TestSessionRevertWithOptionalParams(t *testing.T) {
 		},
 	)
 	if err != nil {
-		var apierr *opencode.Error
+		var apierr *opencode.APIError
 		if errors.As(err, &apierr) {
-			t.Log(string(apierr.DumpRequest(true)))
+			t.Log(apierr.Error())
 		}
 		t.Fatalf("err should be nil: %s", err.Error())
 	}
@@ -438,9 +438,9 @@ func TestSessionShareWithOptionalParams(t *testing.T) {
 		},
 	)
 	if err != nil {
-		var apierr *opencode.Error
+		var apierr *opencode.APIError
 		if errors.As(err, &apierr) {
-			t.Log(string(apierr.DumpRequest(true)))
+			t.Log(apierr.Error())
 		}
 		t.Fatalf("err should be nil: %s", err.Error())
 	}

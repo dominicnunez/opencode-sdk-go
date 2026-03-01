@@ -27,9 +27,9 @@ func TestProjectListWithOptionalParams(t *testing.T) {
 		Directory: opencode.Ptr("directory"),
 	})
 	if err != nil {
-		var apierr *opencode.Error
+		var apierr *opencode.APIError
 		if errors.As(err, &apierr) {
-			t.Log(string(apierr.DumpRequest(true)))
+			t.Log(apierr.Error())
 		}
 		t.Fatalf("err should be nil: %s", err.Error())
 	}
@@ -52,9 +52,9 @@ func TestProjectCurrentWithOptionalParams(t *testing.T) {
 		Directory: opencode.Ptr("directory"),
 	})
 	if err != nil {
-		var apierr *opencode.Error
+		var apierr *opencode.APIError
 		if errors.As(err, &apierr) {
-			t.Log(string(apierr.DumpRequest(true)))
+			t.Log(apierr.Error())
 		}
 		t.Fatalf("err should be nil: %s", err.Error())
 	}

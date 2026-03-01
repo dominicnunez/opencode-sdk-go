@@ -28,9 +28,9 @@ func TestTuiAppendPromptWithOptionalParams(t *testing.T) {
 		Directory: opencode.Ptr("directory"),
 	})
 	if err != nil {
-		var apierr *opencode.Error
+		var apierr *opencode.APIError
 		if errors.As(err, &apierr) {
-			t.Log(string(apierr.DumpRequest(true)))
+			t.Log(apierr.Error())
 		}
 		t.Fatalf("err should be nil: %s", err.Error())
 	}
@@ -53,9 +53,9 @@ func TestTuiClearPromptWithOptionalParams(t *testing.T) {
 		Directory: opencode.Ptr("directory"),
 	})
 	if err != nil {
-		var apierr *opencode.Error
+		var apierr *opencode.APIError
 		if errors.As(err, &apierr) {
-			t.Log(string(apierr.DumpRequest(true)))
+			t.Log(apierr.Error())
 		}
 		t.Fatalf("err should be nil: %s", err.Error())
 	}
@@ -79,9 +79,9 @@ func TestTuiExecuteCommandWithOptionalParams(t *testing.T) {
 		Directory: opencode.Ptr("directory"),
 	})
 	if err != nil {
-		var apierr *opencode.Error
+		var apierr *opencode.APIError
 		if errors.As(err, &apierr) {
-			t.Log(string(apierr.DumpRequest(true)))
+			t.Log(apierr.Error())
 		}
 		t.Fatalf("err should be nil: %s", err.Error())
 	}
@@ -104,9 +104,9 @@ func TestTuiOpenHelpWithOptionalParams(t *testing.T) {
 		Directory: opencode.Ptr("directory"),
 	})
 	if err != nil {
-		var apierr *opencode.Error
+		var apierr *opencode.APIError
 		if errors.As(err, &apierr) {
-			t.Log(string(apierr.DumpRequest(true)))
+			t.Log(apierr.Error())
 		}
 		t.Fatalf("err should be nil: %s", err.Error())
 	}
@@ -129,9 +129,9 @@ func TestTuiOpenModelsWithOptionalParams(t *testing.T) {
 		Directory: opencode.Ptr("directory"),
 	})
 	if err != nil {
-		var apierr *opencode.Error
+		var apierr *opencode.APIError
 		if errors.As(err, &apierr) {
-			t.Log(string(apierr.DumpRequest(true)))
+			t.Log(apierr.Error())
 		}
 		t.Fatalf("err should be nil: %s", err.Error())
 	}
@@ -154,9 +154,9 @@ func TestTuiOpenSessionsWithOptionalParams(t *testing.T) {
 		Directory: opencode.Ptr("directory"),
 	})
 	if err != nil {
-		var apierr *opencode.Error
+		var apierr *opencode.APIError
 		if errors.As(err, &apierr) {
-			t.Log(string(apierr.DumpRequest(true)))
+			t.Log(apierr.Error())
 		}
 		t.Fatalf("err should be nil: %s", err.Error())
 	}
@@ -179,9 +179,9 @@ func TestTuiOpenThemesWithOptionalParams(t *testing.T) {
 		Directory: opencode.Ptr("directory"),
 	})
 	if err != nil {
-		var apierr *opencode.Error
+		var apierr *opencode.APIError
 		if errors.As(err, &apierr) {
-			t.Log(string(apierr.DumpRequest(true)))
+			t.Log(apierr.Error())
 		}
 		t.Fatalf("err should be nil: %s", err.Error())
 	}
@@ -207,9 +207,9 @@ func TestTuiShowToastWithOptionalParams(t *testing.T) {
 		Title:     "title",
 	})
 	if err != nil {
-		var apierr *opencode.Error
+		var apierr *opencode.APIError
 		if errors.As(err, &apierr) {
-			t.Log(string(apierr.DumpRequest(true)))
+			t.Log(apierr.Error())
 		}
 		t.Fatalf("err should be nil: %s", err.Error())
 	}
@@ -232,9 +232,9 @@ func TestTuiSubmitPromptWithOptionalParams(t *testing.T) {
 		Directory: opencode.Ptr("directory"),
 	})
 	if err != nil {
-		var apierr *opencode.Error
+		var apierr *opencode.APIError
 		if errors.As(err, &apierr) {
-			t.Log(string(apierr.DumpRequest(true)))
+			t.Log(apierr.Error())
 		}
 		t.Fatalf("err should be nil: %s", err.Error())
 	}
