@@ -1286,3 +1286,38 @@ actually cause same-repo PRs to run CI twice — once from push, once from pull_
 **Date:** 2026-03-01
 
 **Reason:** The audit claims the `maxDataBytes` limit error path ("event data exceeds %d bytes") has no test coverage. This is factually wrong. `TestEventStreamDecoder_DataAccumulationExceedsLimit` at `ssestream_test.go:570` tests exactly this path: it sets `maxDataBytes` to 256, feeds multiple `data:` lines that collectively exceed the limit, and asserts `Next()` returns false with an error containing "exceeds". The error path is tested.
+
+### apierror.Error dead code finding duplicates existing exceptions
+
+**Location:** `internal/apierror/apierror.go:12`, `aliases.go:8`
+**Date:** 2026-03-01
+
+**Reason:** The finding itself states "Already tracked in risks.md — included for completeness." All sub-issues (memory pinning from stored `*http.Request`/`*http.Response`, dead `StatusCode` field, `DumpRequest` body mutation, dead code alias) are already classified in known exceptions: "apierror.Error is unused but exported as a public type alias," "apierror.Error stores live http.Request and http.Response references," "apierror.Error has overlapping StatusCode field that is never read," and "httputil dump errors ignored in debugging methods." No new observation — this is a duplicate roll-up of existing exceptions.
+
+### No test for EventListStreaming success path with actual SSE data
+
+**Location:** `event_streaming_error_test.go`, `event_test.go`
+**Date:** 2026-03-01
+
+**Reason:** The audit claims there is no integration test verifying a successful SSE connection with actual event data flowing through `Stream[Event]` and being deserialized via `As*()` methods, and dismisses `readme_test.go` as "a compilation check, not a behavioral test." This is factually wrong. `readme_test.go:137-154` starts an `httptest.Server` that sends a `text/event-stream` response with a `message.updated` SSE event containing full JSON, calls `ListStreaming`, asserts `stream.Next()` returns true, verifies `evt.Type == EventTypeMessageUpdated`, calls `AsMessageUpdated()`, and checks `updated.Data.Info.ID == "msg_1"`. This is a full behavioral integration test exercising the entire path from `ListStreaming` → `NewDecoder` → `Stream[Event].Next()` → `Event.UnmarshalJSON` → `AsMessageUpdated()`. Additionally, `TestListStreaming_ContextCancelMidStream` (client_test.go:412) receives and iterates two events from a live SSE server before cancelling.
+
+### No test for retry behavior on HTTP 408 and 429
+
+**Location:** `client_do_test.go` — missing 408/429 retry tests
+**Date:** 2026-03-01
+
+**Reason:** The audit claims retry tests cover only 5xx and do not test 408 or 429. This is factually wrong — the audit only searched `client_do_test.go` and missed the tests in `client_test.go`. `TestRetryOn429` (client_test.go:42) uses a custom transport returning 429 on every request, calls `Session.List`, asserts an error after exhausting retries, and verifies exactly 3 attempts. `TestRetryOn408` (client_test.go:69) does the same for 408. `TestRetryOn429ThenSuccess` (client_test.go:96) additionally tests the 429→200 recovery path.
+
+### apierror.Error stores full http.Request and http.Response described as a new finding
+
+**Location:** `internal/apierror/apierror.go:12-17` — Error struct fields
+**Date:** 2026-03-01
+
+**Reason:** This is a duplicate of multiple existing known exceptions: "apierror.Error stores live http.Request and http.Response references," "httputil dump errors ignored in debugging methods," "apierror.Error is unused but exported as a public type alias," and "apierror.Error unused Stainless leftover combines already-excepted sub-issues." The type is never constructed anywhere in the SDK. The finding's sub-concerns (memory pinning, swallowed httputil errors) are each already individually classified. No new observation beyond existing exceptions.
+
+### Session.Message path construction with two dynamic segments lacks url.PathEscape
+
+**Location:** `session.go:164` — path segment interpolation
+**Date:** 2026-03-01
+
+**Reason:** The finding itself concludes "No action needed unless the API surface changes to accept user-provided IDs" and "This is already tracked in `audit/exceptions/risks.md`." It is a duplicate of the existing known exception "Path parameters not URL-encoded in service methods," which documents that IDs are server-generated UUIDs and path escaping adds noise for no real-world benefit.
