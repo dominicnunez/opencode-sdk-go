@@ -67,8 +67,8 @@ type ModelCost struct {
 }
 
 type ModelLimit struct {
-	Context int64 `json:"context"`
-	Output  int64 `json:"output"`
+	Context float64 `json:"context"`
+	Output  float64 `json:"output"`
 }
 
 type ModelModalities struct {
