@@ -279,6 +279,79 @@ func TestPermission_UnmarshalWithoutPattern(t *testing.T) {
 	}
 }
 
+func TestPermissionResponse_IsKnown(t *testing.T) {
+	tests := []struct {
+		value opencode.PermissionResponse
+		known bool
+	}{
+		{opencode.PermissionResponseOnce, true},
+		{opencode.PermissionResponseAlways, true},
+		{opencode.PermissionResponseReject, true},
+		{opencode.PermissionResponse(""), false},
+		{opencode.PermissionResponse("invalid"), false},
+		{opencode.PermissionResponse("ONCE"), false},
+	}
+
+	for _, tt := range tests {
+		t.Run(string(tt.value), func(t *testing.T) {
+			if got := tt.value.IsKnown(); got != tt.known {
+				t.Errorf("PermissionResponse(%q).IsKnown() = %v, want %v", tt.value, got, tt.known)
+			}
+		})
+	}
+}
+
+func TestPermissionPattern_MarshalJSON_Roundtrip(t *testing.T) {
+	tests := []struct {
+		name     string
+		jsonData string
+	}{
+		{"string variant", `"*.go"`},
+		{"array variant", `["*.go","*.ts"]`},
+		{"empty array", `[]`},
+		{"empty string", `""`},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var p1 opencode.PermissionPattern
+			if err := json.Unmarshal([]byte(tt.jsonData), &p1); err != nil {
+				t.Fatalf("Unmarshal: %v", err)
+			}
+
+			data, err := p1.MarshalJSON()
+			if err != nil {
+				t.Fatalf("MarshalJSON: %v", err)
+			}
+
+			var p2 opencode.PermissionPattern
+			if err := json.Unmarshal(data, &p2); err != nil {
+				t.Fatalf("Unmarshal roundtrip: %v", err)
+			}
+
+			data2, err := p2.MarshalJSON()
+			if err != nil {
+				t.Fatalf("MarshalJSON roundtrip: %v", err)
+			}
+
+			if string(data) != string(data2) {
+				t.Errorf("roundtrip mismatch: %s != %s", data, data2)
+			}
+		})
+	}
+}
+
+func TestPermissionPattern_MarshalJSON_NilRaw(t *testing.T) {
+	var p opencode.PermissionPattern
+	data, err := p.MarshalJSON()
+	if err != nil {
+		t.Fatalf("MarshalJSON: %v", err)
+	}
+	if string(data) != "null" {
+		t.Errorf("MarshalJSON(nil raw) = %s, want null", data)
+	}
+}
+
 // Helper function to compare string slices
 func stringSlicesEqual(a, b []string) bool {
 	if len(a) != len(b) {
