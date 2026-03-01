@@ -607,3 +607,45 @@ actually cause same-repo PRs to run CI twice — once from push, once from pull_
 **Date:** 2026-03-01
 
 **Reason:** The finding claims `ConfigProviderListResponse` is `map[string]Provider` — a named map type. This is factually wrong. `ConfigProviderListResponse` is defined as a struct with `Default map[string]string` and `Providers []ConfigProvider` fields. The finding's premise and comparison with `McpStatus` (which actually is a `map[string]interface{}`) is based on a misread of the type definition.
+
+### Default base URL uses plaintext HTTP described as a security finding
+
+**Location:** `client.go:20` — DefaultBaseURL constant
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing known exception. The SDK targets a local dev server (`localhost:54321`). `WithBaseURL` intentionally allows `http://` for localhost usage. Callers who set a remote URL are explicitly overriding the default and responsible for their transport security.
+
+### Query parameters from base URL described as duplicated in buildURL
+
+**Location:** `client.go:180-199` — buildURL base URL query loop
+**Date:** 2026-03-01
+
+**Reason:** The finding claims `ResolveReference` preserves base URL query params, making the loop at lines 183-185 redundant. This is factually wrong. Verified empirically: `base.ResolveReference(&url.URL{Path: "sessions"})` where base is `http://localhost:54321/?foo=bar` produces `http://localhost:54321/sessions` with an empty `RawQuery`. The loop is necessary to re-merge base URL query parameters. The finding also claims the merge order is wrong (base URL wins over struct params), but reading the code: base URL params are merged at lines 183-185, then struct params at lines 193-195. Since struct params are merged last, they correctly take precedence over base URL params — the opposite of what the report claims.
+
+### SSE ListStreaming bypasses client timeout described as a bug
+
+**Location:** `event.go:33-63` — uses httpClient.Do directly
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing known exceptions ("ListStreaming bypasses Client timeout and retry logic", "ListStreaming bypasses client timeout on SSE connections"). SSE streams are long-lived connections; applying a 30s timeout would kill every connection. Callers use `context.WithTimeout` for deadlines.
+
+### Backoff delay overflow for high retry counts
+
+**Location:** `client.go:282` — exponential backoff calculation
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing known exception. `WithMaxRetries` hard-caps at 10, producing a maximum shift of `1 << 10 = 1024` and `500ms * 1024 = 512s`, well within `int64` range. The `delay <= 0 || delay > maxBackoff` guard at line 283 catches any overflow. The finding describes speculative fragility if `maxRetryCap` were increased beyond ~33 on 64-bit systems, which requires violating the enforced invariant.
+
+### apierror.Error stores full http.Request and http.Response references
+
+**Location:** `internal/apierror/apierror.go:12-17` — Error struct fields
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing known exception. The type is a Stainless leftover never constructed by any SDK method. The references can never pin memory in practice since the type is inert.
+
+### apierror.Error type exported but only aliased creating two public paths
+
+**Location:** `aliases.go:8`, `internal/apierror/apierror.go:12`
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing known exceptions covering the apierror.Error Stainless leftover. The `internal` package prevents direct external import. The type is never constructed by the SDK, making discoverability of `DumpRequest`/`DumpResponse` a moot point. Already tracked as "apierror.Error is unused but exported as a public type alias."
