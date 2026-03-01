@@ -18,6 +18,10 @@ var (
 	ErrWrongVariant   = errors.New("wrong union variant")
 )
 
+func wrongVariant(expected, actual string) error {
+	return fmt.Errorf("%s, got %s: %w", expected, actual, ErrWrongVariant)
+}
+
 type APIError struct {
 	StatusCode int
 	Message    string
