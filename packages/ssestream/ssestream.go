@@ -12,13 +12,10 @@ import (
 	"sync"
 )
 
-// sseBufferMultiplier is the bit-shift applied to bufio.MaxScanTokenSize
-// to produce the SSE token buffer size. 1 << 9 = 512x multiplier.
-const sseBufferMultiplier = 9
-
 // maxSSETokenSize is the maximum size for a single SSE event token.
-// bufio.MaxScanTokenSize (64KB) << 9 = 32MB.
-const maxSSETokenSize = bufio.MaxScanTokenSize << sseBufferMultiplier
+// Large events (e.g. tool outputs, base64 file contents) can exceed
+// bufio's default 64KB limit, so we allow up to 32MB per token.
+const maxSSETokenSize = 32 * 1024 * 1024
 
 // ErrNilDecoder is returned by Stream.Next when the SSE decoder is nil,
 // indicating the response body was not available.
