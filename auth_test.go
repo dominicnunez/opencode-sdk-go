@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 )
 
@@ -304,6 +305,47 @@ func TestAuthSetParams_MarshalJSON_AutoSetsTypeDiscriminator(t *testing.T) {
 				t.Errorf("expected type %q, got %v", tt.expectedType, result["type"])
 			}
 		})
+	}
+}
+
+func TestAuthSetParams_MarshalJSON_PointerDoesNotMutate(t *testing.T) {
+	oauth := &OAuth{
+		Refresh: "ref",
+		Access:  "acc",
+		Expires: 3600,
+	}
+
+	params := AuthSetParams{Auth: oauth}
+	data, err := json.Marshal(params)
+	if err != nil {
+		t.Fatalf("marshal failed: %v", err)
+	}
+
+	if oauth.Type != "" {
+		t.Errorf("expected original pointer's Type to remain empty, got %q", oauth.Type)
+	}
+
+	var result map[string]interface{}
+	if err := json.Unmarshal(data, &result); err != nil {
+		t.Fatalf("unmarshal failed: %v", err)
+	}
+	if result["type"] != "oauth" {
+		t.Errorf("expected marshaled type %q, got %v", "oauth", result["type"])
+	}
+}
+
+type bogusAuth struct{}
+
+func (bogusAuth) implementsAuthSetParamsAuthUnion() {}
+
+func TestAuthSetParams_MarshalJSON_UnknownTypeErrors(t *testing.T) {
+	params := AuthSetParams{Auth: bogusAuth{}}
+	_, err := json.Marshal(params)
+	if err == nil {
+		t.Fatal("expected error for unknown auth type, got nil")
+	}
+	if !strings.Contains(err.Error(), "unknown auth union type") {
+		t.Errorf("expected error containing %q, got %v", "unknown auth union type", err)
 	}
 }
 

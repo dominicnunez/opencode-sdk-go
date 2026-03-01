@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 
@@ -59,21 +60,24 @@ func (r AuthSetParams) MarshalJSON() ([]byte, error) {
 		v.Type = AuthTypeOAuth
 		return json.Marshal(v)
 	case *OAuth:
-		v.Type = AuthTypeOAuth
-		return json.Marshal(v)
+		copy := *v
+		copy.Type = AuthTypeOAuth
+		return json.Marshal(copy)
 	case ApiAuth:
 		v.Type = AuthTypeAPI
 		return json.Marshal(v)
 	case *ApiAuth:
-		v.Type = AuthTypeAPI
-		return json.Marshal(v)
+		copy := *v
+		copy.Type = AuthTypeAPI
+		return json.Marshal(copy)
 	case WellKnownAuth:
 		v.Type = AuthTypeWellKnown
 		return json.Marshal(v)
 	case *WellKnownAuth:
-		v.Type = AuthTypeWellKnown
-		return json.Marshal(v)
+		copy := *v
+		copy.Type = AuthTypeWellKnown
+		return json.Marshal(copy)
 	default:
-		return json.Marshal(r.Auth)
+		return nil, fmt.Errorf("unknown auth union type: %T", r.Auth)
 	}
 }
