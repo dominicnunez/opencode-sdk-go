@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -14,11 +15,6 @@ import (
 )
 
 func TestClientDo_Success(t *testing.T) {
-	type response struct {
-		Message string `json:"message"`
-		Count   int    `json:"count"`
-	}
-
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			t.Errorf("Expected POST, got %s", r.Method)
@@ -28,7 +24,11 @@ func TestClientDo_Success(t *testing.T) {
 		}
 
 		w.WriteHeader(http.StatusOK)
-		_ = json.NewEncoder(w).Encode(response{Message: "success", Count: 42})
+		_ = json.NewEncoder(w).Encode(opencode.Session{
+			ID:    "sess_1",
+			Title: "Test Session",
+			Time:  opencode.SessionTime{Created: 1, Updated: 1},
+		})
 	}))
 	defer server.Close()
 
@@ -37,12 +37,14 @@ func TestClientDo_Success(t *testing.T) {
 		t.Fatalf("failed to create client: %v", err)
 	}
 
-	_, err = client.Session.Create(context.Background(), &opencode.SessionCreateParams{
+	session, err := client.Session.Create(context.Background(), &opencode.SessionCreateParams{
 		ParentID: opencode.Ptr("test-parent"),
 	})
-	// Just check that the request was made successfully
 	if err != nil {
-		t.Logf("Session.Create error (expected for mock): %v", err)
+		t.Fatalf("Session.Create failed: %v", err)
+	}
+	if session.ID != "sess_1" {
+		t.Errorf("expected session ID %q, got %q", "sess_1", session.ID)
 	}
 }
 
@@ -57,7 +59,9 @@ func TestClientDo_Retry(t *testing.T) {
 			return
 		}
 		w.WriteHeader(http.StatusOK)
-		_ = json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+		_ = json.NewEncoder(w).Encode([]opencode.Session{
+			{ID: "sess_1", Title: "Recovered", Time: opencode.SessionTime{Created: 1, Updated: 1}},
+		})
 	}))
 	defer server.Close()
 
@@ -69,15 +73,16 @@ func TestClientDo_Retry(t *testing.T) {
 		t.Fatalf("failed to create client: %v", err)
 	}
 
-	params := &opencode.SessionListParams{}
-	_, err = client.Session.List(context.Background(), params)
+	sessions, err := client.Session.List(context.Background(), &opencode.SessionListParams{})
+	if err != nil {
+		t.Fatalf("Session.List failed after retries: %v", err)
+	}
 
 	if attempts != 3 {
 		t.Errorf("Expected 3 attempts, got %d", attempts)
 	}
-
-	if err != nil {
-		t.Logf("Final error (expected): %v", err)
+	if len(sessions) != 1 || sessions[0].ID != "sess_1" {
+		t.Errorf("expected 1 session with ID sess_1, got %v", sessions)
 	}
 }
 
@@ -97,10 +102,10 @@ func TestClientDo_ContextCancellation(t *testing.T) {
 
 	_, err = client.Session.List(ctx, &opencode.SessionListParams{})
 	if err == nil {
-		t.Error("Expected context cancellation error")
+		t.Fatal("expected context cancellation error")
 	}
-	if err != context.Canceled {
-		t.Logf("Got error: %v", err)
+	if !errors.Is(err, context.Canceled) {
+		t.Errorf("expected context.Canceled, got: %v", err)
 	}
 }
 
@@ -128,9 +133,11 @@ func TestClientDo_QueryParams(t *testing.T) {
 	}
 
 	if receivedQuery == "" {
-		t.Error("Expected query params to be sent")
+		t.Fatal("Expected query params to be sent")
 	}
-	t.Logf("Received query: %s", receivedQuery)
+	if !strings.Contains(receivedQuery, "directory=%2Ftest") {
+		t.Errorf("expected query to contain directory=%%2Ftest, got %q", receivedQuery)
+	}
 }
 
 func TestClientDo_BaseURLQueryParamsPreserved(t *testing.T) {
@@ -291,4 +298,111 @@ func TestClientDo_EmptyBody502_ReturnsAPIErrorWithStatusText(t *testing.T) {
 	if apiErr.StatusCode != http.StatusBadGateway {
 		t.Errorf("expected StatusCode %d, got %d", http.StatusBadGateway, apiErr.StatusCode)
 	}
+}
+
+func TestClientDo_PostBodyReencodedOnRetry(t *testing.T) {
+	var bodies []string
+	attempts := 0
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		attempts++
+		body, _ := io.ReadAll(r.Body)
+		bodies = append(bodies, string(body))
+
+		if attempts < 2 {
+			w.WriteHeader(http.StatusInternalServerError)
+			_, _ = w.Write([]byte("server error"))
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		_ = json.NewEncoder(w).Encode(opencode.Session{
+			ID:   "sess_1",
+			Time: opencode.SessionTime{Created: 1, Updated: 1},
+		})
+	}))
+	defer server.Close()
+
+	client, err := opencode.NewClient(
+		opencode.WithBaseURL(server.URL),
+		opencode.WithMaxRetries(2),
+	)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	_, err = client.Session.Create(context.Background(), &opencode.SessionCreateParams{
+		ParentID: opencode.Ptr("test-parent"),
+	})
+	if err != nil {
+		t.Fatalf("Session.Create failed: %v", err)
+	}
+
+	if attempts != 2 {
+		t.Fatalf("expected 2 attempts, got %d", attempts)
+	}
+
+	if len(bodies) != 2 {
+		t.Fatalf("expected 2 request bodies, got %d", len(bodies))
+	}
+
+	// Both attempts should receive the same non-empty body
+	for i, body := range bodies {
+		if body == "" {
+			t.Errorf("attempt %d: expected non-empty body", i+1)
+		}
+		if !strings.Contains(body, "test-parent") {
+			t.Errorf("attempt %d: expected body to contain 'test-parent', got %q", i+1, body)
+		}
+	}
+
+	if bodies[0] != bodies[1] {
+		t.Errorf("body mismatch between attempts:\n  attempt 1: %s\n  attempt 2: %s", bodies[0], bodies[1])
+	}
+}
+
+func TestClientDo_TransportErrorRetryExhaustion(t *testing.T) {
+	transportErr := errors.New("connection refused")
+	attempts := 0
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Fatal("should not reach server")
+	}))
+	defer server.Close()
+
+	client, err := opencode.NewClient(
+		opencode.WithBaseURL(server.URL),
+		opencode.WithMaxRetries(2),
+		opencode.WithHTTPClient(&http.Client{
+			Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+				attempts++
+				return nil, transportErr
+			}),
+		}),
+	)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	_, err = client.Session.List(context.Background(), &opencode.SessionListParams{})
+	if err == nil {
+		t.Fatal("expected error after exhausting retries")
+	}
+
+	if attempts != 3 {
+		t.Errorf("expected 3 attempts (1 initial + 2 retries), got %d", attempts)
+	}
+
+	if !errors.Is(err, transportErr) {
+		t.Errorf("expected error to wrap transport error, got: %v", err)
+	}
+
+	if !strings.Contains(err.Error(), "2 retries") {
+		t.Errorf("expected error to mention retry count, got: %v", err)
+	}
+}
+
+type roundTripFunc func(req *http.Request) (*http.Response, error)
+
+func (f roundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
+	return f(req)
 }
