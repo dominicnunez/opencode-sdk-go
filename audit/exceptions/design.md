@@ -92,3 +92,17 @@
 **Date:** 2026-02-28
 
 **Reason:** The SSE spec defines `id` and `retry` as standard fields, but this SDK has no reconnection logic — SSE streams are consumed once and callers manage reconnection at the application level. Adding `ID` and `Retry` fields to the `Event` struct would expand the public API surface for a feature the SDK does not use. The `id` field's purpose is `Last-Event-ID` for reconnection, and `retry` sets a reconnection interval — both are meaningless without built-in reconnection. Callers who need reconnection semantics should implement a custom decoder via `RegisterDecoder`.
+
+### ErrInvalidRequest is a catch-all for 4xx without a dedicated sentinel
+
+**Location:** `errors.go:56-73` — APIError.Is switch
+**Date:** 2026-02-28
+
+**Reason:** `Is()` evaluates top-down: 401, 403, 404, 408, and 429 match their dedicated sentinels first; the 400-499 range then catches everything else as `ErrInvalidRequest`. A caller doing `errors.Is(err, ErrInvalidRequest)` on a 429 gets `false` — this is correct because 429 has a more specific sentinel (`ErrRateLimited`). Renaming to `ErrClientError` would be a breaking public API change for clearer naming alone. The current sentinel names, combined with the `Is*Error()` helpers and thorough test coverage in `errors_test.go`, make the semantics unambiguous.
+
+### ListStreaming uses stricter status check than doRaw
+
+**Location:** `event.go:67` — `resp.StatusCode < 200 || resp.StatusCode >= 300`
+**Date:** 2026-02-28
+
+**Reason:** `doRaw` accepts any status < 400 as success because JSON API responses can legitimately use 2xx and 3xx codes. SSE streams require a 200 OK with a streaming body — a 204 No Content or 3xx redirect would produce an empty or missing event stream with no error signal. The stricter check ensures SSE callers get an explicit `*APIError` for any non-2xx response rather than a silent empty stream. The `do` path handles different HTTP semantics and the two checks are intentionally distinct.
