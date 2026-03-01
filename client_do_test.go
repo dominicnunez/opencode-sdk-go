@@ -449,6 +449,54 @@ func TestClientDo_3xxRedirectIsError(t *testing.T) {
 	}
 }
 
+func TestClientDo_ContextCancelledDuringBackoffDelay(t *testing.T) {
+	attempts := 0
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		attempts++
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = w.Write([]byte("server error"))
+	}))
+	defer server.Close()
+
+	client, err := opencode.NewClient(
+		opencode.WithBaseURL(server.URL),
+		opencode.WithMaxRetries(3),
+	)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	// Cancel context after the first attempt completes but during the backoff
+	// delay (initialBackoff = 500ms). 100ms gives time for the request to
+	// complete and enter the timer select, but is well under the 500ms delay.
+	go func() {
+		time.Sleep(100 * time.Millisecond)
+		cancel()
+	}()
+
+	start := time.Now()
+	_, err = client.Session.List(ctx, &opencode.SessionListParams{})
+	elapsed := time.Since(start)
+
+	if err == nil {
+		t.Fatal("expected error after context cancellation")
+	}
+	if !errors.Is(err, context.Canceled) {
+		t.Errorf("expected context.Canceled, got: %v", err)
+	}
+	if attempts != 1 {
+		t.Errorf("expected 1 attempt before cancellation, got %d", attempts)
+	}
+	// Should return well before the full backoff (500ms) plus remaining
+	// retries would take. 400ms gives generous timing tolerance.
+	if elapsed > 400*time.Millisecond {
+		t.Errorf("expected prompt return after cancellation, took %v", elapsed)
+	}
+}
+
 type roundTripFunc func(req *http.Request) (*http.Response, error)
 
 func (f roundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
