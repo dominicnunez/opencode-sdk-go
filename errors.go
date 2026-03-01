@@ -13,9 +13,15 @@ var (
 	ErrForbidden      = errors.New("forbidden")
 	ErrRateLimited    = errors.New("rate limited")
 	ErrInvalidRequest = errors.New("invalid request")
-	ErrTimeout        = errors.New("request timeout")
-	ErrInternal       = errors.New("internal server error")
-	ErrWrongVariant   = errors.New("wrong union variant")
+	// ErrTimeout matches HTTP 408 (Request Timeout) responses from the server.
+	// Client-side timeouts from context.WithTimeout or context.WithDeadline
+	// surface as context.DeadlineExceeded and are NOT matched by this sentinel.
+	// Use errors.Is(err, context.DeadlineExceeded) to detect client-side timeouts.
+	ErrTimeout  = errors.New("request timeout")
+	ErrInternal = errors.New("internal server error")
+	// ErrWrongVariant is returned when a union type accessor is called with
+	// a discriminator value that does not match the requested variant.
+	ErrWrongVariant = errors.New("wrong union variant")
 )
 
 func wrongVariant(expected, actual string) error {
@@ -124,6 +130,10 @@ func readAPIError(resp *http.Response, bodyLimit int64) *APIError {
 	}
 }
 
+// IsTimeoutError reports whether err matches an HTTP 408 (Request Timeout)
+// response. It does not match client-side timeouts caused by context
+// cancellation or deadlines — use errors.Is(err, context.DeadlineExceeded)
+// for those.
 func IsTimeoutError(err error) bool        { return errors.Is(err, ErrTimeout) }
 func IsNotFoundError(err error) bool       { return errors.Is(err, ErrNotFound) }
 func IsUnauthorizedError(err error) bool   { return errors.Is(err, ErrUnauthorized) }
