@@ -25,7 +25,7 @@ linters:
       # APIKey field name matches secret pattern, but the struct reflects the OpenAPI spec
       - linters: [gosec]
         text: "G117"
-        path: \.go
+        path: config\.go
 
       # Test files: file reads from test paths, subprocess launches, and test HTTP clients
       - linters: [gosec]
