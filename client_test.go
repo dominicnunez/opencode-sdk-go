@@ -409,6 +409,64 @@ func TestBaseURL_WithTrailingSlash_ResolvesCorrectly(t *testing.T) {
 	}
 }
 
+func TestListStreaming_ContextCancelMidStream(t *testing.T) {
+	// Verifies that cancelling a context while the SSE decoder is actively
+	// reading events (after successfully receiving some) reports
+	// context.Canceled via stream.Err().
+	eventsSent := make(chan struct{})
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		flusher, ok := w.(http.Flusher)
+		if !ok {
+			t.Error("expected ResponseWriter to implement Flusher")
+			return
+		}
+		w.Header().Set("Content-Type", "text/event-stream")
+		w.WriteHeader(http.StatusOK)
+
+		// Send two valid events.
+		for i := 0; i < 2; i++ {
+			_, _ = fmt.Fprintf(w, "event: message\ndata: {\"type\":\"message\"}\n\n")
+			flusher.Flush()
+		}
+
+		// Signal that events have been sent, then block until client disconnects.
+		close(eventsSent)
+		<-r.Context().Done()
+	}))
+	defer server.Close()
+
+	client, err := opencode.NewClient(opencode.WithBaseURL(server.URL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	stream := client.Event.ListStreaming(ctx, &opencode.EventListParams{})
+	defer func() { _ = stream.Close() }()
+
+	received := 0
+	for stream.Next() {
+		received++
+		if received == 2 {
+			// Wait for server to finish sending, then cancel.
+			<-eventsSent
+			cancel()
+		}
+	}
+
+	if received != 2 {
+		t.Errorf("expected 2 events before cancellation, got %d", received)
+	}
+	if stream.Err() == nil {
+		t.Fatal("expected non-nil error after context cancellation")
+	}
+	if !errors.Is(stream.Err(), context.Canceled) {
+		t.Errorf("expected context.Canceled, got: %v", stream.Err())
+	}
+}
+
 type readerFunc func([]byte) (int, error)
 
 func (f readerFunc) Read(p []byte) (int, error) { return f(p) }
