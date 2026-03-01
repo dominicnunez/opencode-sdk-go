@@ -586,3 +586,24 @@ actually cause same-repo PRs to run CI twice — once from push, once from pull_
 **Date:** 2026-03-01
 
 **Reason:** Comprehensive tests exist in `session_filepartsource_test.go`. Tests cover AsFile() success with field validation, AsSymbol() success with range/kind fields, wrong-variant errors for both directions, invalid type strings, malformed JSON, empty JSON, missing type field, and malformed nested JSON. The audit missed an existing test file.
+
+### Backoff delay integer overflow for high attempt counts
+
+**Location:** `client.go:282` — exponential backoff calculation
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of three existing known exceptions covering the same backoff overflow concern. `WithMaxRetries` hard-caps at 10, producing a maximum shift of `1 << 10 = 1024` and `500ms * 1024 = 512s`, which is well within `int64` range. The `delay <= 0 || delay > maxBackoff` guard at line 283 catches any overflow. The finding acknowledges "the current constants are safe" and describes only speculative fragility if constants were changed.
+
+### No test for Retry-After header or 429 backoff timing described as a testing gap
+
+**Location:** `client.go:280-293` — retry backoff for 429 responses
+**Date:** 2026-03-01
+
+**Reason:** The SDK does not implement `Retry-After` header support — 429 responses use the same exponential backoff as 5xx. `TestRetryOn429` correctly tests the actual behavior (retry count). The finding describes a missing feature as a testing gap, but there is nothing to test when the feature doesn't exist. The finding itself says "While not a bug" and "if Retry-After support is added in the future." Testing a non-existent feature is not a gap.
+
+### ConfigProviderListResponse described as a named map type
+
+**Location:** `config.go:1649-1652` — ConfigProviderListResponse type definition
+**Date:** 2026-03-01
+
+**Reason:** The finding claims `ConfigProviderListResponse` is `map[string]Provider` — a named map type. This is factually wrong. `ConfigProviderListResponse` is defined as a struct with `Default map[string]string` and `Providers []ConfigProvider` fields. The finding's premise and comparison with `McpStatus` (which actually is a `map[string]interface{}`) is based on a misread of the type definition.
