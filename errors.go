@@ -22,6 +22,13 @@ var (
 	// ErrWrongVariant is returned when a union type accessor is called with
 	// a discriminator value that does not match the requested variant.
 	ErrWrongVariant = errors.New("wrong union variant")
+
+	// ErrNilAuth is returned when AuthSetParams.MarshalJSON is called with a nil
+	// Auth field or a non-nil interface holding a nil pointer.
+	ErrNilAuth = errors.New("nil auth value")
+	// ErrUnknownAuthType is returned when AuthSetParams.MarshalJSON encounters
+	// an Auth implementation that is not one of OAuth, ApiAuth, or WellKnownAuth.
+	ErrUnknownAuthType = errors.New("unknown auth union type")
 )
 
 func wrongVariant(expected, actual string) error {

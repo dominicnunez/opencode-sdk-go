@@ -56,7 +56,7 @@ func (r AuthSetParams) URLQuery() (url.Values, error) {
 // so callers don't need to set it manually.
 func (r AuthSetParams) MarshalJSON() ([]byte, error) {
 	if r.Auth == nil {
-		return nil, fmt.Errorf("AuthSetParams.MarshalJSON: Auth field is required")
+		return nil, fmt.Errorf("AuthSetParams: Auth field is required: %w", ErrNilAuth)
 	}
 
 	// Dereference pointers so the switch below only handles value types.
@@ -64,19 +64,19 @@ func (r AuthSetParams) MarshalJSON() ([]byte, error) {
 	switch v := auth.(type) {
 	case *OAuth:
 		if v == nil {
-			return nil, fmt.Errorf("AuthSetParams.MarshalJSON: Auth contains typed nil *OAuth")
+			return nil, fmt.Errorf("AuthSetParams: Auth contains typed nil *OAuth: %w", ErrNilAuth)
 		}
 		copy := *v
 		auth = copy
 	case *ApiAuth:
 		if v == nil {
-			return nil, fmt.Errorf("AuthSetParams.MarshalJSON: Auth contains typed nil *ApiAuth")
+			return nil, fmt.Errorf("AuthSetParams: Auth contains typed nil *ApiAuth: %w", ErrNilAuth)
 		}
 		copy := *v
 		auth = copy
 	case *WellKnownAuth:
 		if v == nil {
-			return nil, fmt.Errorf("AuthSetParams.MarshalJSON: Auth contains typed nil *WellKnownAuth")
+			return nil, fmt.Errorf("AuthSetParams: Auth contains typed nil *WellKnownAuth: %w", ErrNilAuth)
 		}
 		copy := *v
 		auth = copy
@@ -93,6 +93,6 @@ func (r AuthSetParams) MarshalJSON() ([]byte, error) {
 		v.Type = AuthTypeWellKnown
 		return json.Marshal(v)
 	default:
-		return nil, fmt.Errorf("unknown auth union type: %T", r.Auth)
+		return nil, fmt.Errorf("auth type %T: %w", r.Auth, ErrUnknownAuthType)
 	}
 }

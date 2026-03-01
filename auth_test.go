@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"strings"
 	"testing"
 )
 
@@ -344,8 +343,8 @@ func TestAuthSetParams_MarshalJSON_NilAuthErrors(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for nil Auth, got nil")
 	}
-	if !strings.Contains(err.Error(), "AuthSetParams.MarshalJSON: Auth field is required") {
-		t.Errorf("expected error containing %q, got %v", "AuthSetParams.MarshalJSON: Auth field is required", err)
+	if !errors.Is(err, ErrNilAuth) {
+		t.Errorf("expected error wrapping ErrNilAuth, got %v", err)
 	}
 }
 
@@ -356,8 +355,8 @@ func TestAuthSetParams_MarshalJSON_NilPointerAuthErrors(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for nil *OAuth, got nil")
 	}
-	if !strings.Contains(err.Error(), "Auth contains typed nil *OAuth") {
-		t.Errorf("expected error containing %q, got %v", "Auth contains typed nil *OAuth", err)
+	if !errors.Is(err, ErrNilAuth) {
+		t.Errorf("expected error wrapping ErrNilAuth, got %v", err)
 	}
 }
 
@@ -367,8 +366,8 @@ func TestAuthSetParams_MarshalJSON_UnknownTypeErrors(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for unknown auth type, got nil")
 	}
-	if !strings.Contains(err.Error(), "unknown auth union type") {
-		t.Errorf("expected error containing %q, got %v", "unknown auth union type", err)
+	if !errors.Is(err, ErrUnknownAuthType) {
+		t.Errorf("expected error wrapping ErrUnknownAuthType, got %v", err)
 	}
 }
 
