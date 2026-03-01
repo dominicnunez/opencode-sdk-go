@@ -71,3 +71,10 @@
 **Date:** 2026-02-28
 
 **Reason:** When a params struct has only `query:` tagged fields and no `json:` fields, `doRaw` serializes it as `{}`. The server accepts empty bodies, and the overhead is a few bytes per request. Eliminating this would require splitting the query/body encoding path in `doRaw` or special-casing these methods, which adds complexity for no behavioral benefit.
+
+### ListStreaming response body not closed if readAPIError panics on custom transport
+
+**Location:** `event.go:56-57` — non-2xx status path
+**Date:** 2026-02-28
+
+**Reason:** If a custom transport's `io.ReadCloser` panics during `io.ReadAll` inside `readAPIError`, the response body is never closed. This requires a custom transport that violates Go's `io.Reader` contract (panicking instead of returning an error). The `doRaw` path avoids this via a defer in `do`, but `ListStreaming` intentionally bypasses `do` for SSE semantics. Adding a defer-close before `readAPIError` would close the body twice on the normal path (since `readAPIError` already closes it). The risk is theoretical — no well-behaved transport panics from `Read`.

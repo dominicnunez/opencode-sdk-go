@@ -106,3 +106,10 @@
 **Date:** 2026-02-28
 
 **Reason:** `doRaw` accepts any status < 400 as success because JSON API responses can legitimately use 2xx and 3xx codes. SSE streams require a 200 OK with a streaming body — a 204 No Content or 3xx redirect would produce an empty or missing event stream with no error signal. The stricter check ensures SSE callers get an explicit `*APIError` for any non-2xx response rather than a silent empty stream. The `do` path handles different HTTP semantics and the two checks are intentionally distinct.
+
+### Event type-specific Type fields duplicate the parent Event discriminator
+
+**Location:** `event.go:318,341,365` — all EventXxx structs
+**Date:** 2026-02-28
+
+**Reason:** Each `EventXxx` struct has its own `Type` field with a dedicated string type and `IsKnown()` method, despite the parent `Event.Type` already carrying this information. This is spec-driven — the OpenAPI spec defines a `type` property on each event schema. The per-struct types faithfully reflect the spec and ensure round-trip fidelity. Removing them would diverge from the spec and break callers who access `event.Type` on the concrete struct after calling `AsXxx()`.
