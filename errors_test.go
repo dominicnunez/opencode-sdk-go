@@ -3,7 +3,9 @@ package opencode
 import (
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
+	"strings"
 	"testing"
 )
 
@@ -429,6 +431,58 @@ func TestIsRetryableError(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestReadAPIError_TruncatesMessage verifies that readAPIError truncates the
+// Message field for large response bodies while preserving the full Body.
+func TestReadAPIError_TruncatesMessage(t *testing.T) {
+	t.Run("small body is not truncated", func(t *testing.T) {
+		body := "short error"
+		resp := &http.Response{
+			StatusCode: http.StatusBadRequest,
+			Header:     http.Header{},
+			Body:       io.NopCloser(strings.NewReader(body)),
+		}
+		apiErr := readAPIError(resp, 1<<20)
+		if apiErr.Message != body {
+			t.Errorf("Message = %q, want %q", apiErr.Message, body)
+		}
+		if apiErr.Body != body {
+			t.Errorf("Body = %q, want %q", apiErr.Body, body)
+		}
+	})
+
+	t.Run("large body is truncated in Message but preserved in Body", func(t *testing.T) {
+		body := strings.Repeat("x", maxMessageDisplaySize+1000)
+		resp := &http.Response{
+			StatusCode: http.StatusInternalServerError,
+			Header:     http.Header{},
+			Body:       io.NopCloser(strings.NewReader(body)),
+		}
+		apiErr := readAPIError(resp, 1<<20)
+		if apiErr.Body != body {
+			t.Errorf("Body length = %d, want %d", len(apiErr.Body), len(body))
+		}
+		if len(apiErr.Message) >= len(body) {
+			t.Errorf("Message should be truncated, got length %d", len(apiErr.Message))
+		}
+		if !strings.HasSuffix(apiErr.Message, "... (truncated)") {
+			t.Errorf("Message should end with truncation marker, got %q", apiErr.Message[len(apiErr.Message)-30:])
+		}
+	})
+
+	t.Run("exactly at limit is not truncated", func(t *testing.T) {
+		body := strings.Repeat("y", maxMessageDisplaySize)
+		resp := &http.Response{
+			StatusCode: http.StatusBadGateway,
+			Header:     http.Header{},
+			Body:       io.NopCloser(strings.NewReader(body)),
+		}
+		apiErr := readAPIError(resp, 1<<20)
+		if apiErr.Message != body {
+			t.Errorf("Message at exact limit should not be truncated")
+		}
+	})
 }
 
 // contains is a local helper to avoid importing strings in tests.
