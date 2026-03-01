@@ -92,6 +92,11 @@ func (e *APIError) Is(target error) bool {
 
 // IsRetryableError reports whether err wraps an *APIError with a retryable
 // status code (408, 429, or 5xx).
+//
+// Transport-level failures (DNS resolution, connection refused, TLS handshake
+// errors, etc.) are NOT wrapped as *APIError, so this function returns false
+// for them. To detect transport errors after retries are exhausted, unwrap the
+// underlying net.Error or check for specific error types directly.
 func IsRetryableError(err error) bool {
 	var apiErr *APIError
 	if errors.As(err, &apiErr) {
@@ -141,6 +146,11 @@ func readAPIError(resp *http.Response, bodyLimit int64) *APIError {
 // response. It does not match client-side timeouts caused by context
 // cancellation or deadlines — use errors.Is(err, context.DeadlineExceeded)
 // for those.
+//
+// All Is*Error helpers only match errors that wrap *APIError (HTTP responses).
+// Transport-level failures (DNS, connection refused, TLS errors) are returned
+// as plain errors and will not match any of these helpers. Use errors.As with
+// net.Error or unwrap the error directly to classify transport failures.
 func IsTimeoutError(err error) bool        { return errors.Is(err, ErrTimeout) }
 func IsNotFoundError(err error) bool       { return errors.Is(err, ErrNotFound) }
 func IsUnauthorizedError(err error) bool   { return errors.Is(err, ErrUnauthorized) }
