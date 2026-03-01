@@ -1,6 +1,7 @@
 package ssestream
 
 import (
+	"bufio"
 	"errors"
 	"io"
 	"net/http"
@@ -336,5 +337,101 @@ func TestNewDecoder_UnknownContentType_FallsBackToSSE(t *testing.T) {
 	evt := dec.Event()
 	if evt.Type != "test" {
 		t.Errorf("expected event type %q, got %q", "test", evt.Type)
+	}
+}
+
+func TestEventStreamDecoder_ConnectionDropMidEvent(t *testing.T) {
+	// Simulate connection drop mid-event: reader returns partial data then error.
+	connErr := errors.New("connection reset by peer")
+	r := &failingReader{
+		data: "event: msg\ndata: {\"partial\":",
+		err:  connErr,
+	}
+	resp := &http.Response{
+		StatusCode: http.StatusOK,
+		Header:     http.Header{"Content-Type": []string{"text/event-stream"}},
+		Body:       io.NopCloser(r),
+	}
+
+	dec := NewDecoder(resp)
+	defer func() { _ = dec.Close() }()
+
+	if dec.Next() {
+		t.Fatal("expected Next() to return false on connection drop mid-event")
+	}
+	if dec.Err() == nil {
+		t.Fatal("expected non-nil error from decoder after connection drop")
+	}
+}
+
+// failingReader returns data on first read, then an error.
+type failingReader struct {
+	data string
+	err  error
+	read bool
+}
+
+func (r *failingReader) Read(p []byte) (int, error) {
+	if !r.read {
+		r.read = true
+		n := copy(p, r.data)
+		return n, nil
+	}
+	return 0, r.err
+}
+
+func TestEventStreamDecoder_InterleavedComments(t *testing.T) {
+	// SSE comments (lines starting with ":") should be silently ignored.
+	raw := ": keep-alive\nevent: msg\n: another comment\ndata: {\"ok\":true}\n\n"
+	dec := NewDecoder(newSSEResponse(raw))
+	defer func() { _ = dec.Close() }()
+
+	if !dec.Next() {
+		t.Fatal("expected Next() to return true")
+	}
+	evt := dec.Event()
+	if evt.Type != "msg" {
+		t.Errorf("expected event type %q, got %q", "msg", evt.Type)
+	}
+	if string(evt.Data) != `{"ok":true}` {
+		t.Errorf("expected data %q, got %q", `{"ok":true}`, string(evt.Data))
+	}
+}
+
+func TestEventStreamDecoder_TokenExceedsBufferLimit(t *testing.T) {
+	// A single line exceeding the scanner buffer causes a scanner error.
+	// Use a small custom scanner to avoid allocating 32MB in tests.
+	const smallLimit = 256
+	body := "data: " + strings.Repeat("x", smallLimit+1) + "\n\n"
+	r := io.NopCloser(strings.NewReader(body))
+
+	scn := bufio.NewScanner(r)
+	scn.Buffer(nil, smallLimit)
+	dec := &eventStreamDecoder{rc: r, scn: scn}
+
+	if dec.Next() {
+		t.Fatal("expected Next() to return false when token exceeds buffer")
+	}
+	if dec.Err() == nil {
+		t.Fatal("expected scanner error for oversized token")
+	}
+}
+
+func TestEventStreamDecoder_IncompleteEventNoBlankLine(t *testing.T) {
+	// Stream has data but connection closes without a blank line separator.
+	// The decoder should still dispatch the buffered event at EOF.
+	raw := "event: update\ndata: {\"id\":1}"
+	dec := NewDecoder(newSSEResponse(raw))
+	defer func() { _ = dec.Close() }()
+
+	if !dec.Next() {
+		t.Fatal("expected Next() to return true for event at EOF without trailing newline")
+	}
+	evt := dec.Event()
+	if evt.Type != "update" {
+		t.Errorf("expected event type %q, got %q", "update", evt.Type)
+	}
+	if string(evt.Data) != `{"id":1}` {
+		t.Errorf("expected data %q, got %q", `{"id":1}`, string(evt.Data))
 	}
 }
