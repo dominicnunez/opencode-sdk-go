@@ -75,7 +75,10 @@ func marshalFields(params url.Values, val reflect.Value) error {
 		}
 
 		// Parse tag to extract name and options
-		name, required, omitempty := parseTag(tag)
+		name, required, omitempty, err := parseTag(tag)
+		if err != nil {
+			return fmt.Errorf("queryparams: field %s: %w", typeField.Name, err)
+		}
 		if name == "" {
 			continue
 		}
@@ -89,9 +92,10 @@ func marshalFields(params url.Values, val reflect.Value) error {
 	return nil
 }
 
-// parseTag parses a struct tag like "name,required", "name,omitempty", or "name,required,omitempty"
-// Returns: name, required, omitempty
-func parseTag(tag string) (name string, required bool, omitempty bool) {
+// parseTag parses a struct tag like "name,required" or "name,omitempty".
+// The combination "required,omitempty" is contradictory and rejected.
+// Returns: name, required, omitempty, error.
+func parseTag(tag string) (name string, required bool, omitempty bool, err error) {
 	parts := strings.Split(tag, ",")
 	name = parts[0]
 	for _, opt := range parts[1:] {
@@ -101,6 +105,9 @@ func parseTag(tag string) (name string, required bool, omitempty bool) {
 		case "omitempty":
 			omitempty = true
 		}
+	}
+	if required && omitempty {
+		err = fmt.Errorf("query tag %q: required and omitempty are contradictory", name)
 	}
 	return
 }
@@ -131,13 +138,23 @@ func addFieldValue(params url.Values, name string, field reflect.Value, required
 		}
 		params.Add(name, s)
 	case reflect.Int, reflect.Int64:
-		if omitempty && !isPtr && field.Int() == 0 {
-			return nil
+		if !isPtr && field.Int() == 0 {
+			if required {
+				return fmt.Errorf("required query parameter %q has zero value", name)
+			}
+			if omitempty {
+				return nil
+			}
 		}
 		params.Add(name, strconv.FormatInt(field.Int(), 10))
 	case reflect.Bool:
-		if omitempty && !isPtr && !field.Bool() {
-			return nil
+		if !isPtr && !field.Bool() {
+			if required {
+				return fmt.Errorf("required query parameter %q has zero value", name)
+			}
+			if omitempty {
+				return nil
+			}
 		}
 		params.Add(name, strconv.FormatBool(field.Bool()))
 	case reflect.Slice:

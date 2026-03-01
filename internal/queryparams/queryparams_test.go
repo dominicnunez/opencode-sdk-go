@@ -263,16 +263,18 @@ func TestParseTag(t *testing.T) {
 		wantName string
 		wantReq  bool
 		wantOmit bool
+		wantErr  bool
 	}{
-		{"query,required", "query", true, false},
-		{"directory,omitempty", "directory", false, true},
-		{"pattern", "pattern", false, false},
-		{"-", "-", false, false},
+		{"query,required", "query", true, false, false},
+		{"directory,omitempty", "directory", false, true, false},
+		{"pattern", "pattern", false, false, false},
+		{"-", "-", false, false, false},
+		{"count,required,omitempty", "count", true, true, true},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.tag, func(t *testing.T) {
-			name, req, omit := parseTag(tt.tag)
+			name, req, omit, err := parseTag(tt.tag)
 			if name != tt.wantName {
 				t.Errorf("name: got %q, want %q", name, tt.wantName)
 			}
@@ -281,6 +283,9 @@ func TestParseTag(t *testing.T) {
 			}
 			if omit != tt.wantOmit {
 				t.Errorf("omitempty: got %v, want %v", omit, tt.wantOmit)
+			}
+			if (err != nil) != tt.wantErr {
+				t.Errorf("error: got %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
@@ -439,6 +444,85 @@ func TestMarshal_EmbeddedPointerToStruct(t *testing.T) {
 	}
 	if got := result.Get("limit"); got != "" {
 		t.Errorf("expected limit to be omitted for nil embedded, got %q", got)
+	}
+}
+
+func TestMarshal_RequiredIntValidation(t *testing.T) {
+	type params struct {
+		Count int `query:"count,required"`
+	}
+
+	// Zero value should error
+	_, err := Marshal(params{Count: 0})
+	if err == nil {
+		t.Fatal("expected error for zero-value required int")
+	}
+
+	// Non-zero should succeed
+	result, err := Marshal(params{Count: 5})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got := result.Get("count"); got != "5" {
+		t.Errorf("expected count=5, got %q", got)
+	}
+
+	// Pointer-to-zero should succeed (intentional zero)
+	type ptrParams struct {
+		Count *int `query:"count,required"`
+	}
+	zero := 0
+	result, err = Marshal(ptrParams{Count: &zero})
+	if err != nil {
+		t.Fatalf("unexpected error for pointer-to-zero required int: %v", err)
+	}
+	if got := result.Get("count"); got != "0" {
+		t.Errorf("expected count=0, got %q", got)
+	}
+}
+
+func TestMarshal_RequiredBoolValidation(t *testing.T) {
+	type params struct {
+		Active bool `query:"active,required"`
+	}
+
+	// False (zero value) should error
+	_, err := Marshal(params{Active: false})
+	if err == nil {
+		t.Fatal("expected error for false required bool")
+	}
+
+	// True should succeed
+	result, err := Marshal(params{Active: true})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got := result.Get("active"); got != "true" {
+		t.Errorf("expected active=true, got %q", got)
+	}
+
+	// Pointer-to-false should succeed (intentional false)
+	type ptrParams struct {
+		Active *bool `query:"active,required"`
+	}
+	f := false
+	result, err = Marshal(ptrParams{Active: &f})
+	if err != nil {
+		t.Fatalf("unexpected error for pointer-to-false required bool: %v", err)
+	}
+	if got := result.Get("active"); got != "false" {
+		t.Errorf("expected active=false, got %q", got)
+	}
+}
+
+func TestMarshal_RequiredOmitemptyConflict(t *testing.T) {
+	type params struct {
+		Count int `query:"count,required,omitempty"`
+	}
+
+	_, err := Marshal(params{Count: 5})
+	if err == nil {
+		t.Fatal("expected error for contradictory required,omitempty tag")
 	}
 }
 
