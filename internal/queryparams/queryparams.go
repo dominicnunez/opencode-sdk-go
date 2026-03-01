@@ -138,6 +138,10 @@ func addFieldValue(params url.Values, name string, field reflect.Value, required
 		}
 		params.Add(name, s)
 	case reflect.Int, reflect.Int64:
+		// Note: unlike strings (always omitted when empty), non-pointer int/bool
+		// zero values are emitted unless omitempty is set. This asymmetry is
+		// intentional — empty strings are never meaningful as query params, but
+		// zero ints/bools can be (e.g. "offset=0", "verbose=false").
 		if !isPtr && field.Int() == 0 {
 			if required {
 				return fmt.Errorf("required query parameter %q has zero value", name)
