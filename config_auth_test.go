@@ -256,6 +256,40 @@ func TestAuth_EmptyJSON(t *testing.T) {
 	}
 }
 
+// TestAuthSetParams_MarshalJSON_OverwritesWrongType verifies that MarshalJSON
+// corrects a caller-supplied Type discriminator to the canonical value.
+func TestAuthSetParams_MarshalJSON_OverwritesWrongType(t *testing.T) {
+	tests := []struct {
+		name     string
+		auth     AuthSetParamsAuthUnion
+		wantType string
+	}{
+		{"OAuth with wrong type", OAuth{Type: AuthTypeAPI, Refresh: "r", Access: "a", Expires: 1}, "oauth"},
+		{"ApiAuth with wrong type", ApiAuth{Type: AuthTypeOAuth, Key: "k"}, "api"},
+		{"WellKnownAuth with wrong type", WellKnownAuth{Type: AuthTypeOAuth, Key: "k", Token: "t"}, "wellknown"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			params := AuthSetParams{Auth: tt.auth}
+			data, err := params.MarshalJSON()
+			if err != nil {
+				t.Fatalf("MarshalJSON() error: %v", err)
+			}
+			var raw map[string]interface{}
+			if err := json.Unmarshal(data, &raw); err != nil {
+				t.Fatalf("Unmarshal output: %v", err)
+			}
+			got, ok := raw["type"].(string)
+			if !ok {
+				t.Fatal("type field missing or not a string")
+			}
+			if got != tt.wantType {
+				t.Errorf("type = %q, want %q", got, tt.wantType)
+			}
+		})
+	}
+}
+
 func TestAuth_String_RedactsCredentials(t *testing.T) {
 	jsonData := `{"type":"oauth","access":"secret-token","refresh":"secret-refresh","expires":"2025-01-01T00:00:00Z"}`
 	var auth Auth
