@@ -32,15 +32,15 @@ func TestSessionService_Shell_Success(t *testing.T) {
 
 		// Return AssistantMessage
 		resp := AssistantMessage{
-			ID:        "msg456",
-			Role:      AssistantMessageRoleAssistant,
-			SessionID: "sess123",
-			Cost:      0.01,
-			Mode:      "auto",
-			ModelID:   "claude-sonnet-4.5",
-			ParentID:  "msg123",
+			ID:         "msg456",
+			Role:       AssistantMessageRoleAssistant,
+			SessionID:  "sess123",
+			Cost:       0.01,
+			Mode:       "auto",
+			ModelID:    "claude-sonnet-4.5",
+			ParentID:   "msg123",
 			ProviderID: "anthropic",
-			System:    []string{},
+			System:     []string{},
 			Path: AssistantMessagePath{
 				Cwd:  "/home/user",
 				Root: "/home/user",
@@ -93,15 +93,15 @@ func TestSessionService_Shell_WithDirectory(t *testing.T) {
 
 		// Return minimal AssistantMessage
 		resp := AssistantMessage{
-			ID:        "msg789",
-			Role:      AssistantMessageRoleAssistant,
-			SessionID: "sess123",
-			Cost:      0.01,
-			Mode:      "auto",
-			ModelID:   "claude-sonnet-4.5",
-			ParentID:  "msg123",
+			ID:         "msg789",
+			Role:       AssistantMessageRoleAssistant,
+			SessionID:  "sess123",
+			Cost:       0.01,
+			Mode:       "auto",
+			ModelID:    "claude-sonnet-4.5",
+			ParentID:   "msg123",
 			ProviderID: "anthropic",
-			System:    []string{},
+			System:     []string{},
 			Path: AssistantMessagePath{
 				Cwd:  "/tmp",
 				Root: "/tmp",

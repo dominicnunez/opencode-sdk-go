@@ -74,9 +74,9 @@ func TestSessionPromptParams_ComplexTypes(t *testing.T) {
 	params := &opencode.SessionPromptParams{
 		Parts: []opencode.SessionPromptParamsPartUnion{
 			opencode.AgentPartInputParam{
-				Name:   "test-agent",
-				Type:   opencode.AgentPartInputTypeAgent,
-				ID:     opencode.Ptr("agent1"),
+				Name: "test-agent",
+				Type: opencode.AgentPartInputTypeAgent,
+				ID:   opencode.Ptr("agent1"),
 				Source: &opencode.AgentPartInputSourceParam{
 					End:   100,
 					Start: 0,

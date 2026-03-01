@@ -2,9 +2,9 @@ package opencode
 
 import (
 	"context"
+	"github.com/dominicnunez/opencode-sdk-go/internal/queryparams"
 	"net/http"
 	"net/url"
-	"github.com/dominicnunez/opencode-sdk-go/internal/queryparams"
 )
 
 type ProjectService struct {
@@ -36,14 +36,14 @@ func (s *ProjectService) Current(ctx context.Context, params *ProjectCurrentPara
 }
 
 type Project struct {
-	ID       string     `json:"id"`
+	ID       string      `json:"id"`
 	Time     ProjectTime `json:"time"`
-	Worktree string     `json:"worktree"`
+	Worktree string      `json:"worktree"`
 	Vcs      *ProjectVcs `json:"vcs,omitempty"`
 }
 
 type ProjectTime struct {
-	Created     float64 `json:"created"`
+	Created     float64  `json:"created"`
 	Initialized *float64 `json:"initialized,omitempty"`
 }
 

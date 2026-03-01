@@ -30,12 +30,12 @@ func TestConfigService_Providers_Success(t *testing.T) {
 					Env:  []string{"ANTHROPIC_API_KEY"},
 					Models: map[string]opencode.ConfigProviderModel{
 						"claude-3-5-sonnet-20241022": {
-							ID:         "claude-3-5-sonnet-20241022",
-							Name:       "Claude 3.5 Sonnet",
-							Attachment: true,
-							Reasoning:  false,
+							ID:          "claude-3-5-sonnet-20241022",
+							Name:        "Claude 3.5 Sonnet",
+							Attachment:  true,
+							Reasoning:   false,
 							Temperature: true,
-							ToolCall:   true,
+							ToolCall:    true,
 							Cost: opencode.ConfigProviderModelsCost{
 								Input:  3.0,
 								Output: 15.0,
