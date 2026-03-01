@@ -1047,7 +1047,7 @@ actually cause same-repo PRs to run CI twice — once from push, once from pull_
 **Location:** `session.go:89-330` — Session service methods
 **Date:** 2026-03-01
 
-**Reason:** The finding claims Abort, Children, Command, Init, Share, Diff, Fork, Shell, Summarize, Todo, Unrevert, and Unshare all lack test coverage. 9 of these 12 have comprehensive dedicated tests: Init and Command in `session_init_command_revert_test.go`, Diff in `session_diff_test.go` (11 tests), Fork in `session_fork_test.go` (8 tests), Shell in `session_shell_test.go` (8 tests), Summarize in `session_summarize_test.go` (9 tests), Todo in `session_todo_test.go` (8 tests), Unrevert in `session_unrevert_test.go` (7 tests), and Unshare in `session_unshare_test.go` (6 tests). Only Abort, Children, and Share actually lack coverage.
+**Reason:** The finding claims Abort, Children, Command, Init, Share, Diff, Fork, Shell, Summarize, Todo, Unrevert, and Unshare all lack test coverage. All 12 have tests: Init and Command in `session_init_command_revert_test.go`, Diff in `session_diff_test.go` (11 tests), Fork in `session_fork_test.go` (8 tests), Shell in `session_shell_test.go` (8 tests), Summarize in `session_summarize_test.go` (9 tests), Todo in `session_todo_test.go` (8 tests), Unrevert in `session_unrevert_test.go` (7 tests), Unshare in `session_unshare_test.go` (6 tests), and Abort, Children, and Share in `service_test.go` (lines 434-515).
 
 ### No test coverage for Agent, Command, Path, Project, Tui services
 
@@ -1125,3 +1125,164 @@ actually cause same-repo PRs to run CI twice — once from push, once from pull_
 **Date:** 2026-03-01
 
 **Reason:** `bufio.Scanner.Buffer(nil, max)` is the documented way to set a custom max token size while letting the scanner allocate its own initial buffer. Per the Go stdlib docs: "Buffer sets the initial buffer to use when scanning and the maximum size of buffer that may be allocated during scanning. The maximum token size is the larger of max and cap(buf)." Passing nil is intentional — it delegates initial allocation to the scanner (starting at `bufio.MaxScanTokenSize` = 64KiB) while capping growth at `maxSSETokenSize`. Allocating `make([]byte, 0, 4096)` would actually be worse — it would cap the initial buffer at 4KiB instead of the scanner's default 64KiB, causing unnecessary early reallocations for typical SSE payloads. The current code is idiomatic and correct.
+
+### Path parameters not URL-escaped before concatenation described as medium severity security issue
+
+**Location:** `session.go:40`, `sessionpermission.go:28`, `auth.go:32` — path segment interpolation
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing known exception "Path parameters not URL-encoded in service methods." The IDs are server-generated UUIDs that do not contain special characters. The exception already documents this as a conscious design tradeoff. The finding correctly describes the code but misclassifies it as a net-new finding when it is already tracked.
+
+### Default base URL uses plaintext HTTP described as medium severity security issue
+
+**Location:** `client.go:20` — DefaultBaseURL constant
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing known exception "Default base URL uses plaintext HTTP." The SDK targets a local dev server (`localhost:54321`). Callers who set a remote URL are explicitly overriding the default and responsible for their transport security. Already classified.
+
+### SSE event stream bypasses client timeout described as a low severity issue
+
+**Location:** `event.go:53` — uses httpClient.Do directly
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing known exception "ListStreaming bypasses Client timeout and retry logic." SSE streams are long-lived connections; applying a 30s timeout would kill every connection. Callers use `context.WithTimeout` for deadlines. Already classified as intentional design.
+
+### SSE scanner nil initial buffer described as an inefficiency bug
+
+**Location:** `packages/ssestream/ssestream.go:54` — bufio.Scanner.Buffer call
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing known exception "SSE scanner buffer starts at nil, relies on implicit default." `bufio.Scanner.Buffer(nil, max)` is the documented way to set a custom max token size. Passing nil delegates initial allocation to the scanner's default 64KiB, which is correct. The finding's suggested fix (`make([]byte, 0, bufio.MaxScanTokenSize)`) would actually be worse — it sets cap to 64KiB explicitly, identical to the scanner's default, adding no benefit. Already classified.
+
+### apierror.Error dead code exported as public type alias described as a code quality issue
+
+**Location:** `internal/apierror/apierror.go:12`, `aliases.go:8`
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing known exception "apierror.Error is unused but exported as a public type alias." The type is a Stainless leftover never constructed by any SDK method. Removing it would be a breaking API change. Already classified.
+
+### RegisterDecoder global mutable state without unregister described as a code quality issue
+
+**Location:** `packages/ssestream/ssestream.go:65` — global decoder registry
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing known exception "RegisterDecoder uses global mutable state without unregister." The pattern follows `sql.Register`, `image.RegisterFormat`, and `encoding.RegisterCodec` in the Go stdlib. Registrations are process-lifetime by design. Already classified.
+
+### ListStreaming does not apply retry logic described as a code quality issue
+
+**Location:** `event.go:33-63` — single HTTP request via httpClient.Do
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing known exception "ListStreaming bypasses client retry logic." SSE streams are consumed once; retrying is complex and callers should manage reconnection at the application level. Already classified.
+
+### APIError.Is described as not matching ErrTimeout for 408 that also matches ErrInvalidRequest
+
+**Location:** `errors.go:66-84` — APIError.Is switch statement
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing known exception "ErrInvalidRequest is a catch-all for 4xx without a dedicated sentinel." The `Is()` switch evaluates top-down: 408 matches `ErrTimeout` at line 77 first and returns true. The 4xx catch-all at line 78-79 is never reached for 408. The finding itself acknowledges "The current ordering is correct (specific before general)" — the described concern is working-as-designed behavior that is already classified.
+
+### No test for ListStreaming non-2xx 4xx responses described as a testing gap
+
+**Location:** `event.go:58-59` — non-2xx status path
+**Date:** 2026-03-01
+
+**Reason:** The audit claims only 502 is tested for non-2xx ListStreaming responses. This is factually wrong. `TestListStreaming_ErrorStatus` (event_streaming_error_test.go:85) is a table-driven test covering 401, 403, 404, 500, and 502 status codes. Each subtest verifies `stream.Next()` returns false, `stream.Err()` wraps a `*APIError` via `errors.As`, and the status code matches. The claim that "there's no test for 4xx responses" is contradicted by three explicit 4xx subtests in the existing test suite.
+
+### No test for buildURL query parameter override behavior described as a testing gap
+
+**Location:** `client.go:180-200` — buildURL query parameter merging
+**Date:** 2026-03-01
+
+**Reason:** The audit claims the same-key override behavior between base URL query params and params struct query params is untested. This is factually wrong. `TestBuildURL_ParamsOverrideBaseURLQueryKey` (client_baseurl_test.go:99) sets a base URL with `?key=base` and a params struct with the same key set to `override`, then verifies the resolved URL contains `key=override` and not `key=base`. The exact scenario described in the finding is already tested.
+
+### ConfigUpdateParams sends zero-value bool/int fields in PATCH body
+
+**Location:** `config.go:30-35` — Config.Update PATCH serialization
+**Date:** 2026-03-01
+
+**Reason:** The finding claims "Go's `omitempty` does not omit `false` bools or `0` ints" and names `Autoshare`, `Snapshot`, and `Autoupdate` as examples. This is factually wrong. Go's `encoding/json` `omitempty` does omit `false` bools and `0` ints. All three named fields have `omitempty` tags: `Autoshare bool json:"autoshare,omitempty"` (config.go:61), `Autoupdate bool json:"autoupdate,omitempty"` (config.go:63), and `Snapshot bool json:"snapshot,omitempty"` (config.go:93). A zero-value `Config` struct marshals to `{}`, not a body full of false/zero fields. The finding's premise is incorrect.
+
+### No integration test for 429 retry behavior in client_do_test.go
+
+**Location:** `client_do_test.go` — missing 429 retry integration test
+**Date:** 2026-03-01
+
+**Reason:** The finding says the retry integration tests cover 500 but 429 has no end-to-end test. `TestRetryOn429` exists at `client_test.go:42` — it uses a custom transport returning 429 on every request, calls `Session.List`, asserts an error after exhausting retries, and verifies exactly 3 attempts were made. The test is in a different file than the finding looked at.
+
+### No integration test for 408 retry behavior in client_do_test.go
+
+**Location:** `client_do_test.go` — missing 408 retry integration test
+**Date:** 2026-03-01
+
+**Reason:** Same issue as the 429 finding. `TestRetryOn408` exists at `client_test.go:69` — it uses a custom transport returning 408 on every request, calls `Session.List`, asserts an error after exhausting retries, and verifies exactly 3 attempts were made. The test is in a different file than the finding looked at.
+
+### Backoff delay overflow for high attempt counts wraps to negative before cap check
+
+**Location:** `client.go:288-289` — exponential backoff calculation
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing known exception "Backoff overflow guard is unreachable with current constants" at `client.go:283`. The finding describes the same `delay <= 0` guard on the same code, acknowledges `maxRetryCap=10` makes the overflow unreachable today, and proposes capping the shift exponent as a preventive measure. The known exception already documents that `WithMaxRetries` hard-caps at 10, producing a maximum of `500ms * 1024 = 512s` well within `int64` range, and that the `delay <= 0` guard is a zero-cost safety net. No new information beyond what is already classified.
+
+### ListStreaming swallows context cancellation as nil error
+
+**Location:** `event.go:53-55` — ListStreaming error path after httpClient.Do
+**Date:** 2026-03-01
+
+**Reason:** The finding title claims context cancellation is "swallowed as nil error," which is factually wrong. When `httpClient.Do` fails due to context cancellation, the error is wrapped as `fmt.Errorf("event stream request: %w", err)` and stored in the stream via `ssestream.NewStream[Event](nil, err)` — the error is propagated, not swallowed. The secondary concern about closing `resp.Body` when a custom transport returns both a non-nil response and non-nil error is also wrong: per Go's `net/http` documentation, "A non-nil resp with a non-nil err only occurs when CheckRedirect fails, and even then the returned Response.Body is already closed." The body is already closed by the stdlib in this edge case.
+
+### Event.MarshalJSON returns null for zero-value Event
+
+**Location:** `event.go:83-88` — MarshalJSON on unconstructed Event
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing known exception "Union types cannot be constructed programmatically for serialization" tracked in `audit/exceptions/risks.md`. The finding itself acknowledges this: "Already tracked in `audit/exceptions/risks.md`." No new information beyond what is already classified.
+
+### Default base URL uses plaintext HTTP described as medium severity
+
+**Location:** `client.go:20` — DefaultBaseURL constant
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing known exception "Default base URL uses plaintext HTTP." The SDK targets a local dev server (`localhost:54321`). Callers who override to a remote host are explicitly choosing their transport security. Already classified.
+
+### apierror.Error dead code described as needing removal
+
+**Location:** `internal/apierror/apierror.go:12-17`, `aliases.go:8`
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing known exception "apierror.Error is unused but exported as a public type alias." The type is a Stainless leftover never constructed by the SDK. Removing it would be a breaking API change for any caller referencing `opencode.Error`. Already classified multiple times.
+
+### Non-pointer int/bool query params emit zero values described as a bug
+
+**Location:** `internal/queryparams/queryparams.go:147-170` — addFieldValue int/bool cases
+**Date:** 2026-03-01
+
+**Reason:** The behavior is explicitly documented in code comments at lines 148-151 and in the known exception "queryparams non-pointer zero-value int/bool emitted even without omitempty." The finding categorizes documented, intentional behavior as a "[Bug]." No params struct in the SDK uses a bare non-pointer int/bool query field, and the finding itself says "No code change needed today." This is working-as-designed, not a bug.
+
+### ListStreaming does not apply Client timeout described as medium severity
+
+**Location:** `event.go:33-63` — uses httpClient.Do directly
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing known exception "ListStreaming bypasses Client timeout and retry logic." SSE streams are long-lived connections; applying the client's 30s default timeout would kill every connection. Callers use `context.WithTimeout` for deadlines. The finding correctly describes the behavior but misclassifies it as a bug — this is intentional design. Already classified multiple times.
+
+### McpStatus untyped map described as code quality issue
+
+**Location:** `mcp.go:17` — McpStatus type definition
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing known exception "McpStatus is an untyped map." The OpenAPI spec defines the MCP status response with an empty schema (`"schema": {}`), meaning the response shape is intentionally unspecified. `map[string]interface{}` is the correct Go representation. Already classified.
+
+### AssistantMessageError wrong-variant As*() methods described as untested
+
+**Location:** `session.go:447-525` — As*() methods
+**Date:** 2026-03-01
+
+**Reason:** The audit claims `ErrWrongVariant` error paths are unverified. This is factually wrong. `session_assistantmessageerror_test.go` extensively tests wrong-variant calls: every `As*()` test includes a wrong-type assertion against `ErrWrongVariant` (lines 41-44, 79-82, 112-115, 150-153, 206-209). Additional tests at lines 230-246 and 277-282 call multiple `As*()` methods on mismatched variants and assert `ErrWrongVariant` for each. The error path is thoroughly covered.
+
+### SSE event data size limit error path described as untested
+
+**Location:** `packages/ssestream/ssestream.go:141-148` — per-event data size limit
+**Date:** 2026-03-01
+
+**Reason:** The audit claims the `maxDataBytes` limit error path ("event data exceeds %d bytes") has no test coverage. This is factually wrong. `TestEventStreamDecoder_DataAccumulationExceedsLimit` at `ssestream_test.go:570` tests exactly this path: it sets `maxDataBytes` to 256, feeds multiple `data:` lines that collectively exceed the limit, and asserts `Next()` returns false with an error containing "exceeds". The error path is tested.
