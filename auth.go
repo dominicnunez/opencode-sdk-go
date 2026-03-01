@@ -29,7 +29,7 @@ func (s *AuthService) Set(ctx context.Context, id string, params *AuthSetParams)
 	}
 
 	var result bool
-	err := s.client.do(ctx, http.MethodPut, "auth/"+id, params, &result)
+	err := s.client.do(ctx, http.MethodPut, "auth/"+url.PathEscape(id), params, &result)
 	if err != nil {
 		return false, err
 	}

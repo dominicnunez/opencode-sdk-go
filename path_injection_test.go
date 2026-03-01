@@ -62,8 +62,23 @@ func TestPathParameterInjection_SessionGet(t *testing.T) {
 	}
 }
 
+// authSetPayloads has expected paths after url.PathEscape is applied to the
+// provider ID. Unlike server-generated UUIDs, provider IDs are user-defined,
+// so Auth.Set escapes them explicitly.
+var authSetPayloads = []struct {
+	name             string
+	id               string
+	wantPathContains string
+}{
+	{"path traversal is escaped", "../config", "..%2Fconfig"},
+	{"slash in id is escaped", "foo/bar", "foo%2Fbar"},
+	{"query injection is escaped", "id?x=1", "id%3Fx=1"},
+	{"url-encoded traversal is double-escaped", "%2e%2e%2fconfig", "%252e%252e%252fconfig"},
+	{"simple id is unchanged", "anthropic", "/auth/anthropic"},
+}
+
 func TestPathParameterInjection_AuthSet(t *testing.T) {
-	for _, tt := range injectionPayloads {
+	for _, tt := range authSetPayloads {
 		t.Run(tt.name, func(t *testing.T) {
 			var receivedPath string
 			server := newInjectionServer(&receivedPath)
