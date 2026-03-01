@@ -28,5 +28,9 @@ func CheckTestServer(t *testing.T, url string) bool {
 		return false
 	}
 	_ = resp.Body.Close()
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		t.Fatalf("mock server returned non-2xx status: %d", resp.StatusCode)
+		return false
+	}
 	return true
 }
