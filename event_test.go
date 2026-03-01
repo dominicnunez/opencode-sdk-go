@@ -190,6 +190,32 @@ func TestEvent_AsSessionError(t *testing.T) {
 	}
 }
 
+// Test Event discriminated union - unknown event type is stored and round-trips
+func TestEvent_UnknownType(t *testing.T) {
+	jsonData := `{"type":"future.event","properties":{"key":"value"}}`
+	var event Event
+	if err := json.Unmarshal([]byte(jsonData), &event); err != nil {
+		t.Fatalf("Failed to unmarshal unknown event type: %v", err)
+	}
+
+	if event.Type != "future.event" {
+		t.Errorf("Expected type %q, got %q", "future.event", event.Type)
+	}
+
+	if event.Type.IsKnown() {
+		t.Error("Expected IsKnown() to return false for unrecognized event type")
+	}
+
+	// Verify round-trip: MarshalJSON should reproduce the original data
+	out, err := event.MarshalJSON()
+	if err != nil {
+		t.Fatalf("MarshalJSON failed: %v", err)
+	}
+	if string(out) != jsonData {
+		t.Errorf("Round-trip mismatch:\n  got:  %s\n  want: %s", string(out), jsonData)
+	}
+}
+
 // Test all 19 event types can be discriminated
 func TestEvent_AllTypes(t *testing.T) {
 	testCases := []struct {
