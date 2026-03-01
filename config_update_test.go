@@ -184,6 +184,72 @@ func TestConfigUpdate_InvalidJSON(t *testing.T) {
 	}
 }
 
+func TestConfigUpdate_UnionTypeRoundTrip(t *testing.T) {
+	mcpJSON := `{"type":"local","command":["/usr/bin/mcp-server"],"enabled":true,"environment":{"NODE_ENV":"production"}}`
+
+	var mcp ConfigMcp
+	if err := json.Unmarshal([]byte(mcpJSON), &mcp); err != nil {
+		t.Fatalf("unmarshal ConfigMcp: %v", err)
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var received map[string]json.RawMessage
+		if err := json.NewDecoder(r.Body).Decode(&received); err != nil {
+			t.Fatalf("decode request body: %v", err)
+		}
+
+		mcpRaw, ok := received["mcp"]
+		if !ok {
+			t.Fatal("expected mcp field in request body")
+		}
+
+		var mcpMap map[string]json.RawMessage
+		if err := json.Unmarshal(mcpRaw, &mcpMap); err != nil {
+			t.Fatalf("unmarshal mcp map: %v", err)
+		}
+
+		serverRaw, ok := mcpMap["test-server"]
+		if !ok {
+			t.Fatal("expected test-server key in mcp map")
+		}
+
+		var entry map[string]interface{}
+		if err := json.Unmarshal(serverRaw, &entry); err != nil {
+			t.Fatalf("unmarshal mcp entry: %v", err)
+		}
+		if entry["type"] != "local" {
+			t.Errorf("expected type local, got %v", entry["type"])
+		}
+		cmd, ok := entry["command"].([]interface{})
+		if !ok || len(cmd) != 1 || cmd[0] != "/usr/bin/mcp-server" {
+			t.Errorf("unexpected command: %v", entry["command"])
+		}
+
+		// Echo back the config
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(Config{})
+	}))
+	defer server.Close()
+
+	client, err := NewClient(WithBaseURL(server.URL))
+	if err != nil {
+		t.Fatalf("create client: %v", err)
+	}
+
+	params := &ConfigUpdateParams{
+		Config: Config{
+			Mcp: map[string]ConfigMcp{
+				"test-server": mcp,
+			},
+		},
+	}
+
+	_, err = client.Config.Update(context.Background(), params)
+	if err != nil {
+		t.Fatalf("Update failed: %v", err)
+	}
+}
+
 func TestConfigUpdateParams_MarshalJSON(t *testing.T) {
 	params := ConfigUpdateParams{
 		Config: Config{
