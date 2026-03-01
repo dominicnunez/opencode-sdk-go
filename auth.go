@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 
@@ -28,9 +27,8 @@ func (s *AuthService) Set(ctx context.Context, id string, params *AuthSetParams)
 		return false, errors.New("missing required Auth field")
 	}
 
-	path := fmt.Sprintf("auth/%s", id)
 	var result bool
-	err := s.client.do(ctx, http.MethodPut, path, params, &result)
+	err := s.client.do(ctx, http.MethodPut, "auth/"+id, params, &result)
 	if err != nil {
 		return false, err
 	}
