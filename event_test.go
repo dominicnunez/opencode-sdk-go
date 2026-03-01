@@ -127,7 +127,7 @@ func TestEvent_WrongType(t *testing.T) {
 	}
 }
 
-// Test Event discriminated union - invalid JSON
+// Test Event discriminated union - malformed nested data returns error
 func TestEvent_InvalidJSON(t *testing.T) {
 	jsonData := `{"type":"installation.updated","properties":{"version":123}}`
 	var event Event
@@ -135,14 +135,15 @@ func TestEvent_InvalidJSON(t *testing.T) {
 		t.Fatalf("Failed to unmarshal: %v", err)
 	}
 
-	// Type is correct but data is malformed
+	// Type matches but nested data has wrong types — AsInstallationUpdated
+	// must return an error because json.Unmarshal cannot decode a number
+	// into a string field.
 	evt, err := event.AsInstallationUpdated()
-	if err != nil {
-		t.Logf("AsInstallationUpdated returned error (expected for malformed data): %v", err)
-	} else if evt != nil {
-		if evt.Data.Version != "" {
-			t.Logf("Version parsed as: %s", evt.Data.Version)
-		}
+	if err == nil {
+		t.Fatal("expected error for malformed nested data, got nil")
+	}
+	if evt != nil {
+		t.Errorf("expected nil event on error, got %+v", evt)
 	}
 }
 
