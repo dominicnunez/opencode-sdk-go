@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"mime"
 	"net/http"
@@ -79,10 +80,11 @@ type Event struct {
 
 // A base implementation of a Decoder for text/event-stream.
 type eventStreamDecoder struct {
-	evt Event
-	rc  io.ReadCloser
-	scn *bufio.Scanner
-	err error
+	evt          Event
+	rc           io.ReadCloser
+	scn          *bufio.Scanner
+	err          error
+	maxDataBytes int // max accumulated data size per event; 0 uses maxSSETokenSize
 }
 
 func (s *eventStreamDecoder) Next() bool {
@@ -134,6 +136,14 @@ func (s *eventStreamDecoder) Next() bool {
 			}
 			_, s.err = data.Write(value)
 			if s.err != nil {
+				return false
+			}
+			limit := s.maxDataBytes
+			if limit == 0 {
+				limit = maxSSETokenSize
+			}
+			if data.Len() > limit {
+				s.err = fmt.Errorf("event data exceeds %d bytes", limit)
 				return false
 			}
 		}

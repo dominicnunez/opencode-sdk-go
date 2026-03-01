@@ -567,6 +567,35 @@ func TestEventStreamDecoder_TokenExceedsBufferLimit(t *testing.T) {
 	}
 }
 
+func TestEventStreamDecoder_DataAccumulationExceedsLimit(t *testing.T) {
+	// Multiple data: lines that individually fit within the scanner buffer
+	// but collectively exceed maxDataBytes should produce an error.
+	const dataLimit = 256
+	line := strings.Repeat("x", 100)
+	var raw strings.Builder
+	for raw.Len() < dataLimit+100 {
+		raw.WriteString("data: ")
+		raw.WriteString(line)
+		raw.WriteString("\n")
+	}
+	// No blank line terminator — accumulation hits the limit before EOF.
+
+	r := io.NopCloser(strings.NewReader(raw.String()))
+	scn := bufio.NewScanner(r)
+	scn.Buffer(nil, dataLimit*10)
+	dec := &eventStreamDecoder{rc: r, scn: scn, maxDataBytes: dataLimit}
+
+	if dec.Next() {
+		t.Fatal("expected Next() to return false when accumulated data exceeds limit")
+	}
+	if dec.Err() == nil {
+		t.Fatal("expected error for oversized accumulated data")
+	}
+	if !strings.Contains(dec.Err().Error(), "exceeds") {
+		t.Errorf("expected error about exceeding limit, got: %v", dec.Err())
+	}
+}
+
 func TestEventStreamDecoder_IncompleteEventNoBlankLine(t *testing.T) {
 	// Stream has data but connection closes without a blank line separator.
 	// The decoder should still dispatch the buffered event at EOF.
