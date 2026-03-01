@@ -30,6 +30,10 @@ type APIError struct {
 	// Truncated is true when the response body exceeded the read limit
 	// and Body contains only the first portion of the original response.
 	Truncated bool
+	// ReadErr is non-nil when the response body could not be fully read
+	// (e.g. connection dropped mid-transfer). Body contains whatever
+	// partial data was received before the error.
+	ReadErr error
 }
 
 func (e *APIError) Error() string {
@@ -106,9 +110,6 @@ func readAPIError(resp *http.Response, bodyLimit int64) *APIError {
 	}
 
 	msg := body
-	if readErr != nil {
-		msg += fmt.Sprintf(" (read error: %v)", readErr)
-	}
 	if len(msg) > maxMessageDisplaySize {
 		msg = msg[:maxMessageDisplaySize] + "... (truncated)"
 	}
@@ -119,6 +120,7 @@ func readAPIError(resp *http.Response, bodyLimit int64) *APIError {
 		RequestID:  resp.Header.Get("X-Request-Id"),
 		Body:       body,
 		Truncated:  truncated,
+		ReadErr:    readErr,
 	}
 }
 

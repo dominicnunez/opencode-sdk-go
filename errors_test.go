@@ -517,6 +517,73 @@ func TestReadAPIError_TruncatesMessage(t *testing.T) {
 	})
 }
 
+func TestReadAPIError_PartialReadError(t *testing.T) {
+	partialErr := errors.New("connection reset by peer")
+
+	t.Run("read error stored in ReadErr field", func(t *testing.T) {
+		r := &partialReader{data: "partial body", err: partialErr}
+		resp := &http.Response{
+			StatusCode: http.StatusInternalServerError,
+			Header:     http.Header{},
+			Body:       io.NopCloser(r),
+		}
+		apiErr := readAPIError(resp, 1<<20)
+		if apiErr.ReadErr == nil {
+			t.Fatal("expected ReadErr to be non-nil")
+		}
+		if !errors.Is(apiErr.ReadErr, partialErr) {
+			t.Errorf("ReadErr = %v, want %v", apiErr.ReadErr, partialErr)
+		}
+		if apiErr.Body != "partial body" {
+			t.Errorf("Body = %q, want %q", apiErr.Body, "partial body")
+		}
+	})
+
+	t.Run("read error not mixed into Message", func(t *testing.T) {
+		r := &partialReader{data: "some data", err: partialErr}
+		resp := &http.Response{
+			StatusCode: http.StatusBadGateway,
+			Header:     http.Header{},
+			Body:       io.NopCloser(r),
+		}
+		apiErr := readAPIError(resp, 1<<20)
+		if strings.Contains(apiErr.Message, "read error") {
+			t.Errorf("Message should not contain read error, got %q", apiErr.Message)
+		}
+		if strings.Contains(apiErr.Message, "connection reset") {
+			t.Errorf("Message should not contain transport error, got %q", apiErr.Message)
+		}
+	})
+
+	t.Run("successful read has nil ReadErr", func(t *testing.T) {
+		resp := &http.Response{
+			StatusCode: http.StatusBadRequest,
+			Header:     http.Header{},
+			Body:       io.NopCloser(strings.NewReader("clean body")),
+		}
+		apiErr := readAPIError(resp, 1<<20)
+		if apiErr.ReadErr != nil {
+			t.Errorf("ReadErr should be nil for successful read, got %v", apiErr.ReadErr)
+		}
+	})
+}
+
+// partialReader returns data on the first read, then an error on the second.
+type partialReader struct {
+	data string
+	err  error
+	read bool
+}
+
+func (r *partialReader) Read(p []byte) (int, error) {
+	if !r.read {
+		r.read = true
+		n := copy(p, r.data)
+		return n, nil
+	}
+	return 0, r.err
+}
+
 func TestReadAPIError_BodyTruncation(t *testing.T) {
 	const bodyLimit int64 = 1024
 
