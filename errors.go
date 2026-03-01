@@ -95,11 +95,11 @@ func readAPIError(resp *http.Response, bodyLimit int64) *APIError {
 	if body == "" {
 		body = http.StatusText(resp.StatusCode)
 	}
-	if readErr != nil {
-		body += fmt.Sprintf(" (read error: %v)", readErr)
-	}
 
 	msg := body
+	if readErr != nil {
+		msg += fmt.Sprintf(" (read error: %v)", readErr)
+	}
 	if len(msg) > maxMessageDisplaySize {
 		msg = msg[:maxMessageDisplaySize] + "... (truncated)"
 	}
