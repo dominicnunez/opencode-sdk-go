@@ -440,6 +440,10 @@ type AssistantMessageTokensCache struct {
 	Write int64 `json:"write"`
 }
 
+// AssistantMessageError is a discriminated union keyed on Name.
+// Use the As*() methods to access the concrete variant.
+// To check for unrecognized variants, use Name.IsKnown() rather than
+// comparing Name against "".
 type AssistantMessageError struct {
 	Name AssistantMessageErrorName `json:"name"`
 	raw  json.RawMessage

@@ -721,6 +721,10 @@ type EventSessionErrorData struct {
 	SessionID *string       `json:"sessionID,omitempty"`
 }
 
+// SessionError is a discriminated union keyed on Name.
+// Use the As*() methods to access the concrete variant.
+// To check for unrecognized variants, use Name.IsKnown() rather than
+// comparing Name against "".
 type SessionError struct {
 	Name SessionErrorName `json:"name"`
 	raw  json.RawMessage
