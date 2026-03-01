@@ -78,6 +78,35 @@ func TestRetryOn429(t *testing.T) {
 	}
 }
 
+func TestRetryOn408(t *testing.T) {
+	attempts := 0
+	client, err := opencode.NewClient(
+		opencode.WithHTTPClient(&http.Client{
+			Transport: &closureTransport{
+				fn: func(req *http.Request) (*http.Response, error) {
+					attempts++
+					return &http.Response{
+						StatusCode: http.StatusRequestTimeout,
+						Status:     "408 Request Timeout",
+						Header:     http.Header{},
+						Body:       io.NopCloser(strings.NewReader("request timeout")),
+					}, nil
+				},
+			},
+		}),
+	)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	_, err = client.Session.List(context.Background(), &opencode.SessionListParams{})
+	if err == nil {
+		t.Error("expected error after exhausting retries on 408")
+	}
+	if want := 3; attempts != want {
+		t.Errorf("expected %d attempts, got %d", want, attempts)
+	}
+}
+
 func TestContextCancel(t *testing.T) {
 	client, err := opencode.NewClient(
 		opencode.WithHTTPClient(&http.Client{
