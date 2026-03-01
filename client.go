@@ -174,9 +174,12 @@ func (c *Client) do(ctx context.Context, method, path string, params, result int
 }
 
 func (c *Client) doRaw(ctx context.Context, method, path string, params interface{}) (*http.Response, error) {
-	// Build full URL, preserving any query params from the base URL
+	// Build full URL, merging any query params from the base URL
 	fullURL := c.baseURL.ResolveReference(&url.URL{Path: path})
-	fullURL.RawQuery = c.baseURL.RawQuery
+	mergedQuery := fullURL.Query()
+	for k, vs := range c.baseURL.Query() {
+		mergedQuery[k] = vs
+	}
 
 	var body io.Reader
 
@@ -187,15 +190,12 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 			if err != nil {
 				return nil, fmt.Errorf("encode query params: %w", err)
 			}
-			if len(query) > 0 {
-				if fullURL.RawQuery != "" {
-					fullURL.RawQuery += "&" + query.Encode()
-				} else {
-					fullURL.RawQuery = query.Encode()
-				}
+			for k, vs := range query {
+				mergedQuery[k] = vs
 			}
 		}
 	}
+	fullURL.RawQuery = mergedQuery.Encode()
 
 	// Handle JSON body for POST/PATCH/PUT
 	if params != nil && method != http.MethodGet && method != http.MethodDelete {

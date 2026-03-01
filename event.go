@@ -16,26 +16,38 @@ type EventService struct {
 	client *Client
 }
 
+// ListStreaming opens an SSE connection and returns a stream of events.
+// The returned stream is never nil. Callers must check stream.Err() after
+// the iteration loop completes to detect HTTP or connection errors:
+//
+//	stream := client.Event.ListStreaming(ctx, nil)
+//	for stream.Next() {
+//	    event := stream.Current()
+//	    // handle event
+//	}
+//	if err := stream.Err(); err != nil {
+//	    // handle error
+//	}
 func (s *EventService) ListStreaming(ctx context.Context, params *EventListParams) *ssestream.Stream[Event] {
 	if params == nil {
 		params = &EventListParams{}
 	}
 
-	// Build URL with query params, preserving any query params from the base URL
+	// Build URL with query params, merging any query params from the base URL
 	fullURL := s.client.baseURL.ResolveReference(&url.URL{Path: "event"})
-	fullURL.RawQuery = s.client.baseURL.RawQuery
+	mergedQuery := fullURL.Query()
+	for k, vs := range s.client.baseURL.Query() {
+		mergedQuery[k] = vs
+	}
 
 	query, err := params.URLQuery()
 	if err != nil {
 		return ssestream.NewStream[Event](nil, err)
 	}
-	if encoded := query.Encode(); encoded != "" {
-		if fullURL.RawQuery != "" {
-			fullURL.RawQuery += "&" + encoded
-		} else {
-			fullURL.RawQuery = encoded
-		}
+	for k, vs := range query {
+		mergedQuery[k] = vs
 	}
+	fullURL.RawQuery = mergedQuery.Encode()
 
 	// Create request with SSE headers
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fullURL.String(), nil)
