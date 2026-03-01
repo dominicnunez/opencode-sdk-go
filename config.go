@@ -1587,8 +1587,8 @@ func (a Auth) MarshalJSON() ([]byte, error) {
 // OAuth represents OAuth authentication credentials.
 //
 // Access and Refresh contain sensitive credentials that are transmitted as
-// plain strings in the HTTP request body. Callers should ensure request
-// logging and debugging middleware do not inadvertently capture these values.
+// plain strings in the HTTP request body. String() and GoString() redact
+// these fields to prevent accidental exposure via fmt or log output.
 type OAuth struct {
 	Type    AuthType `json:"type"`
 	Refresh string   `json:"refresh"`
@@ -1596,22 +1596,50 @@ type OAuth struct {
 	Expires float64  `json:"expires"`
 }
 
+const redacted = "[REDACTED]"
+
+// String returns a human-readable representation with credential fields redacted.
+func (o OAuth) String() string {
+	return fmt.Sprintf("OAuth{Type:%s, Access:%s, Refresh:%s, Expires:%g}", o.Type, redacted, redacted, o.Expires)
+}
+
+// GoString returns a Go-syntax representation with credential fields redacted.
+func (o OAuth) GoString() string { return o.String() }
+
 func (OAuth) implementsAuthSetParamsAuthUnion() {}
 
-// ApiAuth represents API key authentication
+// ApiAuth represents API key authentication.
+// String() and GoString() redact the Key field.
 type ApiAuth struct {
 	Type AuthType `json:"type"`
 	Key  string   `json:"key"`
 }
 
+// String returns a human-readable representation with the key redacted.
+func (a ApiAuth) String() string {
+	return fmt.Sprintf("ApiAuth{Type:%s, Key:%s}", a.Type, redacted)
+}
+
+// GoString returns a Go-syntax representation with the key redacted.
+func (a ApiAuth) GoString() string { return a.String() }
+
 func (ApiAuth) implementsAuthSetParamsAuthUnion() {}
 
-// WellKnownAuth represents well-known authentication
+// WellKnownAuth represents well-known authentication.
+// String() and GoString() redact credential fields.
 type WellKnownAuth struct {
 	Type  AuthType `json:"type"`
 	Key   string   `json:"key"`
 	Token string   `json:"token"`
 }
+
+// String returns a human-readable representation with credential fields redacted.
+func (w WellKnownAuth) String() string {
+	return fmt.Sprintf("WellKnownAuth{Type:%s, Key:%s, Token:%s}", w.Type, redacted, redacted)
+}
+
+// GoString returns a Go-syntax representation with credential fields redacted.
+func (w WellKnownAuth) GoString() string { return w.String() }
 
 func (WellKnownAuth) implementsAuthSetParamsAuthUnion() {}
 
