@@ -62,7 +62,7 @@ func (r ProjectVcs) IsKnown() bool {
 }
 
 type ProjectListParams struct {
-	Directory *string `query:"directory,omitempty"`
+	Directory *string `json:"-" query:"directory,omitempty"`
 }
 
 func (r ProjectListParams) URLQuery() (url.Values, error) {
@@ -70,7 +70,7 @@ func (r ProjectListParams) URLQuery() (url.Values, error) {
 }
 
 type ProjectCurrentParams struct {
-	Directory *string `query:"directory,omitempty"`
+	Directory *string `json:"-" query:"directory,omitempty"`
 }
 
 func (r ProjectCurrentParams) URLQuery() (url.Values, error) {

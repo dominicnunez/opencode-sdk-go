@@ -144,7 +144,7 @@ type FindTextResponseSubmatchesMatch struct {
 
 type FindFilesParams struct {
 	Query     string  `query:"query,required"`
-	Directory *string `query:"directory,omitempty"`
+	Directory *string `json:"-" query:"directory,omitempty"`
 }
 
 func (r FindFilesParams) URLQuery() (url.Values, error) {
@@ -153,7 +153,7 @@ func (r FindFilesParams) URLQuery() (url.Values, error) {
 
 type FindSymbolsParams struct {
 	Query     string  `query:"query,required"`
-	Directory *string `query:"directory,omitempty"`
+	Directory *string `json:"-" query:"directory,omitempty"`
 }
 
 func (r FindSymbolsParams) URLQuery() (url.Values, error) {
@@ -162,7 +162,7 @@ func (r FindSymbolsParams) URLQuery() (url.Values, error) {
 
 type FindTextParams struct {
 	Pattern   string  `query:"pattern,required"`
-	Directory *string `query:"directory,omitempty"`
+	Directory *string `json:"-" query:"directory,omitempty"`
 }
 
 func (r FindTextParams) URLQuery() (url.Values, error) {

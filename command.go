@@ -33,7 +33,7 @@ type Command struct {
 }
 
 type CommandListParams struct {
-	Directory *string `query:"directory,omitempty"`
+	Directory *string `json:"-" query:"directory,omitempty"`
 }
 
 func (r CommandListParams) URLQuery() (url.Values, error) {

@@ -963,7 +963,7 @@ func (r EventType) IsKnown() bool {
 }
 
 type EventListParams struct {
-	Directory *string `query:"directory,omitempty"`
+	Directory *string `json:"-" query:"directory,omitempty"`
 }
 
 func (r EventListParams) URLQuery() (url.Values, error) {

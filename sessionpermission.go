@@ -109,7 +109,7 @@ func (p PermissionPattern) MarshalJSON() ([]byte, error) {
 
 type SessionPermissionRespondParams struct {
 	Response  PermissionResponse `json:"response"`
-	Directory *string            `query:"directory,omitempty"`
+	Directory *string            `json:"-" query:"directory,omitempty"`
 }
 
 func (r SessionPermissionRespondParams) URLQuery() (url.Values, error) {

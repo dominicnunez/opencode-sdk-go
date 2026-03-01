@@ -113,7 +113,7 @@ type AgentModel struct {
 }
 
 type AgentListParams struct {
-	Directory *string `query:"directory,omitempty"`
+	Directory *string `json:"-" query:"directory,omitempty"`
 }
 
 func (r AgentListParams) URLQuery() (url.Values, error) {

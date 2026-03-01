@@ -1661,7 +1661,7 @@ func (r SessionUpdateParams) URLQuery() (url.Values, error) {
 }
 
 type SessionListParams struct {
-	Directory *string `query:"directory,omitempty"`
+	Directory *string `json:"-" query:"directory,omitempty"`
 }
 
 // URLQuery serializes [SessionListParams]'s query parameters as `url.Values`.
@@ -1670,7 +1670,7 @@ func (r SessionListParams) URLQuery() (url.Values, error) {
 }
 
 type SessionDeleteParams struct {
-	Directory *string `query:"directory,omitempty"`
+	Directory *string `json:"-" query:"directory,omitempty"`
 }
 
 // URLQuery serializes [SessionDeleteParams]'s query parameters as `url.Values`.
@@ -1688,7 +1688,7 @@ func (r SessionAbortParams) URLQuery() (url.Values, error) {
 }
 
 type SessionChildrenParams struct {
-	Directory *string `query:"directory,omitempty"`
+	Directory *string `json:"-" query:"directory,omitempty"`
 }
 
 // URLQuery serializes [SessionChildrenParams]'s query parameters as `url.Values`.
@@ -1711,7 +1711,7 @@ func (r SessionCommandParams) URLQuery() (url.Values, error) {
 }
 
 type SessionDiffParams struct {
-	Directory *string `query:"directory,omitempty"`
+	Directory *string `json:"-" query:"directory,omitempty"`
 	MessageID *string `query:"messageID,omitempty"`
 }
 
@@ -1731,7 +1731,7 @@ func (r SessionForkParams) URLQuery() (url.Values, error) {
 }
 
 type SessionGetParams struct {
-	Directory *string `query:"directory,omitempty"`
+	Directory *string `json:"-" query:"directory,omitempty"`
 }
 
 // URLQuery serializes [SessionGetParams]'s query parameters as `url.Values`.
@@ -1752,7 +1752,7 @@ func (r SessionInitParams) URLQuery() (url.Values, error) {
 }
 
 type SessionMessageParams struct {
-	Directory *string `query:"directory,omitempty"`
+	Directory *string `json:"-" query:"directory,omitempty"`
 }
 
 // URLQuery serializes [SessionMessageParams]'s query parameters as `url.Values`.
@@ -1761,7 +1761,7 @@ func (r SessionMessageParams) URLQuery() (url.Values, error) {
 }
 
 type SessionMessagesParams struct {
-	Directory *string `query:"directory,omitempty"`
+	Directory *string `json:"-" query:"directory,omitempty"`
 }
 
 // URLQuery serializes [SessionMessagesParams]'s query parameters as `url.Values`.
@@ -1871,7 +1871,7 @@ func (r SessionSummarizeParams) URLQuery() (url.Values, error) {
 }
 
 type SessionTodoParams struct {
-	Directory *string `query:"directory,omitempty"`
+	Directory *string `json:"-" query:"directory,omitempty"`
 }
 
 // URLQuery serializes [SessionTodoParams]'s query parameters as `url.Values`.
@@ -1889,7 +1889,7 @@ func (r SessionUnrevertParams) URLQuery() (url.Values, error) {
 }
 
 type SessionUnshareParams struct {
-	Directory *string `query:"directory,omitempty"`
+	Directory *string `json:"-" query:"directory,omitempty"`
 }
 
 // URLQuery serializes [SessionUnshareParams]'s query parameters as `url.Values`.

@@ -1612,7 +1612,7 @@ type WellKnownAuth struct {
 func (WellKnownAuth) implementsAuthSetParamsAuthUnion() {}
 
 type ConfigGetParams struct {
-	Directory *string `query:"directory,omitempty"`
+	Directory *string `json:"-" query:"directory,omitempty"`
 }
 
 // URLQuery serializes [ConfigGetParams]'s query parameters as `url.Values`.
@@ -1624,7 +1624,7 @@ type ConfigUpdateParams struct {
 	// Config is the request body. The json:"-" tag prevents double-encoding
 	// because MarshalJSON serializes this field as the top-level JSON object.
 	Config    Config  `json:"-"`
-	Directory *string `query:"directory,omitempty"`
+	Directory *string `json:"-" query:"directory,omitempty"`
 }
 
 // URLQuery serializes [ConfigUpdateParams]'s query parameters as `url.Values`.
@@ -1638,7 +1638,7 @@ func (r ConfigUpdateParams) MarshalJSON() ([]byte, error) {
 }
 
 type ConfigProviderListParams struct {
-	Directory *string `query:"directory,omitempty"`
+	Directory *string `json:"-" query:"directory,omitempty"`
 }
 
 // URLQuery serializes [ConfigProviderListParams]'s query parameters as `url.Values`.

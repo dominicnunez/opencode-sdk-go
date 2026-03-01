@@ -44,7 +44,7 @@ type AuthSetParamsAuthUnion interface {
 
 type AuthSetParams struct {
 	Auth      AuthSetParamsAuthUnion `json:"-"`
-	Directory *string                `query:"directory,omitempty"`
+	Directory *string                `json:"-" query:"directory,omitempty"`
 }
 
 // URLQuery serializes [AuthSetParams]'s query parameters as `url.Values`.

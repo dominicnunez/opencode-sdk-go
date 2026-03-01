@@ -148,7 +148,7 @@ func (r TuiAppendPromptParams) URLQuery() (url.Values, error) {
 }
 
 type TuiClearPromptParams struct {
-	Directory *string `query:"directory,omitempty"`
+	Directory *string `json:"-" query:"directory,omitempty"`
 }
 
 func (r TuiClearPromptParams) URLQuery() (url.Values, error) {
@@ -165,7 +165,7 @@ func (r TuiExecuteCommandParams) URLQuery() (url.Values, error) {
 }
 
 type TuiOpenHelpParams struct {
-	Directory *string `query:"directory,omitempty"`
+	Directory *string `json:"-" query:"directory,omitempty"`
 }
 
 func (r TuiOpenHelpParams) URLQuery() (url.Values, error) {
@@ -173,7 +173,7 @@ func (r TuiOpenHelpParams) URLQuery() (url.Values, error) {
 }
 
 type TuiOpenModelsParams struct {
-	Directory *string `query:"directory,omitempty"`
+	Directory *string `json:"-" query:"directory,omitempty"`
 }
 
 func (r TuiOpenModelsParams) URLQuery() (url.Values, error) {
@@ -181,7 +181,7 @@ func (r TuiOpenModelsParams) URLQuery() (url.Values, error) {
 }
 
 type TuiOpenSessionsParams struct {
-	Directory *string `query:"directory,omitempty"`
+	Directory *string `json:"-" query:"directory,omitempty"`
 }
 
 func (r TuiOpenSessionsParams) URLQuery() (url.Values, error) {
@@ -189,7 +189,7 @@ func (r TuiOpenSessionsParams) URLQuery() (url.Values, error) {
 }
 
 type TuiOpenThemesParams struct {
-	Directory *string `query:"directory,omitempty"`
+	Directory *string `json:"-" query:"directory,omitempty"`
 }
 
 func (r TuiOpenThemesParams) URLQuery() (url.Values, error) {
@@ -208,7 +208,7 @@ func (r TuiShowToastParams) URLQuery() (url.Values, error) {
 }
 
 type TuiSubmitPromptParams struct {
-	Directory *string `query:"directory,omitempty"`
+	Directory *string `json:"-" query:"directory,omitempty"`
 }
 
 func (r TuiSubmitPromptParams) URLQuery() (url.Values, error) {

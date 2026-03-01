@@ -31,7 +31,7 @@ type Path struct {
 }
 
 type PathGetParams struct {
-	Directory *string `query:"directory,omitempty"`
+	Directory *string `json:"-" query:"directory,omitempty"`
 }
 
 func (r PathGetParams) URLQuery() (url.Values, error) {
