@@ -1,6 +1,7 @@
 package ssestream
 
 import (
+	"errors"
 	"io"
 	"net/http"
 	"strings"
@@ -15,7 +16,25 @@ func (m *mockDecoder) Next() bool   { return false }
 func (m *mockDecoder) Close() error { return nil }
 func (m *mockDecoder) Err() error   { return nil }
 
+// saveAndRestoreDecoders snapshots the global decoder map and restores it
+// when the test completes, preventing registration leaks between tests.
+func saveAndRestoreDecoders(t *testing.T) {
+	t.Helper()
+	decoderTypesMu.Lock()
+	snapshot := make(map[string]func(io.ReadCloser) Decoder, len(decoderTypes))
+	for k, v := range decoderTypes {
+		snapshot[k] = v
+	}
+	decoderTypesMu.Unlock()
+	t.Cleanup(func() {
+		decoderTypesMu.Lock()
+		decoderTypes = snapshot
+		decoderTypesMu.Unlock()
+	})
+}
+
 func TestRegisterDecoderConcurrent(t *testing.T) {
+	saveAndRestoreDecoders(t)
 	var wg sync.WaitGroup
 	for i := 0; i < 100; i++ {
 		wg.Add(1)
@@ -245,5 +264,77 @@ func TestStream_DoubleClose_BothReturnNil(t *testing.T) {
 	err2 := stream.Close()
 	if err2 != nil {
 		t.Fatalf("expected second Close() to return nil, got %v", err2)
+	}
+}
+
+func TestStream_DecoderErrorPropagation(t *testing.T) {
+	readErr := errors.New("connection reset by peer")
+
+	dec := &errorDecoder{err: readErr}
+	stream := NewStream[interface{}](dec, nil)
+
+	if stream.Next() {
+		t.Fatal("expected Next() to return false when decoder errors")
+	}
+
+	if !errors.Is(stream.Err(), readErr) {
+		t.Fatalf("expected stream.Err() to be %v, got %v", readErr, stream.Err())
+	}
+}
+
+// errorDecoder simulates a decoder that fails mid-stream with a read error.
+type errorDecoder struct {
+	err error
+}
+
+func (d *errorDecoder) Event() Event { return Event{} }
+func (d *errorDecoder) Next() bool   { return false }
+func (d *errorDecoder) Close() error { return nil }
+func (d *errorDecoder) Err() error   { return d.err }
+
+func TestRegisterDecoder_LookupByContentType(t *testing.T) {
+	saveAndRestoreDecoders(t)
+	customType := "application/x-custom-stream"
+	called := false
+
+	RegisterDecoder(customType, func(rc io.ReadCloser) Decoder {
+		called = true
+		return &mockDecoder{}
+	})
+
+	resp := &http.Response{
+		StatusCode: http.StatusOK,
+		Header:     http.Header{"Content-Type": []string{customType}},
+		Body:       io.NopCloser(strings.NewReader("")),
+	}
+
+	dec := NewDecoder(resp)
+	if dec == nil {
+		t.Fatal("expected non-nil decoder")
+	}
+	if !called {
+		t.Error("expected custom decoder factory to be called for matching content-type")
+	}
+}
+
+func TestNewDecoder_UnknownContentType_FallsBackToSSE(t *testing.T) {
+	resp := &http.Response{
+		StatusCode: http.StatusOK,
+		Header:     http.Header{"Content-Type": []string{"application/x-unknown-stream-type"}},
+		Body:       io.NopCloser(strings.NewReader("event: test\ndata: {\"ok\":true}\n\n")),
+	}
+
+	dec := NewDecoder(resp)
+	if dec == nil {
+		t.Fatal("expected non-nil decoder for unknown content-type")
+	}
+
+	// Should fall back to SSE decoder and parse the event
+	if !dec.Next() {
+		t.Fatal("expected SSE fallback decoder to parse the event")
+	}
+	evt := dec.Event()
+	if evt.Type != "test" {
+		t.Errorf("expected event type %q, got %q", "test", evt.Type)
 	}
 }
