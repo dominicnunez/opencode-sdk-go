@@ -13,6 +13,13 @@
 
 <!-- Findings where the audit misread the code or described behavior that doesn't occur -->
 
+### RegisterDecoder race between parse and write
+
+**Location:** `packages/ssestream/ssestream.go:59-67` — RegisterDecoder locking
+**Date:** 2026-02-28
+
+**Reason:** The audit claims a race exists because `mime.ParseMediaType` and `strings.ToLower` execute before the write lock is acquired. These are pure functions operating on the function's input parameter — they access no shared state. The shared state (`decoderTypes` map) is properly protected by the mutex at line 64. The "last writer wins" behavior described by the audit is identical regardless of whether the parse runs inside or outside the lock, since both goroutines would compute the same `mediaType` from the same input. There is no data race.
+
 ### Reusing bytes.Buffer across retry iterations is fragile
 
 **Location:** `client.go:192-284` — retry loop body encoding
