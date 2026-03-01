@@ -3,6 +3,7 @@ package opencode_test
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -140,7 +141,14 @@ func TestSessionUnshare_ServerError(t *testing.T) {
 
 	_, err = client.Session.Unshare(context.Background(), "ses_999", nil)
 	if err == nil {
-		t.Fatal("expected error for 404 response, got nil")
+		t.Fatal("expected error for server error, got nil")
+	}
+	var apiErr *opencode.APIError
+	if !errors.As(err, &apiErr) {
+		t.Fatalf("expected *APIError, got %T", err)
+	}
+	if apiErr.StatusCode != http.StatusNotFound {
+		t.Errorf("expected status %d, got %d", http.StatusNotFound, apiErr.StatusCode)
 	}
 }
 

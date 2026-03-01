@@ -3,6 +3,7 @@ package opencode
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -179,7 +180,14 @@ func TestSessionFork_ServerError(t *testing.T) {
 	}
 	_, err = client.Session.Fork(context.Background(), "ses_123", params)
 	if err == nil {
-		t.Error("expected error for server error, got nil")
+		t.Fatal("expected error for server error, got nil")
+	}
+	var apiErr *APIError
+	if !errors.As(err, &apiErr) {
+		t.Fatalf("expected *APIError, got %T", err)
+	}
+	if apiErr.StatusCode != http.StatusInternalServerError {
+		t.Errorf("expected status %d, got %d", http.StatusInternalServerError, apiErr.StatusCode)
 	}
 }
 

@@ -3,6 +3,7 @@ package opencode
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -159,6 +160,13 @@ func TestSessionUnrevert_ServerError(t *testing.T) {
 	_, err = client.Session.Unrevert(context.Background(), "sess_123", &SessionUnrevertParams{})
 	if err == nil {
 		t.Fatal("expected error for server error, got nil")
+	}
+	var apiErr *APIError
+	if !errors.As(err, &apiErr) {
+		t.Fatalf("expected *APIError, got %T", err)
+	}
+	if apiErr.StatusCode != http.StatusInternalServerError {
+		t.Errorf("expected status %d, got %d", http.StatusInternalServerError, apiErr.StatusCode)
 	}
 }
 

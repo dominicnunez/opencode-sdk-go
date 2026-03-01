@@ -3,6 +3,7 @@ package opencode
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -124,7 +125,14 @@ func TestSessionGet_ServerError(t *testing.T) {
 
 	_, err = client.Session.Get(context.Background(), "sess_123", nil)
 	if err == nil {
-		t.Fatal("Expected error for server error, got nil")
+		t.Fatal("expected error for server error, got nil")
+	}
+	var apiErr *APIError
+	if !errors.As(err, &apiErr) {
+		t.Fatalf("expected *APIError, got %T", err)
+	}
+	if apiErr.StatusCode != http.StatusInternalServerError {
+		t.Errorf("expected status %d, got %d", http.StatusInternalServerError, apiErr.StatusCode)
 	}
 }
 
@@ -357,7 +365,14 @@ func TestSessionDelete_ServerError(t *testing.T) {
 
 	_, err = client.Session.Delete(context.Background(), "sess_123", nil)
 	if err == nil {
-		t.Fatal("Expected error for server error, got nil")
+		t.Fatal("expected error for server error, got nil")
+	}
+	var apiErr *APIError
+	if !errors.As(err, &apiErr) {
+		t.Fatalf("expected *APIError, got %T", err)
+	}
+	if apiErr.StatusCode != http.StatusInternalServerError {
+		t.Errorf("expected status %d, got %d", http.StatusInternalServerError, apiErr.StatusCode)
 	}
 }
 

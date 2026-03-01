@@ -3,6 +3,7 @@ package opencode
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -118,7 +119,14 @@ func TestToolService_IDs_ServerError(t *testing.T) {
 
 	ids, err := client.Tool.IDs(context.Background(), nil)
 	if err == nil {
-		t.Fatal("expected error, got nil")
+		t.Fatal("expected error for server error, got nil")
+	}
+	var apiErr *APIError
+	if !errors.As(err, &apiErr) {
+		t.Fatalf("expected *APIError, got %T", err)
+	}
+	if apiErr.StatusCode != http.StatusInternalServerError {
+		t.Errorf("expected status %d, got %d", http.StatusInternalServerError, apiErr.StatusCode)
 	}
 
 	if ids != nil {
@@ -340,7 +348,14 @@ func TestToolService_List_ServerError(t *testing.T) {
 		Model:    "claude-3-opus",
 	})
 	if err == nil {
-		t.Fatal("expected error, got nil")
+		t.Fatal("expected error for server error, got nil")
+	}
+	var apiErr *APIError
+	if !errors.As(err, &apiErr) {
+		t.Fatalf("expected *APIError, got %T", err)
+	}
+	if apiErr.StatusCode != http.StatusBadRequest {
+		t.Errorf("expected status %d, got %d", http.StatusBadRequest, apiErr.StatusCode)
 	}
 
 	if tools != nil {

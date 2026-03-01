@@ -3,6 +3,7 @@ package opencode
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -131,7 +132,14 @@ func TestMcpService_Status_ServerError(t *testing.T) {
 
 	status, err := client.Mcp.Status(context.Background(), nil)
 	if err == nil {
-		t.Fatal("expected error, got nil")
+		t.Fatal("expected error for server error, got nil")
+	}
+	var apiErr *APIError
+	if !errors.As(err, &apiErr) {
+		t.Fatalf("expected *APIError, got %T", err)
+	}
+	if apiErr.StatusCode != http.StatusInternalServerError {
+		t.Errorf("expected status %d, got %d", http.StatusInternalServerError, apiErr.StatusCode)
 	}
 	if status != nil {
 		t.Errorf("expected nil status on error, got %v", status)
