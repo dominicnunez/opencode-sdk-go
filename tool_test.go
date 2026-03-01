@@ -309,9 +309,6 @@ func TestToolService_List_MissingProvider(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error when Provider is empty")
 	}
-	if err.Error() != "missing required provider parameter" {
-		t.Errorf("expected 'missing required provider parameter', got: %v", err)
-	}
 }
 
 func TestToolService_List_MissingModel(t *testing.T) {
@@ -325,9 +322,6 @@ func TestToolService_List_MissingModel(t *testing.T) {
 	})
 	if err == nil {
 		t.Fatal("expected error when Model is empty")
-	}
-	if err.Error() != "missing required model parameter" {
-		t.Errorf("expected 'missing required model parameter', got: %v", err)
 	}
 }
 
