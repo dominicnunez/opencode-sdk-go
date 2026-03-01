@@ -53,6 +53,40 @@ func TestListStreaming_JSONErrorBody(t *testing.T) {
 	}
 }
 
+func TestListStreaming_ContextCancelDuringConnect(t *testing.T) {
+	client, err := opencode.NewClient(
+		opencode.WithHTTPClient(&http.Client{
+			Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+				<-req.Context().Done()
+				return nil, req.Context().Err()
+			}),
+		}),
+	)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	stream := client.Event.ListStreaming(ctx, nil)
+	defer func() { _ = stream.Close() }()
+	if stream.Next() {
+		t.Fatal("expected Next() to return false on cancelled context")
+	}
+
+	err = stream.Err()
+	if err == nil {
+		t.Fatal("expected non-nil error from stream")
+	}
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("expected error to wrap context.Canceled, got: %v", err)
+	}
+	if got := err.Error(); !strings.Contains(got, "event stream request") {
+		t.Errorf("expected error to contain 'event stream request', got: %q", got)
+	}
+}
+
 func TestListStreaming_TransportErrorWrapped(t *testing.T) {
 	transportErr := errors.New("connection refused")
 	client, err := opencode.NewClient(
