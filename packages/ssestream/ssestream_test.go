@@ -84,6 +84,45 @@ func TestRegisterDecoderConcurrent(t *testing.T) {
 	wg.Wait()
 }
 
+func TestRegisterDecoderConcurrentReadWrite(t *testing.T) {
+	// Exercises concurrent RegisterDecoder writes alongside NewDecoder reads
+	// to verify the RWMutex protects both paths. Run with -race.
+	saveAndRestoreDecoders(t)
+
+	const goroutines = 50
+	var wg sync.WaitGroup
+
+	// Writers: register decoders concurrently.
+	for i := 0; i < goroutines; i++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			RegisterDecoder("application/x-race-stream", func(rc io.ReadCloser) Decoder {
+				return &mockDecoder{}
+			})
+		}(i)
+	}
+
+	// Readers: call NewDecoder concurrently (reads the global map).
+	for i := 0; i < goroutines; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			resp := &http.Response{
+				StatusCode: http.StatusOK,
+				Header:     http.Header{"Content-Type": []string{"application/x-race-stream"}},
+				Body:       io.NopCloser(strings.NewReader("")),
+			}
+			dec := NewDecoder(resp)
+			if dec == nil {
+				t.Error("expected non-nil decoder")
+			}
+		}()
+	}
+
+	wg.Wait()
+}
+
 // newSSEResponse wraps a raw SSE string into an *http.Response with
 // content-type "text/event-stream" and an io.NopCloser body.
 func newSSEResponse(body string) *http.Response {
