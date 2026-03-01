@@ -114,11 +114,3 @@ type SessionPermissionRespondParams struct {
 func (r SessionPermissionRespondParams) URLQuery() (url.Values, error) {
 	return queryparams.Marshal(r)
 }
-
-var _ json.Marshaler = (*SessionPermissionRespondParams)(nil)
-
-func (r SessionPermissionRespondParams) MarshalJSON() ([]byte, error) {
-	return json.Marshal(struct {
-		Response PermissionResponse `json:"response"`
-	}{Response: r.Response})
-}
