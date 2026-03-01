@@ -203,3 +203,88 @@ func TestPathParameterInjection_SessionMessage(t *testing.T) {
 		})
 	}
 }
+
+func TestPathParameterInjection_SessionMethods(t *testing.T) {
+	type callFunc func(client *opencode.Client, ctx context.Context, id string)
+
+	methods := []struct {
+		name string
+		call callFunc
+	}{
+		{"Update", func(c *opencode.Client, ctx context.Context, id string) {
+			_, _ = c.Session.Update(ctx, id, nil)
+		}},
+		{"Delete", func(c *opencode.Client, ctx context.Context, id string) {
+			_, _ = c.Session.Delete(ctx, id, nil)
+		}},
+		{"Abort", func(c *opencode.Client, ctx context.Context, id string) {
+			_, _ = c.Session.Abort(ctx, id, nil)
+		}},
+		{"Children", func(c *opencode.Client, ctx context.Context, id string) {
+			_, _ = c.Session.Children(ctx, id, nil)
+		}},
+		{"Messages", func(c *opencode.Client, ctx context.Context, id string) {
+			_, _ = c.Session.Messages(ctx, id, nil)
+		}},
+		{"Share", func(c *opencode.Client, ctx context.Context, id string) {
+			_, _ = c.Session.Share(ctx, id, nil)
+		}},
+		{"Diff", func(c *opencode.Client, ctx context.Context, id string) {
+			_, _ = c.Session.Diff(ctx, id, nil)
+		}},
+		{"Fork", func(c *opencode.Client, ctx context.Context, id string) {
+			_, _ = c.Session.Fork(ctx, id, nil)
+		}},
+		{"Todo", func(c *opencode.Client, ctx context.Context, id string) {
+			_, _ = c.Session.Todo(ctx, id, nil)
+		}},
+		{"Unrevert", func(c *opencode.Client, ctx context.Context, id string) {
+			_, _ = c.Session.Unrevert(ctx, id, nil)
+		}},
+		{"Unshare", func(c *opencode.Client, ctx context.Context, id string) {
+			_, _ = c.Session.Unshare(ctx, id, nil)
+		}},
+		{"Command", func(c *opencode.Client, ctx context.Context, id string) {
+			_, _ = c.Session.Command(ctx, id, &opencode.SessionCommandParams{})
+		}},
+		{"Init", func(c *opencode.Client, ctx context.Context, id string) {
+			_, _ = c.Session.Init(ctx, id, &opencode.SessionInitParams{})
+		}},
+		{"Prompt", func(c *opencode.Client, ctx context.Context, id string) {
+			_, _ = c.Session.Prompt(ctx, id, &opencode.SessionPromptParams{})
+		}},
+		{"Revert", func(c *opencode.Client, ctx context.Context, id string) {
+			_, _ = c.Session.Revert(ctx, id, &opencode.SessionRevertParams{})
+		}},
+		{"Shell", func(c *opencode.Client, ctx context.Context, id string) {
+			_, _ = c.Session.Shell(ctx, id, &opencode.SessionShellParams{})
+		}},
+		{"Summarize", func(c *opencode.Client, ctx context.Context, id string) {
+			_, _ = c.Session.Summarize(ctx, id, &opencode.SessionSummarizeParams{})
+		}},
+	}
+
+	for _, method := range methods {
+		for _, tt := range injectionPayloads {
+			t.Run(method.name+"/"+tt.name, func(t *testing.T) {
+				var receivedPath string
+				server := newInjectionServer(&receivedPath)
+				defer server.Close()
+
+				client, err := opencode.NewClient(opencode.WithBaseURL(server.URL))
+				if err != nil {
+					t.Fatalf("failed to create client: %v", err)
+				}
+
+				method.call(client, context.Background(), tt.id)
+
+				if receivedPath == "" {
+					t.Fatal("server received no request")
+				}
+				if !strings.Contains(receivedPath, tt.wantPathContains) {
+					t.Errorf("received path %q does not contain %q", receivedPath, tt.wantPathContains)
+				}
+			})
+		}
+	}
+}
