@@ -20,7 +20,7 @@ linters:
       # SSRF false positive: URL is constructed from SDK's own baseURL, not tainted input
       - linters: [gosec]
         text: "G704"
-        path: \.go
+        path: (client|event)\.go
 
       # APIKey field name matches secret pattern, but the struct reflects the OpenAPI spec
       - linters: [gosec]
