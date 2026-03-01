@@ -257,8 +257,13 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 			return resp, nil
 		}
 
-		// Error response - don't retry client errors (4xx except specific cases)
-		if lastErr == nil && resp.StatusCode >= 300 {
+		// 3xx responses indicate a misconfigured redirect policy — never retry.
+		if lastErr == nil && resp.StatusCode >= 300 && resp.StatusCode < 400 {
+			return nil, readAPIError(resp, maxErrorBodySize)
+		}
+
+		// 4xx/5xx responses: retry only retryable status codes (408, 429, 5xx).
+		if lastErr == nil && resp.StatusCode >= 400 {
 			if !isRetryableStatus(resp.StatusCode) || attempt >= c.maxRetries {
 				return nil, readAPIError(resp, maxErrorBodySize)
 			}
