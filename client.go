@@ -155,8 +155,11 @@ func WithMaxRetries(n int) ClientOption {
 }
 
 func (c *Client) do(ctx context.Context, method, path string, params, result interface{}) error {
-	ctx, cancel := context.WithTimeout(ctx, c.timeout)
-	defer cancel()
+	if _, ok := ctx.Deadline(); !ok {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, c.timeout)
+		defer cancel()
+	}
 
 	resp, err := c.doRaw(ctx, method, path, params)
 	if err != nil {
