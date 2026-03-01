@@ -348,3 +348,101 @@ actually cause same-repo PRs to run CI twice — once from push, once from pull_
 **Date:** 2026-03-01
 
 **Reason:** The audit's claims about the test code are factually wrong at every cited location. (1) `StreamingEvents` (lines 162-197) calls `stream.Next()`, retrieves the event, and asserts `evt.Type == EventTypeMessageUpdated` — not just `stream != nil`. (2) `CustomHTTPClient` (lines 270-301) makes an actual HTTP request to a mock server and asserts the response is valid — not just `client != nil`. (3) `TestREADMELoggingTransport` (lines 305-325) asserts both `err != nil` and `resp == nil` after calling `RoundTrip`, then closes the body — not "no assertion." The audit described test behavior that doesn't match the actual code.
+
+### Path parameter injection via unsanitized user input in URL construction
+
+**Location:** `session.go:40,67,82,97`, `sessionpermission.go:29`, `auth.go:31` — path segment interpolation
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing known exception "Path parameters not URL-encoded in service methods." The IDs are server-generated UUIDs that do not contain special characters. The exception already documents this as a conscious design tradeoff — adding escaping to every path construction would add noise for no real-world benefit.
+
+### SSE stream response body leak on non-2xx without Close
+
+**Location:** `event.go:56-58` — non-2xx status path
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing known exception "ListStreaming response body not closed if readAPIError panics on custom transport." The `readAPIError` function reads and closes the body (errors.go:96). A leak only occurs if a custom transport panics during `io.ReadAll`, which violates Go's `io.Reader` contract. The normal code path has no leak.
+
+### Retry loop sends empty body on retries for requests with io.Reader body
+
+**Location:** `client.go:223-292` — retry loop body re-encoding
+**Date:** 2026-03-01
+
+**Reason:** The finding's own text admits "In practice this is harmless because context cancellation returns early." This is the fifth variant of the same retry-body concern, already excepted four times: "Reusing bytes.Buffer across retry iterations is fragile" (client.go:192-284), "Retry loop body is not re-readable after first attempt" (client.go:180-244), "Retry on transport error reuses exhausted body reader" (client.go:180-244), and "Retry loop reuses consumed body reader on first retry" (client.go:206-222). The code re-encodes the body at lines 284-289 before every retry iteration. No request is ever made with a stale body.
+
+### buildURL duplicates base URL query parameters
+
+**Location:** `client.go:180-200` — buildURL base URL query loop
+**Date:** 2026-03-01
+
+**Reason:** The finding claims `ResolveReference` preserves the base URL's query string, making the loop at lines 183-185 redundant. This is factually wrong — already proven in existing exception "Base URL query merge in buildURL is redundant because ResolveReference preserves query params." `ResolveReference(&url.URL{Path: path})` drops the base URL's `RawQuery` because the reference has a non-empty path. The loop is necessary to re-merge base URL query parameters.
+
+### apierror.Error retains full http.Request and http.Response
+
+**Location:** `internal/apierror/apierror.go:12-17` — Error struct fields
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing known exceptions: "apierror.Error stores live http.Request and http.Response references" and "apierror.Error unused Stainless leftover combines already-excepted sub-issues." The type is never constructed anywhere in the SDK — it's a Stainless leftover exposed as `opencode.Error`. Since the type is inert, the references can never pin memory in practice.
+
+### apierror.Error appears to be dead code (Stainless artifact)
+
+**Location:** `internal/apierror/apierror.go:1-60`, `aliases.go:8`
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing known exception "apierror.Error is unused but exported as a public type alias." Removing it would be a breaking API change for any caller that references `opencode.Error`. The type is inert (never returned by any SDK method) so it causes no runtime harm.
+
+### McpStatus typed as map[string]interface{} loses all type safety
+
+**Location:** `mcp.go:17`
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing known exception "McpStatus is an untyped map." The OpenAPI spec defines the MCP status response with an empty schema (`"schema": {}`), meaning the response shape is intentionally unspecified. `map[string]interface{}` is the correct Go representation of an unconstrained JSON object.
+
+### FilePartSourceParam.Range uses any type
+
+**Location:** `session.go:717` — Range field
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing known exception "FilePartSourceParam.Range typed as `any`." `FilePartSourceParam` is the catch-all variant of `FilePartSourceUnionParam`. The typed `SymbolSourceParam` already has a concrete `SymbolSourceRange` type for callers who want type safety.
+
+### Event.ListStreaming does not apply client timeout
+
+**Location:** `event.go:31-61` — uses httpClient.Do directly
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing known exceptions "ListStreaming bypasses Client timeout and retry logic" and "ListStreaming bypasses client timeout on SSE connections." SSE streams are long-lived connections; applying a 30s timeout would kill every connection. Callers use `context.WithTimeout` for deadlines.
+
+### EventService.ListStreaming does not use retry logic
+
+**Location:** `event.go:31-61` — single HTTP request via httpClient.Do
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing known exception "ListStreaming bypasses client retry logic." SSE streams are consumed once; retrying is complex and callers should manage reconnection at the application level.
+
+### apierror.Error credential leakage via DumpRequest
+
+**Location:** `internal/apierror/apierror.go:12-17`, `aliases.go:8`
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of multiple existing known exceptions covering the apierror.Error Stainless leftover. The type is never constructed anywhere in the SDK — no SDK method returns it. The credential leakage scenario requires constructing the type with a live `*http.Request` containing auth headers, which only a consumer could do (and they already have the request). The type is inert in practice.
+
+### SSE decoder silently discards id and retry fields
+
+**Location:** `packages/ssestream/ssestream.go:113-130` — switch statement
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing known exception "SSE decoder does not store id or retry fields from the event stream." The SDK has no reconnection logic — SSE streams are consumed once. The `id` field's purpose is `Last-Event-ID` for reconnection, and `retry` sets a reconnection interval — both are meaningless without built-in reconnection.
+
+### apierror.Error StatusCode field shadowed by Response.StatusCode in Error()
+
+**Location:** `internal/apierror/apierror.go:13, 30-32`
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing known exception "apierror.Error has overlapping StatusCode field that is never read." The type is a Stainless leftover never constructed by the SDK, making the field overlap entirely theoretical.
+
+### apierror.Error dead code consolidation duplicates existing exceptions
+
+**Location:** `internal/apierror/apierror.go:12-60`, `aliases.go:8`
+**Date:** 2026-03-01
+
+**Reason:** The finding rolls up sub-issues (memory pinning, dead StatusCode field, DumpRequest mutation, dead code) that are each already classified in known exceptions: "apierror.Error is unused but exported as a public type alias", "apierror.Error stores live http.Request and http.Response references", "apierror.Error has overlapping StatusCode field that is never read", "httputil dump errors ignored in debugging methods", and "apierror.Error unused Stainless leftover combines already-excepted sub-issues." The finding itself concludes "No action needed — already tracked." No new observation beyond existing exceptions.

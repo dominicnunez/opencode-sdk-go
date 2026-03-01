@@ -100,6 +100,13 @@
 
 **Reason:** `Is()` evaluates top-down: 401, 403, 404, 408, and 429 match their dedicated sentinels first; the 400-499 range then catches everything else as `ErrInvalidRequest`. A caller doing `errors.Is(err, ErrInvalidRequest)` on a 429 gets `false` — this is correct because 429 has a more specific sentinel (`ErrRateLimited`). Renaming to `ErrClientError` would be a breaking public API change for clearer naming alone. The current sentinel names, combined with the `Is*Error()` helpers and thorough test coverage in `errors_test.go`, make the semantics unambiguous.
 
+### AssistantMessageErrorAPIErrorData and SessionAPIErrorData are structurally identical
+
+**Location:** `session.go:547-553`, `event.go:826-832` — two API error data structs
+**Date:** 2026-03-01
+
+**Reason:** Both types map to distinct OpenAPI spec schemas (`AssistantMessage.error.data` vs `Session.error.APIError.data`). They happen to be byte-for-byte identical today, but extracting a shared type would couple two independent spec schemas. If either schema adds or removes a field, the shared type would break the other. Keeping them separate preserves 1:1 spec fidelity at the cost of ~6 lines of duplication.
+
 ### ListStreaming uses stricter status check than doRaw
 
 **Location:** `event.go:67` — `resp.StatusCode < 200 || resp.StatusCode >= 300`
