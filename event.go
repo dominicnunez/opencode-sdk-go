@@ -33,21 +33,10 @@ func (s *EventService) ListStreaming(ctx context.Context, params *EventListParam
 		params = &EventListParams{}
 	}
 
-	// Build URL with query params, merging any query params from the base URL
-	fullURL := s.client.baseURL.ResolveReference(&url.URL{Path: "event"})
-	mergedQuery := fullURL.Query()
-	for k, vs := range s.client.baseURL.Query() {
-		mergedQuery[k] = vs
-	}
-
-	query, err := params.URLQuery()
+	fullURL, err := s.client.buildURL("event", params)
 	if err != nil {
 		return ssestream.NewStream[Event](nil, err)
 	}
-	for k, vs := range query {
-		mergedQuery[k] = vs
-	}
-	fullURL.RawQuery = mergedQuery.Encode()
 
 	// Create request with SSE headers
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fullURL.String(), nil)
