@@ -30,6 +30,16 @@ func TestAPIError_Error_Format(t *testing.T) {
 			err:       &APIError{StatusCode: 404, Message: "not found", RequestID: "req-abc"},
 			wantParts: []string{"not found", "404", "req-abc"},
 		},
+		{
+			name:      "with read error",
+			err:       &APIError{StatusCode: 502, Message: "Bad Gateway", ReadErr: errors.New("connection reset")},
+			wantParts: []string{"502", "body read error", "connection reset"},
+		},
+		{
+			name:      "nil read error omits suffix",
+			err:       &APIError{StatusCode: 500, Message: "Internal Server Error"},
+			wantParts: []string{"500"},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -41,6 +51,13 @@ func TestAPIError_Error_Format(t *testing.T) {
 			}
 		})
 	}
+
+	t.Run("nil ReadErr does not include body read error suffix", func(t *testing.T) {
+		e := &APIError{StatusCode: 500, Message: "fail"}
+		if strings.Contains(e.Error(), "body read error") {
+			t.Errorf("Error() = %q, should not mention body read error when ReadErr is nil", e.Error())
+		}
+	})
 }
 
 // TestAPIError_Is_SentinelMapping verifies that each HTTP status code maps to

@@ -50,10 +50,16 @@ type APIError struct {
 }
 
 func (e *APIError) Error() string {
+	var msg string
 	if e.RequestID != "" {
-		return fmt.Sprintf("%s (status %d, request %s)", e.Message, e.StatusCode, e.RequestID)
+		msg = fmt.Sprintf("%s (status %d, request %s)", e.Message, e.StatusCode, e.RequestID)
+	} else {
+		msg = fmt.Sprintf("%s (status %d)", e.Message, e.StatusCode)
 	}
-	return fmt.Sprintf("%s (status %d)", e.Message, e.StatusCode)
+	if e.ReadErr != nil {
+		msg += fmt.Sprintf(" (body read error: %v)", e.ReadErr)
+	}
+	return msg
 }
 
 func isRetryableStatus(code int) bool {
