@@ -5,7 +5,6 @@ type MessageAbortedError struct {
 	Name MessageAbortedErrorName `json:"name"`
 }
 
-
 type MessageAbortedErrorData struct {
 	Message string `json:"message"`
 }
@@ -28,7 +27,6 @@ type ProviderAuthError struct {
 	Data ProviderAuthErrorData `json:"data"`
 	Name ProviderAuthErrorName `json:"name"`
 }
-
 
 type ProviderAuthErrorData struct {
 	Message    string `json:"message"`
@@ -53,7 +51,6 @@ type UnknownError struct {
 	Data UnknownErrorData `json:"data"`
 	Name UnknownErrorName `json:"name"`
 }
-
 
 type UnknownErrorData struct {
 	Message string `json:"message"`
