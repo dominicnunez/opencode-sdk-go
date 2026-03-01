@@ -36,14 +36,18 @@ func (e *APIError) Error() string {
 	return fmt.Sprintf("%s (status %d)", e.Message, e.StatusCode)
 }
 
+func isRetryableStatus(code int) bool {
+	return code == http.StatusRequestTimeout ||
+		code == http.StatusTooManyRequests ||
+		code >= http.StatusInternalServerError
+}
+
 // IsRetryable reports whether the error represents a transient failure
 // (408 Request Timeout, 429 Too Many Requests, or 5xx) that may succeed
 // on retry. Callers implementing SSE reconnection or custom retry logic
 // can use this to distinguish transient from permanent failures.
 func (e *APIError) IsRetryable() bool {
-	return e.StatusCode == http.StatusRequestTimeout ||
-		e.StatusCode == http.StatusTooManyRequests ||
-		e.StatusCode >= http.StatusInternalServerError
+	return isRetryableStatus(e.StatusCode)
 }
 
 func (e *APIError) Is(target error) bool {

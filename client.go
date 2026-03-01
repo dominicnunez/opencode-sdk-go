@@ -247,12 +247,7 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 
 		// Error response - don't retry client errors (4xx except specific cases)
 		if lastErr == nil && resp.StatusCode >= 400 {
-			// Only retry specific status codes
-			shouldRetry := resp.StatusCode == http.StatusRequestTimeout ||
-				resp.StatusCode == http.StatusTooManyRequests ||
-				resp.StatusCode >= http.StatusInternalServerError
-
-			if !shouldRetry || attempt >= c.maxRetries {
+			if !isRetryableStatus(resp.StatusCode) || attempt >= c.maxRetries {
 				return nil, readAPIError(resp, maxErrorBodySize)
 			}
 
