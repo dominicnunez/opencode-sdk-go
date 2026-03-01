@@ -205,6 +205,20 @@
 
 **Reason:** These types must serialize credential fields (Access, Refresh, Key, Token) in the HTTP request body sent to the server — that is their purpose. `String()` and `GoString()` redact these fields to prevent accidental exposure via `fmt` or log output, which covers the common leak vector. Implementing `MarshalJSON` to redact would break the API since `Client.do()` uses `json.Marshal` to build request bodies. A context-aware `MarshalJSON` that switches between redacted and non-redacted modes would add complexity for a marginal benefit — callers who marshal these types to JSON are explicitly opting into serialization and should be aware of the contents. The type-level godoc already documents which fields are sensitive and that `String()` is the safe output method.
 
+### queryparams emits non-pointer zero int/bool without omitempty
+
+**Location:** `internal/queryparams/queryparams.go:147-170` — zero-value emission
+**Date:** 2026-03-01
+
+**Reason:** Non-pointer `int`/`bool` fields without `omitempty` are emitted at zero value. This is documented as intentional at line 149 and matches `encoding/json` semantics: zero without `omitempty` means "explicitly set to zero". No current SDK param struct triggers this — all int/bool query fields use either pointers or `omitempty`. Changing the default would break the semantic contract for any future struct that intentionally sends zero.
+
+### ListStreaming ignores mime.ParseMediaType error
+
+**Location:** `event.go:63` — also `ssestream.go:47`
+**Date:** 2026-03-01
+
+**Reason:** When `mime.ParseMediaType` errors on a malformed Content-Type, `mediaType` is empty, causing the code to fall through to the default SSE decoder. This is the correct fallback for streaming endpoints — SSE is the expected wire format and rejecting the stream for a malformed header would be overly strict. The same pattern in `ssestream.NewDecoder` ensures consistent behavior. Treating parse errors as "no explicit content type" and defaulting to SSE is a deliberate defensive choice.
+
 ### ConfigProviderOptions APIKey field exposed via json.Marshal
 
 **Location:** `config.go:1264-1278` — ConfigProviderOptions type
