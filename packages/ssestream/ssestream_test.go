@@ -340,6 +340,36 @@ func TestNewDecoder_UnknownContentType_FallsBackToSSE(t *testing.T) {
 	}
 }
 
+func TestStream_CloseMiddleOfIteration_NextReturnsErrNilDecoder(t *testing.T) {
+	// Closing a stream mid-iteration (from the same goroutine) should cause
+	// subsequent Next() calls to return false with ErrNilDecoder, not panic.
+	raw := "event: a\ndata: {\"ok\":true}\n\nevent: b\ndata: {\"ok\":true}\n\n"
+	dec := NewDecoder(newSSEResponse(raw))
+
+	type payload struct {
+		OK bool `json:"ok"`
+	}
+	stream := NewStream[payload](dec, nil)
+
+	// Consume first event
+	if !stream.Next() {
+		t.Fatalf("expected first Next() to return true, err=%v", stream.Err())
+	}
+
+	// Close mid-iteration
+	if err := stream.Close(); err != nil {
+		t.Fatalf("Close() returned error: %v", err)
+	}
+
+	// Next() after Close should return false with ErrNilDecoder
+	if stream.Next() {
+		t.Fatal("expected Next() to return false after Close()")
+	}
+	if !errors.Is(stream.Err(), ErrNilDecoder) {
+		t.Fatalf("expected ErrNilDecoder, got %v", stream.Err())
+	}
+}
+
 func TestEventStreamDecoder_ConnectionDropMidEvent(t *testing.T) {
 	// Simulate connection drop mid-event: reader returns partial data then error.
 	connErr := errors.New("connection reset by peer")
