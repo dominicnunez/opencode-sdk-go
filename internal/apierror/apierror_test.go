@@ -1,6 +1,7 @@
 package apierror
 
 import (
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -163,6 +164,54 @@ func TestError_DumpRequest(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestError_DumpRequest_WithBody(t *testing.T) {
+	bodyContent := `{"key":"secret_value"}`
+	req, err := http.NewRequest("POST", "https://api.opencode.ai/v1/auth", strings.NewReader(bodyContent))
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	apiErr := &Error{
+		StatusCode: 401,
+		Request:    req,
+	}
+
+	dump := apiErr.DumpRequest(true)
+	if dump == nil {
+		t.Fatal("expected non-nil dump for request with body")
+	}
+	if !strings.Contains(string(dump), bodyContent) {
+		t.Errorf("DumpRequest(true) = %q, should contain request body %q", dump, bodyContent)
+	}
+}
+
+func TestError_DumpRequest_WithBody_GetBodyRecreation(t *testing.T) {
+	bodyContent := `{"key":"secret_value"}`
+	req, err := http.NewRequest("POST", "https://api.opencode.ai/v1/auth", strings.NewReader(bodyContent))
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	// Consume the body so GetBody must be used to recreate it.
+	_, _ = io.ReadAll(req.Body)
+	_ = req.Body.Close()
+
+	apiErr := &Error{
+		StatusCode: 401,
+		Request:    req,
+	}
+
+	dump := apiErr.DumpRequest(true)
+	if dump == nil {
+		t.Fatal("expected non-nil dump when GetBody can recreate the body")
+	}
+	if !strings.Contains(string(dump), bodyContent) {
+		t.Errorf("DumpRequest(true) after body consumed = %q, should contain %q", dump, bodyContent)
 	}
 }
 
