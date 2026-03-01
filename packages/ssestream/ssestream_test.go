@@ -591,6 +591,32 @@ func TestEventStreamDecoder_DataAccumulationExceedsLimit(t *testing.T) {
 	}
 }
 
+func TestEventStreamDecoder_IgnoresIDAndRetryFields(t *testing.T) {
+	// SSE spec defines id: and retry: fields. The decoder silently drops them
+	// (no matching case in the switch). Verify data is still correctly parsed.
+	raw := "id: 42\nevent: msg\nretry: 3000\ndata: {\"ok\":true}\nid: 43\n\n"
+	dec := NewDecoder(newSSEResponse(raw))
+	defer func() { _ = dec.Close() }()
+
+	if !dec.Next() {
+		t.Fatal("expected Next() to return true despite id:/retry: lines")
+	}
+	evt := dec.Event()
+	if evt.Type != "msg" {
+		t.Errorf("expected event type %q, got %q", "msg", evt.Type)
+	}
+	if string(evt.Data) != `{"ok":true}` {
+		t.Errorf("expected data %q, got %q", `{"ok":true}`, string(evt.Data))
+	}
+
+	if dec.Next() {
+		t.Fatal("expected no more events")
+	}
+	if err := dec.Err(); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func TestEventStreamDecoder_IncompleteEventNoBlankLine(t *testing.T) {
 	// Stream has data but connection closes without a blank line separator.
 	// The decoder should still dispatch the buffered event at EOF.
