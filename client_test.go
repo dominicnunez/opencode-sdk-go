@@ -41,15 +41,15 @@ func TestUserAgentHeader(t *testing.T) {
 		t.Fatalf("failed to create client: %v", err)
 	}
 	_, err = client.Session.List(context.Background(), &opencode.SessionListParams{})
-	if err != nil {
-		t.Logf("Session.List error: %v", err)
+	if err == nil {
+		t.Error("expected decode error from empty response body")
 	}
 	if userAgent != fmt.Sprintf("Opencode/Go %s", internal.PackageVersion) {
 		t.Errorf("Expected User-Agent to be correct, but got: %#v", userAgent)
 	}
 }
 
-func TestRetryAfterMs(t *testing.T) {
+func TestRetryOn429(t *testing.T) {
 	attempts := 0
 	client, err := opencode.NewClient(
 		opencode.WithHTTPClient(&http.Client{
@@ -58,9 +58,9 @@ func TestRetryAfterMs(t *testing.T) {
 					attempts++
 					return &http.Response{
 						StatusCode: http.StatusTooManyRequests,
-						Header: http.Header{
-							http.CanonicalHeaderKey("Retry-After-Ms"): []string{"100"},
-						},
+						Status:     "429 Too Many Requests",
+						Header:     http.Header{},
+						Body:       io.NopCloser(strings.NewReader("rate limited")),
 					}, nil
 				},
 			},
@@ -71,10 +71,10 @@ func TestRetryAfterMs(t *testing.T) {
 	}
 	_, err = client.Session.List(context.Background(), &opencode.SessionListParams{})
 	if err == nil {
-		t.Error("Expected there to be a cancel error")
+		t.Error("expected error after exhausting retries on 429")
 	}
 	if want := 3; attempts != want {
-		t.Errorf("Expected %d attempts, got %d", want, attempts)
+		t.Errorf("expected %d attempts, got %d", want, attempts)
 	}
 }
 
@@ -96,7 +96,10 @@ func TestContextCancel(t *testing.T) {
 	cancel()
 	_, err = client.Session.List(cancelCtx, &opencode.SessionListParams{})
 	if err == nil {
-		t.Error("Expected there to be a cancel error")
+		t.Fatal("expected context cancellation error")
+	}
+	if !errors.Is(err, context.Canceled) {
+		t.Errorf("expected context.Canceled, got: %v", err)
 	}
 }
 
