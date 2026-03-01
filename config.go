@@ -56,7 +56,7 @@ type Config struct {
 	// JSON schema reference for configuration validation
 	Schema string `json:"$schema,omitempty"`
 	// Agent configuration, see https://opencode.ai/docs/agent
-	Agent ConfigAgent `json:"agent,omitempty"`
+	Agent *ConfigAgent `json:"agent,omitempty"`
 	// Deprecated: Use the Share field instead. Share newly created sessions
 	// automatically.
 	Autoshare bool `json:"autoshare,omitempty"`
@@ -66,12 +66,12 @@ type Config struct {
 	Command map[string]ConfigCommand `json:"command,omitempty"`
 	// Disable providers that are loaded automatically
 	DisabledProviders []string                   `json:"disabled_providers,omitempty"`
-	Experimental      ConfigExperimental         `json:"experimental,omitempty"`
+	Experimental      *ConfigExperimental        `json:"experimental,omitempty"`
 	Formatter         map[string]ConfigFormatter `json:"formatter,omitempty"`
 	// Additional instruction files or patterns to include
 	Instructions []string `json:"instructions,omitempty"`
 	// Custom keybind configurations
-	Keybinds KeybindsConfig `json:"keybinds,omitempty"`
+	Keybinds *KeybindsConfig `json:"keybinds,omitempty"`
 	// Deprecated: Always uses stretch layout.
 	Layout ConfigLayout         `json:"layout,omitempty"`
 	Lsp    map[string]ConfigLsp `json:"lsp,omitempty"`
@@ -80,9 +80,9 @@ type Config struct {
 	// Deprecated: Use the Agent field instead.
 	Mode ConfigMode `json:"mode,omitempty"`
 	// Model to use in the format of provider/model, eg anthropic/claude-2
-	Model      string           `json:"model,omitempty"`
-	Permission ConfigPermission `json:"permission,omitempty"`
-	Plugin     []string         `json:"plugin,omitempty"`
+	Model      string            `json:"model,omitempty"`
+	Permission *ConfigPermission `json:"permission,omitempty"`
+	Plugin     []string          `json:"plugin,omitempty"`
 	// Custom provider configurations and model overrides
 	Provider map[string]ConfigProvider `json:"provider,omitempty"`
 	// Control sharing behavior:'manual' allows manual sharing via commands, 'auto'
@@ -96,10 +96,10 @@ type Config struct {
 	Theme string          `json:"theme,omitempty"`
 	Tools map[string]bool `json:"tools,omitempty"`
 	// TUI specific settings
-	Tui ConfigTui `json:"tui,omitempty"`
+	Tui *ConfigTui `json:"tui,omitempty"`
 	// Custom username to display in conversations instead of system username
-	Username string        `json:"username,omitempty"`
-	Watcher  ConfigWatcher `json:"watcher,omitempty"`
+	Username string         `json:"username,omitempty"`
+	Watcher  *ConfigWatcher `json:"watcher,omitempty"`
 }
 
 // Agent configuration, see https://opencode.ai/docs/agent

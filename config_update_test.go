@@ -313,6 +313,14 @@ func TestConfigUpdateParams_MarshalJSON_OmitsZeroValues(t *testing.T) {
 	if _, ok := raw["model"]; ok {
 		t.Error("Zero-value string 'model' should be omitted from PATCH body")
 	}
+
+	// Nil pointer struct fields must be omitted from PATCH body to avoid
+	// the server interpreting zero-value sub-fields as intentional updates.
+	for _, key := range []string{"agent", "keybinds", "permission", "tui", "watcher", "experimental"} {
+		if _, ok := raw[key]; ok {
+			t.Errorf("Nil struct field %q should be omitted from PATCH body", key)
+		}
+	}
 }
 
 func TestConfigUpdateParams_URLQuery(t *testing.T) {
