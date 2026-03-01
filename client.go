@@ -52,11 +52,7 @@ type Client struct {
 
 type ClientOption func(*Client) error
 
-func NewClient(opts ...ClientOption) (*Client, error) {
-	rawURL := os.Getenv("OPENCODE_BASE_URL")
-	if rawURL == "" {
-		rawURL = DefaultBaseURL
-	}
+func parseBaseURL(rawURL string) (*url.URL, error) {
 	parsed, err := url.Parse(rawURL)
 	if err != nil {
 		return nil, fmt.Errorf("parse base URL: %w", err)
@@ -66,6 +62,18 @@ func NewClient(opts ...ClientOption) (*Client, error) {
 	}
 	if !strings.HasSuffix(parsed.Path, "/") {
 		parsed.Path += "/"
+	}
+	return parsed, nil
+}
+
+func NewClient(opts ...ClientOption) (*Client, error) {
+	rawURL := os.Getenv("OPENCODE_BASE_URL")
+	if rawURL == "" {
+		rawURL = DefaultBaseURL
+	}
+	parsed, err := parseBaseURL(rawURL)
+	if err != nil {
+		return nil, err
 	}
 
 	c := &Client{
@@ -104,15 +112,9 @@ func NewClient(opts ...ClientOption) (*Client, error) {
 
 func WithBaseURL(rawURL string) ClientOption {
 	return func(c *Client) error {
-		u, err := url.Parse(rawURL)
+		u, err := parseBaseURL(rawURL)
 		if err != nil {
-			return fmt.Errorf("parse base URL: %w", err)
-		}
-		if u.Scheme != "http" && u.Scheme != "https" {
-			return fmt.Errorf("base URL must use http or https scheme, got %q", u.Scheme)
-		}
-		if !strings.HasSuffix(u.Path, "/") {
-			u.Path += "/"
+			return err
 		}
 		c.baseURL = u
 		return nil
