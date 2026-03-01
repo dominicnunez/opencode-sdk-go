@@ -93,6 +93,44 @@ func TestRetryOn408(t *testing.T) {
 	}
 }
 
+func TestRetryOn429ThenSuccess(t *testing.T) {
+	attempts := 0
+	client, err := opencode.NewClient(
+		opencode.WithHTTPClient(&http.Client{
+			Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+				attempts++
+				if attempts == 1 {
+					return &http.Response{
+						StatusCode: http.StatusTooManyRequests,
+						Status:     "429 Too Many Requests",
+						Header:     http.Header{},
+						Body:       io.NopCloser(strings.NewReader("rate limited")),
+					}, nil
+				}
+				return &http.Response{
+					StatusCode: http.StatusOK,
+					Status:     "200 OK",
+					Header:     http.Header{},
+					Body:       io.NopCloser(strings.NewReader(`[{"id":"sess_1","title":"OK","time":{"created":1,"updated":1}}]`)),
+				}, nil
+			}),
+		}),
+	)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	sessions, err := client.Session.List(context.Background(), &opencode.SessionListParams{})
+	if err != nil {
+		t.Fatalf("expected success after 429 retry, got: %v", err)
+	}
+	if attempts != 2 {
+		t.Errorf("expected 2 attempts (429 then 200), got %d", attempts)
+	}
+	if len(sessions) != 1 || sessions[0].ID != "sess_1" {
+		t.Errorf("expected 1 session with ID sess_1, got %v", sessions)
+	}
+}
+
 func TestContextCancel(t *testing.T) {
 	client, err := opencode.NewClient(
 		opencode.WithHTTPClient(&http.Client{
