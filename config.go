@@ -1584,7 +1584,11 @@ func (a Auth) MarshalJSON() ([]byte, error) {
 	return a.raw, nil
 }
 
-// OAuth represents OAuth authentication credentials
+// OAuth represents OAuth authentication credentials.
+//
+// Access and Refresh contain sensitive credentials that are transmitted as
+// plain strings in the HTTP request body. Callers should ensure request
+// logging and debugging middleware do not inadvertently capture these values.
 type OAuth struct {
 	Type    AuthType `json:"type"`
 	Refresh string   `json:"refresh"`
