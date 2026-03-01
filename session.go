@@ -116,6 +116,8 @@ func (s *SessionService) Children(ctx context.Context, id string, params *Sessio
 	return result, nil
 }
 
+// Command executes a command in the session. Params must not be nil because
+// the endpoint requires a request body with at least the command field.
 func (s *SessionService) Command(ctx context.Context, id string, params *SessionCommandParams) (*SessionCommandResponse, error) {
 	if id == "" {
 		return nil, errors.New("missing required id parameter")
@@ -131,6 +133,8 @@ func (s *SessionService) Command(ctx context.Context, id string, params *Session
 	return &result, nil
 }
 
+// Init initializes a session. Params must not be nil because the endpoint
+// requires a request body.
 func (s *SessionService) Init(ctx context.Context, id string, params *SessionInitParams) (bool, error) {
 	if id == "" {
 		return false, errors.New("missing required id parameter")
@@ -179,6 +183,8 @@ func (s *SessionService) Messages(ctx context.Context, id string, params *Sessio
 	return result, nil
 }
 
+// Prompt sends a message to the session. Params must not be nil because the
+// endpoint requires a request body with at least the message content.
 func (s *SessionService) Prompt(ctx context.Context, id string, params *SessionPromptParams) (*SessionPromptResponse, error) {
 	if id == "" {
 		return nil, errors.New("missing required id parameter")
@@ -194,6 +200,8 @@ func (s *SessionService) Prompt(ctx context.Context, id string, params *SessionP
 	return &result, nil
 }
 
+// Revert reverts a session to a previous state. Params must not be nil because
+// the endpoint requires a request body with the target state.
 func (s *SessionService) Revert(ctx context.Context, id string, params *SessionRevertParams) (*Session, error) {
 	if id == "" {
 		return nil, errors.New("missing required id parameter")
@@ -254,6 +262,8 @@ func (s *SessionService) Fork(ctx context.Context, id string, params *SessionFor
 	return &result, nil
 }
 
+// Shell runs a shell command in the session. Params must not be nil because
+// the endpoint requires a request body with at least the shell command.
 func (s *SessionService) Shell(ctx context.Context, id string, params *SessionShellParams) (*AssistantMessage, error) {
 	if id == "" {
 		return nil, errors.New("missing required id parameter")
@@ -269,6 +279,8 @@ func (s *SessionService) Shell(ctx context.Context, id string, params *SessionSh
 	return &result, nil
 }
 
+// Summarize generates a summary for the session. Params must not be nil
+// because the endpoint requires a request body.
 func (s *SessionService) Summarize(ctx context.Context, id string, params *SessionSummarizeParams) (bool, error) {
 	if id == "" {
 		return false, errors.New("missing required id parameter")
