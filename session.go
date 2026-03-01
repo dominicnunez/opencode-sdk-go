@@ -1712,7 +1712,7 @@ func (r SessionCommandParams) URLQuery() (url.Values, error) {
 
 type SessionDiffParams struct {
 	Directory *string `json:"-" query:"directory,omitempty"`
-	MessageID *string `query:"messageID,omitempty"`
+	MessageID *string `json:"-" query:"messageID,omitempty"`
 }
 
 // URLQuery serializes [SessionDiffParams]'s query parameters as `url.Values`.
