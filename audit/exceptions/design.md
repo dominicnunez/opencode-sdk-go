@@ -148,3 +148,10 @@
 **Date:** 2026-03-01
 
 **Reason:** The `buildURL` failure path (line 39-41) is unreachable through the public API because `EventListParams.URLQuery()` delegates to `queryparams.Marshal` which cannot error for the field types in `EventListParams` (a single `*string`). The `http.NewRequestWithContext` failure path (line 45-47) requires a nil context or invalid method, neither of which can occur from normal usage — the method is hardcoded as `GET` and context comes from the caller. Both paths exist as defensive coding against future changes to the params struct or internal invariants. Testing them would require either bypassing the type system or injecting programming errors, providing no regression value.
+
+### Backoff overflow guard is unreachable with current constants
+
+**Location:** `client.go:283` — `delay <= 0` check in retry backoff
+**Date:** 2026-03-01
+
+**Reason:** With `maxRetryCap = 10` and `initialBackoff = 500ms`, the maximum product is `500ms * 1024 = 512s`, well within `time.Duration` (int64 nanoseconds) range, so the `delay <= 0` overflow check is unreachable. However, it's a zero-cost guard that protects against future changes to `maxRetryCap` or `initialBackoff`. The `maxBackoff` cap alone would mask an overflow (capping a negative duration to `maxBackoff` silently), so the explicit overflow check adds a meaningful safety net. Removing it saves nothing and introduces a latent risk.
