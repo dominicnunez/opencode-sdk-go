@@ -1454,3 +1454,94 @@ actually cause same-repo PRs to run CI twice — once from push, once from pull_
 **Date:** 2026-03-01
 
 **Reason:** Duplicate of multiple existing known exceptions: "apierror.Error is unused but exported as a public type alias," "apierror.Error stores live http.Request and http.Response references," "apierror.Error has overlapping StatusCode field that is never read," "httputil dump errors ignored in debugging methods," and "apierror.Error unused Stainless leftover combines already-excepted sub-issues." Every sub-concern (memory pinning, dead StatusCode field, swallowed httputil errors) is already individually classified. No new observation.
+
+### Credentials serialized in plaintext JSON with no transport enforcement
+
+**Location:** `auth.go:57` — AuthSetParams.MarshalJSON
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing known exception "Default base URL uses plaintext HTTP." The finding describes the same root concern (credentials over HTTP) from the perspective of the auth serialization code. The SDK targets a local dev server (`localhost:54321`), and callers who override to a remote host are responsible for their transport security. The `String()`/`GoString()` redaction for log output is already in place. No new observation beyond the existing exception.
+
+### SSE stream bypasses retry and timeout logic
+
+**Location:** `event.go:54` — ListStreaming uses httpClient.Do directly
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing known exceptions "ListStreaming bypasses Client timeout and retry logic" and "ListStreaming bypasses client retry logic." SSE streams are long-lived connections; applying the client's 30s timeout would kill every connection, and retrying a stream is complex. Callers use `context.WithTimeout` for deadlines and manage reconnection at the application level. Already classified as intentional design.
+
+### RegisterDecoder mutates global state without cleanup mechanism
+
+**Location:** `packages/ssestream/ssestream.go:66` — global decoder registry
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing known exception "RegisterDecoder uses global mutable state without unregister." The pattern follows `sql.Register`, `image.RegisterFormat`, and `encoding.RegisterCodec` in the Go stdlib. Registrations are process-lifetime by design. The test helper `saveAndRestoreDecoders` isolates test state. Already classified.
+
+### apierror.Error stores http.Request and http.Response references
+
+**Location:** `internal/apierror/apierror.go:12` — Error struct fields
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing known exceptions "apierror.Error stores live http.Request and http.Response references" and "apierror.Error is unused but exported as a public type alias." The type is a Stainless leftover never constructed by any SDK method. The references can never pin memory in practice since the type is inert. Already classified.
+
+### Two distinct APIError/Error types with overlapping purpose
+
+**Location:** `errors.go:38`, `internal/apierror/apierror.go:12` — overlapping error types
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing known exception "apierror.Error is unused but exported as a public type alias." The finding correctly identifies the overlap but `apierror.Error` is a Stainless leftover never constructed in production — only `APIError` is returned by the SDK. Removing the alias would be a breaking API change. Already classified.
+
+### apierror.Error never constructed in production code
+
+**Location:** `internal/apierror/apierror.go:12`, `aliases.go:8` — dead code type
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing known exception "apierror.Error is unused but exported as a public type alias." The type is exposed as `opencode.Error` and removing it would be a breaking API change. It causes no runtime harm. Already classified.
+
+### ListStreaming does not apply client timeout to SSE context
+
+**Location:** `event.go:34` — ListStreaming timeout behavior
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing known exception "ListStreaming bypasses Client timeout and retry logic." SSE streams are long-lived connections; applying the client's 30s default timeout would kill every connection. Callers use `context.WithTimeout` for deadlines. The godoc at `event.go:19-33` includes a full usage example. Already classified as intentional design.
+
+### No test coverage for ListStreaming content-type rejection
+
+**Location:** `event.go:63` — content-type validation path
+**Date:** 2026-03-01
+
+**Reason:** The audit claims no test exercises the content-type rejection path. This is factually wrong. `TestListStreaming_UnexpectedContentType` at `event_streaming_error_test.go:172` starts an httptest.Server returning `200 OK` with `Content-Type: application/json`, calls `ListStreaming`, verifies `stream.Next()` returns false, asserts `stream.Err()` is non-nil, and checks the error contains both "unexpected content type" and "application/json". The exact scenario described in the suggested fix is already tested.
+
+### No test for Retry-After header or jitter in backoff
+
+**Location:** `client.go:291` — retry backoff behavior
+**Date:** 2026-03-01
+
+**Reason:** The SDK does not implement `Retry-After` header support — 429 responses use the same exponential backoff as 5xx. Describing a missing feature as a testing gap is a misread. `TestClientDo_ExponentialBackoff` (client_do_test.go:234) already tests backoff timing with wall-clock measurements, verifying delays of ~500ms and ~1000ms and that delays increase exponentially. The `delay <= 0` overflow path is already classified in known exception "Backoff overflow guard is unreachable with current constants." The `maxBackoff` cap is not explicitly tested, but the finding's primary claim about Retry-After and jitter describes a non-existent feature.
+
+### apierror.Error tested but never constructed in production
+
+**Location:** `internal/apierror/apierror_test.go:1` — tests for dead code
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing known exception "apierror.Error is unused but exported as a public type alias." The test maintenance burden is a direct consequence of the type being a Stainless leftover, which is already classified. The tests verify the public type `opencode.Error` behaves correctly — if the type is public, its tests should stay to prevent regressions if it's ever wired up. Removing or keeping the tests is part of the same decision about the type itself. Already classified.
+
+### ToolService.List defers required-field validation to query encoder
+
+**Location:** `tool.go:71-83` — ToolListParams Provider/Model validation
+**Date:** 2026-03-01
+
+**Reason:** The audit claims `ToolService.List` only checks `params == nil` and defers `Provider`/`Model` validation to the query encoder via struct tags. This was fixed in commit `8f53a52` ("fix: validate required query fields at service method entry"). Lines 75-80 of `tool.go` now explicitly validate both fields before calling `client.do`. The audit was written against pre-fix code.
+
+### FindService methods defer required-field validation to query encoder
+
+**Location:** `find.go:16-50` — FindFilesParams/FindSymbolsParams/FindTextParams validation
+**Date:** 2026-03-01
+
+**Reason:** The audit claims `FindService.Files`, `FindService.Symbols`, and `FindService.Text` rely on struct tags for required-field validation. This was fixed in commit `8f53a52`. `Files` validates `Query` at line 20, `Symbols` validates `Query` at line 35, and `Text` validates `Pattern` at line 50 — all before calling `client.do`. The audit was written against pre-fix code.
+
+### FileService.List and FileService.Read defer required-field validation to query encoder
+
+**Location:** `file.go:16-38` — FileListParams/FileReadParams Path validation
+**Date:** 2026-03-01
+
+**Reason:** The audit claims `FileService.List` and `FileService.Read` rely on `query:"path,required"` struct tags instead of explicit validation. This was fixed in commit `8f53a52`. `List` validates `Path` at line 20 and `Read` validates `Path` at line 35 — both before calling `client.do`. The audit was written against pre-fix code.
