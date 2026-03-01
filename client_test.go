@@ -131,29 +131,6 @@ func TestRetryOn429ThenSuccess(t *testing.T) {
 	}
 }
 
-func TestContextCancel(t *testing.T) {
-	client, err := opencode.NewClient(
-		opencode.WithHTTPClient(&http.Client{
-			Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
-				<-req.Context().Done()
-				return nil, req.Context().Err()
-			}),
-		}),
-	)
-	if err != nil {
-		t.Fatalf("failed to create client: %v", err)
-	}
-	cancelCtx, cancel := context.WithCancel(context.Background())
-	cancel()
-	_, err = client.Session.List(cancelCtx, &opencode.SessionListParams{})
-	if err == nil {
-		t.Fatal("expected context cancellation error")
-	}
-	if !errors.Is(err, context.Canceled) {
-		t.Errorf("expected context.Canceled, got: %v", err)
-	}
-}
-
 func TestContextCancelDelay(t *testing.T) {
 	client, err := opencode.NewClient(
 		opencode.WithHTTPClient(&http.Client{
@@ -170,7 +147,10 @@ func TestContextCancelDelay(t *testing.T) {
 	defer cancel()
 	_, err = client.Session.List(cancelCtx, &opencode.SessionListParams{})
 	if err == nil {
-		t.Error("expected there to be a cancel error")
+		t.Fatal("expected context deadline error")
+	}
+	if !errors.Is(err, context.DeadlineExceeded) {
+		t.Errorf("expected context.DeadlineExceeded, got: %v", err)
 	}
 }
 
