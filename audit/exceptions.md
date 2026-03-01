@@ -13,6 +13,13 @@
 
 <!-- Findings where the audit misread the code or described behavior that doesn't occur -->
 
+### check-spec-update.sh silently treats empty hash or URL as valid
+
+**Location:** `scripts/check-spec-update.sh:19-30` — hash/URL parsing from .stats.yml
+**Date:** 2026-02-28
+
+**Reason:** The script uses `set -euo pipefail` (line 6). If `grep 'openapi_spec_hash'` finds no match, the pipeline exits non-zero, and `pipefail` propagates that failure to the command substitution, which causes the script to abort under `set -e`. The same applies to the URL parsing on line 20. The scenario where `UPSTREAM_HASH` or `UPSTREAM_URL` is set to empty string without the script aborting cannot occur — `grep` returning no matches is a pipeline failure, not a successful empty result. The audit correctly noted `set -euo pipefail` is in effect but then incorrectly concluded the empty-variable scenario was still reachable.
+
 ### RegisterDecoder race between parse and write
 
 **Location:** `packages/ssestream/ssestream.go:59-67` — RegisterDecoder locking
@@ -252,6 +259,13 @@ actually cause same-repo PRs to run CI twice — once from push, once from pull_
 
 **Reason:** `apierror.Error` is never constructed anywhere in the SDK — it's a Stainless leftover. However, it's exposed as the public type `opencode.Error`. Removing it would be a breaking API change for any caller that references the type. The type is inert (never returned by any SDK method), so it causes no runtime harm.
 
+
+### Six BashUnion types have identical method implementations
+
+**Location:** `config.go:148-186, 291-329, 434-472, 807-844, 950-988, 1064-1102`
+**Date:** 2026-02-28
+
+**Reason:** Each BashUnion type maps to a distinct schema in the OpenAPI spec and is a separate public API type. Extracting a generic helper would require Go generics with type constraints, adding complexity for 6 small types (~40 lines each) that rarely change. The methods are generated-pattern code where a bug fix can be applied mechanically. The cost of the generic abstraction outweighs the risk of divergence.
 
 ### Path parameters not URL-encoded in service methods
 
