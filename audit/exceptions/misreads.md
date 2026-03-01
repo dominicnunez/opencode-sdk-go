@@ -1321,3 +1321,45 @@ actually cause same-repo PRs to run CI twice — once from push, once from pull_
 **Date:** 2026-03-01
 
 **Reason:** The finding itself concludes "No action needed unless the API surface changes to accept user-provided IDs" and "This is already tracked in `audit/exceptions/risks.md`." It is a duplicate of the existing known exception "Path parameters not URL-encoded in service methods," which documents that IDs are server-generated UUIDs and path escaping adds noise for no real-world benefit.
+
+### ListStreaming bypasses client timeout described as a bug
+
+**Location:** `event.go:34-71` — uses httpClient.Do directly
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing known exception "ListStreaming bypasses Client timeout and retry logic." SSE streams are long-lived connections that remain open indefinitely while events arrive. Applying the client's default 30s timeout would prematurely kill every SSE connection. Callers who need a deadline can set one via `context.WithTimeout` on the context they pass in. This is intentional design, not a bug.
+
+### Backoff delay can overflow for large maxRetries values
+
+**Location:** `client.go:291` — exponential backoff calculation
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing known exception "Backoff overflow guard is unreachable with current constants." `WithMaxRetries` hard-caps at `maxRetryCap = 10`, producing a maximum shift of `1 << 10 = 1024` and `500ms * 1024 = 512s`, well within `int64` range. The `delay <= 0` guard at line 292 catches any theoretical overflow. The finding itself acknowledges "No immediate fix needed since maxRetryCap = 10 is safe." The overflow scenario requires violating an enforced invariant.
+
+### McpStatus typed as map[string]interface{} provides no type safety
+
+**Location:** `mcp.go:17` — McpStatus type definition
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing known exception "McpStatus is an untyped map." The OpenAPI spec defines the MCP status response with an empty schema (`"schema": {}`), meaning the response shape is intentionally unspecified. `map[string]interface{}` is the correct Go representation of an unconstrained JSON object.
+
+### APIError.Is matches ErrInvalidRequest for 408 and 429 as fallthrough
+
+**Location:** `errors.go:73-91` — APIError.Is switch statement
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing known exception "ErrInvalidRequest is a catch-all for 4xx without a dedicated sentinel." The `Is()` switch evaluates top-down: 429 matches `ErrRateLimited` first at line 82, 408 matches `ErrTimeout` first at line 84. The 4xx catch-all at line 85-86 only matches remaining codes (400, 402, 405-407, 409-428, etc.). The behavior is correct and the sentinel names combined with `Is*Error()` helpers make semantics unambiguous.
+
+### No test coverage for backoff timing in retry loop
+
+**Location:** `client.go:290-302` — retry loop backoff behavior
+**Date:** 2026-03-01
+
+**Reason:** The audit claims no test verifies backoff delays. This is factually wrong. `TestClientDo_ExponentialBackoff` (client_do_test.go:234-279) returns 500 on all attempts with `maxRetries=2`, records timestamps, verifies the first delay is at least 400ms (~500ms expected), the second delay is at least 800ms (~1000ms expected), and that the second delay is strictly greater than the first. The exponential backoff timing is tested with wall-clock measurements. The `skipDelay` optimization for transport errors on the penultimate attempt is untested, but the finding's primary claim about backoff timing being untested is incorrect.
+
+### No test for 3xx redirect responses returning APIError
+
+**Location:** `client.go:265-267` — doRaw 3xx handling
+**Date:** 2026-03-01
+
+**Reason:** The audit claims no test exercises the 3xx path. This is factually wrong. `TestClientDo_3xxRedirectIsError` (client_do_test.go:449-482) starts a server returning 301 with `CheckRedirect` set to `http.ErrUseLastResponse`, calls `Session.List`, verifies the error wraps `*APIError` via `errors.As`, and asserts the status code is `http.StatusMovedPermanently`. The exact scenario described in the suggested fix is already tested.
