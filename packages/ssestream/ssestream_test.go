@@ -486,6 +486,29 @@ func TestEventStreamDecoder_InterleavedComments(t *testing.T) {
 	}
 }
 
+func TestEventStreamDecoder_CommentBetweenDataLines(t *testing.T) {
+	// SSE comments between two data: lines within the same event must not
+	// disrupt data accumulation. Per the spec, comments are ignored mid-event.
+	raw := ":comment\ndata:hello\n:another comment\ndata:world\n\n"
+	dec := NewDecoder(newSSEResponse(raw))
+	defer func() { _ = dec.Close() }()
+
+	if !dec.Next() {
+		t.Fatal("expected Next() to return true")
+	}
+	evt := dec.Event()
+	if string(evt.Data) != "hello\nworld" {
+		t.Fatalf("expected data %q, got %q", "hello\nworld", string(evt.Data))
+	}
+
+	if dec.Next() {
+		t.Fatal("expected Next() to return false after final event")
+	}
+	if err := dec.Err(); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func TestEventStreamDecoder_TokenExceedsBufferLimit(t *testing.T) {
 	// A single line exceeding the scanner buffer causes a scanner error.
 	// Use a small custom scanner to avoid allocating 32MB in tests.

@@ -206,6 +206,37 @@ func TestEvent_UnknownType(t *testing.T) {
 		t.Error("Expected IsKnown() to return false for unrecognized event type")
 	}
 
+	// Every As*() accessor must return ErrWrongVariant for an unknown type.
+	accessors := []struct {
+		name string
+		fn   func() error
+	}{
+		{"AsInstallationUpdated", func() error { _, err := event.AsInstallationUpdated(); return err }},
+		{"AsLspClientDiagnostics", func() error { _, err := event.AsLspClientDiagnostics(); return err }},
+		{"AsMessageUpdated", func() error { _, err := event.AsMessageUpdated(); return err }},
+		{"AsMessageRemoved", func() error { _, err := event.AsMessageRemoved(); return err }},
+		{"AsMessagePartUpdated", func() error { _, err := event.AsMessagePartUpdated(); return err }},
+		{"AsMessagePartRemoved", func() error { _, err := event.AsMessagePartRemoved(); return err }},
+		{"AsSessionCompacted", func() error { _, err := event.AsSessionCompacted(); return err }},
+		{"AsPermissionUpdated", func() error { _, err := event.AsPermissionUpdated(); return err }},
+		{"AsPermissionReplied", func() error { _, err := event.AsPermissionReplied(); return err }},
+		{"AsFileEdited", func() error { _, err := event.AsFileEdited(); return err }},
+		{"AsFileWatcherUpdated", func() error { _, err := event.AsFileWatcherUpdated(); return err }},
+		{"AsTodoUpdated", func() error { _, err := event.AsTodoUpdated(); return err }},
+		{"AsSessionIdle", func() error { _, err := event.AsSessionIdle(); return err }},
+		{"AsSessionCreated", func() error { _, err := event.AsSessionCreated(); return err }},
+		{"AsSessionUpdated", func() error { _, err := event.AsSessionUpdated(); return err }},
+		{"AsSessionDeleted", func() error { _, err := event.AsSessionDeleted(); return err }},
+		{"AsSessionError", func() error { _, err := event.AsSessionError(); return err }},
+		{"AsServerConnected", func() error { _, err := event.AsServerConnected(); return err }},
+		{"AsIdeInstalled", func() error { _, err := event.AsIdeInstalled(); return err }},
+	}
+	for _, a := range accessors {
+		if !errors.Is(a.fn(), ErrWrongVariant) {
+			t.Errorf("%s: expected ErrWrongVariant for unknown event type", a.name)
+		}
+	}
+
 	// Verify round-trip: MarshalJSON should reproduce the original data
 	out, err := event.MarshalJSON()
 	if err != nil {

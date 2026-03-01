@@ -317,6 +317,34 @@ func TestClientDo_EmptyBody502_ReturnsAPIErrorWithStatusText(t *testing.T) {
 	}
 }
 
+func TestClientDo_MaxRetriesZero_ExactlyOneAttempt(t *testing.T) {
+	// WithMaxRetries(0) means exactly one attempt with no retries.
+	attempts := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		attempts++
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = w.Write([]byte("server error"))
+	}))
+	defer server.Close()
+
+	client, err := opencode.NewClient(
+		opencode.WithBaseURL(server.URL),
+		opencode.WithMaxRetries(0),
+	)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	_, err = client.Session.List(context.Background(), &opencode.SessionListParams{})
+	if err == nil {
+		t.Fatal("expected error for 500 response")
+	}
+
+	if attempts != 1 {
+		t.Errorf("expected exactly 1 attempt with maxRetries=0, got %d", attempts)
+	}
+}
+
 func TestClientDo_PostBodyReencodedOnRetry(t *testing.T) {
 	var bodies []string
 	attempts := 0
