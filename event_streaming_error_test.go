@@ -168,3 +168,34 @@ func TestListStreaming_ErrorStatus(t *testing.T) {
 		})
 	}
 }
+
+func TestListStreaming_UnexpectedContentType(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"events": []}`))
+	}))
+	defer server.Close()
+
+	client, err := opencode.NewClient(opencode.WithBaseURL(server.URL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	stream := client.Event.ListStreaming(context.Background(), nil)
+	defer func() { _ = stream.Close() }()
+	if stream.Next() {
+		t.Fatal("expected Next() to return false on wrong content type")
+	}
+
+	err = stream.Err()
+	if err == nil {
+		t.Fatal("expected non-nil error for unexpected content type")
+	}
+	if !strings.Contains(err.Error(), "unexpected content type") {
+		t.Errorf("expected error about unexpected content type, got: %v", err)
+	}
+	if !strings.Contains(err.Error(), "application/json") {
+		t.Errorf("expected error to mention actual content type, got: %v", err)
+	}
+}

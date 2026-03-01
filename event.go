@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"mime"
 	"net/http"
 	"net/url"
 
@@ -57,6 +58,13 @@ func (s *EventService) ListStreaming(ctx context.Context, params *EventListParam
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return ssestream.NewStream[Event](nil, readAPIError(resp, maxErrorBodySize))
+	}
+
+	mediaType, _, _ := mime.ParseMediaType(resp.Header.Get("Content-Type"))
+	if mediaType != "" && mediaType != "text/event-stream" {
+		_ = resp.Body.Close()
+		return ssestream.NewStream[Event](nil, fmt.Errorf(
+			"event stream: unexpected content type %q, expected text/event-stream", mediaType))
 	}
 
 	return ssestream.NewStream[Event](ssestream.NewDecoder(resp), nil)
