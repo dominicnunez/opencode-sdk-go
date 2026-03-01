@@ -1,6 +1,7 @@
 package opencode
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -1288,7 +1289,8 @@ func (p *ConfigProviderOptionsTimeoutUnion) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// AsInt returns the timeout as an int64 if it is a number, or (0, ErrWrongVariant) otherwise.
+// AsInt returns the timeout as an int64 if it is an integer, or (0, ErrWrongVariant) otherwise.
+// Float values (e.g. 300000.5) return ErrWrongVariant rather than silently truncating.
 func (p ConfigProviderOptionsTimeoutUnion) AsInt() (int64, error) {
 	if len(p.raw) == 0 {
 		return 0, wrongVariant("int variant", "empty raw")
@@ -1296,6 +1298,9 @@ func (p ConfigProviderOptionsTimeoutUnion) AsInt() (int64, error) {
 	c := p.raw[0]
 	if c != '-' && (c < '0' || c > '9') {
 		return 0, wrongVariant("int variant", "non-numeric JSON value")
+	}
+	if bytes.ContainsAny(p.raw, ".eE") {
+		return 0, wrongVariant("int variant", "float JSON value")
 	}
 	var i int64
 	if err := json.Unmarshal(p.raw, &i); err != nil {
@@ -1467,6 +1472,15 @@ type McpLocalConfig struct {
 	// Environment variables to set when running the MCP server
 	Environment map[string]string `json:"environment"`
 }
+
+// String returns a human-readable representation with environment values redacted.
+func (c McpLocalConfig) String() string {
+	return fmt.Sprintf("McpLocalConfig{Type:%s, Command:%v, Enabled:%t, Environment:<%d redacted>}",
+		c.Type, c.Command, c.Enabled, len(c.Environment))
+}
+
+// GoString returns a Go-syntax representation with environment values redacted.
+func (c McpLocalConfig) GoString() string { return c.String() }
 
 // Type of MCP server connection
 type McpLocalConfigType string

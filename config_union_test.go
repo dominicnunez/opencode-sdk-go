@@ -139,6 +139,45 @@ func TestConfigProviderOptionsTimeoutUnion(t *testing.T) {
 			t.Errorf("AsBool() = %v, want ErrWrongVariant", err)
 		}
 	})
+
+	t.Run("AsInt_RejectsFloat", func(t *testing.T) {
+		data := []byte(`300000.5`)
+		var u ConfigProviderOptionsTimeoutUnion
+		if err := json.Unmarshal(data, &u); err != nil {
+			t.Fatalf("Unmarshal failed: %v", err)
+		}
+		_, err := u.AsInt()
+		if !errors.Is(err, ErrWrongVariant) {
+			t.Errorf("AsInt(300000.5) = %v, want ErrWrongVariant", err)
+		}
+	})
+
+	t.Run("AsInt_RejectsScientificNotation", func(t *testing.T) {
+		data := []byte(`3e5`)
+		var u ConfigProviderOptionsTimeoutUnion
+		if err := json.Unmarshal(data, &u); err != nil {
+			t.Fatalf("Unmarshal failed: %v", err)
+		}
+		_, err := u.AsInt()
+		if !errors.Is(err, ErrWrongVariant) {
+			t.Errorf("AsInt(3e5) = %v, want ErrWrongVariant", err)
+		}
+	})
+
+	t.Run("AsInt_NegativeInt", func(t *testing.T) {
+		data := []byte(`-1`)
+		var u ConfigProviderOptionsTimeoutUnion
+		if err := json.Unmarshal(data, &u); err != nil {
+			t.Fatalf("Unmarshal failed: %v", err)
+		}
+		i, err := u.AsInt()
+		if err != nil {
+			t.Fatalf("AsInt(-1) unexpected error: %v", err)
+		}
+		if i != -1 {
+			t.Errorf("Expected -1, got %d", i)
+		}
+	})
 }
 
 // TestConfigAgentGeneralPermissionBashUnion tests another bash union to ensure pattern consistency
