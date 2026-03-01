@@ -529,6 +529,69 @@ func TestClientDo_ContextCancelledDuringBackoffDelay(t *testing.T) {
 	}
 }
 
+func TestClientDo_ContextCancelledDuringInFlightRequest(t *testing.T) {
+	// Verifies that cancelling a context while the HTTP request is in-flight
+	// propagates context.Canceled through the SDK's error wrapping.
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Hold the connection open until the client cancels.
+		<-r.Context().Done()
+	}))
+	defer server.Close()
+
+	client, err := opencode.NewClient(
+		opencode.WithBaseURL(server.URL),
+		opencode.WithMaxRetries(0),
+		opencode.WithTimeout(5*time.Second),
+	)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	// Cancel after a short delay so the request is in-flight.
+	go func() {
+		time.Sleep(50 * time.Millisecond)
+		cancel()
+	}()
+
+	_, err = client.Session.List(ctx, &opencode.SessionListParams{})
+	if err == nil {
+		t.Fatal("expected error after context cancellation during in-flight request")
+	}
+	if !errors.Is(err, context.Canceled) {
+		t.Errorf("expected context.Canceled, got: %v", err)
+	}
+}
+
+func TestClientDo_JSONDecodeFailureOnSuccessResponse(t *testing.T) {
+	// Verifies that HTTP 200 with invalid JSON body produces a decode error
+	// containing method and path context.
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("not json"))
+	}))
+	defer server.Close()
+
+	client, err := opencode.NewClient(opencode.WithBaseURL(server.URL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	_, err = client.Session.List(context.Background(), &opencode.SessionListParams{})
+	if err == nil {
+		t.Fatal("expected error for invalid JSON response body")
+	}
+
+	errMsg := err.Error()
+	if !strings.Contains(errMsg, "decode") {
+		t.Errorf("expected error to contain %q, got: %v", "decode", errMsg)
+	}
+	if !strings.Contains(errMsg, "GET") {
+		t.Errorf("expected error to contain HTTP method, got: %v", errMsg)
+	}
+}
+
 type roundTripFunc func(req *http.Request) (*http.Response, error)
 
 func (f roundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
