@@ -1269,6 +1269,14 @@ type ConfigProviderOptions struct {
 	Timeout ConfigProviderOptionsTimeoutUnion `json:"timeout"`
 }
 
+// String returns a human-readable representation with the APIKey redacted.
+func (o ConfigProviderOptions) String() string {
+	return fmt.Sprintf("ConfigProviderOptions{APIKey:%s, BaseURL:%s, Timeout:%v}", redacted, o.BaseURL, o.Timeout)
+}
+
+// GoString returns a Go-syntax representation with the APIKey redacted.
+func (o ConfigProviderOptions) GoString() string { return o.String() }
+
 // ConfigProviderOptionsTimeoutUnion can be either an int64 or a bool.
 // Use AsInt() or AsBool() to access the value.
 type ConfigProviderOptionsTimeoutUnion struct {
@@ -1485,6 +1493,15 @@ type McpRemoteConfig struct {
 	// Headers to send with the request
 	Headers map[string]string `json:"headers"`
 }
+
+// String returns a human-readable representation with header values redacted.
+func (r McpRemoteConfig) String() string {
+	return fmt.Sprintf("McpRemoteConfig{Type:%s, URL:%s, Enabled:%t, Headers:<%d redacted>}",
+		r.Type, r.URL, r.Enabled, len(r.Headers))
+}
+
+// GoString returns a Go-syntax representation with header values redacted.
+func (r McpRemoteConfig) GoString() string { return r.String() }
 
 // Type of MCP server connection
 type McpRemoteConfigType string
