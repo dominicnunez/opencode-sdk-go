@@ -481,3 +481,52 @@ actually cause same-repo PRs to run CI twice — once from push, once from pull_
 **Date:** 2026-03-01
 
 **Reason:** The finding itself says "No code change needed — this is a readability observation." The types (`OAuth`, `ApiAuth`, `WellKnownAuth`) and their constants (`AuthTypeOAuth`, `AuthTypeAPI`, `AuthTypeWellKnown`) are defined in `config.go` and are findable via standard IDE navigation or grep. Cross-file type references are normal in Go packages. This is an observation about code organization, not a defect.
+
+### Backoff delay overflow for high attempt values
+
+**Location:** `client.go:280` — exponential backoff calculation
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing exception "Backoff bit-shift overflow on high retry counts." `WithMaxRetries` hard-caps at 10, and the `delay <= 0 || delay > maxBackoff` guard at line 281 catches any overflow. The maximum intermediate value is `500ms * 1024 = 512s`, well within `int64` range. The finding is speculative — it describes a concern that requires violating the enforced `maxRetryCap` invariant.
+
+### queryparams non-pointer zero-value int/bool emitted even without omitempty
+
+**Location:** `internal/queryparams/queryparams.go:145-163` — addFieldValue int/bool cases
+**Date:** 2026-03-01
+
+**Reason:** The behavior is explicitly documented in a comment at lines 141-144: "unlike strings (always omitted when empty), non-pointer int/bool zero values are emitted unless omitempty is set." The finding itself says "No code change needed." This describes documented, working-as-designed behavior. No current params struct uses a non-pointer int/bool without `omitempty`, so the "test documenting this behavior" suggestion addresses a purely hypothetical future scenario.
+
+### No test for readAPIError with truncated large response body
+
+**Location:** `errors.go:97-125` — readAPIError truncation
+**Date:** 2026-03-01
+
+**Reason:** The audit claims no test verifies truncation behavior. This is factually wrong. `TestReadAPIError_BodyTruncation` (errors_test.go:590-631) has three subtests: "body within limit is not marked truncated" (asserts `Truncated == false`), "body exceeding limit is marked truncated" (asserts `Truncated == true` and `len(Body) == maxErrorBodySize`), and "body exactly one byte over limit is marked truncated." The exact scenarios described in the suggested fix are already tested.
+
+### No test for readAPIError with ReadErr (partial body read failure)
+
+**Location:** `errors.go:99` — readAPIError ReadErr field
+**Date:** 2026-03-01
+
+**Reason:** The audit claims no test verifies that a mid-stream read failure populates `ReadErr`. This is factually wrong. `TestReadAPIError_PartialReadError` (errors_test.go:520) has subtests including "read error stored in ReadErr field" which uses a custom `io.Reader` that returns partial data then an error, and asserts both `Body` contains partial content and `ReadErr` is non-nil with the expected error via `errors.Is`.
+
+### SSE maxSSETokenSize allows 32MB per token with no backpressure
+
+**Location:** `packages/ssestream/ssestream.go:18` — maxSSETokenSize constant
+**Date:** 2026-03-01
+
+**Reason:** The finding itself says "This is likely acceptable for the intended use case (local dev server)" and only suggests adding godoc. The constant is already documented with a comment at lines 15-17 explaining why 32MB is needed. This is a documentation suggestion for a conscious design choice targeting a local dev server, not a code defect.
+
+### apierror.Error type alias has no integration test
+
+**Location:** `internal/apierror/apierror_test.go` — Error type alias
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing exception "apierror.Error is unused but exported as a public type alias." The type is a Stainless leftover never constructed by the SDK. The finding itself says "low priority" and acknowledges the type is already documented as never-constructed. Adding an integration test for a type that is never returned by any SDK method has no practical value.
+
+### No test for retry behavior on 429 status codes
+
+**Location:** `client_do_test.go` — missing 429 retry integration test
+**Date:** 2026-03-01
+
+**Reason:** The audit claims neither 408 nor 429 has a dedicated retry test. The 429 claim is factually wrong. `TestRetryOn429` (client_test.go:52-79) uses a custom transport returning 429 on every request, creates a client, calls `Session.List`, asserts an error after exhausting retries, and verifies exactly 3 attempts were made. This is a full integration retry test, not just a unit check of `isRetryableStatus`.
