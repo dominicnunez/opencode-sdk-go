@@ -55,28 +55,30 @@ func (r AuthSetParams) URLQuery() (url.Values, error) {
 // It sets the Type discriminator automatically based on the concrete type,
 // so callers don't need to set it manually.
 func (r AuthSetParams) MarshalJSON() ([]byte, error) {
-	switch v := r.Auth.(type) {
+	// Dereference pointers so the switch below only handles value types.
+	auth := r.Auth
+	switch v := auth.(type) {
+	case *OAuth:
+		copy := *v
+		auth = copy
+	case *ApiAuth:
+		copy := *v
+		auth = copy
+	case *WellKnownAuth:
+		copy := *v
+		auth = copy
+	}
+
+	switch v := auth.(type) {
 	case OAuth:
 		v.Type = AuthTypeOAuth
 		return json.Marshal(v)
-	case *OAuth:
-		copy := *v
-		copy.Type = AuthTypeOAuth
-		return json.Marshal(copy)
 	case ApiAuth:
 		v.Type = AuthTypeAPI
 		return json.Marshal(v)
-	case *ApiAuth:
-		copy := *v
-		copy.Type = AuthTypeAPI
-		return json.Marshal(copy)
 	case WellKnownAuth:
 		v.Type = AuthTypeWellKnown
 		return json.Marshal(v)
-	case *WellKnownAuth:
-		copy := *v
-		copy.Type = AuthTypeWellKnown
-		return json.Marshal(copy)
 	default:
 		return nil, fmt.Errorf("unknown auth union type: %T", r.Auth)
 	}
