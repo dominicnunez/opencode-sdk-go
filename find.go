@@ -82,7 +82,17 @@ const (
 )
 
 func (r SymbolKind) IsKnown() bool {
-	return r >= SymbolKindFile && r <= SymbolKindTypeParameter
+	switch r {
+	case SymbolKindFile, SymbolKindModule, SymbolKindNamespace, SymbolKindPackage,
+		SymbolKindClass, SymbolKindMethod, SymbolKindProperty, SymbolKindField,
+		SymbolKindConstructor, SymbolKindEnum, SymbolKindInterface, SymbolKindFunction,
+		SymbolKindVariable, SymbolKindConstant, SymbolKindString, SymbolKindNumber,
+		SymbolKindBoolean, SymbolKindArray, SymbolKindObject, SymbolKindKey,
+		SymbolKindNull, SymbolKindEnumMember, SymbolKindStruct, SymbolKindEvent,
+		SymbolKindOperator, SymbolKindTypeParameter:
+		return true
+	}
+	return false
 }
 
 type Symbol struct {
@@ -97,16 +107,11 @@ type SymbolLocation struct {
 }
 
 type SymbolLocationRange struct {
-	End   SymbolLocationRangeEnd   `json:"end"`
-	Start SymbolLocationRangeStart `json:"start"`
+	End   SymbolPosition `json:"end"`
+	Start SymbolPosition `json:"start"`
 }
 
-type SymbolLocationRangeEnd struct {
-	Character int64 `json:"character"`
-	Line      int64 `json:"line"`
-}
-
-type SymbolLocationRangeStart struct {
+type SymbolPosition struct {
 	Character int64 `json:"character"`
 	Line      int64 `json:"line"`
 }
