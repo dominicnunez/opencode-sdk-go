@@ -138,3 +138,53 @@ func TestPathParameterInjection_SessionPermissionRespond(t *testing.T) {
 		})
 	}
 }
+
+func TestPathParameterInjection_SessionMessage(t *testing.T) {
+	// Session.Message has two dynamic segments: session/{id}/message/{messageID}.
+	// Test injection in both parameters independently.
+	for _, tt := range injectionPayloads {
+		t.Run("sessionID/"+tt.name, func(t *testing.T) {
+			var receivedPath string
+			server := newInjectionServer(&receivedPath)
+			defer server.Close()
+
+			client, err := opencode.NewClient(opencode.WithBaseURL(server.URL))
+			if err != nil {
+				t.Fatalf("failed to create client: %v", err)
+			}
+
+			_, _ = client.Session.Message(
+				context.Background(), tt.id, "safe-message-id", nil,
+			)
+
+			if receivedPath == "" {
+				t.Fatal("server received no request")
+			}
+			if !strings.Contains(receivedPath, tt.wantPathContains) {
+				t.Errorf("received path %q does not contain %q", receivedPath, tt.wantPathContains)
+			}
+		})
+
+		t.Run("messageID/"+tt.name, func(t *testing.T) {
+			var receivedPath string
+			server := newInjectionServer(&receivedPath)
+			defer server.Close()
+
+			client, err := opencode.NewClient(opencode.WithBaseURL(server.URL))
+			if err != nil {
+				t.Fatalf("failed to create client: %v", err)
+			}
+
+			_, _ = client.Session.Message(
+				context.Background(), "safe-session-id", tt.id, nil,
+			)
+
+			if receivedPath == "" {
+				t.Fatal("server received no request")
+			}
+			if !strings.Contains(receivedPath, tt.wantPathContains) {
+				t.Errorf("received path %q does not contain %q", receivedPath, tt.wantPathContains)
+			}
+		})
+	}
+}
