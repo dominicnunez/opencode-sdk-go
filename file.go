@@ -150,7 +150,7 @@ type FileReadResponsePatchHunk struct {
 }
 
 type FileListParams struct {
-	Path      string  `query:"path,required"`
+	Path      string  `json:"-" query:"path,required"`
 	Directory *string `json:"-" query:"directory,omitempty"`
 }
 
@@ -159,7 +159,7 @@ func (r FileListParams) URLQuery() (url.Values, error) {
 }
 
 type FileReadParams struct {
-	Path      string  `query:"path,required"`
+	Path      string  `json:"-" query:"path,required"`
 	Directory *string `json:"-" query:"directory,omitempty"`
 }
 

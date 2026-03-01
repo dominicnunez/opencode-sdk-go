@@ -41,8 +41,8 @@ func (p ToolIDsParams) URLQuery() (url.Values, error) {
 // ToolListParams are the parameters for GET /experimental/tool
 type ToolListParams struct {
 	Directory *string `json:"-" query:"directory,omitempty"`
-	Provider  string  `query:"provider,required"`
-	Model     string  `query:"model,required"`
+	Provider  string  `json:"-" query:"provider,required"`
+	Model     string  `json:"-" query:"model,required"`
 }
 
 // URLQuery returns the query parameters for ToolListParams
