@@ -761,3 +761,367 @@ actually cause same-repo PRs to run CI twice — once from push, once from pull_
 **Date:** 2026-03-01
 
 **Reason:** `TestEventStreamDecoder_TokenExceedsBufferLimit` in `ssestream_test.go:489` already tests this exact code path. It creates a `bufio.Scanner` with a small custom limit (256 bytes), sends a token exceeding that limit, and asserts the decoder returns false with a non-nil error. The behavior is identical regardless of the buffer size — `bufio.Scanner` returns `bufio.ErrTooLong` when any token exceeds the configured limit. Allocating 32MB in a test to exercise the same code path would be wasteful.
+
+### ListStreaming connection-establishment timeout described as missing
+
+**Location:** `event.go:33-63` — uses httpClient.Do directly
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of known exception "ListStreaming bypasses Client timeout and retry logic." The finding reframes the same behavior (ListStreaming not applying `Client.timeout`) as a connection-establishment concern. SSE streams intentionally bypass `do`/`doRaw` — callers who need a connection deadline pass `context.WithTimeout`. This is documented in the method's godoc and already classified in `audit/exceptions/design.md`.
+
+### apierror.Error stores full http.Request and http.Response described as net-new
+
+**Location:** `internal/apierror/apierror.go:12-17` — Error struct fields
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of known exception "apierror.Error stores live http.Request and http.Response references." The type is a Stainless leftover never constructed by any SDK method. Already classified in `audit/exceptions/risks.md`.
+
+### Nil params error path described as untested
+
+**Location:** `session.go:119-132`, `tui.go:16-26`, `file.go:16-26` — required-params methods
+**Date:** 2026-03-01
+
+**Reason:** `nilparams_test.go` explicitly tests the `"params is required"` error path for `Session.Command`, `Session.Init`, `Session.Prompt`, `Session.Revert`, `Tui.AppendPrompt`, `Tui.ExecuteCommand`, `Tui.ShowToast`, `File.List`, `File.Read`, `Find.Files`, `Find.Symbols`, `Find.Text`, and `App.Log`. Additional coverage exists in service-specific tests (`session_shell_test.go:175`, `session_summarize_test.go:115`, `config_update_test.go:127`, `auth_test.go:124`). The audit's claim that "nilparams_test.go only covers methods that accept nil params gracefully" is the opposite of what the test does — it asserts that nil params produce the expected error.
+
+### WithTimeout and WithMaxRetries boundary tests described as missing
+
+**Location:** `client.go:134-155` — option validation
+**Date:** 2026-03-01
+
+**Reason:** `client_options_test.go` already contains `TestWithTimeout_BoundaryValues` testing `{zero, 0, true}` and `{one_nanosecond, 1ns, false}`, and `TestWithMaxRetries_BoundaryValues` testing `{max_allowed, 10, false}` and `{exceeds_cap, 11, true}`. These are the exact boundary cases the audit says are untested.
+
+### ErrInvalidRequest described as misleading for not matching 401/403
+
+**Location:** `errors.go:66-84` — APIError.Is switch statement
+**Date:** 2026-03-01
+
+**Reason:** The `Is()` method correctly evaluates 401 → `ErrUnauthorized`, 403 → `ErrForbidden`, then the 4xx catch-all matches remaining codes as `ErrInvalidRequest`. This is already documented as a known exception ("ErrInvalidRequest is a catch-all for 4xx without a dedicated sentinel"). The behavior is intentional: callers who want "any client error" should use `errors.As` with `*APIError` and check `StatusCode`, not `errors.Is(err, ErrInvalidRequest)`. The dedicated sentinels exist precisely to distinguish these cases.
+
+### ListStreaming bypasses client timeout described as a bug
+
+**Location:** `event.go:33-63` — uses httpClient.Do directly
+**Date:** 2026-03-01
+
+**Reason:** Already classified as a known exception multiple times. SSE streams are long-lived connections; applying the client's 30s default timeout would kill every connection. Callers use `context.WithTimeout` for deadlines. This is intentional design, not a bug.
+
+### ListStreaming does not apply retry logic described as a bug
+
+**Location:** `event.go:52-59` — single HTTP request via httpClient.Do
+**Date:** 2026-03-01
+
+**Reason:** Already classified as a known exception. SSE streams are consumed once; retrying a stream is complex and callers should manage reconnection at the application level. `ListStreaming` intentionally bypasses `Client.doRaw()` for SSE semantics.
+
+### APIError does not implement Unwrap described as an error handling gap
+
+**Location:** `errors.go:31-50` — APIError type
+**Date:** 2026-03-01
+
+**Reason:** The finding itself says "No action required now." `readAPIError` returns `*APIError` directly (unwrapped), so the `Is` method is always called. The concern is purely speculative: "if any future code wraps an `APIError` with `fmt.Errorf`." No code in the codebase does this today, and Go's `errors.As` already handles `*APIError` matching through the chain. The finding describes a hypothetical future problem, not a current defect.
+
+### Base URL query merge in buildURL described as redundant
+
+**Location:** `client.go:181-186` — buildURL base URL query loop
+**Date:** 2026-03-01
+
+**Reason:** The finding claims `ResolveReference` preserves the base URL's query string, making the merge loop redundant. This is factually wrong. `ResolveReference(&url.URL{Path: path})` produces a resolved URL with an empty `RawQuery` — the base URL's query params are dropped because the reference has a non-empty path. The loop is necessary to re-merge those params. Already proven in existing known exception "Base URL query merge in buildURL is redundant because ResolveReference preserves query params."
+
+### No SSE reconnection test described as a testing gap
+
+**Location:** `event.go:33-63` — ListStreaming single-request design
+**Date:** 2026-03-01
+
+**Reason:** Already classified as a known exception. The SDK intentionally does not implement SSE reconnection — callers manage reconnection at the application level. There is no reconnection logic in the codebase to test. Suggesting an `IsRetryableError` integration test is a documentation/example request, not a test gap.
+
+### McpStatus uses untyped map described as a code quality issue
+
+**Location:** `mcp.go:17` — McpStatus type definition
+**Date:** 2026-03-01
+
+**Reason:** Already classified as a known exception. The OpenAPI spec defines the MCP status response with an empty schema (`"schema": {}`), meaning the response shape is intentionally unspecified. `map[string]interface{}` is the correct Go representation. The finding's suggestion to use `json.RawMessage` would force callers to unmarshal twice, adding complexity for no type safety gain.
+
+### Timer not stopped on normal expiry in retry backoff
+
+**Location:** `client.go:288` — backoff timer select
+**Date:** 2026-03-01
+
+**Reason:** When the timer fires via `<-timer.C`, calling `Stop()` is a documented no-op in Go — the timer's internal goroutine has already exited. There is no resource to release. The finding itself acknowledges "The timer is GC'd after the loop iteration anyway, making this a minor resource hygiene issue rather than a leak." This is not a bug or a meaningful hygiene issue — `Stop()` after fire does nothing.
+
+### ToolService.List required params validation described as untested
+
+**Location:** `tool.go:72-74` — required params validation
+**Date:** 2026-03-01
+
+**Reason:** `TestToolService_List_MissingProvider` (tool_test.go:300) and `TestToolService_List_MissingModel` (tool_test.go:314) test exactly this — they call `ToolService.List` with empty `Provider` or `Model` strings and assert an error is returned. The integration path through `ToolService.List` is tested for required field validation.
+
+### AuthSetParams.MarshalJSON edge cases described as untested
+
+**Location:** `auth.go:57-85` — MarshalJSON test coverage
+**Date:** 2026-03-01
+
+**Reason:** The finding claims "No test calls `json.Marshal` on `AuthSetParams` directly." This is factually wrong. `TestAuthSetParams_MarshalJSON_OAuth` (auth_test.go:195), `_ApiAuth` (auth_test.go:224), `_WellKnownAuth` (auth_test.go:250), `_AutoSetsTypeDiscriminator` (auth_test.go:280), `_PointerDoesNotMutate` (auth_test.go:311), and `_UnknownTypeErrors` (auth_test.go:341) all call `json.Marshal` on `AuthSetParams` directly. The pointer dereferencing, type discrimination, and unknown-type error paths are all exercised. The nil-pointer interface case (`(*OAuth)(nil)`) is genuinely untested, but that is a bug finding (nil pointer dereference panic), not a testing gap — the separate bug finding about nil Auth already covers it.
+
+### 429 retry behavior described as untested
+
+**Location:** `client.go:52-56` — isRetryableStatus for 429
+**Date:** 2026-03-01
+
+**Reason:** `TestRetryOn429` (client_test.go:52) does exactly what the finding's suggested fix describes: returns 429 on every attempt, verifies 3 attempts are made (confirming retry behavior), and asserts an error is returned after exhaustion. The claim "no test verifies that 429 responses are retried" is factually wrong.
+
+### ListStreaming does not apply client timeout to connection establishment
+
+**Location:** `event.go:53` — uses httpClient.Do directly
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of known exceptions "ListStreaming bypasses Client timeout and retry logic" and "ListStreaming bypasses client timeout on SSE connections." SSE streams are long-lived connections that intentionally bypass `do`/`doRaw` and their `context.WithTimeout` wrapper. Callers who need a connection-establishment deadline pass `context.WithTimeout` on the context argument, which is documented in the method's godoc. The finding reframes an already-classified intentional design choice as a new medium-severity issue.
+
+### buildURL double-merges base URL query parameters
+
+**Location:** `client.go:181-185` — buildURL base URL query loop
+**Date:** 2026-03-01
+
+**Reason:** The finding claims `ResolveReference` preserves the base URL's query string, making the loop at lines 183-185 redundant. This is factually wrong. `ResolveReference(&url.URL{Path: path})` produces a resolved URL with an empty `RawQuery` — the base URL's query params are dropped because the reference has a non-empty path. The loop is necessary to re-merge base URL query parameters. Already proven in existing known exception "Base URL query merge in buildURL is redundant because ResolveReference preserves query params." The suggested fix ("Remove lines 183-185") would break base URL query parameter preservation.
+
+### Event.MarshalJSON returns null for zero-value Event
+
+**Location:** `event.go:83-88` — MarshalJSON on unconstructed Event
+**Date:** 2026-03-01
+
+**Reason:** The finding itself states "Already tracked in `audit/exceptions/risks.md` as 'Union types cannot be constructed programmatically for serialization.' No change needed." This is a duplicate of an existing known exception, not a new finding.
+
+### ListStreaming context cancellation described as untested
+
+**Location:** `event.go:33-63` — ListStreaming context propagation
+**Date:** 2026-03-01
+
+**Reason:** The audit claims no test verifies that cancelling the context terminates the stream and surfaces an error via `stream.Err()`. This is factually wrong. `TestContextDeadlineStreaming` in `client_test.go:198` does exactly this: creates a context with a 100ms deadline, calls `ListStreaming` with a blocking transport that waits on `req.Context().Done()`, verifies the stream terminates with a non-nil error, and asserts the client returned within 30ms of the deadline. The context cancellation path is tested end-to-end.
+
+### apierror.Error stores live http.Request and http.Response described as new concern
+
+**Location:** `internal/apierror/apierror.go:12-17` — unused type with stored references
+**Date:** 2026-03-01
+
+**Reason:** The finding is a duplicate of multiple existing known exceptions: "apierror.Error stores live http.Request and http.Response references", "httputil dump errors ignored in debugging methods", and "apierror.Error unused Stainless leftover combines already-excepted sub-issues." The "additional concern" about `DumpRequest` body mutation is already covered by the "httputil dump errors ignored in debugging methods" exception. The type is never constructed anywhere in the SDK, making all sub-concerns theoretical. No new observation beyond existing exceptions.
+
+### ListStreaming buildURL error embedding described as needing action
+
+**Location:** `event.go:38-41` — buildURL error path
+**Date:** 2026-03-01
+
+**Reason:** The finding itself says "Already documented in design.md — no action needed." The behavior is intentional and already classified in known exceptions as "ListStreaming returns error via stream object on buildURL failure." The finding adds no new observation.
+
+### SSE stream mid-event connection drop described as untested
+
+**Location:** `packages/ssestream/ssestream.go:97-158` — eventStreamDecoder.Next()
+**Date:** 2026-03-01
+
+**Reason:** The audit claims no test verifies behavior when the SSE connection drops mid-event. This is factually wrong. `TestEventStreamDecoder_ConnectionDropMidEvent` at `ssestream_test.go:431` does exactly this: creates an `errReader` that returns partial data then an error, verifies `Next()` returns false, and asserts the decoder's `Err()` surfaces the read error. The mid-event TCP reset scenario is tested.
+
+### No test for maxRetries=0 with HTTP error response
+
+**Location:** `client_do_test.go` — maxRetries=0 with 500 status
+**Date:** 2026-03-01
+
+**Reason:** The audit claims no test verifies `maxRetries=0` with a retryable HTTP status. This is factually wrong. `TestClientDo_MaxRetriesZero_ExactlyOneAttempt` at `client_do_test.go:320` does exactly this: configures `WithMaxRetries(0)`, returns HTTP 500 from the test server, verifies exactly 1 attempt was made, and asserts an error is returned. The code path is tested.
+
+### APIError does not implement Unwrap described as a bug
+
+**Location:** `errors.go:31-84` — APIError type
+**Date:** 2026-03-01
+
+**Reason:** The finding itself concludes "No code change needed." `APIError` is always the terminal error (never wraps another), so the lack of `Unwrap()` is correct. The concern about future callers wrapping it with custom error types is speculative — no code in the codebase does this. Already classified as a known exception.
+
+### McpStatus described as lacking typed accessors
+
+**Location:** `mcp.go:17` — McpStatus type definition
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of known exception "McpStatus is an untyped map." The OpenAPI spec defines the MCP status response with an empty schema (`"schema": {}`). `map[string]interface{}` is the correct Go representation. Already classified.
+
+### apierror.Error stores *http.Request and *http.Response described as retaining large objects
+
+**Location:** `internal/apierror/apierror.go:12-17` — Error struct fields
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of known exception "apierror.Error stores live http.Request and http.Response references." The type is a Stainless leftover never constructed by any SDK method. The finding itself says "No action needed while the type remains unused." Already classified multiple times.
+
+### ListStreaming bypasses Client.do timeout described as a bug
+
+**Location:** `event.go:33-63` — uses httpClient.Do directly
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of known exception "ListStreaming bypasses Client timeout and retry logic." SSE streams are long-lived connections; applying the client's 30s default timeout would kill every connection. Callers use `context.WithTimeout` for deadlines. Already classified.
+
+### ListStreaming does not retry on transient failures described as inconsistency
+
+**Location:** `event.go:53-59` — single HTTP request via httpClient.Do
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of known exception "ListStreaming bypasses client retry logic." SSE streams are consumed once; retrying is complex and callers should manage reconnection at the application level using `APIError.IsRetryable()`. Already classified.
+
+### No test for PermissionResponse validation with invalid values
+
+**Location:** `sessionpermission.go:17-33` — Respond method
+**Date:** 2026-03-01
+
+**Reason:** The finding claims `IsKnown()` "is never called" and there's no test for invalid values. `IsKnown()` is a public method for callers — it's not meant to be called internally by the SDK. It IS tested: `TestPermissionResponse_IsKnown` in `sessionpermission_test.go:282-302` covers valid values (`once`, `always`, `reject`) and invalid values (`""`, `"invalid"`, `"ONCE"`). The SDK deliberately delegates validation to the server, which is standard practice for API SDKs — client-side validation creates version skew when the server adds new enum values.
+
+### Race condition in test helpers using shared server variable
+
+**Location:** `client_do_test.go:51-53, 236-239` — attempts counter and attemptTimes slice
+**Date:** 2026-03-01
+
+**Reason:** The finding claims `attempts` and `attemptTimes` are written from the handler goroutine and read from the test goroutine without synchronization. This misreads Go's memory model. `http.Client.Do` returns only after the handler goroutine has finished writing the response, which provides a happens-before relationship through the HTTP transport's internal channel operations. All handler writes to `attempts` and `attemptTimes` complete before `Do` returns, and `Session.List` (which calls `doRaw` with sequential retries) only returns after all retries complete. The test assertions run after `Session.List` returns, so all writes are visible. No data race exists.
+
+### Test counter variables accessed across goroutine boundaries without synchronization
+
+**Location:** `client_do_test.go:55, client_test.go:58` — attempts counters in test closures
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of the finding directly above, with the same `client_do_test.go` httptest.Server concern already classified as a misread. The finding additionally references `client_test.go:58`, which uses a `closureTransport` — `RoundTrip` runs synchronously on the caller's goroutine, so there is no cross-goroutine access at all. Neither location has a data race.
+
+### Tool.List required params described as not validated in tests
+
+**Location:** `tool.go:71-83` — required Provider/Model query params
+**Date:** 2026-03-01
+
+**Reason:** The audit claims `tool_test.go` "never verifies that omitting these required fields produces an error from `queryparams.Marshal`." This is factually wrong. `TestToolService_List_MissingProvider` (tool_test.go:300) calls `Tool.List` with an empty `Provider` and asserts an error. `TestToolService_List_MissingModel` (tool_test.go:314) does the same for `Model`. Both tests exercise the `queryparams.Marshal` validation path through the full `Tool.List` method.
+
+### Retry backoff timing and context cancellation described as untested
+
+**Location:** `client.go:219-308` — retry loop backoff behavior
+**Date:** 2026-03-01
+
+**Reason:** The finding claims "the exponential backoff timing, the `skipDelay` optimization for transport errors on the penultimate attempt, and the context cancellation during backoff are not tested." Two of three claims are factually wrong. `TestClientDo_ExponentialBackoff` (client_do_test.go:234) returns 500 twice then verifies delays are ~500ms and ~1000ms respectively, confirming exponential backoff timing. `TestClientDo_ContextCancelledDuringBackoffDelay` (client_do_test.go:484) cancels a context 100ms after the first 500 attempt and verifies the error is `context.Canceled` with only 1 attempt made within 400ms. The `skipDelay` optimization is untested, but the finding's description misrepresents the overall state of coverage.
+
+### SSE maxSSETokenSize enforcement described as untested
+
+**Location:** `packages/ssestream/ssestream.go:17` — maxSSETokenSize constant
+**Date:** 2026-03-01
+
+**Reason:** The finding claims "no test verifies that events exceeding this limit are handled correctly." `TestEventStreamDecoder_TokenExceedsBufferLimit` (ssestream_test.go:551) tests this exact code path using a 256-byte custom scanner limit, verifying that `Next()` returns false with a non-nil error when a token exceeds the buffer. The behavior is identical regardless of buffer size — `bufio.Scanner` returns `bufio.ErrTooLong` when any token exceeds the configured limit. The 32MB constant and the 256-byte test limit exercise the same `bufio.Scanner` overflow path.
+
+### ListStreaming non-2xx initial response described as untested
+
+**Location:** `event.go:58-59` — ListStreaming non-2xx error path
+**Date:** 2026-03-01
+
+**Reason:** The finding claims "There is no test for the full `ListStreaming` → non-2xx → `readAPIError` path." This is factually wrong. `TestListStreaming_ErrorStatus` (event_streaming_error_test.go:85) is a table-driven test covering 401, 403, 404, 500, and 502 status codes. Each subtest starts an HTTP server returning the error status, calls `ListStreaming`, verifies `stream.Next()` returns false, asserts `stream.Err()` wraps a `*APIError` via `errors.As`, and checks the status code matches. `TestListStreaming_JSONErrorBody` (event_streaming_error_test.go:14) additionally tests JSON body parsing and `X-Request-Id` extraction through the same path.
+
+### Retry loop sends empty body when maxRetries=0 with transport error and non-nil response
+
+**Location:** `client.go:300-307` — retry body re-encoding block
+**Date:** 2026-03-01
+
+**Reason:** The finding claims that with `maxRetries == 0` and a transport error where `resp != nil`, the `continue` at line 277-278 skips body re-encoding, causing the next iteration to use a drained buffer. This is factually wrong. With `maxRetries = 0`, the loop runs exactly once (`attempt = 0`). After `continue`, `attempt` increments to 1, and the loop condition `attempt <= c.maxRetries` (i.e., `1 <= 0`) is false — the loop exits immediately. No second iteration occurs, so no drained buffer is ever reused.
+
+### Timer not stopped on normal expiry in retry backoff
+
+**Location:** `client.go:291-298` — backoff timer select
+**Date:** 2026-03-01
+
+**Reason:** The finding itself concludes "No change needed — this is correct behavior. The timer is already fired in the normal path." When a timer fires via `<-timer.C`, calling `Stop()` is a documented no-op in Go — the timer's internal goroutine has already exited. The `<-ctx.Done()` branch correctly calls `Stop()` because the timer hasn't fired there. This is correct Go code, not a bug or inconsistency. Already covered by existing known exception "Timer not stopped on normal completion in retry backoff."
+
+### ListStreaming silently returns empty stream on non-2xx due to theoretical nil APIError
+
+**Location:** `event.go:58-59` — non-2xx error path
+**Date:** 2026-03-01
+
+**Reason:** The finding speculates that `readAPIError` could "theoretically return a nil `*APIError`," creating a nil-interface-value bug. `readAPIError` (errors.go:103-135) always returns `&APIError{...}` — it unconditionally constructs and returns a non-nil pointer. The nil scenario the finding describes cannot occur with the actual implementation. The finding's own text acknowledges "readAPIError always returns a non-nil `*APIError`" and suggests no fix.
+
+### No test coverage for Config.Update with non-nil body content
+
+**Location:** `config.go:30-40` — Config.Update body serialization
+**Date:** 2026-03-01
+
+**Reason:** The finding claims `config_update_test.go` should be verified to test that `ConfigUpdateParams` serializes correctly. The test file already contains exactly this coverage: `TestConfigUpdate_Success` captures the HTTP request body and verifies fields (`Model`, `Theme`), `TestConfigUpdate_WithDirectoryQueryParam` also captures and verifies the body, `TestConfigUpdateParams_MarshalJSON` tests direct serialization of all fields, and `TestConfigUpdateParams_MarshalJSON_OmitsZeroValues` explicitly asserts that zero-value bools and strings are omitted from PATCH bodies.
+
+### gosec G117 exclusion references non-existent rule
+
+**Location:** `.golangci.yml:26-28` — G117 gosec rule suppression
+**Date:** 2026-03-01
+
+**Reason:** The finding claims G117 is "not a standard gosec rule" and suggests it should be G101. G117 is a real gosec rule added in v2.23.0 (released 2026-02-17) for "Potential exposure of secrets via JSON marshaling." The exclusion correctly suppresses G117 because the `APIKey` field in `ConfigProviderOptions` triggers this new serialization rule, and the field faithfully reflects the OpenAPI spec. The finding was based on outdated knowledge of gosec's rule set.
+
+### No test coverage for 12 Session service methods
+
+**Location:** `session.go:89-330` — Session service methods
+**Date:** 2026-03-01
+
+**Reason:** The finding claims Abort, Children, Command, Init, Share, Diff, Fork, Shell, Summarize, Todo, Unrevert, and Unshare all lack test coverage. 9 of these 12 have comprehensive dedicated tests: Init and Command in `session_init_command_revert_test.go`, Diff in `session_diff_test.go` (11 tests), Fork in `session_fork_test.go` (8 tests), Shell in `session_shell_test.go` (8 tests), Summarize in `session_summarize_test.go` (9 tests), Todo in `session_todo_test.go` (8 tests), Unrevert in `session_unrevert_test.go` (7 tests), and Unshare in `session_unshare_test.go` (6 tests). Only Abort, Children, and Share actually lack coverage.
+
+### No test coverage for Agent, Command, Path, Project, Tui services
+
+**Location:** `agent.go, command.go, path.go, project.go, tui.go` — service tests
+**Date:** 2026-03-01
+
+**Reason:** The finding claims all these services lack dedicated test files. `service_test.go` contains tests for AgentService.List (with directory query param), CommandService.List, ProjectService.List, ProjectService.Current, and all 9 TuiService methods. Only PathService.Get lacks a functional test (path_injection_test.go tests injection security but not the Get endpoint).
+
+### SSE stream happy-path iteration described as untested
+
+**Location:** `event.go:33` — ListStreaming happy path
+**Date:** 2026-03-01
+
+**Reason:** The audit claims no test verifies the happy path of ListStreaming delivering SSE events that unmarshal into `Event` structs. This is factually wrong. `readme_test.go:138-147` starts an `httptest.Server` that sends a `text/event-stream` response with a `message.updated` SSE event, calls `ListStreaming`, asserts `stream.Next()` returns true, retrieves `stream.Current()`, and verifies `evt.Type == EventTypeMessageUpdated`. The full integration path from `ListStreaming` → `NewDecoder` → `Stream[Event].Next()` → `Event.UnmarshalJSON` is exercised end-to-end.
+
+### ListStreaming query parameter forwarding described as untested
+
+**Location:** `event.go:38` — buildURL with EventListParams
+**Date:** 2026-03-01
+
+**Reason:** The audit claims no test verifies that `EventListParams{Directory: opencode.Ptr("/foo")}` results in `?directory=%2Ffoo` on the SSE request. This is factually wrong. `TestListStreaming_BaseURLQueryParamsPreservedWithMethodParams` in `client_test.go:228` sets `Directory: opencode.Ptr("/test")`, captures the raw query from the HTTP request, and asserts `strings.Contains(receivedQuery, "directory=%2Ftest")`. The query parameter forwarding is tested end-to-end through a real HTTP server.
+
+### ListStreaming bypasses retry logic described as a new finding
+
+**Location:** `event.go:58-59` — single HTTP request via httpClient.Do
+**Date:** 2026-03-01
+
+**Reason:** This behavior is already classified in multiple known exceptions: "ListStreaming bypasses client retry logic," "ListStreaming bypasses Client timeout and retry logic," and "EventService.ListStreaming does not use retry logic." SSE streams are consumed once; retrying is complex and callers should manage reconnection at the application level. The finding adds no new observation beyond what is already documented.
+
+### ListStreaming does not apply client timeout described as a new finding
+
+**Location:** `event.go:44` — uses httpClient.Do directly
+**Date:** 2026-03-01
+
+**Reason:** This behavior is already classified in multiple known exceptions: "ListStreaming bypasses Client timeout and retry logic," "ListStreaming bypasses client timeout on SSE connections," "Event.ListStreaming does not apply client timeout," and "ListStreaming does not apply client timeout to connection establishment." SSE streams are long-lived connections; applying a 30s timeout would kill every connection. Callers use `context.WithTimeout` for deadlines. The finding adds no new observation.
+
+### No test for 408 Request Timeout retry behavior
+
+**Location:** `client_do_test.go` — missing 408 retry test
+**Date:** 2026-03-01
+
+**Reason:** The audit claims no test verifies that 408 triggers a retry. This is factually wrong. `TestRetryOn408` at `client_test.go:69` uses a custom transport returning 408 on every request, calls `Session.List`, asserts an error after exhausting retries, and verifies exactly 3 attempts were made.
+
+### No test for 429 Too Many Requests retry behavior
+
+**Location:** `client_do_test.go` — missing 429 retry test
+**Date:** 2026-03-01
+
+**Reason:** The audit claims no test confirms the retry loop handles 429 correctly. This is factually wrong. `TestRetryOn429` at `client_test.go:52` uses a custom transport returning 429 on every request, calls `Session.List`, asserts an error after exhausting retries, and verifies exactly 3 attempts were made.
+
+### SSE eventStreamDecoder does not test bufio.Scanner token-too-long error
+
+**Location:** `packages/ssestream/ssestream_test.go` — missing token limit test
+**Date:** 2026-03-01
+
+**Reason:** The audit claims no test verifies that an event exceeding the buffer limit produces `bufio.ErrTooLong`. This is factually wrong. `TestEventStreamDecoder_TokenExceedsBufferLimit` at `ssestream_test.go:551` creates a scanner with a custom 256-byte limit, sends a token exceeding that limit, and asserts the decoder returns false with a non-nil error. The behavior is identical regardless of buffer size — `bufio.Scanner` returns `bufio.ErrTooLong` when any token exceeds the configured limit.
+
+### SSE ListStreaming does not apply context timeout described as a documentation gap
+
+**Location:** `event.go:53` — uses httpClient.Do directly
+**Date:** 2026-03-01
+
+**Reason:** This is a duplicate of multiple existing known exceptions: "ListStreaming bypasses Client timeout and retry logic," "ListStreaming bypasses client timeout on SSE connections," "Event.ListStreaming does not apply client timeout," and "ListStreaming does not apply client timeout to connection establishment." The finding reframes an already-classified intentional design choice as a documentation gap. The godoc at lines 19-32 already includes a full usage example showing `context.WithTimeout`.
+
+### Backoff delay bit shift lacks inline comment for overflow safety
+
+**Location:** `client.go:287` — exponential backoff calculation
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing known exceptions "Backoff overflow guard is unreachable with current constants" and "Backoff bit-shift overflow on high retry counts." Both exceptions document that `maxRetryCap = 10` limits the shift to `1 << 10 = 1024` and the product `500ms * 1024 = 512s` is well within `int64` range. The suggestion to add an inline comment is a documentation preference for an already-documented design choice.
+
+### SSE scanner buffer starts at nil, relies on implicit default
+
+**Location:** `packages/ssestream/ssestream.go:54` — bufio.Scanner.Buffer call
+**Date:** 2026-03-01
+
+**Reason:** `bufio.Scanner.Buffer(nil, max)` is the documented way to set a custom max token size while letting the scanner allocate its own initial buffer. Per the Go stdlib docs: "Buffer sets the initial buffer to use when scanning and the maximum size of buffer that may be allocated during scanning. The maximum token size is the larger of max and cap(buf)." Passing nil is intentional — it delegates initial allocation to the scanner (starting at `bufio.MaxScanTokenSize` = 64KiB) while capping growth at `maxSSETokenSize`. Allocating `make([]byte, 0, 4096)` would actually be worse — it would cap the initial buffer at 4KiB instead of the scanner's default 64KiB, causing unnecessary early reallocations for typical SSE payloads. The current code is idiomatic and correct.
