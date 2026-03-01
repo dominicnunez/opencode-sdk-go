@@ -131,7 +131,7 @@ func TestSessionError_AsAPI_ValidSessionAPIError(t *testing.T) {
 	}
 }
 
-func TestSessionError_WrongType_ReturnsNilNil(t *testing.T) {
+func TestSessionError_WrongType_ReturnsErrWrongVariant(t *testing.T) {
 	jsonData := `{"name":"ProviderAuthError","data":{"message":"auth failed","providerID":"test"}}`
 	var sessErr SessionError
 	if e := json.Unmarshal([]byte(jsonData), &sessErr); e != nil {
