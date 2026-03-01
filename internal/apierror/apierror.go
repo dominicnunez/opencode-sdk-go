@@ -40,6 +40,11 @@ func (r *Error) Error() string {
 	return fmt.Sprintf("%s \"%s\": %d %s %s", method, url, statusCode, statusText, raw)
 }
 
+// DumpRequest returns the outgoing HTTP request in wire format.
+// When body is true the request body is included, which may contain
+// sensitive data such as OAuth tokens, API keys, or other credentials
+// for authentication endpoints. Only enable body dumping in trusted
+// debug contexts.
 func (r *Error) DumpRequest(body bool) []byte {
 	if r.Request == nil {
 		return nil
