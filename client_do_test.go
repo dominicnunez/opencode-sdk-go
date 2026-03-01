@@ -253,15 +253,28 @@ func TestClientDo_ExponentialBackoff(t *testing.T) {
 	_, _ = client.Session.List(context.Background(), &opencode.SessionListParams{})
 
 	if attempts != 3 {
-		t.Errorf("Expected 3 attempts, got %d", attempts)
+		t.Fatalf("Expected 3 attempts, got %d", attempts)
 	}
 
-	// Check that there was a delay between attempts
-	if len(attemptTimes) >= 2 {
-		delay := attemptTimes[1].Sub(attemptTimes[0])
-		if delay < 400*time.Millisecond {
-			t.Errorf("Expected delay >= 400ms between attempts, got %v", delay)
-		}
+	// With 3 attempts we have 2 inter-attempt delays.
+	// Backoff formula: initialBackoff * (1 << attempt) → 500ms, 1000ms.
+	// Verify each delay is at least 80% of the expected value (timing tolerance)
+	// and that the second delay is meaningfully larger than the first.
+	if len(attemptTimes) < 3 {
+		t.Fatal("not enough attempt timestamps recorded")
+	}
+
+	delay1 := attemptTimes[1].Sub(attemptTimes[0])
+	delay2 := attemptTimes[2].Sub(attemptTimes[1])
+
+	if delay1 < 400*time.Millisecond {
+		t.Errorf("first delay should be ~500ms, got %v", delay1)
+	}
+	if delay2 < 800*time.Millisecond {
+		t.Errorf("second delay should be ~1000ms, got %v", delay2)
+	}
+	if delay2 <= delay1 {
+		t.Errorf("delays should increase exponentially: delay1=%v, delay2=%v", delay1, delay2)
 	}
 }
 
