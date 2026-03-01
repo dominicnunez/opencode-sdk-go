@@ -6,8 +6,34 @@ run:
 linters:
   default: none
   enable:
+    - bodyclose
     - errcheck
+    - gosec
     - govet
     - ineffassign
+    - noctx
     - staticcheck
     - unused
+
+  exclusions:
+    rules:
+      # SSRF false positive: URL is constructed from SDK's own baseURL, not tainted input
+      - linters: [gosec]
+        text: "G704"
+        path: \.go
+
+      # APIKey field name matches secret pattern, but the struct reflects the OpenAPI spec
+      - linters: [gosec]
+        text: "G117"
+        path: \.go
+
+      # Test files: file reads from test paths, subprocess launches, and test HTTP clients
+      - linters: [gosec]
+        path: _test\.go
+        text: "G204|G304"
+
+      - linters: [noctx]
+        path: _test\.go
+
+      - linters: [bodyclose]
+        path: _test\.go
