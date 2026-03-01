@@ -11,18 +11,17 @@ import (
 )
 
 // injectionPayloads are path parameter values that attempt traversal, query
-// injection, or encoded trickery. The SDK relies on server-generated UUIDs
-// so these inputs are abnormal — tests document that Go's net/http
-// neutralizes traversal via URL normalization.
+// injection, or encoded trickery. All path parameters are escaped with
+// url.PathEscape, so special characters are percent-encoded.
 var injectionPayloads = []struct {
 	name             string
 	id               string
 	wantPathContains string
 }{
-	{"path traversal is neutralized", "../config", "/config"},
-	{"slash in id", "foo/bar", "foo/bar"},
-	{"query injection", "id?x=1", "id"},
-	{"url-encoded traversal", "%2e%2e%2fconfig", "%2e%2e%2fconfig"},
+	{"path traversal is escaped", "../config", "..%2Fconfig"},
+	{"slash in id is escaped", "foo/bar", "foo%2Fbar"},
+	{"query injection is escaped", "id?x=1", "id%3Fx=1"},
+	{"url-encoded traversal is double-escaped", "%2e%2e%2fconfig", "%252e%252e%252fconfig"},
 }
 
 // newInjectionServer returns a test server that captures the request path.

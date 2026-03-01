@@ -37,7 +37,7 @@ func (s *SessionService) Update(ctx context.Context, id string, params *SessionU
 		params = &SessionUpdateParams{}
 	}
 	var result Session
-	err := s.client.do(ctx, http.MethodPatch, "session/"+id, params, &result)
+	err := s.client.do(ctx, http.MethodPatch, "session/"+url.PathEscape(id), params, &result)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +64,7 @@ func (s *SessionService) Get(ctx context.Context, id string, params *SessionGetP
 		params = &SessionGetParams{}
 	}
 	var result Session
-	err := s.client.do(ctx, http.MethodGet, "session/"+id, params, &result)
+	err := s.client.do(ctx, http.MethodGet, "session/"+url.PathEscape(id), params, &result)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +79,7 @@ func (s *SessionService) Delete(ctx context.Context, id string, params *SessionD
 		params = &SessionDeleteParams{}
 	}
 	var result bool
-	err := s.client.do(ctx, http.MethodDelete, "session/"+id, params, &result)
+	err := s.client.do(ctx, http.MethodDelete, "session/"+url.PathEscape(id), params, &result)
 	if err != nil {
 		return false, err
 	}
@@ -94,7 +94,7 @@ func (s *SessionService) Abort(ctx context.Context, id string, params *SessionAb
 		params = &SessionAbortParams{}
 	}
 	var result bool
-	err := s.client.do(ctx, http.MethodPost, "session/"+id+"/abort", params, &result)
+	err := s.client.do(ctx, http.MethodPost, "session/"+url.PathEscape(id)+"/abort", params, &result)
 	if err != nil {
 		return false, err
 	}
@@ -109,7 +109,7 @@ func (s *SessionService) Children(ctx context.Context, id string, params *Sessio
 		params = &SessionChildrenParams{}
 	}
 	var result []Session
-	err := s.client.do(ctx, http.MethodGet, "session/"+id+"/children", params, &result)
+	err := s.client.do(ctx, http.MethodGet, "session/"+url.PathEscape(id)+"/children", params, &result)
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +126,7 @@ func (s *SessionService) Command(ctx context.Context, id string, params *Session
 		return nil, errors.New("params is required")
 	}
 	var result SessionCommandResponse
-	err := s.client.do(ctx, http.MethodPost, "session/"+id+"/command", params, &result)
+	err := s.client.do(ctx, http.MethodPost, "session/"+url.PathEscape(id)+"/command", params, &result)
 	if err != nil {
 		return nil, err
 	}
@@ -143,7 +143,7 @@ func (s *SessionService) Init(ctx context.Context, id string, params *SessionIni
 		return false, errors.New("params is required")
 	}
 	var result bool
-	err := s.client.do(ctx, http.MethodPost, "session/"+id+"/init", params, &result)
+	err := s.client.do(ctx, http.MethodPost, "session/"+url.PathEscape(id)+"/init", params, &result)
 	if err != nil {
 		return false, err
 	}
@@ -161,7 +161,7 @@ func (s *SessionService) Message(ctx context.Context, id string, messageID strin
 		params = &SessionMessageParams{}
 	}
 	var result SessionMessageResponse
-	err := s.client.do(ctx, http.MethodGet, "session/"+id+"/message/"+messageID, params, &result)
+	err := s.client.do(ctx, http.MethodGet, "session/"+url.PathEscape(id)+"/message/"+url.PathEscape(messageID), params, &result)
 	if err != nil {
 		return nil, err
 	}
@@ -176,7 +176,7 @@ func (s *SessionService) Messages(ctx context.Context, id string, params *Sessio
 		params = &SessionMessagesParams{}
 	}
 	var result []SessionMessagesResponse
-	err := s.client.do(ctx, http.MethodGet, "session/"+id+"/message", params, &result)
+	err := s.client.do(ctx, http.MethodGet, "session/"+url.PathEscape(id)+"/message", params, &result)
 	if err != nil {
 		return nil, err
 	}
@@ -193,7 +193,7 @@ func (s *SessionService) Prompt(ctx context.Context, id string, params *SessionP
 		return nil, errors.New("params is required")
 	}
 	var result SessionPromptResponse
-	err := s.client.do(ctx, http.MethodPost, "session/"+id+"/message", params, &result)
+	err := s.client.do(ctx, http.MethodPost, "session/"+url.PathEscape(id)+"/message", params, &result)
 	if err != nil {
 		return nil, err
 	}
@@ -210,7 +210,7 @@ func (s *SessionService) Revert(ctx context.Context, id string, params *SessionR
 		return nil, errors.New("params is required")
 	}
 	var result Session
-	err := s.client.do(ctx, http.MethodPost, "session/"+id+"/revert", params, &result)
+	err := s.client.do(ctx, http.MethodPost, "session/"+url.PathEscape(id)+"/revert", params, &result)
 	if err != nil {
 		return nil, err
 	}
@@ -225,7 +225,7 @@ func (s *SessionService) Share(ctx context.Context, id string, params *SessionSh
 		params = &SessionShareParams{}
 	}
 	var result Session
-	err := s.client.do(ctx, http.MethodPost, "session/"+id+"/share", params, &result)
+	err := s.client.do(ctx, http.MethodPost, "session/"+url.PathEscape(id)+"/share", params, &result)
 	if err != nil {
 		return nil, err
 	}
@@ -240,7 +240,7 @@ func (s *SessionService) Diff(ctx context.Context, id string, params *SessionDif
 		params = &SessionDiffParams{}
 	}
 	var result []FileDiff
-	err := s.client.do(ctx, http.MethodGet, "session/"+id+"/diff", params, &result)
+	err := s.client.do(ctx, http.MethodGet, "session/"+url.PathEscape(id)+"/diff", params, &result)
 	if err != nil {
 		return nil, err
 	}
@@ -255,7 +255,7 @@ func (s *SessionService) Fork(ctx context.Context, id string, params *SessionFor
 		params = &SessionForkParams{}
 	}
 	var result Session
-	err := s.client.do(ctx, http.MethodPost, "session/"+id+"/fork", params, &result)
+	err := s.client.do(ctx, http.MethodPost, "session/"+url.PathEscape(id)+"/fork", params, &result)
 	if err != nil {
 		return nil, err
 	}
@@ -272,7 +272,7 @@ func (s *SessionService) Shell(ctx context.Context, id string, params *SessionSh
 		return nil, errors.New("params is required")
 	}
 	var result AssistantMessage
-	err := s.client.do(ctx, http.MethodPost, "session/"+id+"/shell", params, &result)
+	err := s.client.do(ctx, http.MethodPost, "session/"+url.PathEscape(id)+"/shell", params, &result)
 	if err != nil {
 		return nil, err
 	}
@@ -289,7 +289,7 @@ func (s *SessionService) Summarize(ctx context.Context, id string, params *Sessi
 		return false, errors.New("params is required")
 	}
 	var result bool
-	err := s.client.do(ctx, http.MethodPost, "session/"+id+"/summarize", params, &result)
+	err := s.client.do(ctx, http.MethodPost, "session/"+url.PathEscape(id)+"/summarize", params, &result)
 	if err != nil {
 		return false, err
 	}
@@ -304,7 +304,7 @@ func (s *SessionService) Todo(ctx context.Context, id string, params *SessionTod
 		params = &SessionTodoParams{}
 	}
 	var result []Todo
-	err := s.client.do(ctx, http.MethodGet, "session/"+id+"/todo", params, &result)
+	err := s.client.do(ctx, http.MethodGet, "session/"+url.PathEscape(id)+"/todo", params, &result)
 	if err != nil {
 		return nil, err
 	}
@@ -319,7 +319,7 @@ func (s *SessionService) Unrevert(ctx context.Context, id string, params *Sessio
 		params = &SessionUnrevertParams{}
 	}
 	var result Session
-	err := s.client.do(ctx, http.MethodPost, "session/"+id+"/unrevert", params, &result)
+	err := s.client.do(ctx, http.MethodPost, "session/"+url.PathEscape(id)+"/unrevert", params, &result)
 	if err != nil {
 		return nil, err
 	}
@@ -334,7 +334,7 @@ func (s *SessionService) Unshare(ctx context.Context, id string, params *Session
 		params = &SessionUnshareParams{}
 	}
 	var result Session
-	err := s.client.do(ctx, http.MethodDelete, "session/"+id+"/share", params, &result)
+	err := s.client.do(ctx, http.MethodDelete, "session/"+url.PathEscape(id)+"/share", params, &result)
 	if err != nil {
 		return nil, err
 	}

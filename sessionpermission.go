@@ -25,7 +25,7 @@ func (s *SessionPermissionService) Respond(ctx context.Context, id string, permi
 		return false, errors.New("params is required")
 	}
 	var result bool
-	err := s.client.do(ctx, http.MethodPost, "session/"+id+"/permissions/"+permissionID, params, &result)
+	err := s.client.do(ctx, http.MethodPost, "session/"+url.PathEscape(id)+"/permissions/"+url.PathEscape(permissionID), params, &result)
 	if err != nil {
 		return false, err
 	}
