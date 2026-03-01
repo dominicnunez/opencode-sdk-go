@@ -70,7 +70,12 @@ func TestAPIError_Is_SentinelMapping(t *testing.T) {
 		{"429 matches ErrRateLimited", http.StatusTooManyRequests, ErrRateLimited, true},
 		{"429 does not match ErrInvalidRequest", http.StatusTooManyRequests, ErrInvalidRequest, false},
 
-		// --- 4xx (not 401/403/404/429) maps to ErrInvalidRequest ---
+		// --- 408 maps to ErrTimeout (transient, not invalid request) ---
+		{"408 matches ErrTimeout", http.StatusRequestTimeout, ErrTimeout, true},
+		{"408 does not match ErrInvalidRequest", http.StatusRequestTimeout, ErrInvalidRequest, false},
+		{"408 does not match ErrInternal", http.StatusRequestTimeout, ErrInternal, false},
+
+		// --- 4xx (not 401/403/404/408/429) maps to ErrInvalidRequest ---
 		{"400 matches ErrInvalidRequest", http.StatusBadRequest, ErrInvalidRequest, true},
 		{"400 does not match ErrNotFound", http.StatusBadRequest, ErrNotFound, false},
 		{"400 does not match ErrInternal", http.StatusBadRequest, ErrInternal, false},
@@ -113,6 +118,7 @@ func TestAPIError_Is_ViaWrapping(t *testing.T) {
 		{"wrapped 401 matches ErrUnauthorized", http.StatusUnauthorized, ErrUnauthorized},
 		{"wrapped 403 matches ErrForbidden", http.StatusForbidden, ErrForbidden},
 		{"wrapped 429 matches ErrRateLimited", http.StatusTooManyRequests, ErrRateLimited},
+		{"wrapped 408 matches ErrTimeout", http.StatusRequestTimeout, ErrTimeout},
 		{"wrapped 400 matches ErrInvalidRequest", http.StatusBadRequest, ErrInvalidRequest},
 		{"wrapped 500 matches ErrInternal", http.StatusInternalServerError, ErrInternal},
 		{"wrapped 502 matches ErrInternal", http.StatusBadGateway, ErrInternal},
@@ -138,6 +144,32 @@ func TestAPIError_Is_DoublyWrapped(t *testing.T) {
 	twice := fmt.Errorf("layer two: %w", once)
 	if !errors.Is(twice, ErrNotFound) {
 		t.Error("errors.Is through double wrapping should match ErrNotFound")
+	}
+}
+
+// TestIsTimeoutError covers the IsTimeoutError helper.
+func TestIsTimeoutError(t *testing.T) {
+	tests := []struct {
+		name string
+		err  error
+		want bool
+	}{
+		{"nil error", nil, false},
+		{"408 APIError", apiErr(http.StatusRequestTimeout), true},
+		{"400 APIError", apiErr(http.StatusBadRequest), false},
+		{"500 APIError", apiErr(http.StatusInternalServerError), false},
+		{"wrapped 408 APIError", fmt.Errorf("wrap: %w", apiErr(http.StatusRequestTimeout)), true},
+		{"ErrTimeout sentinel directly", ErrTimeout, true},
+		{"ErrInvalidRequest sentinel", ErrInvalidRequest, false},
+		{"unrelated error", errors.New("something else"), false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IsTimeoutError(tt.err); got != tt.want {
+				t.Errorf("IsTimeoutError(%v) = %v, want %v", tt.err, got, tt.want)
+			}
+		})
 	}
 }
 

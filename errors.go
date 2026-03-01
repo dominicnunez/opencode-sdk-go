@@ -13,6 +13,7 @@ var (
 	ErrForbidden      = errors.New("forbidden")
 	ErrRateLimited    = errors.New("rate limited")
 	ErrInvalidRequest = errors.New("invalid request")
+	ErrTimeout        = errors.New("request timeout")
 	ErrInternal       = errors.New("internal server error")
 	ErrWrongVariant   = errors.New("wrong union variant")
 )
@@ -51,6 +52,8 @@ func (e *APIError) Is(target error) bool {
 		return target == ErrForbidden
 	case e.StatusCode == http.StatusTooManyRequests:
 		return target == ErrRateLimited
+	case e.StatusCode == http.StatusRequestTimeout:
+		return target == ErrTimeout
 	case e.StatusCode >= http.StatusBadRequest && e.StatusCode < http.StatusInternalServerError:
 		return target == ErrInvalidRequest
 	case e.StatusCode >= http.StatusInternalServerError:
@@ -101,6 +104,7 @@ func readAPIError(resp *http.Response, bodyLimit int64) *APIError {
 	}
 }
 
+func IsTimeoutError(err error) bool        { return errors.Is(err, ErrTimeout) }
 func IsNotFoundError(err error) bool       { return errors.Is(err, ErrNotFound) }
 func IsUnauthorizedError(err error) bool   { return errors.Is(err, ErrUnauthorized) }
 func IsForbiddenError(err error) bool      { return errors.Is(err, ErrForbidden) }
