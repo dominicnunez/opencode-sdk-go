@@ -137,8 +137,8 @@ func TestAuthService_Set_MissingAuth(t *testing.T) {
 	if err == nil {
 		t.Fatal("Expected error for nil Auth, got nil")
 	}
-	if err.Error() != "missing required Auth field" {
-		t.Errorf("Expected 'missing required Auth field' error, got %v", err)
+	if err.Error() != "AuthSetParams: Auth field is required" {
+		t.Errorf("Expected 'AuthSetParams: Auth field is required' error, got %v", err)
 	}
 }
 
@@ -344,8 +344,8 @@ func TestAuthSetParams_MarshalJSON_NilAuthErrors(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for nil Auth, got nil")
 	}
-	if !strings.Contains(err.Error(), "Auth field is required") {
-		t.Errorf("expected error containing %q, got %v", "Auth field is required", err)
+	if !strings.Contains(err.Error(), "AuthSetParams.MarshalJSON: Auth field is required") {
+		t.Errorf("expected error containing %q, got %v", "AuthSetParams.MarshalJSON: Auth field is required", err)
 	}
 }
 
@@ -356,8 +356,8 @@ func TestAuthSetParams_MarshalJSON_NilPointerAuthErrors(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for nil *OAuth, got nil")
 	}
-	if !strings.Contains(err.Error(), "Auth field is required") {
-		t.Errorf("expected error containing %q, got %v", "Auth field is required", err)
+	if !strings.Contains(err.Error(), "Auth contains typed nil *OAuth") {
+		t.Errorf("expected error containing %q, got %v", "Auth contains typed nil *OAuth", err)
 	}
 }
 

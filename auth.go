@@ -25,7 +25,7 @@ func (s *AuthService) Set(ctx context.Context, id string, params *AuthSetParams)
 		return false, errors.New("params is required")
 	}
 	if params.Auth == nil {
-		return false, errors.New("missing required Auth field")
+		return false, errors.New("AuthSetParams: Auth field is required")
 	}
 
 	var result bool
@@ -56,7 +56,7 @@ func (r AuthSetParams) URLQuery() (url.Values, error) {
 // so callers don't need to set it manually.
 func (r AuthSetParams) MarshalJSON() ([]byte, error) {
 	if r.Auth == nil {
-		return nil, fmt.Errorf("Auth field is required")
+		return nil, fmt.Errorf("AuthSetParams.MarshalJSON: Auth field is required")
 	}
 
 	// Dereference pointers so the switch below only handles value types.
@@ -64,19 +64,19 @@ func (r AuthSetParams) MarshalJSON() ([]byte, error) {
 	switch v := auth.(type) {
 	case *OAuth:
 		if v == nil {
-			return nil, fmt.Errorf("Auth field is required")
+			return nil, fmt.Errorf("AuthSetParams.MarshalJSON: Auth contains typed nil *OAuth")
 		}
 		copy := *v
 		auth = copy
 	case *ApiAuth:
 		if v == nil {
-			return nil, fmt.Errorf("Auth field is required")
+			return nil, fmt.Errorf("AuthSetParams.MarshalJSON: Auth contains typed nil *ApiAuth")
 		}
 		copy := *v
 		auth = copy
 	case *WellKnownAuth:
 		if v == nil {
-			return nil, fmt.Errorf("Auth field is required")
+			return nil, fmt.Errorf("AuthSetParams.MarshalJSON: Auth contains typed nil *WellKnownAuth")
 		}
 		copy := *v
 		auth = copy
