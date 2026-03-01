@@ -189,3 +189,118 @@ func TestMcpLocalConfig_GoString_RedactsEnvironment(t *testing.T) {
 		t.Error("GoString() leaked environment values via fmt #v")
 	}
 }
+
+func TestConfigLspObject_String_RedactsEnv(t *testing.T) {
+	c := ConfigLspObject{
+		Command: []string{"gopls"},
+		Env: map[string]string{
+			"API_KEY":    "sk-secret-key-12345",
+			"AUTH_TOKEN": "secret-token-67890",
+		},
+	}
+
+	s := c.String()
+	if strings.Contains(s, "sk-secret-key-12345") {
+		t.Error("String() leaked API_KEY value")
+	}
+	if strings.Contains(s, "secret-token-67890") {
+		t.Error("String() leaked AUTH_TOKEN value")
+	}
+	if !strings.Contains(s, "2 redacted") {
+		t.Error("String() should show env variable count")
+	}
+	if !strings.Contains(s, "gopls") {
+		t.Error("String() should include non-sensitive Command field")
+	}
+}
+
+func TestConfigLspObject_GoString_RedactsEnv(t *testing.T) {
+	c := ConfigLspObject{Env: map[string]string{"SECRET": "hunter2"}}
+	s := fmt.Sprintf("%#v", c)
+	if strings.Contains(s, "hunter2") {
+		t.Error("GoString() leaked env values via fmt #v")
+	}
+}
+
+func TestConfigFormatter_String_RedactsEnvironment(t *testing.T) {
+	c := ConfigFormatter{
+		Command: []string{"prettier", "--write"},
+		Environment: map[string]string{
+			"API_KEY": "sk-secret-key-12345",
+		},
+	}
+
+	s := c.String()
+	if strings.Contains(s, "sk-secret-key-12345") {
+		t.Error("String() leaked API_KEY value")
+	}
+	if !strings.Contains(s, "1 redacted") {
+		t.Error("String() should show environment variable count")
+	}
+	if !strings.Contains(s, "prettier") {
+		t.Error("String() should include non-sensitive Command field")
+	}
+}
+
+func TestConfigFormatter_GoString_RedactsEnvironment(t *testing.T) {
+	c := ConfigFormatter{Environment: map[string]string{"SECRET": "hunter2"}}
+	s := fmt.Sprintf("%#v", c)
+	if strings.Contains(s, "hunter2") {
+		t.Error("GoString() leaked environment values via fmt #v")
+	}
+}
+
+func TestConfigExperimentalHookFileEdited_String_RedactsEnvironment(t *testing.T) {
+	c := ConfigExperimentalHookFileEdited{
+		Command:     []string{"notify", "--hook"},
+		Environment: map[string]string{"SECRET_TOKEN": "abc123"},
+	}
+
+	s := c.String()
+	if strings.Contains(s, "abc123") {
+		t.Error("String() leaked SECRET_TOKEN value")
+	}
+	if !strings.Contains(s, "1 redacted") {
+		t.Error("String() should show environment variable count")
+	}
+	if !strings.Contains(s, "notify") {
+		t.Error("String() should include non-sensitive Command field")
+	}
+}
+
+func TestConfigExperimentalHookFileEdited_GoString_RedactsEnvironment(t *testing.T) {
+	c := ConfigExperimentalHookFileEdited{Environment: map[string]string{"SECRET": "hunter2"}}
+	s := fmt.Sprintf("%#v", c)
+	if strings.Contains(s, "hunter2") {
+		t.Error("GoString() leaked environment values via fmt #v")
+	}
+}
+
+func TestConfigExperimentalHookSessionCompleted_String_RedactsEnvironment(t *testing.T) {
+	c := ConfigExperimentalHookSessionCompleted{
+		Command:     []string{"cleanup", "--all"},
+		Environment: map[string]string{"API_KEY": "secret-key", "TOKEN": "secret-token"},
+	}
+
+	s := c.String()
+	if strings.Contains(s, "secret-key") {
+		t.Error("String() leaked API_KEY value")
+	}
+	if strings.Contains(s, "secret-token") {
+		t.Error("String() leaked TOKEN value")
+	}
+	if !strings.Contains(s, "2 redacted") {
+		t.Error("String() should show environment variable count")
+	}
+	if !strings.Contains(s, "cleanup") {
+		t.Error("String() should include non-sensitive Command field")
+	}
+}
+
+func TestConfigExperimentalHookSessionCompleted_GoString_RedactsEnvironment(t *testing.T) {
+	c := ConfigExperimentalHookSessionCompleted{Environment: map[string]string{"SECRET": "hunter2"}}
+	s := fmt.Sprintf("%#v", c)
+	if strings.Contains(s, "hunter2") {
+		t.Error("GoString() leaked environment values via fmt #v")
+	}
+}

@@ -561,10 +561,28 @@ type ConfigExperimentalHookFileEdited struct {
 	Environment map[string]string `json:"environment"`
 }
 
+// String returns a human-readable representation with environment values redacted.
+func (c ConfigExperimentalHookFileEdited) String() string {
+	return fmt.Sprintf("ConfigExperimentalHookFileEdited{Command:%v, Environment:<%d redacted>}",
+		c.Command, len(c.Environment))
+}
+
+// GoString returns a Go-syntax representation with environment values redacted.
+func (c ConfigExperimentalHookFileEdited) GoString() string { return c.String() }
+
 type ConfigExperimentalHookSessionCompleted struct {
 	Command     []string          `json:"command"`
 	Environment map[string]string `json:"environment"`
 }
+
+// String returns a human-readable representation with environment values redacted.
+func (c ConfigExperimentalHookSessionCompleted) String() string {
+	return fmt.Sprintf("ConfigExperimentalHookSessionCompleted{Command:%v, Environment:<%d redacted>}",
+		c.Command, len(c.Environment))
+}
+
+// GoString returns a Go-syntax representation with environment values redacted.
+func (c ConfigExperimentalHookSessionCompleted) GoString() string { return c.String() }
 
 type ConfigFormatter struct {
 	Command     []string          `json:"command"`
@@ -572,6 +590,15 @@ type ConfigFormatter struct {
 	Environment map[string]string `json:"environment"`
 	Extensions  []string          `json:"extensions"`
 }
+
+// String returns a human-readable representation with environment values redacted.
+func (c ConfigFormatter) String() string {
+	return fmt.Sprintf("ConfigFormatter{Command:%v, Disabled:%t, Environment:<%d redacted>, Extensions:%v}",
+		c.Command, c.Disabled, len(c.Environment), c.Extensions)
+}
+
+// GoString returns a Go-syntax representation with environment values redacted.
+func (c ConfigFormatter) GoString() string { return c.String() }
 
 // Deprecated: Always uses stretch layout.
 type ConfigLayout string
@@ -679,6 +706,15 @@ type ConfigLspObject struct {
 	Extensions     []string               `json:"extensions"`
 	Initialization map[string]interface{} `json:"initialization"`
 }
+
+// String returns a human-readable representation with env values redacted.
+func (c ConfigLspObject) String() string {
+	return fmt.Sprintf("ConfigLspObject{Command:%v, Disabled:%t, Env:<%d redacted>, Extensions:%v}",
+		c.Command, c.Disabled, len(c.Env), c.Extensions)
+}
+
+// GoString returns a Go-syntax representation with env values redacted.
+func (c ConfigLspObject) GoString() string { return c.String() }
 
 // ConfigMcp represents MCP (Model Context Protocol) server configuration.
 // It can be either McpLocalConfig or McpRemoteConfig, discriminated by the type field.
