@@ -170,9 +170,6 @@ func TestConfigMcp_InvalidJSON(t *testing.T) {
 	if local != nil {
 		t.Error("AsLocal() should return nil for malformed JSON")
 	}
-	if local != nil {
-		t.Error("AsLocal() returned non-nil for malformed JSON")
-	}
 }
 
 func TestConfigMcp_MissingType(t *testing.T) {
@@ -290,9 +287,6 @@ func TestConfigMcp_MalformedJSON(t *testing.T) {
 	}
 	if local != nil {
 		t.Error("AsLocal() should return nil for malformed environment")
-	}
-	if local != nil {
-		t.Error("AsLocal() returned non-nil for malformed environment")
 	}
 }
 
