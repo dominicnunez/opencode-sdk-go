@@ -530,3 +530,59 @@ actually cause same-repo PRs to run CI twice — once from push, once from pull_
 **Date:** 2026-03-01
 
 **Reason:** The audit claims neither 408 nor 429 has a dedicated retry test. The 429 claim is factually wrong. `TestRetryOn429` (client_test.go:52-79) uses a custom transport returning 429 on every request, creates a client, calls `Session.List`, asserts an error after exhausting retries, and verifies exactly 3 attempts were made. This is a full integration retry test, not just a unit check of `isRetryableStatus`.
+
+### SSE stream response body ownership described as fragile
+
+**Location:** `event.go:58-59` — non-2xx status path
+**Date:** 2026-03-01
+
+**Reason:** The finding says `readAPIError` reads and closes the body but the caller never sees a `defer resp.Body.Close()`, making ownership "implicit" and "fragile to refactoring." However, `readAPIError` explicitly documents body ownership in its comment (errors.go:95-96: "reads the response body, constructs an *APIError, and closes the body. The caller should not use resp.Body after.") and unconditionally calls `resp.Body.Close()` at line 100. The ownership is not implicit — it's documented. The finding describes a code style preference, not a bug or missing handling. Already tracked as a known exception ("ListStreaming response body not closed if readAPIError panics on custom transport").
+
+### Backoff delay overflow for high retry counts described as silently capped
+
+**Location:** `client.go:282-283` — backoff calculation
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing known exception "Backoff bit-shift overflow on high retry counts." The finding itself says "No action needed given current `maxRetryCap = 10`." `WithMaxRetries` hard-caps at 10, and the `delay <= 0` guard catches any overflow regardless. The overflow scenario requires violating an enforced invariant.
+
+### Duplicate error union types between Session and AssistantMessage
+
+**Location:** `session.go:447-589`, `event.go:714-870` — error unions
+**Date:** 2026-03-01
+
+**Reason:** Already tracked in known exceptions: "AssistantMessageErrorAPIErrorData and SessionAPIErrorData are structurally identical" documents that both types map to distinct OpenAPI spec schemas. The finding itself acknowledges "This appears to be a Stainless-era artifact where the spec defines them separately" and suggests consolidating only "if the spec allows." The spec defines them as separate schemas, so the duplication is spec-driven fidelity, not a defect.
+
+### Dead internal package apierror.Error described as never constructed
+
+**Location:** `internal/apierror/apierror.go:12-60`, `aliases.go:8`
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of multiple existing known exceptions: "apierror.Error is unused but exported as a public type alias," "apierror.Error stores live http.Request and http.Response references," "apierror.Error has overlapping StatusCode field that is never read," "httputil dump errors ignored in debugging methods," and "apierror.Error unused Stainless leftover combines already-excepted sub-issues." The finding itself says "Already documented in audit/exceptions/risks.md."
+
+### go.mod specifies go 1.25 which does not exist
+
+**Location:** `go.mod:3` — go directive
+**Date:** 2026-03-01
+
+**Reason:** Go 1.25 exists as of March 2026 (installed version: go1.25.5). The finding's claim that "the latest is 1.24.x" is factually wrong. The go directive is valid.
+
+### No test coverage for AssistantMessageError union As*() methods
+
+**Location:** `session.go:452-525` — As*() methods
+**Date:** 2026-03-01
+
+**Reason:** Comprehensive tests exist in `session_assistantmessageerror_test.go`. All five `As*()` methods (AsProviderAuth, AsUnknown, AsOutputLength, AsAborted, AsAPI) are tested with valid data and wrong-variant error paths. Additional tests cover invalid JSON, missing name, unknown name, and malformed data. The audit missed an existing test file.
+
+### No test for ListStreaming context timeout enforcement
+
+**Location:** `event.go:33-63` — ListStreaming timeout behavior
+**Date:** 2026-03-01
+
+**Reason:** The finding describes an intentional design decision already tracked in known exceptions ("ListStreaming bypasses Client timeout and retry logic" and "ListStreaming bypasses client timeout on SSE connections"). SSE streams are long-lived connections where the client's 30s default timeout is inappropriate. `TestContextDeadlineStreaming` already tests caller-provided deadlines. The "gap" is not testing a missing feature — it's testing that a documented design choice holds, which is a documentation concern, not a testing gap.
+
+### FilePartSource union As*() methods described as lacking test coverage
+
+**Location:** `session.go:650-698` — AsFile() and AsSymbol() methods
+**Date:** 2026-03-01
+
+**Reason:** Comprehensive tests exist in `session_filepartsource_test.go`. Tests cover AsFile() success with field validation, AsSymbol() success with range/kind fields, wrong-variant errors for both directions, invalid type strings, malformed JSON, empty JSON, missing type field, and malformed nested JSON. The audit missed an existing test file.

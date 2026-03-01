@@ -127,3 +127,17 @@
 **Date:** 2026-02-28
 
 **Reason:** Each `EventXxx` struct has its own `Type` field with a dedicated string type and `IsKnown()` method, despite the parent `Event.Type` already carrying this information. This is spec-driven — the OpenAPI spec defines a `type` property on each event schema. The per-struct types faithfully reflect the spec and ensure round-trip fidelity. Removing them would diverge from the spec and break callers who access `event.Type` on the concrete struct after calling `AsXxx()`.
+
+### RegisterDecoder uses global mutable state without unregister
+
+**Location:** `packages/ssestream/ssestream.go:52-64` — global decoder registry
+**Date:** 2026-03-01
+
+**Reason:** `RegisterDecoder` follows the same global-registration pattern as `sql.Register`, `image.RegisterFormat`, and `encoding.RegisterCodec` in the Go stdlib. Registrations are process-lifetime by design — decoders are registered at init time and never removed. Moving the registry to the `Client` struct would force callers to configure decoders per-client, which is unnecessary since content-type decoders are application-wide. The mutex prevents races, and the test helper `saveAndRestoreDecoders` adequately isolates test state.
+
+### ListStreaming returns error via stream object on buildURL failure
+
+**Location:** `event.go:39-41` — buildURL error path
+**Date:** 2026-03-01
+
+**Reason:** When `buildURL` fails, `ListStreaming` wraps the error into the stream via `ssestream.NewStream[Event](nil, err)`. The caller must check `stream.Err()` after iteration, which is documented in the method's godoc with a full usage example. This matches Go's iterator contract (`bufio.Scanner`, `sql.Rows`) where errors are deferred to an `Err()` method. Returning `(*Stream, error)` would break the single-return-value streaming API and force callers to handle two error paths instead of one.
