@@ -99,7 +99,6 @@ func TestREADMEExamples(t *testing.T) {
 
 		success, err := client.Auth.Set(context.TODO(), "provider-id", &AuthSetParams{
 			Auth: OAuth{
-				Type:    AuthTypeOAuth,
 				Refresh: "refresh_token",
 				Access:  "access_token",
 				Expires: 1234567890,
