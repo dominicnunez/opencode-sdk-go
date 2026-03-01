@@ -240,6 +240,7 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 		// (e.g., custom HTTP clients that don't follow stdlib's contract)
 		if lastErr != nil && resp != nil {
 			_ = resp.Body.Close()
+			resp = nil
 		}
 
 		// Check context cancellation
