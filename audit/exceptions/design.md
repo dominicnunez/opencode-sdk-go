@@ -197,3 +197,17 @@
 **Date:** 2026-03-01
 
 **Reason:** Union types store `json.RawMessage` internally and return `"null"` when never populated via `UnmarshalJSON`. For `ConfigUpdateParams`, this means zero-value union fields inside nested structs appear as `null` in the PATCH body. However, the nested structs themselves (e.g. `ConfigAgent`, `ConfigPermission`) also serialize their zero-value non-union fields (empty strings, false bools, zero ints). The `null` from unions is consistent with this behavior — Go's `omitempty` does not omit zero-value structs. Fixing only unions while leaving other zero-valued fields would create an inconsistency. The correct fix would require the server to use JSON Merge Patch (RFC 7396) semantics or the SDK to implement a sparse serializer that tracks which fields were explicitly set — both are disproportionate to the risk, which only materializes if the server interprets `null` as "unset" rather than "unchanged".
+
+### Auth credential types expose sensitive fields via json.Marshal
+
+**Location:** `config.go:1609-1661` — OAuth, ApiAuth, WellKnownAuth types
+**Date:** 2026-03-01
+
+**Reason:** These types must serialize credential fields (Access, Refresh, Key, Token) in the HTTP request body sent to the server — that is their purpose. `String()` and `GoString()` redact these fields to prevent accidental exposure via `fmt` or log output, which covers the common leak vector. Implementing `MarshalJSON` to redact would break the API since `Client.do()` uses `json.Marshal` to build request bodies. A context-aware `MarshalJSON` that switches between redacted and non-redacted modes would add complexity for a marginal benefit — callers who marshal these types to JSON are explicitly opting into serialization and should be aware of the contents. The type-level godoc already documents which fields are sensitive and that `String()` is the safe output method.
+
+### ConfigProviderOptions APIKey field exposed via json.Marshal
+
+**Location:** `config.go:1264-1278` — ConfigProviderOptions type
+**Date:** 2026-03-01
+
+**Reason:** `ConfigProviderOptions` faithfully reflects the OpenAPI spec schema. The server includes API keys in config responses, and the SDK must deserialize them. Adding `json:"-"` would silently drop data the server returns, breaking callers who need the value. `String()` and `GoString()` already redact the APIKey for safe logging. The serialization concern belongs in the caller's logging/caching layer, not in the SDK's data types. Implementing a `Redact()` method would expand the public API surface for a concern that is the caller's responsibility.

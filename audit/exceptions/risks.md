@@ -78,3 +78,10 @@
 **Date:** 2026-02-28
 
 **Reason:** If a custom transport's `io.ReadCloser` panics during `io.ReadAll` inside `readAPIError`, the response body is never closed. This requires a custom transport that violates Go's `io.Reader` contract (panicking instead of returning an error). The `doRaw` path avoids this via a defer in `do`, but `ListStreaming` intentionally bypasses `do` for SSE semantics. Adding a defer-close before `readAPIError` would close the body twice on the normal path (since `readAPIError` already closes it). The risk is theoretical — no well-behaved transport panics from `Read`.
+
+### SSE stream data accumulation not configurable by callers
+
+**Location:** `packages/ssestream/ssestream.go:87,141-148` — maxDataBytes field and limit check
+**Date:** 2026-03-01
+
+**Reason:** The `eventStreamDecoder` has an unexported `maxDataBytes` field that defaults to `maxSSETokenSize` (32MB). Many small `data:` lines can accumulate up to this limit before the check triggers. The 32MB default is generous but matches the scanner token limit for consistency. Exposing `maxDataBytes` via a `DecoderOption` would expand the public API surface of the `ssestream` package. The current limit is adequate for the SDK's use case (OpenCode server events are small JSON objects). Callers who need tighter bounds can implement a custom decoder via `RegisterDecoder`.
