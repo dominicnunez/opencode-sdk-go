@@ -1594,6 +1594,16 @@ func (a Auth) AsWellKnown() (*WellKnownAuth, error) {
 	return &wellKnown, nil
 }
 
+// String returns a redacted representation showing only the type discriminator.
+// The raw field may contain plaintext credentials; this prevents accidental
+// exposure through fmt or logging.
+func (a Auth) String() string {
+	return fmt.Sprintf("Auth{Type:%s}", a.Type)
+}
+
+// GoString returns a Go-syntax representation with credentials redacted.
+func (a Auth) GoString() string { return a.String() }
+
 func (a Auth) MarshalJSON() ([]byte, error) {
 	if a.raw == nil {
 		return []byte("null"), nil

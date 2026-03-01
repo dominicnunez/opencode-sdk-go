@@ -3,6 +3,8 @@ package opencode
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"strings"
 	"testing"
 )
 
@@ -251,6 +253,33 @@ func TestAuth_EmptyJSON(t *testing.T) {
 
 	if oauth, err := auth.AsOAuth(); !errors.Is(err, ErrWrongVariant) || oauth != nil {
 		t.Errorf("AsOAuth() should return (nil, ErrWrongVariant) for empty JSON, got (%v, %v)", oauth, err)
+	}
+}
+
+func TestAuth_String_RedactsCredentials(t *testing.T) {
+	jsonData := `{"type":"oauth","access":"secret-token","refresh":"secret-refresh","expires":"2025-01-01T00:00:00Z"}`
+	var auth Auth
+	if err := json.Unmarshal([]byte(jsonData), &auth); err != nil {
+		t.Fatalf("Unmarshal failed: %v", err)
+	}
+
+	str := auth.String()
+	if !strings.Contains(str, "oauth") {
+		t.Error("String() should contain the type discriminator")
+	}
+	if strings.Contains(str, "secret-token") || strings.Contains(str, "secret-refresh") {
+		t.Error("String() must not contain plaintext credentials")
+	}
+
+	goStr := auth.GoString()
+	if goStr != str {
+		t.Errorf("GoString() = %q, want same as String() = %q", goStr, str)
+	}
+
+	// Verify fmt verbs use String() and do not leak raw JSON
+	formatted := fmt.Sprintf("%v", auth)
+	if strings.Contains(formatted, "secret-token") {
+		t.Error("fmt formatting must not contain plaintext credentials")
 	}
 }
 
