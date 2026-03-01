@@ -169,3 +169,17 @@
 **Date:** 2026-03-01
 
 **Reason:** The OpenAPI spec defines these timestamps as JSON `number` (IEEE 754 double). Go's `float64` is the correct mapping. Sub-millisecond precision loss is inherent to the wire format, not the SDK. Changing the Go type to `int64` or `time.Time` would diverge from the spec and break round-trip fidelity for callers who re-serialize these values.
+
+### SSE decoder silently drops field names with leading/trailing whitespace
+
+**Location:** `packages/ssestream/ssestream.go:122` — switch on field name
+**Date:** 2026-03-01
+
+**Reason:** Per the SSE spec (W3C Server-Sent Events §9.2), field names are matched literally — the spec does not define trimming. A line like `data :value` produces field name `"data "` which does not match `"data"`, so the field is ignored. This is correct spec-compliant behavior. The SSE spec explicitly states that unknown field names must be ignored, and whitespace is significant in field names.
+
+### ConfigProviderOptionsTimeoutUnion.AsInt accepts negative timeout values
+
+**Location:** `config.go:1288-1289` — allows `-` as first character
+**Date:** 2026-03-01
+
+**Reason:** This is a deserialization type that faithfully represents wire data. A negative number is a valid JSON number, and the SDK should not reject it at the unmarshal layer. Validation of timeout semantics (positive, within range) belongs at the application layer, not in the SDK's type system. Silently clamping or rejecting values would violate the principle of faithful wire representation.
