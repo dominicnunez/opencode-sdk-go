@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 
@@ -26,7 +25,7 @@ func (s *SessionPermissionService) Respond(ctx context.Context, id string, permi
 		return false, errors.New("params is required")
 	}
 	var result bool
-	err := s.client.do(ctx, http.MethodPost, fmt.Sprintf("session/%s/permissions/%s", id, permissionID), params, &result)
+	err := s.client.do(ctx, http.MethodPost, "session/"+id+"/permissions/"+permissionID, params, &result)
 	if err != nil {
 		return false, err
 	}

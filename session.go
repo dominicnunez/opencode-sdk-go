@@ -157,7 +157,7 @@ func (s *SessionService) Message(ctx context.Context, id string, messageID strin
 		params = &SessionMessageParams{}
 	}
 	var result SessionMessageResponse
-	err := s.client.do(ctx, http.MethodGet, fmt.Sprintf("session/%s/message/%s", id, messageID), params, &result)
+	err := s.client.do(ctx, http.MethodGet, "session/"+id+"/message/"+messageID, params, &result)
 	if err != nil {
 		return nil, err
 	}
