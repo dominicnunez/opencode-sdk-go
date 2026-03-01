@@ -42,6 +42,11 @@ if [ "${1:-}" = "--update" ]; then
     curl -sL "$UPSTREAM_URL" -o "$LOCAL_SPEC"
     NEW_HASH=$(shasum -a 256 "$LOCAL_SPEC" | awk '{print $1}')
     echo "New local hash: $NEW_HASH"
+    if [ "$NEW_HASH" != "$UPSTREAM_HASH" ]; then
+        echo "ERROR: Downloaded spec hash ($NEW_HASH) does not match upstream ($UPSTREAM_HASH)"
+        rm "$LOCAL_SPEC"
+        exit 1
+    fi
     echo "✅ Spec updated. Review changes with: git diff specs/openapi.yml"
     echo ""
     echo "Next steps:"
