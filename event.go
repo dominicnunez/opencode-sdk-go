@@ -52,7 +52,7 @@ func (s *EventService) ListStreaming(ctx context.Context, params *EventListParam
 	// Execute request
 	resp, err := s.client.httpClient.Do(req)
 	if err != nil {
-		return ssestream.NewStream[Event](nil, err)
+		return ssestream.NewStream[Event](nil, fmt.Errorf("event stream request: %w", err))
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {

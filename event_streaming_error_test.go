@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/dominicnunez/opencode-sdk-go"
@@ -48,6 +49,36 @@ func TestListStreaming_JSONErrorBody(t *testing.T) {
 	}
 	if apiErr.RequestID != "req-abc-123" {
 		t.Errorf("request ID: got %q, want %q", apiErr.RequestID, "req-abc-123")
+	}
+}
+
+func TestListStreaming_TransportErrorWrapped(t *testing.T) {
+	transportErr := errors.New("connection refused")
+	client, err := opencode.NewClient(
+		opencode.WithHTTPClient(&http.Client{
+			Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+				return nil, transportErr
+			}),
+		}),
+	)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	stream := client.Event.ListStreaming(context.Background(), nil)
+	if stream.Next() {
+		t.Fatal("expected Next() to return false on transport error")
+	}
+
+	err = stream.Err()
+	if err == nil {
+		t.Fatal("expected non-nil error from stream")
+	}
+	if !errors.Is(err, transportErr) {
+		t.Fatalf("expected error to wrap transport error, got: %v", err)
+	}
+	if got := err.Error(); !strings.Contains(got, "event stream request") {
+		t.Errorf("expected error to contain 'event stream request', got: %q", got)
 	}
 }
 
