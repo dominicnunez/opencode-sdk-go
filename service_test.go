@@ -430,3 +430,140 @@ func TestTuiService_SubmitPrompt(t *testing.T) {
 		t.Error("expected true result")
 	}
 }
+
+func TestSessionService_Abort(t *testing.T) {
+	h := &serviceTestHandler{t: t, responseBody: true}
+	server := httptest.NewServer(h)
+	defer server.Close()
+
+	client, err := opencode.NewClient(opencode.WithBaseURL(server.URL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	result, err := client.Session.Abort(context.Background(), "ses_abc", nil)
+	if err != nil {
+		t.Fatalf("Session.Abort failed: %v", err)
+	}
+	if h.method != http.MethodPost {
+		t.Errorf("method: got %s, want POST", h.method)
+	}
+	if h.path != "/session/ses_abc/abort" {
+		t.Errorf("path: got %s, want /session/ses_abc/abort", h.path)
+	}
+	if !result {
+		t.Error("expected true result")
+	}
+}
+
+func TestSessionService_Children(t *testing.T) {
+	h := &serviceTestHandler{
+		t: t,
+		responseBody: []opencode.Session{
+			{ID: "child_1"},
+		},
+	}
+	server := httptest.NewServer(h)
+	defer server.Close()
+
+	client, err := opencode.NewClient(opencode.WithBaseURL(server.URL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	children, err := client.Session.Children(context.Background(), "ses_parent", nil)
+	if err != nil {
+		t.Fatalf("Session.Children failed: %v", err)
+	}
+	if h.method != http.MethodGet {
+		t.Errorf("method: got %s, want GET", h.method)
+	}
+	if h.path != "/session/ses_parent/children" {
+		t.Errorf("path: got %s, want /session/ses_parent/children", h.path)
+	}
+	if len(children) != 1 || children[0].ID != "child_1" {
+		t.Errorf("unexpected children: %+v", children)
+	}
+}
+
+func TestSessionService_Share(t *testing.T) {
+	h := &serviceTestHandler{
+		t:            t,
+		responseBody: opencode.Session{ID: "ses_shared"},
+	}
+	server := httptest.NewServer(h)
+	defer server.Close()
+
+	client, err := opencode.NewClient(opencode.WithBaseURL(server.URL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	session, err := client.Session.Share(context.Background(), "ses_123", nil)
+	if err != nil {
+		t.Fatalf("Session.Share failed: %v", err)
+	}
+	if h.method != http.MethodPost {
+		t.Errorf("method: got %s, want POST", h.method)
+	}
+	if h.path != "/session/ses_123/share" {
+		t.Errorf("path: got %s, want /session/ses_123/share", h.path)
+	}
+	if session.ID != "ses_shared" {
+		t.Errorf("expected session ID ses_shared, got %s", session.ID)
+	}
+}
+
+func TestPathService_Get(t *testing.T) {
+	h := &serviceTestHandler{
+		t: t,
+		responseBody: opencode.Path{
+			Config:    "/home/user/.config/opencode",
+			Directory: "/home/user/project",
+			State:     "/home/user/.local/state/opencode",
+			Worktree:  "/home/user/project",
+		},
+	}
+	server := httptest.NewServer(h)
+	defer server.Close()
+
+	client, err := opencode.NewClient(opencode.WithBaseURL(server.URL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	path, err := client.Path.Get(context.Background(), nil)
+	if err != nil {
+		t.Fatalf("Path.Get failed: %v", err)
+	}
+	if h.method != http.MethodGet {
+		t.Errorf("method: got %s, want GET", h.method)
+	}
+	if h.path != "/path" {
+		t.Errorf("path: got %s, want /path", h.path)
+	}
+	if path.Config != "/home/user/.config/opencode" {
+		t.Errorf("unexpected config path: %s", path.Config)
+	}
+}
+
+func TestPathService_Get_WithDirectory(t *testing.T) {
+	h := &serviceTestHandler{t: t, responseBody: opencode.Path{}}
+	server := httptest.NewServer(h)
+	defer server.Close()
+
+	client, err := opencode.NewClient(opencode.WithBaseURL(server.URL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	_, err = client.Path.Get(context.Background(), &opencode.PathGetParams{
+		Directory: opencode.Ptr("/my/project"),
+	})
+	if err != nil {
+		t.Fatalf("Path.Get failed: %v", err)
+	}
+	if got := h.query.Get("directory"); got != "/my/project" {
+		t.Errorf("directory query param: got %q, want %q", got, "/my/project")
+	}
+}
