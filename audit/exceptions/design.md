@@ -86,6 +86,13 @@
 
 **Reason:** The `!isPtr` guard in the omitempty checks is the correct logic — pointer-to-zero is intentional, non-pointer zero is omitted. The audit acknowledges the code is correct and only asks for a clarifying comment. The `isPtr` variable name and its usage make the intent clear enough; adding a comment would be documenting what the code already says.
 
+### readAPIError relies on net/http non-nil Header guarantee
+
+**Location:** `errors.go:120` — resp.Header.Get without nil check
+**Date:** 2026-03-01
+
+**Reason:** `readAPIError` accesses `resp.Header.Get("X-Request-Id")` without a nil guard. Go's `net/http` guarantees non-nil headers on all responses returned by `http.Client.Do`. The function is only called from `Client.do` and `ListStreaming`, both of which receive responses from `http.Client.Do`. Custom transports that return nil headers violate the `net/http.RoundTripper` contract. Adding a defensive nil check would guard against a contract violation that indicates a broken transport, not an SDK bug.
+
 ### SSE decoder does not store id or retry fields from the event stream
 
 **Location:** `packages/ssestream/ssestream.go:102-118` — eventStreamDecoder switch statement

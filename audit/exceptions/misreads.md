@@ -446,3 +446,10 @@ actually cause same-repo PRs to run CI twice — once from push, once from pull_
 **Date:** 2026-03-01
 
 **Reason:** The finding rolls up sub-issues (memory pinning, dead StatusCode field, DumpRequest mutation, dead code) that are each already classified in known exceptions: "apierror.Error is unused but exported as a public type alias", "apierror.Error stores live http.Request and http.Response references", "apierror.Error has overlapping StatusCode field that is never read", "httputil dump errors ignored in debugging methods", and "apierror.Error unused Stainless leftover combines already-excepted sub-issues." The finding itself concludes "No action needed — already tracked." No new observation beyond existing exceptions.
+
+### ConfigService.Update described as having no valid-payload test coverage
+
+**Location:** `config_update_test.go` — ConfigService.Update test suite
+**Date:** 2026-03-01
+
+**Reason:** The audit claims "config_update_test.go only tests the nil-params validation error." This is factually wrong. `TestConfigUpdate_Success` (line 12) sends a `ConfigUpdateParams` with model and theme fields to a mock server, verifies the HTTP method is PATCH, decodes the request body and asserts field values, and checks the response. `TestConfigUpdate_WithDirectoryQueryParam` (line 67) additionally verifies query parameter encoding. `TestConfigUpdate_ServerError` (line 132) tests error handling. `TestConfigUpdate_InvalidJSON` (line 163) tests malformed responses. `TestConfigUpdateParams_MarshalJSON` (line 187) tests serialization. The test file has comprehensive coverage — the audit apparently read a stale or different version of the file.
