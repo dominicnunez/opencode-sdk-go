@@ -19,9 +19,9 @@ if [ "$1" == "--daemon" ]; then
 
   # Wait for server to come online (timeout after 30s)
   echo -n "Waiting for server"
-  elapsed=0
+  iterations=0 # 300 iterations * 0.1s = 30s timeout
   while ! grep -q "✖  fatal\|Prism is listening" ".prism.log" ; do
-    if [ "$elapsed" -ge 300 ]; then
+    if [ "$iterations" -ge 300 ]; then
       echo
       echo "Error: mock server failed to start within 30 seconds"
       cat .prism.log
@@ -29,7 +29,7 @@ if [ "$1" == "--daemon" ]; then
     fi
     echo -n "."
     sleep 0.1
-    elapsed=$((elapsed + 1))
+    iterations=$((iterations + 1))
   done
 
   if grep -q "✖  fatal" ".prism.log"; then
