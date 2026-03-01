@@ -27,6 +27,9 @@ type APIError struct {
 	Message    string
 	RequestID  string
 	Body       string
+	// Truncated is true when the response body exceeded the read limit
+	// and Body contains only the first portion of the original response.
+	Truncated bool
 }
 
 func (e *APIError) Error() string {
@@ -88,8 +91,14 @@ const maxMessageDisplaySize = 4096
 // readAPIError reads the response body (up to limit bytes), constructs an
 // *APIError, and closes the body. The caller should not use resp.Body after.
 func readAPIError(resp *http.Response, bodyLimit int64) *APIError {
-	bodyBytes, readErr := io.ReadAll(io.LimitReader(resp.Body, bodyLimit))
+	// Read one extra byte beyond the limit to detect truncation.
+	bodyBytes, readErr := io.ReadAll(io.LimitReader(resp.Body, bodyLimit+1))
 	_ = resp.Body.Close()
+
+	truncated := int64(len(bodyBytes)) > bodyLimit
+	if truncated {
+		bodyBytes = bodyBytes[:bodyLimit]
+	}
 
 	body := string(bodyBytes)
 	if body == "" {
@@ -109,6 +118,7 @@ func readAPIError(resp *http.Response, bodyLimit int64) *APIError {
 		Message:    msg,
 		RequestID:  resp.Header.Get("X-Request-Id"),
 		Body:       body,
+		Truncated:  truncated,
 	}
 }
 

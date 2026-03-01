@@ -517,6 +517,55 @@ func TestReadAPIError_TruncatesMessage(t *testing.T) {
 	})
 }
 
+func TestReadAPIError_BodyTruncation(t *testing.T) {
+	const bodyLimit int64 = 1024
+
+	t.Run("body within limit is not marked truncated", func(t *testing.T) {
+		body := strings.Repeat("a", int(bodyLimit))
+		resp := &http.Response{
+			StatusCode: http.StatusBadRequest,
+			Header:     http.Header{},
+			Body:       io.NopCloser(strings.NewReader(body)),
+		}
+		apiErr := readAPIError(resp, bodyLimit)
+		if apiErr.Truncated {
+			t.Error("Truncated should be false for body within limit")
+		}
+		if apiErr.Body != body {
+			t.Errorf("Body length = %d, want %d", len(apiErr.Body), len(body))
+		}
+	})
+
+	t.Run("body exceeding limit is marked truncated", func(t *testing.T) {
+		body := strings.Repeat("b", int(bodyLimit)+500)
+		resp := &http.Response{
+			StatusCode: http.StatusInternalServerError,
+			Header:     http.Header{},
+			Body:       io.NopCloser(strings.NewReader(body)),
+		}
+		apiErr := readAPIError(resp, bodyLimit)
+		if !apiErr.Truncated {
+			t.Error("Truncated should be true for body exceeding limit")
+		}
+		if int64(len(apiErr.Body)) != bodyLimit {
+			t.Errorf("Body length = %d, want %d", len(apiErr.Body), bodyLimit)
+		}
+	})
+
+	t.Run("body exactly one byte over limit is marked truncated", func(t *testing.T) {
+		body := strings.Repeat("c", int(bodyLimit)+1)
+		resp := &http.Response{
+			StatusCode: http.StatusBadGateway,
+			Header:     http.Header{},
+			Body:       io.NopCloser(strings.NewReader(body)),
+		}
+		apiErr := readAPIError(resp, bodyLimit)
+		if !apiErr.Truncated {
+			t.Error("Truncated should be true for body one byte over limit")
+		}
+	})
+}
+
 // contains is a local helper to avoid importing strings in tests.
 func contains(s, substr string) bool {
 	return len(substr) == 0 || (len(s) >= len(substr) && (s == substr || len(s) > 0 && containsAt(s, substr)))
