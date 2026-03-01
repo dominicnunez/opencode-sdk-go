@@ -56,8 +56,8 @@ type Config struct {
 	Schema string `json:"$schema,omitempty"`
 	// Agent configuration, see https://opencode.ai/docs/agent
 	Agent ConfigAgent `json:"agent,omitempty"`
-	// @deprecated Use 'share' field instead. Share newly created sessions
-	// automatically
+	// Deprecated: Use the Share field instead. Share newly created sessions
+	// automatically.
 	Autoshare bool `json:"autoshare,omitempty"`
 	// Automatically update to the latest version
 	Autoupdate bool `json:"autoupdate,omitempty"`
@@ -71,12 +71,12 @@ type Config struct {
 	Instructions []string `json:"instructions,omitempty"`
 	// Custom keybind configurations
 	Keybinds KeybindsConfig `json:"keybinds,omitempty"`
-	// @deprecated Always uses stretch layout.
+	// Deprecated: Always uses stretch layout.
 	Layout ConfigLayout         `json:"layout,omitempty"`
 	Lsp    map[string]ConfigLsp `json:"lsp,omitempty"`
 	// MCP (Model Context Protocol) server configurations
 	Mcp map[string]ConfigMcp `json:"mcp,omitempty"`
-	// @deprecated Use `agent` field instead.
+	// Deprecated: Use the Agent field instead.
 	Mode ConfigMode `json:"mode,omitempty"`
 	// Model to use in the format of provider/model, eg anthropic/claude-2
 	Model      string           `json:"model,omitempty"`
