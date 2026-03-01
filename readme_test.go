@@ -187,8 +187,12 @@ func TestREADMEExamples(t *testing.T) {
 		stream := client.Event.ListStreaming(context.TODO(), &EventListParams{})
 		defer func() { _ = stream.Close() }()
 
-		if stream == nil {
-			t.Error("expected non-nil stream")
+		if !stream.Next() {
+			t.Fatalf("expected at least one event, got err: %v", stream.Err())
+		}
+		evt := stream.Current()
+		if evt.Type != EventTypeMessageUpdated {
+			t.Errorf("expected event type %q, got %q", EventTypeMessageUpdated, evt.Type)
 		}
 	})
 
@@ -264,6 +268,12 @@ func TestREADMEExamples(t *testing.T) {
 	})
 
 	t.Run("CustomHTTPClient", func(t *testing.T) {
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode([]Session{})
+		}))
+		defer server.Close()
+
 		customClient := &http.Client{
 			Transport: &http.Transport{
 				MaxIdleConns:        100,
@@ -274,34 +284,44 @@ func TestREADMEExamples(t *testing.T) {
 		}
 
 		client, err := NewClient(
+			WithBaseURL(server.URL),
 			WithHTTPClient(customClient),
 		)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		if client == nil {
-			t.Error("expected non-nil client")
+		sessions, err := client.Session.List(context.TODO(), nil)
+		if err != nil {
+			t.Fatalf("expected custom HTTP client to work, got: %v", err)
+		}
+		if sessions == nil {
+			t.Error("expected non-nil response")
 		}
 	})
 }
 
-// TestREADMELoggingTransport verifies the logging transport example compiles
+// TestREADMELoggingTransport verifies the logging transport pattern works end-to-end.
 func TestREADMELoggingTransport(t *testing.T) {
 	type LoggingTransport struct {
 		Base http.RoundTripper
 	}
 
-	roundTripFunc := func(t *LoggingTransport, req *http.Request) (*http.Response, error) {
-		// Simplified version without actual logging for test
-		return t.Base.RoundTrip(req)
+	roundTripFunc := func(lt *LoggingTransport, req *http.Request) (*http.Response, error) {
+		return lt.Base.RoundTrip(req)
 	}
 
 	transport := &LoggingTransport{Base: http.DefaultTransport}
 
-	// Verify RoundTrip compiles
 	req := httptest.NewRequest(http.MethodGet, "http://example.com", nil)
-	_, _ = roundTripFunc(transport, req)
+	resp, err := roundTripFunc(transport, req)
+	if err != nil {
+		t.Fatalf("RoundTrip failed: %v", err)
+	}
+	if resp == nil {
+		t.Fatal("expected non-nil response")
+	}
+	_ = resp.Body.Close()
 }
 
 // TestREADMEPtrHelper verifies the Ptr helper works as documented
