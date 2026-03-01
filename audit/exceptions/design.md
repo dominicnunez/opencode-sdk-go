@@ -155,3 +155,10 @@
 **Date:** 2026-03-01
 
 **Reason:** With `maxRetryCap = 10` and `initialBackoff = 500ms`, the maximum product is `500ms * 1024 = 512s`, well within `time.Duration` (int64 nanoseconds) range, so the `delay <= 0` overflow check is unreachable. However, it's a zero-cost guard that protects against future changes to `maxRetryCap` or `initialBackoff`. The `maxBackoff` cap alone would mask an overflow (capping a negative duration to `maxBackoff` silently), so the explicit overflow check adds a meaningful safety net. Removing it saves nothing and introduces a latent risk.
+
+### APIError.Is returns false for 3xx status codes
+
+**Location:** `errors.go:66` — `Is()` method switch statement
+**Date:** 2026-03-01
+
+**Reason:** 3xx responses are not standard API error classes — they represent redirects, not client or server errors. The `Is()` method intentionally maps only 4xx and 5xx to sentinels. 3xx errors are created as `*APIError` by `doRaw` (allowing `errors.As` + `StatusCode` inspection), but have no sentinel because there is no actionable error category for redirects that callers would match against. Adding `ErrRedirect` would expand the public API for a status class that HTTP clients typically handle transparently. Callers who need to detect 3xx can use `errors.As` and check `StatusCode`, which is the correct pattern for uncommon status classes.
