@@ -301,9 +301,12 @@ func TestSessionDelete_Success(t *testing.T) {
 		t.Fatalf("Failed to create client: %v", err)
 	}
 
-	_, err = client.Session.Delete(context.Background(), "sess_123", nil)
+	result, err := client.Session.Delete(context.Background(), "sess_123", nil)
 	if err != nil {
 		t.Fatalf("Delete failed: %v", err)
+	}
+	if !result {
+		t.Error("expected Delete to return true")
 	}
 }
 
@@ -326,11 +329,14 @@ func TestSessionDelete_WithDirectoryParam(t *testing.T) {
 	}
 
 	dir := "/custom/dir"
-	_, err = client.Session.Delete(context.Background(), "sess_123", &SessionDeleteParams{
+	result, err := client.Session.Delete(context.Background(), "sess_123", &SessionDeleteParams{
 		Directory: &dir,
 	})
 	if err != nil {
 		t.Fatalf("Delete failed: %v", err)
+	}
+	if !result {
+		t.Error("expected Delete to return true")
 	}
 }
 
