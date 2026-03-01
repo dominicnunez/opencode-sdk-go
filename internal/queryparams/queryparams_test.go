@@ -1,6 +1,7 @@
 package queryparams
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -270,6 +271,8 @@ func TestParseTag(t *testing.T) {
 		{"pattern", "pattern", false, false, false},
 		{"-", "-", false, false, false},
 		{"count,required,omitempty", "count", true, true, true},
+		{"query,omiempty", "query", false, false, true},
+		{"query,reqired", "query", false, false, true},
 	}
 
 	for _, tt := range tests {
@@ -523,6 +526,20 @@ func TestMarshal_RequiredOmitemptyConflict(t *testing.T) {
 	_, err := Marshal(params{Count: 5})
 	if err == nil {
 		t.Fatal("expected error for contradictory required,omitempty tag")
+	}
+}
+
+func TestMarshal_UnrecognizedTagOption(t *testing.T) {
+	type params struct {
+		Query string `query:"query,omiempty"`
+	}
+
+	_, err := Marshal(params{Query: "test"})
+	if err == nil {
+		t.Fatal("expected error for unrecognized tag option")
+	}
+	if !strings.Contains(err.Error(), "unrecognized option") {
+		t.Errorf("expected error to mention unrecognized option, got: %v", err)
 	}
 }
 

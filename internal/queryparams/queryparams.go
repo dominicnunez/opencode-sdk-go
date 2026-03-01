@@ -104,6 +104,9 @@ func parseTag(tag string) (name string, required bool, omitempty bool, err error
 			required = true
 		case "omitempty":
 			omitempty = true
+		default:
+			err = fmt.Errorf("query tag %q: unrecognized option %q", name, opt)
+			return
 		}
 	}
 	if required && omitempty {
