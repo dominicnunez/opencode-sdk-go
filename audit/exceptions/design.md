@@ -183,3 +183,17 @@
 **Date:** 2026-03-01
 
 **Reason:** This is a deserialization type that faithfully represents wire data. A negative number is a valid JSON number, and the SDK should not reject it at the unmarshal layer. Validation of timeout semantics (positive, within range) belongs at the application layer, not in the SDK's type system. Silently clamping or rejecting values would violate the principle of faithful wire representation.
+
+### doRaw discards response body silently when result parameter is nil
+
+**Location:** `client.go:167-169` — `do()` drains body to `io.Discard`
+**Date:** 2026-03-01
+
+**Reason:** When `result == nil`, `do()` drains the response body and returns nil error. This is the correct behavior for methods that return only a success/failure signal (e.g. `Session.Delete`). The caller opted out of body parsing by passing nil. Logging or returning a warning for non-empty bodies would add noise for a scenario that is not an error — the server is free to return metadata in 200 responses that the caller doesn't need. Callers who want the body should pass a result pointer.
+
+### Config union types serialize as null when zero-valued
+
+**Location:** `config.go` — all union types with `MarshalJSON` returning `[]byte("null")` for `raw == nil`
+**Date:** 2026-03-01
+
+**Reason:** Union types store `json.RawMessage` internally and return `"null"` when never populated via `UnmarshalJSON`. For `ConfigUpdateParams`, this means zero-value union fields inside nested structs appear as `null` in the PATCH body. However, the nested structs themselves (e.g. `ConfigAgent`, `ConfigPermission`) also serialize their zero-value non-union fields (empty strings, false bools, zero ints). The `null` from unions is consistent with this behavior — Go's `omitempty` does not omit zero-value structs. Fixing only unions while leaving other zero-valued fields would create an inconsistency. The correct fix would require the server to use JSON Merge Patch (RFC 7396) semantics or the SDK to implement a sparse serializer that tracks which fields were explicitly set — both are disproportionate to the risk, which only materializes if the server interprets `null` as "unset" rather than "unchanged".
