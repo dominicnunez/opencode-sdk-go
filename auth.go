@@ -55,16 +55,29 @@ func (r AuthSetParams) URLQuery() (url.Values, error) {
 // It sets the Type discriminator automatically based on the concrete type,
 // so callers don't need to set it manually.
 func (r AuthSetParams) MarshalJSON() ([]byte, error) {
+	if r.Auth == nil {
+		return nil, fmt.Errorf("Auth field is required")
+	}
+
 	// Dereference pointers so the switch below only handles value types.
 	auth := r.Auth
 	switch v := auth.(type) {
 	case *OAuth:
+		if v == nil {
+			return nil, fmt.Errorf("Auth field is required")
+		}
 		copy := *v
 		auth = copy
 	case *ApiAuth:
+		if v == nil {
+			return nil, fmt.Errorf("Auth field is required")
+		}
 		copy := *v
 		auth = copy
 	case *WellKnownAuth:
+		if v == nil {
+			return nil, fmt.Errorf("Auth field is required")
+		}
 		copy := *v
 		auth = copy
 	}

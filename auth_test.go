@@ -338,6 +338,29 @@ type bogusAuth struct{}
 
 func (bogusAuth) implementsAuthSetParamsAuthUnion() {}
 
+func TestAuthSetParams_MarshalJSON_NilAuthErrors(t *testing.T) {
+	params := AuthSetParams{Auth: nil}
+	_, err := json.Marshal(params)
+	if err == nil {
+		t.Fatal("expected error for nil Auth, got nil")
+	}
+	if !strings.Contains(err.Error(), "Auth field is required") {
+		t.Errorf("expected error containing %q, got %v", "Auth field is required", err)
+	}
+}
+
+func TestAuthSetParams_MarshalJSON_NilPointerAuthErrors(t *testing.T) {
+	// A non-nil interface holding a nil pointer should return an error, not panic.
+	params := AuthSetParams{Auth: (*OAuth)(nil)}
+	_, err := json.Marshal(params)
+	if err == nil {
+		t.Fatal("expected error for nil *OAuth, got nil")
+	}
+	if !strings.Contains(err.Error(), "Auth field is required") {
+		t.Errorf("expected error containing %q, got %v", "Auth field is required", err)
+	}
+}
+
 func TestAuthSetParams_MarshalJSON_UnknownTypeErrors(t *testing.T) {
 	params := AuthSetParams{Auth: bogusAuth{}}
 	_, err := json.Marshal(params)
