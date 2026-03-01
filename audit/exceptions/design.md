@@ -162,3 +162,10 @@
 **Date:** 2026-03-01
 
 **Reason:** 3xx responses are not standard API error classes — they represent redirects, not client or server errors. The `Is()` method intentionally maps only 4xx and 5xx to sentinels. 3xx errors are created as `*APIError` by `doRaw` (allowing `errors.As` + `StatusCode` inspection), but have no sentinel because there is no actionable error category for redirects that callers would match against. Adding `ErrRedirect` would expand the public API for a status class that HTTP clients typically handle transparently. Callers who need to detect 3xx can use `errors.As` and check `StatusCode`, which is the correct pattern for uncommon status classes.
+
+### PermissionTime.Created uses float64 for Unix timestamp
+
+**Location:** `sessionpermission.go:64-66` — also `ProjectTime.Created`, `SessionTime`
+**Date:** 2026-03-01
+
+**Reason:** The OpenAPI spec defines these timestamps as JSON `number` (IEEE 754 double). Go's `float64` is the correct mapping. Sub-millisecond precision loss is inherent to the wire format, not the SDK. Changing the Go type to `int64` or `time.Time` would diverge from the spec and break round-trip fidelity for callers who re-serialize these values.
