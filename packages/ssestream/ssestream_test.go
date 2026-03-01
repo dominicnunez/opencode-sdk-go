@@ -2,6 +2,7 @@ package ssestream
 
 import (
 	"bufio"
+	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
@@ -32,6 +33,36 @@ func saveAndRestoreDecoders(t *testing.T) {
 		decoderTypes = snapshot
 		decoderTypesMu.Unlock()
 	})
+}
+
+func TestNewDecoder_NilResponse_ReturnsErrNilDecoder(t *testing.T) {
+	dec := NewDecoder(nil)
+	if dec == nil {
+		t.Fatal("expected non-nil decoder for nil response")
+	}
+	if dec.Next() {
+		t.Fatal("expected Next() to return false")
+	}
+	if !errors.Is(dec.Err(), ErrNilDecoder) {
+		t.Fatalf("expected ErrNilDecoder, got %v", dec.Err())
+	}
+	if err := dec.Close(); err != nil {
+		t.Fatalf("expected Close() to return nil, got %v", err)
+	}
+}
+
+func TestNewDecoder_NilBody_ReturnsErrNilDecoder(t *testing.T) {
+	resp := &http.Response{Body: nil}
+	dec := NewDecoder(resp)
+	if dec == nil {
+		t.Fatal("expected non-nil decoder for nil body")
+	}
+	if dec.Next() {
+		t.Fatal("expected Next() to return false")
+	}
+	if !errors.Is(dec.Err(), ErrNilDecoder) {
+		t.Fatalf("expected ErrNilDecoder, got %v", dec.Err())
+	}
 }
 
 func TestRegisterDecoderConcurrent(t *testing.T) {
@@ -241,6 +272,33 @@ func TestStream_SkipsEmptyDataEvents(t *testing.T) {
 	}
 	if stream.Err() != nil {
 		t.Fatalf("unexpected error: %v", stream.Err())
+	}
+}
+
+func TestStream_MalformedJSON_ReportsUnmarshalError(t *testing.T) {
+	// An SSE event with malformed JSON data should stop iteration
+	// and expose the unmarshal error via Err().
+	raw := "event: msg\ndata: {invalid json\n\n"
+	dec := NewDecoder(newSSEResponse(raw))
+
+	type payload struct {
+		OK bool `json:"ok"`
+	}
+	stream := NewStream[payload](dec, nil)
+	defer func() { _ = stream.Close() }()
+
+	if stream.Next() {
+		t.Fatal("expected Next() to return false for malformed JSON")
+	}
+
+	err := stream.Err()
+	if err == nil {
+		t.Fatal("expected non-nil error from stream after malformed JSON")
+	}
+
+	var syntaxErr *json.SyntaxError
+	if !errors.As(err, &syntaxErr) {
+		t.Fatalf("expected *json.SyntaxError, got %T: %v", err, err)
 	}
 }
 

@@ -21,6 +21,15 @@ const maxSSETokenSize = 32 * 1024 * 1024
 // indicating the response body was not available.
 var ErrNilDecoder = errors.New("ssestream: decoder is nil")
 
+// nilDecoder is returned by NewDecoder when the response or body is nil.
+// It always reports ErrNilDecoder, making the error discoverable without Stream.
+type nilDecoder struct{}
+
+func (d *nilDecoder) Event() Event { return Event{} }
+func (d *nilDecoder) Next() bool   { return false }
+func (d *nilDecoder) Close() error { return nil }
+func (d *nilDecoder) Err() error   { return ErrNilDecoder }
+
 type Decoder interface {
 	Event() Event
 	Next() bool
@@ -30,7 +39,7 @@ type Decoder interface {
 
 func NewDecoder(res *http.Response) Decoder {
 	if res == nil || res.Body == nil {
-		return nil
+		return &nilDecoder{}
 	}
 
 	var decoder Decoder
