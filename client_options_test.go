@@ -29,6 +29,13 @@ func TestWithTimeout_BoundaryValues(t *testing.T) {
 	}
 }
 
+func TestWithHTTPClient_Nil(t *testing.T) {
+	_, err := opencode.NewClient(opencode.WithHTTPClient(nil))
+	if err == nil {
+		t.Fatal("WithHTTPClient(nil): expected error, got nil")
+	}
+}
+
 func TestWithMaxRetries_BoundaryValues(t *testing.T) {
 	tests := []struct {
 		name    string
