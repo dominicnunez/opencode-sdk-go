@@ -21,7 +21,7 @@
 **Location:** `internal/apierror/apierror.go:12-17` — aliased as `opencode.Error` in `aliases.go:8`
 **Date:** 2026-02-28
 
-**Reason:** `apierror.Error` is never constructed anywhere in the SDK — it's a Stainless leftover. However, it's exposed as the public type `opencode.Error`. Removing it would be a breaking API change for any caller that references the type. The type is inert (never returned by any SDK method), so it causes no runtime harm.
+**Reason:** `apierror.Error` is never constructed anywhere in the SDK — it's a Stainless leftover. However, it's exposed as the public type `opencode.Error`. Removing it would be a breaking API change for any caller that references the type. The type is inert (never returned by any SDK method), so it causes no runtime harm. The test file (`apierror_test.go`) is kept alongside the type — if the type is public, its tests should stay to prevent silent regressions if it's ever wired up.
 
 ### Six BashUnion types have identical method implementations
 
