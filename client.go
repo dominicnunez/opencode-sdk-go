@@ -266,8 +266,17 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 			_ = resp.Body.Close()
 		}
 
-		// Wait before retry (exponential backoff)
-		if attempt < c.maxRetries {
+		// No more retries — let the loop condition handle exit
+		if attempt >= c.maxRetries {
+			continue
+		}
+
+		// Backoff before retry. Transport errors (lastErr != nil) skip the
+		// delay on the penultimate attempt because the final retry is
+		// best-effort — sleeping up to maxBackoff for a likely-unreachable
+		// host wastes wall-clock time without improving success odds.
+		skipDelay := lastErr != nil && attempt == c.maxRetries-1
+		if !skipDelay {
 			delay := initialBackoff * (1 << attempt)
 			if delay <= 0 || delay > maxBackoff {
 				delay = maxBackoff
@@ -279,15 +288,15 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 				timer.Stop()
 				return nil, ctx.Err()
 			}
+		}
 
-			// Reset body for retry if needed
-			if params != nil && method != http.MethodGet && method != http.MethodDelete {
-				var buf bytes.Buffer
-				if err := json.NewEncoder(&buf).Encode(params); err != nil {
-					return nil, fmt.Errorf("marshal request body for retry: %w", err)
-				}
-				body = &buf
+		// Reset body for retry if needed
+		if params != nil && method != http.MethodGet && method != http.MethodDelete {
+			var buf bytes.Buffer
+			if err := json.NewEncoder(&buf).Encode(params); err != nil {
+				return nil, fmt.Errorf("marshal request body for retry: %w", err)
 			}
+			body = &buf
 		}
 	}
 
