@@ -30,13 +30,6 @@
 
 **Reason:** The audit describes the buffer reuse pattern as "fragile" but acknowledges the code is correct today: the re-encode block at line 278-284 creates a fresh buffer on every retry, guarded by the same method check as the initial encode at line 187. The described "bug" is purely hypothetical — "any future refactor that adjusts the re-encode guard independently would silently send empty bodies." The current code has no bug; the two guards are structurally identical and correct. This is speculative fragility, not a real defect.
 
-### McpRemoteConfig.Headers exposes auth tokens in plain struct fields
-
-**Location:** `config.go:1491` — Headers field
-**Date:** 2026-02-28
-
-**Reason:** This is a duplicate of the existing intentional design decision "ConfigProviderOptions exposes API key as a plain string field." The audit itself acknowledges "the same rationale from the APIKey exception applies." The struct reflects the OpenAPI spec schema, and redaction is a caller concern. Already categorized.
-
 ### Retry loop body is not re-readable after first attempt
 
 **Location:** `client.go:180-244` — retry loop body re-encoding
@@ -184,6 +177,13 @@ iteration produces one of those two outcomes.
 
 **Reason:** The finding acknowledges the code is correct: after a timer fires via `<-timer.C`, calling `Stop()` is a documented no-op in Go. The timer's internal goroutine exits upon firing. The finding's own suggested fix is "No action needed." The inconsistency with the `ctx.Done()` branch is stylistic, not a bug.
 
+### Base URL query merge in buildURL is redundant because ResolveReference preserves query params
+
+**Location:** `client.go:181-183` — buildURL base URL query loop
+**Date:** 2026-02-28
+
+**Reason:** The audit claims `url.URL.ResolveReference` preserves the base URL's query string when the reference has no `RawQuery`, making the loop at lines 181-183 redundant. This is factually wrong. `ResolveReference(&url.URL{Path: path})` produces a resolved URL with an empty `RawQuery` — the base URL's query params are dropped because the reference has a non-empty path. The loop is necessary to re-merge those params. Verified empirically: resolving `http://localhost:54321/?foo=bar` with `&url.URL{Path: "sessions"}` produces `http://localhost:54321/sessions` with no query string.
+
 ### Non-pointer string fields always omitted when empty in queryparams
 
 **Location:** `internal/queryparams/queryparams.go:124-131` — addFieldValue string case
@@ -250,3 +250,101 @@ actually cause same-repo PRs to run CI twice — once from push, once from pull_
 **Date:** 2026-02-28
 
 **Reason:** The finding claims "several other services with required params use the same `params is required` message but their nil-params tests only verify the error is non-nil, not the message content." This is factually wrong. `nilparams_test.go` covers all the named services (App.Log, File.List, File.Read, Find.Files, Find.Symbols, Find.Text, Tui.AppendPrompt, Tui.ExecuteCommand, Tui.ShowToast) and asserts `strings.Contains(err.Error(), "params is required")` at line 127. Additional dedicated tests (`config_update_test.go:126`, `auth_test.go:122`, `session_shell_test.go:174`, `session_summarize_test.go:114`, `sessionpermission_respond_test.go:240`) also check the error message. The error message format is consistent across all services and tested everywhere.
+
+### ListStreaming bypasses client timeout on SSE connections
+
+**Location:** `event.go:51` — uses httpClient.Do directly
+**Date:** 2026-02-28
+
+**Reason:** SSE streams are long-lived connections that remain open indefinitely while events arrive. Applying the client's default 30s timeout would prematurely kill every SSE connection. Callers who need a deadline can set one via `context.WithTimeout` on the context they pass in. The audit correctly describes the code path but misclassifies it as a bug — this is intentional design consistent with how other Go SSE/WebSocket libraries handle timeouts.
+
+### ListStreaming bypasses client retry logic
+
+**Location:** `event.go:51` — single HTTP request via httpClient.Do
+**Date:** 2026-02-28
+
+**Reason:** SSE streams are consumed once; retrying a stream is complex and callers should manage reconnection at the application level. The audit correctly describes the behavior but misclassifies it as a bug. `ListStreaming` intentionally bypasses `Client.doRaw()` for SSE semantics. The `WithMaxRetries` configuration governs JSON API calls, not streaming connections.
+
+### apierror.Error unused Stainless leftover combines already-excepted sub-issues
+
+**Location:** `internal/apierror/apierror.go:12-17`, `aliases.go:8`
+**Date:** 2026-02-28
+
+**Reason:** The finding rolls up multiple concerns (memory pinning from stored `*http.Request`/`*http.Response`, dead `StatusCode` field, `DumpRequest` body mutation) that are each already classified as exceptions: "apierror.Error stores live http.Request and http.Response references", "apierror.Error has overlapping StatusCode field that is never read", "httputil dump errors ignored in debugging methods", and "apierror.Error is unused but exported as a public type alias". The type is never constructed anywhere in the SDK, making all sub-issues theoretical. No new observation beyond existing exceptions.
+
+### TestClientDo_Success described as silently swallowing decode errors
+
+**Location:** `client_do_test.go:27-48` — Session.Create success test
+**Date:** 2026-03-01
+
+**Reason:** The audit claims the server returns `{"message": "success", "count": 42}` and the decode error is only logged with `t.Logf`. This is factually wrong. The server encodes a valid `Session` struct (line 27-31), the test asserts `err != nil` via `t.Fatalf` (line 43-44), and checks `session.ID` (line 46-48). The test properly validates the full request/response cycle.
+
+### TestClientDo_Retry described as silently swallowing decode errors
+
+**Location:** `client_do_test.go:62-86` — Session.List retry test
+**Date:** 2026-03-01
+
+**Reason:** The audit claims the server returns `{"status": "ok"}` which is not valid `[]Session` and the decode error is logged with `t.Logf`. This is factually wrong. The server encodes a valid `[]Session` (line 62-64), the test asserts `err` via `t.Fatalf` (line 77-78), and verifies `sessions[0].ID` (line 84-85). The response is correctly decoded and validated.
+
+### TestRetryAfterMs described as testing a non-existent Retry-After-Ms feature
+
+**Location:** `client_test.go:52-79` — 429 retry test
+**Date:** 2026-03-01
+
+**Reason:** The audit claims the test is named `TestRetryAfterMs` and sends a `Retry-After-Ms: 100` header. This is factually wrong. The test is named `TestRetryOn429` (line 52), sends no `Retry-After-Ms` header, and correctly tests that 429 responses are retried. The audit described a test that doesn't exist in the codebase.
+
+### Refactoring archaeology tests described as serving no ongoing purpose
+
+**Location:** `cleanup_verification_test.go`, `deletion_verification_test.go`, `apiform_deletion_test.go`
+**Date:** 2026-03-01
+
+**Reason:** All three files have already been deleted. The git status shows them with `D` prefix (staged deletions). The finding describes files that no longer exist in the working tree.
+
+### apiform_deletion_test.go described as containing an empty test body
+
+**Location:** `apiform_deletion_test.go:85-88` — BuildStillWorks subtest
+**Date:** 2026-03-01
+
+**Reason:** The file has been deleted. It no longer exists in the working tree (git status shows `D apiform_deletion_test.go`).
+
+### TestClientDo_QueryParams described as only asserting query presence, not content
+
+**Location:** `client_do_test.go:135-140` — query params test
+**Date:** 2026-03-01
+
+**Reason:** The audit claims the test "only checks `receivedQuery == ""`" and that "any non-empty query passes." This is factually wrong. Line 138 asserts `strings.Contains(receivedQuery, "directory=%2Ftest")`, which is a specific value assertion on the encoded query parameter content.
+
+### No test covers retry with POST body re-encoding
+
+**Location:** `client.go:284-289` — retry loop body re-encoding
+**Date:** 2026-03-01
+
+**Reason:** The audit claims no test exercises the POST body re-encoding path on retry. This is factually wrong. `TestClientDo_PostBodyReencodedOnRetry` (client_do_test.go:303-361) POSTs to a server that returns 500 on the first attempt and 200 on the second, then verifies both attempts received identical non-empty request bodies containing `"test-parent"`.
+
+### No test covers transport-error retry exhaustion
+
+**Location:** `client.go:296` — retry exhaustion error path
+**Date:** 2026-03-01
+
+**Reason:** The audit claims no test exercises the transport-error retry exhaustion path. This is factually wrong. `TestClientDo_TransportErrorRetryExhaustion` (client_do_test.go:363-402) uses a custom transport that always returns `connection refused`, verifies 3 attempts are made, and asserts the error wraps the transport error and mentions the retry count.
+
+### SSE decoder error propagation described as untested
+
+**Location:** `packages/ssestream/ssestream.go:216` — Stream.Next error propagation
+**Date:** 2026-03-01
+
+**Reason:** The audit claims the test suite's `mockDecoder` always returns `nil` from `Err()` and no test covers decoder errors mid-stream. This is factually wrong. `TestStream_DecoderErrorPropagation` (ssestream_test.go:252-265) uses an `errorDecoder` that returns `false` from `Next()` with a non-nil `Err()` ("connection reset by peer"), and verifies `stream.Err()` surfaces the decoder error via `errors.Is`.
+
+### RegisterDecoder lookup path described as untested
+
+**Location:** `packages/ssestream/ssestream.go:41-51` — NewDecoder content-type lookup
+**Date:** 2026-03-01
+
+**Reason:** The audit claims tests cover concurrent registration but never verify lookup or fallback. This is factually wrong. `TestRegisterDecoder_LookupByContentType` (ssestream_test.go:277-299) registers a custom decoder, creates a response with matching content-type, and verifies the custom factory was called. `TestNewDecoder_UnknownContentType_FallsBackToSSE` (ssestream_test.go:301-321) verifies an unknown content-type falls back to the SSE decoder and correctly parses events.
+
+### readme_test.go described as containing vacuous assertions
+
+**Location:** `readme_test.go:162, readme_test.go:266, readme_test.go:289-305`
+**Date:** 2026-03-01
+
+**Reason:** The audit's claims about the test code are factually wrong at every cited location. (1) `StreamingEvents` (lines 162-197) calls `stream.Next()`, retrieves the event, and asserts `evt.Type == EventTypeMessageUpdated` — not just `stream != nil`. (2) `CustomHTTPClient` (lines 270-301) makes an actual HTTP request to a mock server and asserts the response is valid — not just `client != nil`. (3) `TestREADMELoggingTransport` (lines 305-325) asserts both `err != nil` and `resp == nil` after calling `RoundTrip`, then closes the body — not "no assertion." The audit described test behavior that doesn't match the actual code.
