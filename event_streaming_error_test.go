@@ -28,6 +28,7 @@ func TestListStreaming_JSONErrorBody(t *testing.T) {
 	}
 
 	stream := client.Event.ListStreaming(context.Background(), nil)
+	defer func() { _ = stream.Close() }()
 	if stream.Next() {
 		t.Fatal("expected Next() to return false on error status")
 	}
@@ -66,6 +67,7 @@ func TestListStreaming_TransportErrorWrapped(t *testing.T) {
 	}
 
 	stream := client.Event.ListStreaming(context.Background(), nil)
+	defer func() { _ = stream.Close() }()
 	if stream.Next() {
 		t.Fatal("expected Next() to return false on transport error")
 	}
@@ -112,6 +114,7 @@ func TestListStreaming_ErrorStatus(t *testing.T) {
 			}
 
 			stream := client.Event.ListStreaming(context.Background(), nil)
+			defer func() { _ = stream.Close() }()
 			if stream.Next() {
 				t.Fatal("expected Next() to return false on error status")
 			}
