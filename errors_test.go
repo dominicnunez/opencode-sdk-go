@@ -35,7 +35,7 @@ func TestAPIError_Error_Format(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got := tt.err.Error()
 			for _, part := range tt.wantParts {
-				if !contains(got, part) {
+				if !strings.Contains(got, part) {
 					t.Errorf("Error() = %q, expected to contain %q", got, part)
 				}
 			}
@@ -564,18 +564,4 @@ func TestReadAPIError_BodyTruncation(t *testing.T) {
 			t.Error("Truncated should be true for body one byte over limit")
 		}
 	})
-}
-
-// contains is a local helper to avoid importing strings in tests.
-func contains(s, substr string) bool {
-	return len(substr) == 0 || (len(s) >= len(substr) && (s == substr || len(s) > 0 && containsAt(s, substr)))
-}
-
-func containsAt(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
 }
