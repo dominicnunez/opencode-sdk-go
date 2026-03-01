@@ -1533,6 +1533,12 @@ func (r McpLocalConfigType) IsKnown() bool {
 	return false
 }
 
+// McpRemoteConfig describes a remote MCP server returned by the API.
+// The SDK deserializes this from server responses but does not connect to the
+// URL itself. Callers that use URL to establish an MCP connection should
+// validate the scheme (e.g. reject non-HTTPS) and host (e.g. reject private
+// IP ranges) before dialing to prevent SSRF. The same applies to Headers,
+// which could contain authorization tokens intended for a different origin.
 type McpRemoteConfig struct {
 	// Type of MCP server connection
 	Type McpRemoteConfigType `json:"type"`
@@ -1756,6 +1762,7 @@ func (r ConfigProviderListParams) URLQuery() (url.Values, error) {
 }
 
 type ConfigProviderListResponse struct {
+	// Default maps provider identifiers to their default model identifiers.
 	Default   map[string]string `json:"default"`
 	Providers []ConfigProvider  `json:"providers"`
 }
