@@ -237,6 +237,13 @@ actually cause same-repo PRs to run CI twice — once from push, once from pull_
 
 **Reason:** The finding correctly identifies that `Error()` reads `Response.StatusCode` instead of the `StatusCode` field, but the finding itself concludes "no action needed" since the type is a Stainless leftover. This is already tracked in the Won't Fix section as "apierror.Error is unused but exported as a public type alias" — the type is never constructed anywhere in the SDK, making the field overlap entirely theoretical.
 
+### Retry loop reuses consumed body reader on first retry
+
+**Location:** `client.go:206-222` — retry loop body encoding
+**Date:** 2026-02-28
+
+**Reason:** The finding's own analysis contradicts its title. It states "The current code happens to work because re-encode always runs before the next request" and traces the correct control flow: (1) make request with body, (2) check retry, (3) backoff, (4) re-encode body, (5) loop back to make request. The body is always freshly encoded at step 4 before it is used at step 5. The "consumed-buffer window" described — where the `body` variable temporarily holds an exhausted buffer — is not a bug because no code reads `body` during that window. The variable is reassigned before its next use. This is the fourth variant of the same retry-body misread (see existing entries for lines 192-284, 180-244).
+
 ### Nil-params tests only verify error is non-nil, not message content
 
 **Location:** `nilparams_test.go:127-128` — nil-params test assertions
