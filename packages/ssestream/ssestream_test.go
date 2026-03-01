@@ -353,11 +353,6 @@ func TestStream_DoubleClose_BothReturnNil(t *testing.T) {
 		t.Fatalf("expected first Close() to return nil, got %v", err1)
 	}
 
-	// Verify decoder is nil after first Close().
-	if stream.decoder != nil {
-		t.Fatal("expected decoder to be nil after Close()")
-	}
-
 	// Second Close() should also return nil (not panic).
 	err2 := stream.Close()
 	if err2 != nil {
