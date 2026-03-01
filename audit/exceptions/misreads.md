@@ -453,3 +453,31 @@ actually cause same-repo PRs to run CI twice — once from push, once from pull_
 **Date:** 2026-03-01
 
 **Reason:** The audit claims "config_update_test.go only tests the nil-params validation error." This is factually wrong. `TestConfigUpdate_Success` (line 12) sends a `ConfigUpdateParams` with model and theme fields to a mock server, verifies the HTTP method is PATCH, decodes the request body and asserts field values, and checks the response. `TestConfigUpdate_WithDirectoryQueryParam` (line 67) additionally verifies query parameter encoding. `TestConfigUpdate_ServerError` (line 132) tests error handling. `TestConfigUpdate_InvalidJSON` (line 163) tests malformed responses. `TestConfigUpdateParams_MarshalJSON` (line 187) tests serialization. The test file has comprehensive coverage — the audit apparently read a stale or different version of the file.
+
+### ListStreaming body close suggestion duplicates known exception for readAPIError panic path
+
+**Location:** `event.go:58-59` — non-2xx status path
+**Date:** 2026-03-01
+
+**Reason:** The finding suggests adding `defer resp.Body.Close()` before the status check to guard against `readAPIError` panicking. This is already tracked as a known exception ("ListStreaming response body not closed if readAPIError panics on custom transport") which documents that such a panic requires a custom transport violating Go's `io.Reader` contract, and that adding a defer-close would double-close the body on the normal path. The finding acknowledges the existing exception tracking.
+
+### No Retry-After header parsing described as a testing gap
+
+**Location:** `client.go:258-267` — retry backoff for 429 responses
+**Date:** 2026-03-01
+
+**Reason:** The SDK does not implement `Retry-After` header support — 429 responses use the same exponential backoff as 5xx. `TestRetryOn429` correctly tests the actual behavior (retry count). The finding describes a missing *feature* (Retry-After support) as a testing gap, but there is nothing to test when the feature doesn't exist. The finding itself says "While not a bug."
+
+### No SSE reconnection test described as a testing gap
+
+**Location:** `event.go:33-63` — ListStreaming single-request design
+**Date:** 2026-03-01
+
+**Reason:** The SDK intentionally does not implement SSE reconnection — this is documented in known exceptions ("ListStreaming bypasses client retry logic"). Suggesting an example test for caller-side reconnection is a documentation/example request, not a test gap. The code under test has no reconnection logic to exercise.
+
+### Auth types defined in config.go described as not visible from auth.go
+
+**Location:** `auth.go:40-83` — MarshalJSON referencing OAuth, ApiAuth, WellKnownAuth
+**Date:** 2026-03-01
+
+**Reason:** The finding itself says "No code change needed — this is a readability observation." The types (`OAuth`, `ApiAuth`, `WellKnownAuth`) and their constants (`AuthTypeOAuth`, `AuthTypeAPI`, `AuthTypeWellKnown`) are defined in `config.go` and are findable via standard IDE navigation or grep. Cross-file type references are normal in Go packages. This is an observation about code organization, not a defect.
