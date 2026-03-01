@@ -236,3 +236,10 @@ actually cause same-repo PRs to run CI twice — once from push, once from pull_
 **Date:** 2026-02-28
 
 **Reason:** The finding correctly identifies that `Error()` reads `Response.StatusCode` instead of the `StatusCode` field, but the finding itself concludes "no action needed" since the type is a Stainless leftover. This is already tracked in the Won't Fix section as "apierror.Error is unused but exported as a public type alias" — the type is never constructed anywhere in the SDK, making the field overlap entirely theoretical.
+
+### Nil-params tests only verify error is non-nil, not message content
+
+**Location:** `nilparams_test.go:127-128` — nil-params test assertions
+**Date:** 2026-02-28
+
+**Reason:** The finding claims "several other services with required params use the same `params is required` message but their nil-params tests only verify the error is non-nil, not the message content." This is factually wrong. `nilparams_test.go` covers all the named services (App.Log, File.List, File.Read, Find.Files, Find.Symbols, Find.Text, Tui.AppendPrompt, Tui.ExecuteCommand, Tui.ShowToast) and asserts `strings.Contains(err.Error(), "params is required")` at line 127. Additional dedicated tests (`config_update_test.go:126`, `auth_test.go:122`, `session_shell_test.go:174`, `session_summarize_test.go:114`, `sessionpermission_respond_test.go:240`) also check the error message. The error message format is consistent across all services and tested everywhere.
