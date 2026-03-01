@@ -9,6 +9,13 @@
 > **Date:** YYYY-MM-DD
 > **Reason:** Explanation (can be multiple lines)
 
+### readAPIError X-Request-Id extraction is untested
+
+**Location:** `errors.go:128` — X-Request-Id header extraction
+**Date:** 2026-03-01
+
+**Reason:** The audit claims no test passes an HTTP response with the `X-Request-Id` header through `readAPIError`. This is factually wrong. `TestListStreaming_JSONErrorBody` in `event_streaming_error_test.go:19` sets `X-Request-Id: "req-abc-123"` in the response header, the response flows through `readAPIError`, and line 50 asserts `apiErr.RequestID == "req-abc-123"`. The extraction is tested end-to-end through a real HTTP response.
+
 ### check-spec-update.sh silently treats empty hash or URL as valid
 
 **Location:** `scripts/check-spec-update.sh:19-30` — hash/URL parsing from .stats.yml
@@ -649,3 +656,108 @@ actually cause same-repo PRs to run CI twice — once from push, once from pull_
 **Date:** 2026-03-01
 
 **Reason:** Duplicate of existing known exceptions covering the apierror.Error Stainless leftover. The `internal` package prevents direct external import. The type is never constructed by the SDK, making discoverability of `DumpRequest`/`DumpResponse` a moot point. Already tracked as "apierror.Error is unused but exported as a public type alias."
+
+### apierror.Error exported but never constructed described as confusing public API
+
+**Location:** `internal/apierror/apierror.go:12`, `aliases.go:8`
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of multiple existing known exceptions: "apierror.Error is unused but exported as a public type alias," "apierror.Error stores live http.Request and http.Response references," and the entry directly above. The finding itself says "Already documented in audit/exceptions/risks.md" and "No action needed." No new observation.
+
+### Backoff delay on attempt 0 described as producing initialBackoff instead of no delay
+
+**Location:** `client.go:282` — exponential backoff calculation
+**Date:** 2026-03-01
+
+**Reason:** The finding's own analysis confirms "The logic is correct." The title claims attempt 0 produces `initialBackoff` via `1 << 0 = 1`, but the finding's body explains that attempt 0 never reaches the backoff code — HTTP errors return at line 262-263, and the `attempt >= c.maxRetries` check at line 272 causes `continue` which exits the loop. The suggested fix is adding a comment, not fixing a bug. There is no behavioral defect.
+
+### go 1.25 directive described as referencing an unreleased Go version
+
+**Location:** `go.mod:3` — go directive
+**Date:** 2026-03-01
+
+**Reason:** Go 1.25 exists as of March 2026. The installed version is go1.25.5. The finding's claim that "Go 1.25 has not been released" and "current latest is 1.24.x" is factually wrong.
+
+### ToolStateRunning.Input interface{} described as inconsistency with peer types
+
+**Location:** `session.go:1569` — ToolStateRunning.Input field
+**Date:** 2026-03-01
+
+**Reason:** Already classified as a known exception. The OpenAPI spec defines `ToolStateRunning.input` with an empty schema (`{}`), while `ToolStateCompleted` and `ToolStateError` define it as `"type": "object"`. The Go types (`interface{}` vs `map[string]interface{}`) correctly reflect this spec difference. The finding itself concludes "No code change needed (spec-correct)" and only suggests adding a comment.
+
+### SessionPromptParamsPart bare `any` fields described as a quality issue
+
+**Location:** `session.go:1796-1802` — Metadata, Source, Time fields
+**Date:** 2026-03-01
+
+**Reason:** Already classified as a known exception. `SessionPromptParamsPart` is the escape-hatch catch-all variant of `SessionPromptParamsPartUnion`. The typed alternatives (`TextPartInputParam`, `FilePartInputParam`, `AgentPartInputParam`) provide compile-time safety. The finding itself concludes "Accept as pragmatic tradeoff."
+
+### No SSE reconnection test described as a testing gap
+
+**Location:** `event.go:33-63` — ListStreaming single-request design
+**Date:** 2026-03-01
+
+**Reason:** Already classified as a known exception. The SDK intentionally does not implement SSE reconnection — callers manage reconnection at the application level. There is no reconnection logic in the codebase to test. Suggesting a reconnection example test is a documentation request, not a testing gap in the code.
+
+### apierror.Error described as unused outside aliases.go
+
+**Location:** `internal/apierror/apierror.go:12`, `aliases.go:8`
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing known exception "apierror.Error is unused but exported as a public type alias." The type is a Stainless leftover never constructed by the SDK. Removing it would be a breaking API change. Already tracked — no new observation.
+
+### McpStatus described as untyped map losing type safety
+
+**Location:** `mcp.go:17`
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing known exception "McpStatus is an untyped map." The OpenAPI spec defines the MCP status response with an empty schema (`"schema": {}`), meaning the response shape is intentionally unspecified. `map[string]interface{}` is the correct Go representation.
+
+### SSE stream response body leak when caller forgets defer Close
+
+**Location:** `event.go:53` — ListStreaming response body ownership
+**Date:** 2026-03-01
+
+**Reason:** The finding describes standard Go resource ownership — callers must close resources they receive, just like `*os.File`, `*sql.Rows`, or `*http.Response.Body`. The `ListStreaming` godoc explicitly instructs callers to `defer stream.Close()` with a complete usage example. The finding itself acknowledges "This is a known pattern in Go SSE clients." Describing normal resource management as a bug is a misread. Already covered by known exceptions about the streaming API design.
+
+### apierror tests described as covering dead production code
+
+**Location:** `internal/apierror/apierror_test.go:1` — 215 lines of tests
+**Date:** 2026-03-01
+
+**Reason:** The test maintenance burden is a direct consequence of `apierror.Error` being a Stainless leftover, which is already tracked as the known exception "apierror.Error is unused but exported as a public type alias." The finding adds no new observation — removing or keeping the tests is part of the same decision about whether to remove the type itself.
+
+### SSE stream body leak on non-2xx described as a bug when it requires contract-violating custom transports
+
+**Location:** `event.go:58-59` — ListStreaming non-2xx path
+**Date:** 2026-03-01
+
+**Reason:** The finding describes scenarios that require custom transports violating Go's `http.RoundTripper` contract (returning nil body on success, 1xx responses reaching the client). The finding itself concludes "No action needed — defensive coding against contract violations." The normal code path has no leak — `readAPIError` reads and closes the body. Already covered by known exceptions for ListStreaming body ownership.
+
+### ListStreaming non-2xx error described as swallowed when it is documented and discoverable
+
+**Location:** `event.go:58-59` — non-2xx wrapped into stream error
+**Date:** 2026-03-01
+
+**Reason:** The finding says "Already mitigated by godoc" and suggests a README example. The `*APIError` is wrapped into the stream and discoverable via `stream.Err()`, which is documented in the method's godoc with a full usage example. This is the standard Go iterator pattern (`bufio.Scanner`, `sql.Rows`). The finding describes documented, working-as-designed behavior and the suggested fix is a documentation enhancement, not a code fix. Already covered by known exceptions for the streaming error pattern.
+
+### AuthSetParams MarshalJSON unknown union type described as untested
+
+**Location:** `auth.go:82-83` — default branch in MarshalJSON
+**Date:** 2026-03-01
+
+**Reason:** The audit claims no test covers the default error branch. This is factually wrong. `TestAuthSetParams_MarshalJSON_UnknownTypeErrors` at auth_test.go:341 already tests this exact path — it passes a custom type implementing `AuthSetParamsAuthUnion`, verifies the error is non-nil, and checks the error message contains "unknown auth union type".
+
+### ConfigProviderOptionsTimeoutUnion comment described as misleading when validation is server-side
+
+**Location:** `config.go:1268-1269` — Timeout field comment
+**Date:** 2026-03-01
+
+**Reason:** The finding itself acknowledges "This is a read-only type (response deserialization), so it's the server's responsibility to validate." The SDK correctly deserializes whatever the server sends via `AsInt()` and `AsBool()` accessors. The comment accurately reflects the server's API semantics. The suggestion to add `IsDisabled()` is a feature request for a convenience method, not a code defect or misread of behavior.
+
+### SSE decoder buffer overflow (maxSSETokenSize) is untested
+
+**Location:** `packages/ssestream/ssestream.go:18` — maxSSETokenSize constant
+**Date:** 2026-03-01
+
+**Reason:** `TestEventStreamDecoder_TokenExceedsBufferLimit` in `ssestream_test.go:489` already tests this exact code path. It creates a `bufio.Scanner` with a small custom limit (256 bytes), sends a token exceeding that limit, and asserts the decoder returns false with a non-nil error. The behavior is identical regardless of the buffer size — `bufio.Scanner` returns `bufio.ErrTooLong` when any token exceeds the configured limit. Allocating 32MB in a test to exercise the same code path would be wasteful.
