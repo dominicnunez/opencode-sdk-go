@@ -19,6 +19,10 @@ import (
 // of whether "omitempty" is set. This means the "required" tag on a non-pointer
 // string enforces "required and non-empty". To send an empty string value,
 // use *string.
+//
+// Similarly, "required" on a non-pointer int or bool rejects the zero value
+// (0 or false) because the zero value is indistinguishable from "not set".
+// Use *int or *bool if zero/false is a valid required value.
 func Marshal(v interface{}) (url.Values, error) {
 	if v == nil {
 		return url.Values{}, nil
