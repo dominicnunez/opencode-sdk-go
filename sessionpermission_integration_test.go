@@ -12,7 +12,7 @@ import (
 	"github.com/dominicnunez/opencode-sdk-go/internal/testutil"
 )
 
-func TestAppLogWithOptionalParams(t *testing.T) {
+func TestSessionPermissionRespondWithOptionalParams(t *testing.T) {
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -24,15 +24,15 @@ func TestAppLogWithOptionalParams(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create client: %v", err)
 	}
-	_, err = client.App.Log(context.TODO(), &opencode.AppLogParams{
-		Level:     opencode.LogLevelDebug,
-		Message:   "message",
-		Service:   "service",
-		Directory: opencode.Ptr("directory"),
-		Extra: map[string]interface{}{
-			"foo": "bar",
+	_, err = client.Session.Permissions.Respond(
+		context.TODO(),
+		"id",
+		"permissionID",
+		&opencode.SessionPermissionRespondParams{
+			Response:  opencode.PermissionResponseOnce,
+			Directory: opencode.Ptr("directory"),
 		},
-	})
+	)
 	if err != nil {
 		var apierr *opencode.APIError
 		if errors.As(err, &apierr) {

@@ -1,3 +1,5 @@
+//go:build integration
+
 package opencode_test
 
 import (
@@ -11,7 +13,6 @@ import (
 )
 
 func TestSessionNewWithOptionalParams(t *testing.T) {
-	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -38,7 +39,6 @@ func TestSessionNewWithOptionalParams(t *testing.T) {
 }
 
 func TestSessionUpdateWithOptionalParams(t *testing.T) {
-	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -68,7 +68,6 @@ func TestSessionUpdateWithOptionalParams(t *testing.T) {
 }
 
 func TestSessionListWithOptionalParams(t *testing.T) {
-	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -93,7 +92,6 @@ func TestSessionListWithOptionalParams(t *testing.T) {
 }
 
 func TestSessionDeleteWithOptionalParams(t *testing.T) {
-	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -122,7 +120,6 @@ func TestSessionDeleteWithOptionalParams(t *testing.T) {
 }
 
 func TestSessionAbortWithOptionalParams(t *testing.T) {
-	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -151,7 +148,6 @@ func TestSessionAbortWithOptionalParams(t *testing.T) {
 }
 
 func TestSessionChildrenWithOptionalParams(t *testing.T) {
-	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -180,7 +176,6 @@ func TestSessionChildrenWithOptionalParams(t *testing.T) {
 }
 
 func TestSessionCommandWithOptionalParams(t *testing.T) {
-	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -214,7 +209,6 @@ func TestSessionCommandWithOptionalParams(t *testing.T) {
 }
 
 func TestSessionGetWithOptionalParams(t *testing.T) {
-	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -243,7 +237,6 @@ func TestSessionGetWithOptionalParams(t *testing.T) {
 }
 
 func TestSessionInitWithOptionalParams(t *testing.T) {
-	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -275,7 +268,6 @@ func TestSessionInitWithOptionalParams(t *testing.T) {
 }
 
 func TestSessionMessageWithOptionalParams(t *testing.T) {
-	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -305,7 +297,6 @@ func TestSessionMessageWithOptionalParams(t *testing.T) {
 }
 
 func TestSessionMessagesWithOptionalParams(t *testing.T) {
-	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -334,7 +325,6 @@ func TestSessionMessagesWithOptionalParams(t *testing.T) {
 }
 
 func TestSessionPromptWithOptionalParams(t *testing.T) {
-	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -387,7 +377,6 @@ func TestSessionPromptWithOptionalParams(t *testing.T) {
 }
 
 func TestSessionRevertWithOptionalParams(t *testing.T) {
-	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -418,7 +407,6 @@ func TestSessionRevertWithOptionalParams(t *testing.T) {
 }
 
 func TestSessionShareWithOptionalParams(t *testing.T) {
-	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL

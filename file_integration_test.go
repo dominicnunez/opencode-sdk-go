@@ -12,7 +12,7 @@ import (
 	"github.com/dominicnunez/opencode-sdk-go/internal/testutil"
 )
 
-func TestProjectListWithOptionalParams(t *testing.T) {
+func TestFileListWithOptionalParams(t *testing.T) {
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -24,7 +24,8 @@ func TestProjectListWithOptionalParams(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create client: %v", err)
 	}
-	_, err = client.Project.List(context.TODO(), &opencode.ProjectListParams{
+	_, err = client.File.List(context.TODO(), &opencode.FileListParams{
+		Path:      "path",
 		Directory: opencode.Ptr("directory"),
 	})
 	if err != nil {
@@ -36,7 +37,7 @@ func TestProjectListWithOptionalParams(t *testing.T) {
 	}
 }
 
-func TestProjectCurrentWithOptionalParams(t *testing.T) {
+func TestFileReadWithOptionalParams(t *testing.T) {
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -48,7 +49,32 @@ func TestProjectCurrentWithOptionalParams(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create client: %v", err)
 	}
-	_, err = client.Project.Current(context.TODO(), &opencode.ProjectCurrentParams{
+	_, err = client.File.Read(context.TODO(), &opencode.FileReadParams{
+		Path:      "path",
+		Directory: opencode.Ptr("directory"),
+	})
+	if err != nil {
+		var apierr *opencode.APIError
+		if errors.As(err, &apierr) {
+			t.Log(apierr.Error())
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+}
+
+func TestFileStatusWithOptionalParams(t *testing.T) {
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+	client, err := opencode.NewClient(opencode.WithBaseURL(baseURL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	_, err = client.File.Status(context.TODO(), &opencode.FileStatusParams{
 		Directory: opencode.Ptr("directory"),
 	})
 	if err != nil {

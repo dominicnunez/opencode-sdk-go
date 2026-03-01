@@ -1,3 +1,5 @@
+//go:build integration
+
 package opencode_test
 
 import (
@@ -11,7 +13,6 @@ import (
 )
 
 func TestTuiAppendPromptWithOptionalParams(t *testing.T) {
-	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -37,7 +38,6 @@ func TestTuiAppendPromptWithOptionalParams(t *testing.T) {
 }
 
 func TestTuiClearPromptWithOptionalParams(t *testing.T) {
-	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -62,7 +62,6 @@ func TestTuiClearPromptWithOptionalParams(t *testing.T) {
 }
 
 func TestTuiExecuteCommandWithOptionalParams(t *testing.T) {
-	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -88,7 +87,6 @@ func TestTuiExecuteCommandWithOptionalParams(t *testing.T) {
 }
 
 func TestTuiOpenHelpWithOptionalParams(t *testing.T) {
-	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -113,7 +111,6 @@ func TestTuiOpenHelpWithOptionalParams(t *testing.T) {
 }
 
 func TestTuiOpenModelsWithOptionalParams(t *testing.T) {
-	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -138,7 +135,6 @@ func TestTuiOpenModelsWithOptionalParams(t *testing.T) {
 }
 
 func TestTuiOpenSessionsWithOptionalParams(t *testing.T) {
-	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -163,7 +159,6 @@ func TestTuiOpenSessionsWithOptionalParams(t *testing.T) {
 }
 
 func TestTuiOpenThemesWithOptionalParams(t *testing.T) {
-	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -188,7 +183,6 @@ func TestTuiOpenThemesWithOptionalParams(t *testing.T) {
 }
 
 func TestTuiShowToastWithOptionalParams(t *testing.T) {
-	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -216,7 +210,6 @@ func TestTuiShowToastWithOptionalParams(t *testing.T) {
 }
 
 func TestTuiSubmitPromptWithOptionalParams(t *testing.T) {
-	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
