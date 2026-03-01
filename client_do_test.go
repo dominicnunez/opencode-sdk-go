@@ -279,9 +279,10 @@ func TestClientDo_ExponentialBackoff(t *testing.T) {
 }
 
 func TestClientDo_EmptyBody502_ReturnsAPIErrorWithStatusText(t *testing.T) {
+	attempts := 0
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		attempts++
 		w.WriteHeader(http.StatusBadGateway)
-		// No body written
 	}))
 	defer server.Close()
 
@@ -310,6 +311,9 @@ func TestClientDo_EmptyBody502_ReturnsAPIErrorWithStatusText(t *testing.T) {
 	}
 	if apiErr.StatusCode != http.StatusBadGateway {
 		t.Errorf("expected StatusCode %d, got %d", http.StatusBadGateway, apiErr.StatusCode)
+	}
+	if attempts != 1 {
+		t.Errorf("expected 1 attempt with maxRetries=0, got %d", attempts)
 	}
 }
 
