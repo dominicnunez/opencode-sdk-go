@@ -120,7 +120,7 @@ func TestREADMEExamples(t *testing.T) {
 				w.Header().Set("Cache-Control", "no-cache")
 				w.Header().Set("Connection", "keep-alive")
 
-				_, _ = w.Write([]byte("data: {\"type\":\"message.updated\",\"data\":{\"info\":{\"id\":\"msg_1\",\"sessionID\":\"sess_1\",\"role\":\"user\",\"parts\":[]}}}\n\n"))
+				_, _ = w.Write([]byte("data: {\"type\":\"message.updated\",\"properties\":{\"info\":{\"id\":\"msg_1\",\"sessionID\":\"sess_1\",\"role\":\"user\",\"parts\":[]}}}\n\n"))
 
 				flusher, ok := w.(http.Flusher)
 				if ok {
@@ -144,6 +144,14 @@ func TestREADMEExamples(t *testing.T) {
 		evt := stream.Current()
 		if evt.Type != EventTypeMessageUpdated {
 			t.Errorf("expected event type %q, got %q", EventTypeMessageUpdated, evt.Type)
+		}
+
+		updated, err := evt.AsMessageUpdated()
+		if err != nil {
+			t.Fatalf("AsMessageUpdated: %v", err)
+		}
+		if updated.Data.Info.ID != "msg_1" {
+			t.Errorf("expected message ID %q, got %q", "msg_1", updated.Data.Info.ID)
 		}
 	})
 
