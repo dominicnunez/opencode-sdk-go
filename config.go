@@ -590,7 +590,8 @@ func (r ConfigLayout) IsKnown() bool {
 
 // ConfigLsp represents LSP (Language Server Protocol) configuration.
 // It can be either ConfigLspDisabled or ConfigLspObject.
-// The variant is determined by checking for the presence of the "command" field.
+// ConfigLspObject is identified by the presence of the "command" field.
+// ConfigLspDisabled is identified by the absence of "command" and disabled=true.
 type ConfigLsp struct {
 	// raw stores the full JSON for lazy unmarshaling
 	raw json.RawMessage
@@ -607,30 +608,24 @@ func (r ConfigLsp) AsDisabled() (*ConfigLspDisabled, error) {
 	if r.raw == nil {
 		return nil, ErrWrongVariant
 	}
-	// Peek at discriminating fields first to avoid unnecessary unmarshal
-	var peek struct {
-		Command  interface{} `json:"command"`
-		Disabled bool        `json:"disabled"`
+
+	// Use a combined struct to check both discriminator fields in one pass
+	var probe struct {
+		ConfigLspDisabled
+		Command json.RawMessage `json:"command"`
 	}
-	if err := json.Unmarshal(r.raw, &peek); err != nil {
+	if err := json.Unmarshal(r.raw, &probe); err != nil {
 		return nil, err
 	}
-
-	// If command field exists, it's not a disabled config
-	if peek.Command != nil {
+	if len(probe.Command) > 0 {
+		return nil, ErrWrongVariant
+	}
+	if !probe.Disabled {
 		return nil, ErrWrongVariant
 	}
 
-	// Must have disabled=true
-	if !peek.Disabled {
-		return nil, ErrWrongVariant
-	}
-
-	var disabled ConfigLspDisabled
-	if err := json.Unmarshal(r.raw, &disabled); err != nil {
-		return nil, err
-	}
-	return &disabled, nil
+	result := probe.ConfigLspDisabled
+	return &result, nil
 }
 
 // AsObject returns the config as ConfigLspObject if it has a command field.
