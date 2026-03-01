@@ -572,7 +572,7 @@ type ConfigFormatter struct {
 	Extensions  []string          `json:"extensions"`
 }
 
-// @deprecated Always uses stretch layout.
+// Deprecated: Always uses stretch layout.
 type ConfigLayout string
 
 const (
@@ -756,7 +756,7 @@ func (r ConfigMcpType) IsKnown() bool {
 	return false
 }
 
-// @deprecated Use `agent` field instead.
+// Deprecated: Use the Agent field instead.
 type ConfigMode struct {
 	Build ConfigModeBuild `json:"build"`
 	Plan  ConfigModePlan  `json:"plan"`
