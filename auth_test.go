@@ -276,6 +276,37 @@ func TestAuthSetParams_MarshalJSON_WellKnownAuth(t *testing.T) {
 	}
 }
 
+func TestAuthSetParams_MarshalJSON_AutoSetsTypeDiscriminator(t *testing.T) {
+	tests := []struct {
+		name         string
+		auth         AuthSetParamsAuthUnion
+		expectedType string
+	}{
+		{"OAuth without Type", OAuth{Refresh: "ref", Access: "acc", Expires: 3600}, "oauth"},
+		{"ApiAuth without Type", ApiAuth{Key: "k"}, "api"},
+		{"WellKnownAuth without Type", WellKnownAuth{Key: "k", Token: "t"}, "wellknown"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			params := AuthSetParams{Auth: tt.auth}
+			data, err := json.Marshal(params)
+			if err != nil {
+				t.Fatalf("marshal failed: %v", err)
+			}
+
+			var result map[string]interface{}
+			if err := json.Unmarshal(data, &result); err != nil {
+				t.Fatalf("unmarshal failed: %v", err)
+			}
+
+			if result["type"] != tt.expectedType {
+				t.Errorf("expected type %q, got %v", tt.expectedType, result["type"])
+			}
+		})
+	}
+}
+
 func TestAuthSetParams_URLQuery(t *testing.T) {
 	tests := []struct {
 		name     string

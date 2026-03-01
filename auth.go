@@ -50,7 +50,30 @@ func (r AuthSetParams) URLQuery() (url.Values, error) {
 	return queryparams.Marshal(r)
 }
 
-// MarshalJSON marshals the Auth field for the request body
+// MarshalJSON marshals the Auth field for the request body.
+// It sets the Type discriminator automatically based on the concrete type,
+// so callers don't need to set it manually.
 func (r AuthSetParams) MarshalJSON() ([]byte, error) {
-	return json.Marshal(r.Auth)
+	switch v := r.Auth.(type) {
+	case OAuth:
+		v.Type = AuthTypeOAuth
+		return json.Marshal(v)
+	case *OAuth:
+		v.Type = AuthTypeOAuth
+		return json.Marshal(v)
+	case ApiAuth:
+		v.Type = AuthTypeAPI
+		return json.Marshal(v)
+	case *ApiAuth:
+		v.Type = AuthTypeAPI
+		return json.Marshal(v)
+	case WellKnownAuth:
+		v.Type = AuthTypeWellKnown
+		return json.Marshal(v)
+	case *WellKnownAuth:
+		v.Type = AuthTypeWellKnown
+		return json.Marshal(v)
+	default:
+		return json.Marshal(r.Auth)
+	}
 }
