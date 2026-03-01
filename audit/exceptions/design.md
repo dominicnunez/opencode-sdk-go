@@ -141,3 +141,10 @@
 **Date:** 2026-03-01
 
 **Reason:** When `buildURL` fails, `ListStreaming` wraps the error into the stream via `ssestream.NewStream[Event](nil, err)`. The caller must check `stream.Err()` after iteration, which is documented in the method's godoc with a full usage example. This matches Go's iterator contract (`bufio.Scanner`, `sql.Rows`) where errors are deferred to an `Err()` method. Returning `(*Stream, error)` would break the single-return-value streaming API and force callers to handle two error paths instead of one.
+
+### ListStreaming buildURL and request-creation error paths are not unit-tested
+
+**Location:** `event.go:38-47` — two early-return error paths
+**Date:** 2026-03-01
+
+**Reason:** The `buildURL` failure path (line 39-41) is unreachable through the public API because `EventListParams.URLQuery()` delegates to `queryparams.Marshal` which cannot error for the field types in `EventListParams` (a single `*string`). The `http.NewRequestWithContext` failure path (line 45-47) requires a nil context or invalid method, neither of which can occur from normal usage — the method is hardcoded as `GET` and context comes from the caller. Both paths exist as defensive coding against future changes to the params struct or internal invariants. Testing them would require either bypassing the type system or injecting programming errors, providing no regression value.
