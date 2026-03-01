@@ -2,9 +2,9 @@ package opencode
 
 import (
 	"context"
+	"github.com/dominicnunez/opencode-sdk-go/internal/queryparams"
 	"net/http"
 	"net/url"
-	"github.com/dominicnunez/opencode-sdk-go/internal/queryparams"
 )
 
 type CommandService struct {
