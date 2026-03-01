@@ -468,7 +468,7 @@ func (r AssistantMessageError) AsProviderAuth() (*shared.ProviderAuthError, erro
 	}
 	var v shared.ProviderAuthError
 	if err := json.Unmarshal(r.raw, &v); err != nil {
-		return nil, fmt.Errorf("unmarshal %s Name: %w", r.Name, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", r.Name, err)
 	}
 	return &v, nil
 }
@@ -479,7 +479,7 @@ func (r AssistantMessageError) AsUnknown() (*shared.UnknownError, error) {
 	}
 	var v shared.UnknownError
 	if err := json.Unmarshal(r.raw, &v); err != nil {
-		return nil, fmt.Errorf("unmarshal %s Name: %w", r.Name, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", r.Name, err)
 	}
 	return &v, nil
 }
@@ -490,7 +490,7 @@ func (r AssistantMessageError) AsOutputLength() (*AssistantMessageErrorMessageOu
 	}
 	var v AssistantMessageErrorMessageOutputLengthError
 	if err := json.Unmarshal(r.raw, &v); err != nil {
-		return nil, fmt.Errorf("unmarshal %s Name: %w", r.Name, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", r.Name, err)
 	}
 	return &v, nil
 }
@@ -501,7 +501,7 @@ func (r AssistantMessageError) AsAborted() (*shared.MessageAbortedError, error) 
 	}
 	var v shared.MessageAbortedError
 	if err := json.Unmarshal(r.raw, &v); err != nil {
-		return nil, fmt.Errorf("unmarshal %s Name: %w", r.Name, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", r.Name, err)
 	}
 	return &v, nil
 }
@@ -512,7 +512,7 @@ func (r AssistantMessageError) AsAPI() (*AssistantMessageErrorAPIError, error) {
 	}
 	var v AssistantMessageErrorAPIError
 	if err := json.Unmarshal(r.raw, &v); err != nil {
-		return nil, fmt.Errorf("unmarshal %s Name: %w", r.Name, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", r.Name, err)
 	}
 	return &v, nil
 }
@@ -673,7 +673,7 @@ func (r FilePartSource) AsFile() (*FileSource, error) {
 	}
 	var src FileSource
 	if err := json.Unmarshal(r.raw, &src); err != nil {
-		return nil, fmt.Errorf("unmarshal %s Type: %w", r.Type, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", r.Type, err)
 	}
 	return &src, nil
 }
@@ -685,7 +685,7 @@ func (r FilePartSource) AsSymbol() (*SymbolSource, error) {
 	}
 	var src SymbolSource
 	if err := json.Unmarshal(r.raw, &src); err != nil {
-		return nil, fmt.Errorf("unmarshal %s Type: %w", r.Type, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", r.Type, err)
 	}
 	return &src, nil
 }
@@ -801,7 +801,7 @@ func (r Message) AsUser() (*UserMessage, error) {
 	}
 	var msg UserMessage
 	if err := json.Unmarshal(r.raw, &msg); err != nil {
-		return nil, fmt.Errorf("unmarshal %s Role: %w", r.Role, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", r.Role, err)
 	}
 	return &msg, nil
 }
@@ -813,7 +813,7 @@ func (r Message) AsAssistant() (*AssistantMessage, error) {
 	}
 	var msg AssistantMessage
 	if err := json.Unmarshal(r.raw, &msg); err != nil {
-		return nil, fmt.Errorf("unmarshal %s Role: %w", r.Role, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", r.Role, err)
 	}
 	return &msg, nil
 }
@@ -876,7 +876,7 @@ func (r Part) AsText() (*TextPart, error) {
 	}
 	var part TextPart
 	if err := json.Unmarshal(r.raw, &part); err != nil {
-		return nil, fmt.Errorf("unmarshal %s Type: %w", r.Type, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", r.Type, err)
 	}
 	return &part, nil
 }
@@ -888,7 +888,7 @@ func (r Part) AsReasoning() (*ReasoningPart, error) {
 	}
 	var part ReasoningPart
 	if err := json.Unmarshal(r.raw, &part); err != nil {
-		return nil, fmt.Errorf("unmarshal %s Type: %w", r.Type, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", r.Type, err)
 	}
 	return &part, nil
 }
@@ -900,7 +900,7 @@ func (r Part) AsFile() (*FilePart, error) {
 	}
 	var part FilePart
 	if err := json.Unmarshal(r.raw, &part); err != nil {
-		return nil, fmt.Errorf("unmarshal %s Type: %w", r.Type, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", r.Type, err)
 	}
 	return &part, nil
 }
@@ -912,7 +912,7 @@ func (r Part) AsTool() (*ToolPart, error) {
 	}
 	var part ToolPart
 	if err := json.Unmarshal(r.raw, &part); err != nil {
-		return nil, fmt.Errorf("unmarshal %s Type: %w", r.Type, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", r.Type, err)
 	}
 	return &part, nil
 }
@@ -924,7 +924,7 @@ func (r Part) AsStepStart() (*StepStartPart, error) {
 	}
 	var part StepStartPart
 	if err := json.Unmarshal(r.raw, &part); err != nil {
-		return nil, fmt.Errorf("unmarshal %s Type: %w", r.Type, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", r.Type, err)
 	}
 	return &part, nil
 }
@@ -936,7 +936,7 @@ func (r Part) AsStepFinish() (*StepFinishPart, error) {
 	}
 	var part StepFinishPart
 	if err := json.Unmarshal(r.raw, &part); err != nil {
-		return nil, fmt.Errorf("unmarshal %s Type: %w", r.Type, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", r.Type, err)
 	}
 	return &part, nil
 }
@@ -948,7 +948,7 @@ func (r Part) AsSnapshot() (*SnapshotPart, error) {
 	}
 	var part SnapshotPart
 	if err := json.Unmarshal(r.raw, &part); err != nil {
-		return nil, fmt.Errorf("unmarshal %s Type: %w", r.Type, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", r.Type, err)
 	}
 	return &part, nil
 }
@@ -960,7 +960,7 @@ func (r Part) AsPatch() (*PartPatchPart, error) {
 	}
 	var part PartPatchPart
 	if err := json.Unmarshal(r.raw, &part); err != nil {
-		return nil, fmt.Errorf("unmarshal %s Type: %w", r.Type, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", r.Type, err)
 	}
 	return &part, nil
 }
@@ -972,7 +972,7 @@ func (r Part) AsAgent() (*AgentPart, error) {
 	}
 	var part AgentPart
 	if err := json.Unmarshal(r.raw, &part); err != nil {
-		return nil, fmt.Errorf("unmarshal %s Type: %w", r.Type, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", r.Type, err)
 	}
 	return &part, nil
 }
@@ -984,7 +984,7 @@ func (r Part) AsRetry() (*PartRetryPart, error) {
 	}
 	var part PartRetryPart
 	if err := json.Unmarshal(r.raw, &part); err != nil {
-		return nil, fmt.Errorf("unmarshal %s Type: %w", r.Type, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", r.Type, err)
 	}
 	return &part, nil
 }
@@ -1411,7 +1411,7 @@ func (r ToolPartState) AsPending() (*ToolStatePending, error) {
 	}
 	var state ToolStatePending
 	if err := json.Unmarshal(r.raw, &state); err != nil {
-		return nil, fmt.Errorf("unmarshal %s Status: %w", r.Status, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", r.Status, err)
 	}
 	return &state, nil
 }
@@ -1423,7 +1423,7 @@ func (r ToolPartState) AsRunning() (*ToolStateRunning, error) {
 	}
 	var state ToolStateRunning
 	if err := json.Unmarshal(r.raw, &state); err != nil {
-		return nil, fmt.Errorf("unmarshal %s Status: %w", r.Status, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", r.Status, err)
 	}
 	return &state, nil
 }
@@ -1435,7 +1435,7 @@ func (r ToolPartState) AsCompleted() (*ToolStateCompleted, error) {
 	}
 	var state ToolStateCompleted
 	if err := json.Unmarshal(r.raw, &state); err != nil {
-		return nil, fmt.Errorf("unmarshal %s Status: %w", r.Status, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", r.Status, err)
 	}
 	return &state, nil
 }
@@ -1447,7 +1447,7 @@ func (r ToolPartState) AsError() (*ToolStateError, error) {
 	}
 	var state ToolStateError
 	if err := json.Unmarshal(r.raw, &state); err != nil {
-		return nil, fmt.Errorf("unmarshal %s Status: %w", r.Status, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", r.Status, err)
 	}
 	return &state, nil
 }

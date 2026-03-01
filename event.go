@@ -94,7 +94,7 @@ func (e Event) AsInstallationUpdated() (*EventInstallationUpdated, error) {
 	}
 	var evt EventInstallationUpdated
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
-		return nil, fmt.Errorf("unmarshal %s Type: %w", e.Type, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", e.Type, err)
 	}
 	return &evt, nil
 }
@@ -106,7 +106,7 @@ func (e Event) AsLspClientDiagnostics() (*EventLspClientDiagnostics, error) {
 	}
 	var evt EventLspClientDiagnostics
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
-		return nil, fmt.Errorf("unmarshal %s Type: %w", e.Type, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", e.Type, err)
 	}
 	return &evt, nil
 }
@@ -118,7 +118,7 @@ func (e Event) AsMessageUpdated() (*EventMessageUpdated, error) {
 	}
 	var evt EventMessageUpdated
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
-		return nil, fmt.Errorf("unmarshal %s Type: %w", e.Type, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", e.Type, err)
 	}
 	return &evt, nil
 }
@@ -130,7 +130,7 @@ func (e Event) AsMessageRemoved() (*EventMessageRemoved, error) {
 	}
 	var evt EventMessageRemoved
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
-		return nil, fmt.Errorf("unmarshal %s Type: %w", e.Type, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", e.Type, err)
 	}
 	return &evt, nil
 }
@@ -142,7 +142,7 @@ func (e Event) AsMessagePartUpdated() (*EventMessagePartUpdated, error) {
 	}
 	var evt EventMessagePartUpdated
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
-		return nil, fmt.Errorf("unmarshal %s Type: %w", e.Type, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", e.Type, err)
 	}
 	return &evt, nil
 }
@@ -154,7 +154,7 @@ func (e Event) AsMessagePartRemoved() (*EventMessagePartRemoved, error) {
 	}
 	var evt EventMessagePartRemoved
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
-		return nil, fmt.Errorf("unmarshal %s Type: %w", e.Type, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", e.Type, err)
 	}
 	return &evt, nil
 }
@@ -166,7 +166,7 @@ func (e Event) AsSessionCompacted() (*EventSessionCompacted, error) {
 	}
 	var evt EventSessionCompacted
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
-		return nil, fmt.Errorf("unmarshal %s Type: %w", e.Type, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", e.Type, err)
 	}
 	return &evt, nil
 }
@@ -178,7 +178,7 @@ func (e Event) AsPermissionUpdated() (*EventPermissionUpdated, error) {
 	}
 	var evt EventPermissionUpdated
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
-		return nil, fmt.Errorf("unmarshal %s Type: %w", e.Type, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", e.Type, err)
 	}
 	return &evt, nil
 }
@@ -190,7 +190,7 @@ func (e Event) AsPermissionReplied() (*EventPermissionReplied, error) {
 	}
 	var evt EventPermissionReplied
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
-		return nil, fmt.Errorf("unmarshal %s Type: %w", e.Type, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", e.Type, err)
 	}
 	return &evt, nil
 }
@@ -202,7 +202,7 @@ func (e Event) AsFileEdited() (*EventFileEdited, error) {
 	}
 	var evt EventFileEdited
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
-		return nil, fmt.Errorf("unmarshal %s Type: %w", e.Type, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", e.Type, err)
 	}
 	return &evt, nil
 }
@@ -214,7 +214,7 @@ func (e Event) AsFileWatcherUpdated() (*EventFileWatcherUpdated, error) {
 	}
 	var evt EventFileWatcherUpdated
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
-		return nil, fmt.Errorf("unmarshal %s Type: %w", e.Type, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", e.Type, err)
 	}
 	return &evt, nil
 }
@@ -226,7 +226,7 @@ func (e Event) AsTodoUpdated() (*EventTodoUpdated, error) {
 	}
 	var evt EventTodoUpdated
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
-		return nil, fmt.Errorf("unmarshal %s Type: %w", e.Type, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", e.Type, err)
 	}
 	return &evt, nil
 }
@@ -238,7 +238,7 @@ func (e Event) AsSessionIdle() (*EventSessionIdle, error) {
 	}
 	var evt EventSessionIdle
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
-		return nil, fmt.Errorf("unmarshal %s Type: %w", e.Type, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", e.Type, err)
 	}
 	return &evt, nil
 }
@@ -250,7 +250,7 @@ func (e Event) AsSessionCreated() (*EventSessionCreated, error) {
 	}
 	var evt EventSessionCreated
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
-		return nil, fmt.Errorf("unmarshal %s Type: %w", e.Type, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", e.Type, err)
 	}
 	return &evt, nil
 }
@@ -262,7 +262,7 @@ func (e Event) AsSessionUpdated() (*EventSessionUpdated, error) {
 	}
 	var evt EventSessionUpdated
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
-		return nil, fmt.Errorf("unmarshal %s Type: %w", e.Type, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", e.Type, err)
 	}
 	return &evt, nil
 }
@@ -274,7 +274,7 @@ func (e Event) AsSessionDeleted() (*EventSessionDeleted, error) {
 	}
 	var evt EventSessionDeleted
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
-		return nil, fmt.Errorf("unmarshal %s Type: %w", e.Type, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", e.Type, err)
 	}
 	return &evt, nil
 }
@@ -286,7 +286,7 @@ func (e Event) AsSessionError() (*EventSessionError, error) {
 	}
 	var evt EventSessionError
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
-		return nil, fmt.Errorf("unmarshal %s Type: %w", e.Type, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", e.Type, err)
 	}
 	return &evt, nil
 }
@@ -298,7 +298,7 @@ func (e Event) AsServerConnected() (*EventServerConnected, error) {
 	}
 	var evt EventServerConnected
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
-		return nil, fmt.Errorf("unmarshal %s Type: %w", e.Type, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", e.Type, err)
 	}
 	return &evt, nil
 }
@@ -310,7 +310,7 @@ func (e Event) AsIdeInstalled() (*EventIdeInstalled, error) {
 	}
 	var evt EventIdeInstalled
 	if err := json.Unmarshal(e.raw, &evt); err != nil {
-		return nil, fmt.Errorf("unmarshal %s Type: %w", e.Type, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", e.Type, err)
 	}
 	return &evt, nil
 }
@@ -756,7 +756,7 @@ func (r SessionError) AsProviderAuth() (*shared.ProviderAuthError, error) {
 	}
 	var v shared.ProviderAuthError
 	if err := json.Unmarshal(r.raw, &v); err != nil {
-		return nil, fmt.Errorf("unmarshal %s error: %w", r.Name, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", r.Name, err)
 	}
 	return &v, nil
 }
@@ -767,7 +767,7 @@ func (r SessionError) AsUnknown() (*shared.UnknownError, error) {
 	}
 	var v shared.UnknownError
 	if err := json.Unmarshal(r.raw, &v); err != nil {
-		return nil, fmt.Errorf("unmarshal %s error: %w", r.Name, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", r.Name, err)
 	}
 	return &v, nil
 }
@@ -778,7 +778,7 @@ func (r SessionError) AsOutputLength() (*MessageOutputLengthError, error) {
 	}
 	var v MessageOutputLengthError
 	if err := json.Unmarshal(r.raw, &v); err != nil {
-		return nil, fmt.Errorf("unmarshal %s error: %w", r.Name, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", r.Name, err)
 	}
 	return &v, nil
 }
@@ -789,7 +789,7 @@ func (r SessionError) AsAborted() (*shared.MessageAbortedError, error) {
 	}
 	var v shared.MessageAbortedError
 	if err := json.Unmarshal(r.raw, &v); err != nil {
-		return nil, fmt.Errorf("unmarshal %s error: %w", r.Name, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", r.Name, err)
 	}
 	return &v, nil
 }
@@ -800,7 +800,7 @@ func (r SessionError) AsAPI() (*SessionAPIError, error) {
 	}
 	var v SessionAPIError
 	if err := json.Unmarshal(r.raw, &v); err != nil {
-		return nil, fmt.Errorf("unmarshal %s error: %w", r.Name, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", r.Name, err)
 	}
 	return &v, nil
 }

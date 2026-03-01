@@ -712,7 +712,7 @@ func (r ConfigMcp) AsLocal() (*McpLocalConfig, error) {
 	}
 	var local McpLocalConfig
 	if err := json.Unmarshal(r.raw, &local); err != nil {
-		return nil, fmt.Errorf("unmarshal %s Type: %w", r.Type, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", r.Type, err)
 	}
 	return &local, nil
 }
@@ -728,7 +728,7 @@ func (r ConfigMcp) AsRemote() (*McpRemoteConfig, error) {
 	}
 	var remote McpRemoteConfig
 	if err := json.Unmarshal(r.raw, &remote); err != nil {
-		return nil, fmt.Errorf("unmarshal %s Type: %w", r.Type, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", r.Type, err)
 	}
 	return &remote, nil
 }
@@ -1548,7 +1548,7 @@ func (a Auth) AsOAuth() (*OAuth, error) {
 	}
 	var oauth OAuth
 	if err := json.Unmarshal(a.raw, &oauth); err != nil {
-		return nil, fmt.Errorf("unmarshal %s Type: %w", a.Type, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", a.Type, err)
 	}
 	return &oauth, nil
 }
@@ -1560,7 +1560,7 @@ func (a Auth) AsAPI() (*ApiAuth, error) {
 	}
 	var apiAuth ApiAuth
 	if err := json.Unmarshal(a.raw, &apiAuth); err != nil {
-		return nil, fmt.Errorf("unmarshal %s Type: %w", a.Type, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", a.Type, err)
 	}
 	return &apiAuth, nil
 }
@@ -1572,7 +1572,7 @@ func (a Auth) AsWellKnown() (*WellKnownAuth, error) {
 	}
 	var wellKnown WellKnownAuth
 	if err := json.Unmarshal(a.raw, &wellKnown); err != nil {
-		return nil, fmt.Errorf("unmarshal %s Type: %w", a.Type, err)
+		return nil, fmt.Errorf("unmarshal %s: %w", a.Type, err)
 	}
 	return &wellKnown, nil
 }
