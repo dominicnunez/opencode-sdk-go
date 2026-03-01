@@ -1363,3 +1363,94 @@ actually cause same-repo PRs to run CI twice — once from push, once from pull_
 **Date:** 2026-03-01
 
 **Reason:** The audit claims no test exercises the 3xx path. This is factually wrong. `TestClientDo_3xxRedirectIsError` (client_do_test.go:449-482) starts a server returning 301 with `CheckRedirect` set to `http.ErrUseLastResponse`, calls `Session.List`, verifies the error wraps `*APIError` via `errors.As`, and asserts the status code is `http.StatusMovedPermanently`. The exact scenario described in the suggested fix is already tested.
+
+### apierror.Error stores full http.Request and http.Response objects described as new finding
+
+**Location:** `internal/apierror/apierror.go:12-17`
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of multiple existing known exceptions: "apierror.Error stores live http.Request and http.Response references", "apierror.Error unused Stainless leftover combines already-excepted sub-issues", and "apierror.Error is unused but exported as a public type alias." The type is never constructed anywhere in the SDK, making the concern theoretical.
+
+### Dead exported type apierror.Error described as new finding
+
+**Location:** `internal/apierror/apierror.go:12`, `aliases.go:8`
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing known exception "apierror.Error is unused but exported as a public type alias." Removing it would be a breaking API change. Already classified.
+
+### McpStatus untyped map described as code quality issue
+
+**Location:** `mcp.go:17`
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing known exception "McpStatus is an untyped map." The OpenAPI spec defines the MCP status response with an empty schema (`"schema": {}`), meaning the response shape is intentionally unspecified. `map[string]interface{}` is the correct Go representation.
+
+### map[string]interface{} fields described as needing concrete types
+
+**Location:** `agent.go:30`, `app.go:53`, `sessionpermission.go:54`, `session.go:1119`
+**Date:** 2026-03-01
+
+**Reason:** The audit claims these fields "likely have known key sets in the OpenAPI spec." This is factually wrong. The spec defines `Agent.Options`, `Model.Options`, and `Permission.Metadata` with `"type": "object", "propertyNames": {"type": "string"}, "additionalProperties": {}` — meaning they are genuinely schemaless maps with no defined property names. `map[string]interface{}` is the correct Go representation of an unconstrained JSON object with string keys.
+
+### buildURL double-merges base URL query parameters
+
+**Location:** `client.go:184-188` — buildURL base URL query loop
+**Date:** 2026-03-01
+
+**Reason:** The audit claims `ResolveReference()` preserves the base URL's query string, making the explicit merge loop redundant. This is factually wrong. `ResolveReference(&url.URL{Path: path})` drops the base URL's `RawQuery` because the reference has a non-empty path. Verified empirically: resolving `http://localhost:54321/?foo=bar` with `&url.URL{Path: "sessions"}` produces `http://localhost:54321/sessions` with no query string. The loop at lines 186-188 is necessary to re-merge base URL query parameters. Already proven in existing known exception.
+
+### APIError does not implement Unwrap described as an error handling gap
+
+**Location:** `errors.go:38-91` — APIError type
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of existing known exception "APIError does not implement Unwrap described as a bug." The finding itself says "No immediate action needed." `APIError` is always the terminal error (never wraps another), so the lack of `Unwrap()` is correct. The concern about future callers wrapping it is speculative — no code in the codebase does this.
+
+### ConfigUpdateParams described as serializing zero-value boolean fields in PATCH body
+
+**Location:** `config.go:1745-1747` — ConfigUpdateParams.MarshalJSON
+**Date:** 2026-03-01
+
+**Reason:** The finding claims `Autoupdate` (line 64) and `Snapshot` (line 94) lack `omitempty` tags and would always serialize `false` in PATCH bodies. This is factually wrong. Both fields have `omitempty`: `Autoupdate bool \`json:"autoupdate,omitempty"\`` and `Snapshot bool \`json:"snapshot,omitempty"\``. `TestConfigUpdateParams_MarshalJSON_OmitsZeroValues` (config_update_test.go:284) already asserts that zero-value `autoupdate` and `snapshot` are absent from the serialized output.
+
+### No test for ConfigUpdateParams PATCH body serialization described as a testing gap
+
+**Location:** `config.go:1745-1747` — ConfigUpdateParams.MarshalJSON
+**Date:** 2026-03-01
+
+**Reason:** The finding claims there are no tests verifying that a partial update produces minimal JSON. This is factually wrong. `TestConfigUpdateParams_MarshalJSON_OmitsZeroValues` (config_update_test.go:284) creates `ConfigUpdateParams` with only `Theme` set, marshals it, and verifies that `autoshare`, `autoupdate`, `snapshot`, and `model` are all absent from the output. Additionally, the premise about missing `omitempty` tags is incorrect — all boolean fields have `omitempty`.
+
+### No test for ListStreaming content-type validation described as a testing gap
+
+**Location:** `event.go:63-68` — content-type validation path
+**Date:** 2026-03-01
+
+**Reason:** The finding claims no test exercises the content-type validation path. This is factually wrong. `TestListStreaming_WrongContentType` (event_streaming_error_test.go:170) starts an httptest.Server returning `200 OK` with `Content-Type: application/json`, calls `ListStreaming`, verifies `stream.Next()` returns false, and asserts the error contains both "unexpected content type" and "application/json". The exact scenario described in the suggested fix is already tested.
+
+### No test for SSE stream with interleaved comments and empty events described as a testing gap
+
+**Location:** `packages/ssestream/ssestream.go:90-149` — SSE decoder
+**Date:** 2026-03-01
+
+**Reason:** The finding claims the test suite may not cover interleaved comments between data lines or blank lines after only comments/event-type. This is factually wrong. `TestEventStreamDecoder_InterleavedComments` (ssestream_test.go:505) tests comments interleaved with event/data lines. `TestEventStreamDecoder_CommentBetweenDataLines` (ssestream_test.go:523) explicitly tests comments between two `data:` lines within the same event. `TestEventStreamDecoder_EventTypeResetAfterDrop` (ssestream_test.go:271) tests that a blank line after only an event-type line (no data) drops the event and resets the type.
+
+### internal/apierror.Error duplicates opencode.APIError described as a code quality issue
+
+**Location:** `internal/apierror/apierror.go:12-17`, `errors.go:38-50`
+**Date:** 2026-03-01
+
+**Reason:** The finding itself concludes "Already accepted. No action needed." It explicitly states this is already documented in `audit/exceptions/risks.md` as an accepted risk and is included "for completeness." This is a duplicate of the existing known exception "apierror.Error is unused but exported as a public type alias" — no new observation.
+
+### Zero-value union types constructed in code marshal as `null`
+
+**Location:** `config.go:773-778` — `ConfigMcp.MarshalJSON` returns `[]byte("null")` when `raw == nil`
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of two existing known exceptions: "Config union types serialize as null when zero-valued" (which explains why fixing only unions while leaving other zero-valued fields would create an inconsistency) and "Union types cannot be constructed programmatically for serialization" (which accepts the JSON-roundtrip workaround as sufficient). No new observation beyond what's already classified.
+
+### `apierror.Error` described as dead Stainless artifact with public type alias
+
+**Location:** `internal/apierror/apierror.go:12-17`, `aliases.go:8`
+**Date:** 2026-03-01
+
+**Reason:** Duplicate of multiple existing known exceptions: "apierror.Error is unused but exported as a public type alias," "apierror.Error stores live http.Request and http.Response references," "apierror.Error has overlapping StatusCode field that is never read," "httputil dump errors ignored in debugging methods," and "apierror.Error unused Stainless leftover combines already-excepted sub-issues." Every sub-concern (memory pinning, dead StatusCode field, swallowed httputil errors) is already individually classified. No new observation.
