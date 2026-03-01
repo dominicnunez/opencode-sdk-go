@@ -250,13 +250,15 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 			return nil, ctx.Err()
 		}
 
-		// Success - return response
-		if lastErr == nil && resp.StatusCode < 400 {
+		// Success — only 2xx responses are valid JSON API results.
+		// 3xx responses indicate a misconfigured redirect policy and should
+		// surface as errors rather than produce confusing decode failures.
+		if lastErr == nil && resp.StatusCode >= 200 && resp.StatusCode < 300 {
 			return resp, nil
 		}
 
 		// Error response - don't retry client errors (4xx except specific cases)
-		if lastErr == nil && resp.StatusCode >= 400 {
+		if lastErr == nil && resp.StatusCode >= 300 {
 			if !isRetryableStatus(resp.StatusCode) || attempt >= c.maxRetries {
 				return nil, readAPIError(resp, maxErrorBodySize)
 			}

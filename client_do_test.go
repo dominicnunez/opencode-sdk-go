@@ -414,6 +414,41 @@ func TestClientDo_TransportErrorRetryExhaustion(t *testing.T) {
 	}
 }
 
+func TestClientDo_3xxRedirectIsError(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Location", "/other")
+		w.WriteHeader(http.StatusMovedPermanently)
+		_, _ = w.Write([]byte("moved"))
+	}))
+	defer server.Close()
+
+	// Disable redirect following so the client sees the 301 directly
+	client, err := opencode.NewClient(
+		opencode.WithBaseURL(server.URL),
+		opencode.WithHTTPClient(&http.Client{
+			CheckRedirect: func(req *http.Request, via []*http.Request) error {
+				return http.ErrUseLastResponse
+			},
+		}),
+	)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	_, err = client.Session.List(context.Background(), &opencode.SessionListParams{})
+	if err == nil {
+		t.Fatal("expected error for 3xx response, got nil")
+	}
+
+	var apiErr *opencode.APIError
+	if !errors.As(err, &apiErr) {
+		t.Fatalf("expected *opencode.APIError, got %T: %v", err, err)
+	}
+	if apiErr.StatusCode != http.StatusMovedPermanently {
+		t.Errorf("expected status %d, got %d", http.StatusMovedPermanently, apiErr.StatusCode)
+	}
+}
+
 type roundTripFunc func(req *http.Request) (*http.Response, error)
 
 func (f roundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
