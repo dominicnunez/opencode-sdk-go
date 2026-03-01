@@ -17,10 +17,12 @@ type EventService struct {
 }
 
 // ListStreaming opens an SSE connection and returns a stream of events.
-// The returned stream is never nil. Callers must check stream.Err() after
+// The returned stream is never nil. Callers must defer stream.Close() to
+// release the underlying HTTP response body, and check stream.Err() after
 // the iteration loop completes to detect HTTP or connection errors:
 //
 //	stream := client.Event.ListStreaming(ctx, nil)
+//	defer stream.Close()
 //	for stream.Next() {
 //	    event := stream.Current()
 //	    // handle event
