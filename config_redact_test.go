@@ -153,3 +153,39 @@ func TestMcpRemoteConfig_GoString_RedactsHeaders(t *testing.T) {
 		t.Error("GoString() leaked header values via fmt #v")
 	}
 }
+
+func TestMcpLocalConfig_String_RedactsEnvironment(t *testing.T) {
+	c := McpLocalConfig{
+		Type:    McpLocalConfigTypeLocal,
+		Command: []string{"npx", "mcp-server"},
+		Enabled: true,
+		Environment: map[string]string{
+			"API_KEY":    "sk-secret-key-12345",
+			"AUTH_TOKEN": "secret-token-67890",
+		},
+	}
+
+	s := c.String()
+	if strings.Contains(s, "sk-secret-key-12345") {
+		t.Error("String() leaked API_KEY value")
+	}
+	if strings.Contains(s, "secret-token-67890") {
+		t.Error("String() leaked AUTH_TOKEN value")
+	}
+	if !strings.Contains(s, "2 redacted") {
+		t.Error("String() should show environment variable count")
+	}
+	if !strings.Contains(s, "npx") {
+		t.Error("String() should include non-sensitive Command field")
+	}
+}
+
+func TestMcpLocalConfig_GoString_RedactsEnvironment(t *testing.T) {
+	c := McpLocalConfig{
+		Environment: map[string]string{"SECRET": "hunter2"},
+	}
+	s := fmt.Sprintf("%#v", c)
+	if strings.Contains(s, "hunter2") {
+		t.Error("GoString() leaked environment values via fmt #v")
+	}
+}
