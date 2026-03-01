@@ -4,6 +4,9 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   lint:
     timeout-minutes: 10
@@ -18,6 +21,11 @@ jobs:
         uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
         with:
           go-version-file: ./go.mod
+
+      - name: Install golangci-lint
+        uses: golangci/golangci-lint-action@4afd733a84b2f1a89662d9ab1eec4cb19f48d122 # v6
+        with:
+          install-mode: binary
 
       - name: Run lints
         run: ./scripts/lint
