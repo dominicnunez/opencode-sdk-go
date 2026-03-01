@@ -72,6 +72,12 @@ func (s *ToolService) List(ctx context.Context, params *ToolListParams) (*ToolLi
 	if params == nil {
 		return nil, errors.New("params is required")
 	}
+	if params.Provider == "" {
+		return nil, errors.New("missing required provider parameter")
+	}
+	if params.Model == "" {
+		return nil, errors.New("missing required model parameter")
+	}
 
 	var result ToolList
 	err := s.client.do(ctx, http.MethodGet, "experimental/tool", params, &result)

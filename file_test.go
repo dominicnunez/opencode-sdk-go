@@ -23,7 +23,7 @@ func TestFileService_RequiredFieldValidation(t *testing.T) {
 				})
 				return err
 			},
-			expectedErrMsg: "required query parameter",
+			expectedErrMsg: "required path parameter",
 		},
 		{
 			name: "Read with missing Path",
@@ -33,7 +33,7 @@ func TestFileService_RequiredFieldValidation(t *testing.T) {
 				})
 				return err
 			},
-			expectedErrMsg: "required query parameter",
+			expectedErrMsg: "required path parameter",
 		},
 	}
 

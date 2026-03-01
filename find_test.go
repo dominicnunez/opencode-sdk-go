@@ -43,7 +43,7 @@ func TestFindService_RequiredFieldValidation(t *testing.T) {
 				})
 				return err
 			},
-			expectedErrMsg: "required query parameter",
+			expectedErrMsg: "required pattern parameter",
 		},
 	}
 

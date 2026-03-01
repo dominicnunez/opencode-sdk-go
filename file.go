@@ -17,6 +17,9 @@ func (s *FileService) List(ctx context.Context, params *FileListParams) ([]FileN
 	if params == nil {
 		return nil, errors.New("params is required")
 	}
+	if params.Path == "" {
+		return nil, errors.New("missing required path parameter")
+	}
 	var result []FileNode
 	err := s.client.do(ctx, http.MethodGet, "file", params, &result)
 	if err != nil {
@@ -28,6 +31,9 @@ func (s *FileService) List(ctx context.Context, params *FileListParams) ([]FileN
 func (s *FileService) Read(ctx context.Context, params *FileReadParams) (*FileReadResponse, error) {
 	if params == nil {
 		return nil, errors.New("params is required")
+	}
+	if params.Path == "" {
+		return nil, errors.New("missing required path parameter")
 	}
 	var result FileReadResponse
 	err := s.client.do(ctx, http.MethodGet, "file/content", params, &result)
