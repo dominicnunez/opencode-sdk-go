@@ -15,26 +15,16 @@ import (
 	"github.com/dominicnunez/opencode-sdk-go/internal"
 )
 
-type closureTransport struct {
-	fn func(req *http.Request) (*http.Response, error)
-}
-
-func (t *closureTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	return t.fn(req)
-}
-
 func TestUserAgentHeader(t *testing.T) {
 	var userAgent string
 	client, err := opencode.NewClient(
 		opencode.WithHTTPClient(&http.Client{
-			Transport: &closureTransport{
-				fn: func(req *http.Request) (*http.Response, error) {
-					userAgent = req.Header.Get("User-Agent")
-					return &http.Response{
-						StatusCode: http.StatusOK,
-					}, nil
-				},
-			},
+			Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+				userAgent = req.Header.Get("User-Agent")
+				return &http.Response{
+					StatusCode: http.StatusOK,
+				}, nil
+			}),
 		}),
 	)
 	if err != nil {
@@ -53,17 +43,15 @@ func TestRetryOn429(t *testing.T) {
 	attempts := 0
 	client, err := opencode.NewClient(
 		opencode.WithHTTPClient(&http.Client{
-			Transport: &closureTransport{
-				fn: func(req *http.Request) (*http.Response, error) {
-					attempts++
-					return &http.Response{
-						StatusCode: http.StatusTooManyRequests,
-						Status:     "429 Too Many Requests",
-						Header:     http.Header{},
-						Body:       io.NopCloser(strings.NewReader("rate limited")),
-					}, nil
-				},
-			},
+			Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+				attempts++
+				return &http.Response{
+					StatusCode: http.StatusTooManyRequests,
+					Status:     "429 Too Many Requests",
+					Header:     http.Header{},
+					Body:       io.NopCloser(strings.NewReader("rate limited")),
+				}, nil
+			}),
 		}),
 	)
 	if err != nil {
@@ -82,17 +70,15 @@ func TestRetryOn408(t *testing.T) {
 	attempts := 0
 	client, err := opencode.NewClient(
 		opencode.WithHTTPClient(&http.Client{
-			Transport: &closureTransport{
-				fn: func(req *http.Request) (*http.Response, error) {
-					attempts++
-					return &http.Response{
-						StatusCode: http.StatusRequestTimeout,
-						Status:     "408 Request Timeout",
-						Header:     http.Header{},
-						Body:       io.NopCloser(strings.NewReader("request timeout")),
-					}, nil
-				},
-			},
+			Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+				attempts++
+				return &http.Response{
+					StatusCode: http.StatusRequestTimeout,
+					Status:     "408 Request Timeout",
+					Header:     http.Header{},
+					Body:       io.NopCloser(strings.NewReader("request timeout")),
+				}, nil
+			}),
 		}),
 	)
 	if err != nil {
@@ -110,12 +96,10 @@ func TestRetryOn408(t *testing.T) {
 func TestContextCancel(t *testing.T) {
 	client, err := opencode.NewClient(
 		opencode.WithHTTPClient(&http.Client{
-			Transport: &closureTransport{
-				fn: func(req *http.Request) (*http.Response, error) {
-					<-req.Context().Done()
-					return nil, req.Context().Err()
-				},
-			},
+			Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+				<-req.Context().Done()
+				return nil, req.Context().Err()
+			}),
 		}),
 	)
 	if err != nil {
@@ -135,12 +119,10 @@ func TestContextCancel(t *testing.T) {
 func TestContextCancelDelay(t *testing.T) {
 	client, err := opencode.NewClient(
 		opencode.WithHTTPClient(&http.Client{
-			Transport: &closureTransport{
-				fn: func(req *http.Request) (*http.Response, error) {
-					<-req.Context().Done()
-					return nil, req.Context().Err()
-				},
-			},
+			Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+				<-req.Context().Done()
+				return nil, req.Context().Err()
+			}),
 		}),
 	)
 	if err != nil {
@@ -165,12 +147,10 @@ func TestContextDeadline(t *testing.T) {
 	go func() {
 		client, err := opencode.NewClient(
 			opencode.WithHTTPClient(&http.Client{
-				Transport: &closureTransport{
-					fn: func(req *http.Request) (*http.Response, error) {
-						<-req.Context().Done()
-						return nil, req.Context().Err()
-					},
-				},
+				Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+					<-req.Context().Done()
+					return nil, req.Context().Err()
+				}),
 			}),
 		)
 		if err != nil {
@@ -206,20 +186,18 @@ func TestContextDeadlineStreaming(t *testing.T) {
 	go func() {
 		client, err := opencode.NewClient(
 			opencode.WithHTTPClient(&http.Client{
-				Transport: &closureTransport{
-					fn: func(req *http.Request) (*http.Response, error) {
-						return &http.Response{
-							StatusCode: 200,
-							Status:     "200 OK",
-							Body: io.NopCloser(
-								io.Reader(readerFunc(func([]byte) (int, error) {
-									<-req.Context().Done()
-									return 0, req.Context().Err()
-								})),
-							),
-						}, nil
-					},
-				},
+				Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+					return &http.Response{
+						StatusCode: 200,
+						Status:     "200 OK",
+						Body: io.NopCloser(
+							readerFunc(func([]byte) (int, error) {
+								<-req.Context().Done()
+								return 0, req.Context().Err()
+							}),
+						),
+					}, nil
+				}),
 			}),
 		)
 		if err != nil {
@@ -311,16 +289,14 @@ func TestListStreaming_BaseURLQueryParamsPreservedWithNoMethodParams(t *testing.
 func TestListStreaming_EmptyBody502_ReturnsAPIErrorWithStatusText(t *testing.T) {
 	client, err := opencode.NewClient(
 		opencode.WithHTTPClient(&http.Client{
-			Transport: &closureTransport{
-				fn: func(req *http.Request) (*http.Response, error) {
-					return &http.Response{
-						StatusCode: http.StatusBadGateway,
-						Status:     "502 Bad Gateway",
-						Header:     http.Header{},
-						Body:       io.NopCloser(strings.NewReader("")),
-					}, nil
-				},
-			},
+			Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+				return &http.Response{
+					StatusCode: http.StatusBadGateway,
+					Status:     "502 Bad Gateway",
+					Header:     http.Header{},
+					Body:       io.NopCloser(strings.NewReader("")),
+				}, nil
+			}),
 		}),
 	)
 	if err != nil {
@@ -398,4 +374,3 @@ func TestBaseURL_WithTrailingSlash_ResolvesCorrectly(t *testing.T) {
 type readerFunc func([]byte) (int, error)
 
 func (f readerFunc) Read(p []byte) (int, error) { return f(p) }
-func (f readerFunc) Close() error               { return nil }
