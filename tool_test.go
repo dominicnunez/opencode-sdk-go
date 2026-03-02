@@ -325,6 +325,48 @@ func TestToolService_List_MissingModel(t *testing.T) {
 	}
 }
 
+func TestToolService_List_WhitespaceOnlyRequiredFields(t *testing.T) {
+	client, err := NewClient()
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	testCases := []struct {
+		name   string
+		params *ToolListParams
+		want   error
+	}{
+		{
+			name: "whitespace provider",
+			params: &ToolListParams{
+				Provider: "   \t\n",
+				Model:    "claude-3-opus",
+			},
+			want: ErrMissingRequiredParameter,
+		},
+		{
+			name: "whitespace model",
+			params: &ToolListParams{
+				Provider: "anthropic",
+				Model:    "   \t\n",
+			},
+			want: ErrMissingRequiredParameter,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := client.Tool.List(context.Background(), tc.params)
+			if err == nil {
+				t.Fatal("expected validation error")
+			}
+			if !errors.Is(err, tc.want) {
+				t.Fatalf("expected %v, got %v", tc.want, err)
+			}
+		})
+	}
+}
+
 func TestToolService_List_ServerError(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)

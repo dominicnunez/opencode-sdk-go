@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/dominicnunez/opencode-sdk-go/internal/queryparams"
 )
@@ -71,10 +72,10 @@ func (s *ToolService) List(ctx context.Context, params *ToolListParams) (*ToolLi
 	if params == nil {
 		return nil, ErrParamsRequired
 	}
-	if params.Provider == "" {
+	if strings.TrimSpace(params.Provider) == "" {
 		return nil, missingRequiredParameterError("provider")
 	}
-	if params.Model == "" {
+	if strings.TrimSpace(params.Model) == "" {
 		return nil, missingRequiredParameterError("model")
 	}
 
