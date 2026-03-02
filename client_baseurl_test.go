@@ -125,94 +125,7 @@ func TestNewClient_EnvBaseURL_FallbackToDefault(t *testing.T) {
 	}
 }
 
-func TestBuildURL_BaseURLQueryMergedWithParams(t *testing.T) {
-	var receivedQuery string
-
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		receivedQuery = r.URL.RawQuery
-		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode([]opencode.Session{})
-	}))
-	defer server.Close()
-
-	client, err := opencode.NewClient(opencode.WithBaseURL(server.URL + "?workspace=abc"))
-	if err != nil {
-		t.Fatalf("NewClient: %v", err)
-	}
-
-	_, err = client.Session.List(context.Background(), &opencode.SessionListParams{
-		Directory: opencode.Ptr("/mydir"),
-	})
-	if err != nil {
-		t.Fatalf("Session.List: %v", err)
-	}
-
-	if !strings.Contains(receivedQuery, "workspace=abc") {
-		t.Errorf("expected base URL query param preserved, got %q", receivedQuery)
-	}
-	if !strings.Contains(receivedQuery, "directory=") {
-		t.Errorf("expected params query param present, got %q", receivedQuery)
-	}
-}
-
-func TestBuildURL_ParamsOverrideBaseURLQueryKey(t *testing.T) {
-	var receivedQuery string
-
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		receivedQuery = r.URL.RawQuery
-		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode([]opencode.Session{})
-	}))
-	defer server.Close()
-
-	// Base URL has directory=old, params will set directory=/new
-	client, err := opencode.NewClient(opencode.WithBaseURL(server.URL + "?directory=old"))
-	if err != nil {
-		t.Fatalf("NewClient: %v", err)
-	}
-
-	_, err = client.Session.List(context.Background(), &opencode.SessionListParams{
-		Directory: opencode.Ptr("/new"),
-	})
-	if err != nil {
-		t.Fatalf("Session.List: %v", err)
-	}
-
-	// Params struct should override the base URL's directory key
-	if strings.Contains(receivedQuery, "directory=old") {
-		t.Errorf("expected params to override base URL query key, got %q", receivedQuery)
-	}
-	if !strings.Contains(receivedQuery, "directory=") {
-		t.Errorf("expected directory param present, got %q", receivedQuery)
-	}
-}
-
-func TestBuildURL_NilParams(t *testing.T) {
-	var receivedQuery string
-
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		receivedQuery = r.URL.RawQuery
-		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode([]opencode.Session{})
-	}))
-	defer server.Close()
-
-	client, err := opencode.NewClient(opencode.WithBaseURL(server.URL + "?workspace=abc"))
-	if err != nil {
-		t.Fatalf("NewClient: %v", err)
-	}
-
-	_, err = client.Session.List(context.Background(), nil)
-	if err != nil {
-		t.Fatalf("Session.List: %v", err)
-	}
-
-	if receivedQuery != "workspace=abc" {
-		t.Errorf("expected only base URL query params, got %q", receivedQuery)
-	}
-}
-
-func TestWithBaseURL_RejectsSensitiveQueryKeys(t *testing.T) {
+func TestWithBaseURL_RejectsQueryParameters(t *testing.T) {
 	tests := []string{
 		"https://example.com?token=secret",
 		"https://example.com?api_key=secret",
@@ -223,16 +136,18 @@ func TestWithBaseURL_RejectsSensitiveQueryKeys(t *testing.T) {
 		"https://example.com?key=secret",
 		"https://example.com?bearer=secret",
 		"https://example.com?authorization=secret",
+		"https://example.com?workspace=abc",
+		"https://example.com?directory=%2Ftmp",
 	}
 
 	for _, rawURL := range tests {
 		t.Run(rawURL, func(t *testing.T) {
 			_, err := opencode.NewClient(opencode.WithBaseURL(rawURL))
 			if err == nil {
-				t.Fatal("expected error for sensitive query parameter in base URL")
+				t.Fatal("expected error for query parameter in base URL")
 			}
-			if !strings.Contains(err.Error(), "sensitive query parameter") {
-				t.Fatalf("expected sensitive query parameter error, got: %v", err)
+			if !strings.Contains(err.Error(), "must not include query parameters") {
+				t.Fatalf("expected query parameter error, got: %v", err)
 			}
 		})
 	}

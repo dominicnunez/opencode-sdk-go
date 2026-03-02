@@ -58,3 +58,24 @@ func TestWithMaxRetries_BoundaryValues(t *testing.T) {
 		})
 	}
 }
+
+func TestWithMaxSuccessBodySize_BoundaryValues(t *testing.T) {
+	tests := []struct {
+		name    string
+		n       int64
+		wantErr bool
+	}{
+		{"negative", -1, true},
+		{"zero_unlimited", 0, false},
+		{"positive", 1024, false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := opencode.NewClient(opencode.WithMaxSuccessBodySize(tt.n))
+			if (err != nil) != tt.wantErr {
+				t.Errorf("WithMaxSuccessBodySize(%d): err=%v, wantErr=%v", tt.n, err, tt.wantErr)
+			}
+		})
+	}
+}

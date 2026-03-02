@@ -140,29 +140,13 @@ func TestClientDo_QueryParams(t *testing.T) {
 	}
 }
 
-func TestClientDo_BaseURLQueryParamsPreserved(t *testing.T) {
-	var receivedQuery string
-
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		receivedQuery = r.URL.RawQuery
-		w.WriteHeader(http.StatusOK)
-		_ = json.NewEncoder(w).Encode([]opencode.Session{})
-	}))
-	defer server.Close()
-
-	client, err := opencode.NewClient(opencode.WithBaseURL(server.URL + "?workspace=xyz"))
-	if err != nil {
-		t.Fatalf("failed to create client: %v", err)
+func TestClientDo_BaseURLQueryParamsRejected(t *testing.T) {
+	_, err := opencode.NewClient(opencode.WithBaseURL("https://example.com?workspace=xyz"))
+	if err == nil {
+		t.Fatal("expected base URL query parameters to be rejected")
 	}
-
-	// List with no query params of its own — base URL query should survive.
-	_, err = client.Session.List(context.Background(), nil)
-	if err != nil {
-		t.Fatalf("Session.List failed: %v", err)
-	}
-
-	if receivedQuery != "workspace=xyz" {
-		t.Errorf("Expected base URL query params preserved, got %q", receivedQuery)
+	if !strings.Contains(err.Error(), "must not include query parameters") {
+		t.Fatalf("expected query parameter validation error, got: %v", err)
 	}
 }
 
@@ -731,6 +715,30 @@ func TestClientDo_SuccessResponseExceedsSizeLimit(t *testing.T) {
 	defer server.Close()
 
 	client, err := opencode.NewClient(opencode.WithBaseURL(server.URL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	_, err = client.Session.Get(context.Background(), "sess_1", nil)
+	if err != nil {
+		t.Fatalf("expected oversized successful response body to decode without explicit limit: %v", err)
+	}
+}
+
+func TestClientDo_SuccessResponseExceedsConfiguredSizeLimit(t *testing.T) {
+	const maxSuccessBodySize = int64(1 << 20)
+	oversizedBody := strings.Repeat("a", int(maxSuccessBodySize)+1)
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"id":"sess_1","title":"` + oversizedBody + `","time":{"created":1,"updated":1}}`))
+	}))
+	defer server.Close()
+
+	client, err := opencode.NewClient(
+		opencode.WithBaseURL(server.URL),
+		opencode.WithMaxSuccessBodySize(maxSuccessBodySize),
+	)
 	if err != nil {
 		t.Fatalf("failed to create client: %v", err)
 	}

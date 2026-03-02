@@ -29,19 +29,9 @@ const (
 	maxBackoff       = 8 * time.Second
 	backoffJitterDiv = 2
 	maxErrorBodySize = 1 << 20 // 1 MB
-	maxSuccessBodySize = 1 << 20 // 1 MB
-)
 
-var sensitiveBaseURLQueryKeys = map[string]struct{}{
-	"accesstoken":   {},
-	"apikey":        {},
-	"auth":          {},
-	"authorization": {},
-	"bearer":        {},
-	"clientsecret":  {},
-	"key":           {},
-	"token":         {},
-}
+	defaultMaxSuccessBodySize int64 = 0 // unlimited
+)
 
 var retryBackoffRandInt63n = rand.Int63n
 
@@ -56,6 +46,9 @@ type Client struct {
 	timeout    time.Duration
 	userAgent  string
 	baseURLSet bool
+	// maxSuccessBodySize limits successful JSON response bodies.
+	// A value of 0 disables the limit.
+	maxSuccessBodySize int64
 
 	Session *SessionService
 	Event   *EventService
@@ -104,26 +97,9 @@ func parseBaseURL(rawURL string) (*url.URL, error) {
 
 func validateBaseURLQuery(query url.Values) error {
 	for key := range query {
-		if _, blocked := sensitiveBaseURLQueryKeys[normalizeQueryKey(key)]; blocked {
-			return fmt.Errorf("base URL must not include sensitive query parameter %q; use headers instead", key)
-		}
+		return fmt.Errorf("base URL must not include query parameters (found %q)", key)
 	}
 	return nil
-}
-
-func normalizeQueryKey(key string) string {
-	var b strings.Builder
-	b.Grow(len(key))
-	for _, r := range key {
-		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') {
-			b.WriteRune(r)
-			continue
-		}
-		if r >= 'A' && r <= 'Z' {
-			b.WriteRune(r + ('a' - 'A'))
-		}
-	}
-	return b.String()
 }
 
 func isLoopbackHost(host string) bool {
@@ -146,6 +122,7 @@ func NewClient(opts ...ClientOption) (*Client, error) {
 		maxRetries: DefaultMaxRetries,
 		timeout:    DefaultTimeout,
 		userAgent:  "Opencode/Go " + internal.PackageVersion,
+		maxSuccessBodySize: defaultMaxSuccessBodySize,
 	}
 
 	for _, opt := range opts {
@@ -230,6 +207,31 @@ func WithMaxRetries(n int) ClientOption {
 	}
 }
 
+func WithMaxSuccessBodySize(n int64) ClientOption {
+	return func(c *Client) error {
+		if n < 0 {
+			return errors.New("max success body size cannot be negative")
+		}
+		c.maxSuccessBodySize = n
+		return nil
+	}
+}
+
+type countingReader struct {
+	reader io.Reader
+	count  int64
+}
+
+func (r *countingReader) Read(p []byte) (int, error) {
+	n, err := r.reader.Read(p)
+	r.count += int64(n)
+	return n, err
+}
+
+func decodeSuccessBodyLimitExceeded(reader *countingReader, limit int64) bool {
+	return reader != nil && limit > 0 && reader.count > limit
+}
+
 func (c *Client) do(ctx context.Context, method, path string, params, result interface{}) error {
 	if ctx == nil {
 		return ErrContextRequired
@@ -252,23 +254,33 @@ func (c *Client) do(ctx context.Context, method, path string, params, result int
 		return nil
 	}
 
-	bodyBytes, err := io.ReadAll(io.LimitReader(resp.Body, maxSuccessBodySize+1))
-	if err != nil {
-		return fmt.Errorf("read %s %s response: %w", method, path, err)
-	}
-	if int64(len(bodyBytes)) > maxSuccessBodySize {
-		return fmt.Errorf("decode %s %s response: response body exceeds %d bytes limit", method, path, maxSuccessBodySize)
+	successReader := io.Reader(resp.Body)
+	var responseCounter *countingReader
+	if c.maxSuccessBodySize > 0 {
+		responseCounter = &countingReader{
+			reader: io.LimitReader(resp.Body, c.maxSuccessBodySize+1),
+		}
+		successReader = responseCounter
 	}
 
-	dec := json.NewDecoder(bytes.NewReader(bodyBytes))
+	dec := json.NewDecoder(successReader)
 	if err := dec.Decode(result); err != nil {
+		if decodeSuccessBodyLimitExceeded(responseCounter, c.maxSuccessBodySize) {
+			return fmt.Errorf("decode %s %s response: response body exceeds %d bytes limit", method, path, c.maxSuccessBodySize)
+		}
 		return fmt.Errorf("decode %s %s response: %w", method, path, err)
 	}
 	if err := dec.Decode(&struct{}{}); !errors.Is(err, io.EOF) {
 		if err == nil {
 			return fmt.Errorf("decode %s %s response: unexpected trailing JSON value", method, path)
 		}
+		if decodeSuccessBodyLimitExceeded(responseCounter, c.maxSuccessBodySize) {
+			return fmt.Errorf("decode %s %s response: response body exceeds %d bytes limit", method, path, c.maxSuccessBodySize)
+		}
 		return fmt.Errorf("decode %s %s response: %w", method, path, err)
+	}
+	if decodeSuccessBodyLimitExceeded(responseCounter, c.maxSuccessBodySize) {
+		return fmt.Errorf("decode %s %s response: response body exceeds %d bytes limit", method, path, c.maxSuccessBodySize)
 	}
 	return nil
 }

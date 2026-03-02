@@ -296,64 +296,21 @@ func TestListStreaming_DoesNotInheritClientTimeoutWithoutContextDeadline(t *test
 	}
 }
 
-func TestListStreaming_BaseURLQueryParamsPreservedWithMethodParams(t *testing.T) {
-	var receivedQuery string
-
+func TestListStreaming_BaseURLQueryParamsRejected(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		receivedQuery = r.URL.RawQuery
-		w.WriteHeader(http.StatusOK)
-		// Return empty body — stream will error, but we only care about the URL
-	}))
-	defer server.Close()
-
-	client, err := opencode.NewClient(
-		opencode.WithBaseURL(server.URL+"?workspace=abc"),
-		opencode.WithHTTPClient(server.Client()),
-	)
-	if err != nil {
-		t.Fatalf("failed to create client: %v", err)
-	}
-
-	stream := client.Event.ListStreaming(context.Background(), &opencode.EventListParams{
-		Directory: opencode.Ptr("/test"),
-	})
-	// Drain the stream so the request is made
-	for stream.Next() {
-	}
-	_ = stream.Close()
-
-	if !strings.Contains(receivedQuery, "workspace=abc") {
-		t.Errorf("expected query to contain workspace=abc, got %q", receivedQuery)
-	}
-	if !strings.Contains(receivedQuery, "directory=%2Ftest") {
-		t.Errorf("expected query to contain directory=%%2Ftest, got %q", receivedQuery)
-	}
-}
-
-func TestListStreaming_BaseURLQueryParamsPreservedWithNoMethodParams(t *testing.T) {
-	var receivedQuery string
-
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		receivedQuery = r.URL.RawQuery
 		w.WriteHeader(http.StatusOK)
 	}))
 	defer server.Close()
 
-	client, err := opencode.NewClient(
+	_, err := opencode.NewClient(
 		opencode.WithBaseURL(server.URL+"?workspace=abc"),
 		opencode.WithHTTPClient(server.Client()),
 	)
-	if err != nil {
-		t.Fatalf("failed to create client: %v", err)
+	if err == nil {
+		t.Fatal("expected base URL query parameters to be rejected")
 	}
-
-	stream := client.Event.ListStreaming(context.Background(), nil)
-	for stream.Next() {
-	}
-	_ = stream.Close()
-
-	if receivedQuery != "workspace=abc" {
-		t.Errorf("expected query to be %q, got %q", "workspace=abc", receivedQuery)
+	if !strings.Contains(err.Error(), "must not include query parameters") {
+		t.Fatalf("expected query parameter validation error, got: %v", err)
 	}
 }
 
