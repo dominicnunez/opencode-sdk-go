@@ -383,7 +383,7 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 
 	var bodyBytes []byte
 
-	// Handle JSON body for POST/PATCH/PUT
+	// Marshal params for methods that send a request body (all except GET/DELETE).
 	if params != nil && method != http.MethodGet && method != http.MethodDelete {
 		var err error
 		bodyBytes, err = json.Marshal(params)

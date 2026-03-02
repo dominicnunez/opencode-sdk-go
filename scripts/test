@@ -8,16 +8,30 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 NC='\033[0m' # No Color
+PRISM_PORT=4010
+PRISM_BASE_URL="http://localhost:${PRISM_PORT}"
+PRISM_PROBE_PATH="/__opencode_prism_probe__"
+PRISM_NO_PATH_MATCHED_MARKER='https://stoplight.io/prism/errors#NO_PATH_MATCHED_ERROR'
 
 function prism_is_running() {
-  curl --silent "http://localhost:4010" >/dev/null 2>&1
+  response="$(
+    curl \
+      --silent \
+      --show-error \
+      --max-time 2 \
+      "${PRISM_BASE_URL}${PRISM_PROBE_PATH}" 2>/dev/null || true
+  )"
+  [[ "$response" == *"$PRISM_NO_PATH_MATCHED_MARKER"* ]]
 }
 
 kill_server_on_port() {
-  pids=$(lsof -t -i tcp:"$1" || echo "")
-  if [ "$pids" != "" ]; then
-    kill "$pids"
-    echo "Stopped $pids."
+  mapfile -t pids < <(lsof -t -i tcp:"$1" 2>/dev/null | sort -u)
+
+  if [ "${#pids[@]}" -gt 0 ]; then
+    for pid in "${pids[@]}"; do
+      kill "$pid" 2>/dev/null || true
+    done
+    echo "Stopped ${pids[*]}."
   fi
 }
 
@@ -27,7 +41,7 @@ function is_overriding_api_base_url() {
 
 if ! is_overriding_api_base_url && ! prism_is_running ; then
   # When we exit this script, make sure to kill the background mock server process
-  trap 'kill_server_on_port 4010' EXIT
+  trap "kill_server_on_port ${PRISM_PORT}" EXIT
 
   # Start the dev server
   ./scripts/mock --daemon
