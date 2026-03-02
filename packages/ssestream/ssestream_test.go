@@ -123,20 +123,19 @@ func TestRegisterDecoderConcurrentReadWrite(t *testing.T) {
 	wg.Wait()
 }
 
-// newSSEResponse wraps a raw SSE string into an *http.Response with
-// content-type "text/event-stream" and an io.NopCloser body.
-func newSSEResponse(body string) *http.Response {
-	return &http.Response{
+// newSSEDecoder creates an SSE decoder backed by a test response.
+func newSSEDecoder(body string) Decoder {
+	return NewDecoder(&http.Response{
 		StatusCode: http.StatusOK,
 		Header:     http.Header{"Content-Type": []string{"text/event-stream"}},
 		Body:       io.NopCloser(strings.NewReader(body)),
-	}
+	})
 }
 
 func TestEventStreamDecoder_NoTrailingBlankLine_DispatchesFinalEvent(t *testing.T) {
 	// Stream ends with data but no trailing blank line after the last event.
 	raw := "event: message\ndata: {\"ok\":true}\n"
-	dec := NewDecoder(newSSEResponse(raw))
+	dec := newSSEDecoder(raw)
 	defer func() { _ = dec.Close() }()
 
 	if !dec.Next() {
@@ -162,7 +161,7 @@ func TestEventStreamDecoder_NoTrailingBlankLine_DispatchesFinalEvent(t *testing.
 func TestEventStreamDecoder_TrailingBlankLine_DispatchesEvent(t *testing.T) {
 	// Baseline: stream with a proper trailing blank line dispatches the event.
 	raw := "event: done\ndata: {\"id\":1}\n\n"
-	dec := NewDecoder(newSSEResponse(raw))
+	dec := newSSEDecoder(raw)
 	defer func() { _ = dec.Close() }()
 
 	if !dec.Next() {
@@ -187,7 +186,7 @@ func TestEventStreamDecoder_TrailingBlankLine_DispatchesEvent(t *testing.T) {
 
 func TestEventStreamDecoder_EmptyStream_ReturnsFalse(t *testing.T) {
 	// EOF with no data at all should return false immediately.
-	dec := NewDecoder(newSSEResponse(""))
+	dec := newSSEDecoder("")
 	defer func() { _ = dec.Close() }()
 
 	if dec.Next() {
@@ -203,7 +202,7 @@ func TestEventStreamDecoder_EmptyDataFieldAtEOF_DispatchesEvent(t *testing.T) {
 	// Per SSE spec, "data:" seen = hasData = true, so event should dispatch at EOF
 	// even though the data value is empty.
 	raw := "event: foo\ndata: \n"
-	dec := NewDecoder(newSSEResponse(raw))
+	dec := newSSEDecoder(raw)
 	defer func() { _ = dec.Close() }()
 
 	if !dec.Next() {
@@ -230,7 +229,7 @@ func TestEventStreamDecoder_EventTypeOnlyNoDataField_NoDispatchAtEOF(t *testing.
 	// Stream ends with event type only, no "data:" field at all.
 	// Per SSE spec, no data field seen = hasData = false, so no event should dispatch.
 	raw := "event: foo\n"
-	dec := NewDecoder(newSSEResponse(raw))
+	dec := newSSEDecoder(raw)
 	defer func() { _ = dec.Close() }()
 
 	if dec.Next() {
@@ -246,7 +245,7 @@ func TestEventStreamDecoder_EventTypeOnlyWithBlankLine_DropsEvent(t *testing.T) 
 	// a blank line, should be silently dropped per SSE spec §9.2.6.
 	// The next valid event (with data) should still be dispatched.
 	raw := "event: ping\n\nevent: msg\ndata: {\"ok\":true}\n\n"
-	dec := NewDecoder(newSSEResponse(raw))
+	dec := newSSEDecoder(raw)
 	defer func() { _ = dec.Close() }()
 
 	if !dec.Next() {
@@ -272,7 +271,7 @@ func TestEventStreamDecoder_EventTypeResetAfterDrop(t *testing.T) {
 	// After dropping an event-only block (no data), the event type must
 	// be reset. A subsequent data-only block should have an empty type.
 	raw := "event: ping\n\ndata: hello\n\n"
-	dec := NewDecoder(newSSEResponse(raw))
+	dec := newSSEDecoder(raw)
 	defer func() { _ = dec.Close() }()
 
 	if !dec.Next() {
@@ -291,7 +290,7 @@ func TestStream_SkipsEmptyDataEvents(t *testing.T) {
 	// An empty-data event (e.g. keep-alive) between two valid events should
 	// be silently skipped instead of killing the stream with an unmarshal error.
 	raw := "event: ping\ndata: \n\nevent: msg\ndata: {\"ok\":true}\n\n"
-	dec := NewDecoder(newSSEResponse(raw))
+	dec := newSSEDecoder(raw)
 
 	type payload struct {
 		OK bool `json:"ok"`
@@ -318,7 +317,7 @@ func TestStream_MalformedJSON_ReportsUnmarshalError(t *testing.T) {
 	// An SSE event with malformed JSON data should stop iteration
 	// and expose the unmarshal error via Err().
 	raw := "event: msg\ndata: {invalid json\n\n"
-	dec := NewDecoder(newSSEResponse(raw))
+	dec := newSSEDecoder(raw)
 
 	type payload struct {
 		OK bool `json:"ok"`
@@ -436,7 +435,7 @@ func TestStream_CloseMiddleOfIteration_NextReturnsErrNilDecoder(t *testing.T) {
 	// Closing a stream mid-iteration (from the same goroutine) should cause
 	// subsequent Next() calls to return false with ErrNilDecoder, not panic.
 	raw := "event: a\ndata: {\"ok\":true}\n\nevent: b\ndata: {\"ok\":true}\n\n"
-	dec := NewDecoder(newSSEResponse(raw))
+	dec := newSSEDecoder(raw)
 
 	type payload struct {
 		OK bool `json:"ok"`
@@ -505,7 +504,7 @@ func (r *failingReader) Read(p []byte) (int, error) {
 func TestEventStreamDecoder_InterleavedComments(t *testing.T) {
 	// SSE comments (lines starting with ":") should be silently ignored.
 	raw := ": keep-alive\nevent: msg\n: another comment\ndata: {\"ok\":true}\n\n"
-	dec := NewDecoder(newSSEResponse(raw))
+	dec := newSSEDecoder(raw)
 	defer func() { _ = dec.Close() }()
 
 	if !dec.Next() {
@@ -524,7 +523,7 @@ func TestEventStreamDecoder_CommentBetweenDataLines(t *testing.T) {
 	// SSE comments between two data: lines within the same event must not
 	// disrupt data accumulation. Per the spec, comments are ignored mid-event.
 	raw := ":comment\ndata:hello\n:another comment\ndata:world\n\n"
-	dec := NewDecoder(newSSEResponse(raw))
+	dec := newSSEDecoder(raw)
 	defer func() { _ = dec.Close() }()
 
 	if !dec.Next() {
@@ -598,7 +597,7 @@ func TestEventStreamDecoder_IgnoresIDAndRetryFields(t *testing.T) {
 	// SSE spec defines id: and retry: fields. The decoder silently drops them
 	// (no matching case in the switch). Verify data is still correctly parsed.
 	raw := "id: 42\nevent: msg\nretry: 3000\ndata: {\"ok\":true}\nid: 43\n\n"
-	dec := NewDecoder(newSSEResponse(raw))
+	dec := newSSEDecoder(raw)
 	defer func() { _ = dec.Close() }()
 
 	if !dec.Next() {
@@ -624,7 +623,7 @@ func TestEventStreamDecoder_IncompleteEventNoBlankLine(t *testing.T) {
 	// Stream has data but connection closes without a blank line separator.
 	// The decoder should still dispatch the buffered event at EOF.
 	raw := "event: update\ndata: {\"id\":1}"
-	dec := NewDecoder(newSSEResponse(raw))
+	dec := newSSEDecoder(raw)
 	defer func() { _ = dec.Close() }()
 
 	if !dec.Next() {
