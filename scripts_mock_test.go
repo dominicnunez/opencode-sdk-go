@@ -21,6 +21,7 @@ func TestScriptsMock_NoArgsUsesDefaultSpecPath(t *testing.T) {
 	if err := os.WriteFile(fakeNPMPath, []byte(fakeNPM), 0o600); err != nil {
 		t.Fatalf("write fake npm: %v", err)
 	}
+	// #nosec G302 -- test helper must be executable to stub npm via PATH.
 	if err := os.Chmod(fakeNPMPath, 0o755); err != nil {
 		t.Fatalf("chmod fake npm: %v", err)
 	}
