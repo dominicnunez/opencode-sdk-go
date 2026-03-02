@@ -18,8 +18,11 @@ func TestScriptsMock_NoArgsUsesDefaultSpecPath(t *testing.T) {
 	recordedArgsPath := filepath.Join(t.TempDir(), "npm_args.txt")
 	fakeNPMPath := filepath.Join(fakeBinDir, "npm")
 	fakeNPM := "#!/usr/bin/env bash\nset -euo pipefail\nprintf '%s' \"$*\" > \"$TEST_NPM_ARGS_FILE\"\n"
-	if err := os.WriteFile(fakeNPMPath, []byte(fakeNPM), 0o755); err != nil {
+	if err := os.WriteFile(fakeNPMPath, []byte(fakeNPM), 0o600); err != nil {
 		t.Fatalf("write fake npm: %v", err)
+	}
+	if err := os.Chmod(fakeNPMPath, 0o755); err != nil {
+		t.Fatalf("chmod fake npm: %v", err)
 	}
 
 	cmd := exec.Command("bash", filepath.Join(repoRoot, "scripts/mock"))
