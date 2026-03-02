@@ -359,7 +359,7 @@ func TestPathParameterInjection_SessionMethods(t *testing.T) {
 			return err
 		}},
 		{"Command", "/command", func(c *opencode.Client, ctx context.Context, id string) error {
-			_, err := c.Session.Command(ctx, id, &opencode.SessionCommandParams{Command: "/help"})
+			_, err := c.Session.Command(ctx, id, &opencode.SessionCommandParams{Command: "/help", Arguments: "about"})
 			return err
 		}},
 		{"Init", "/init", func(c *opencode.Client, ctx context.Context, id string) error {
@@ -371,7 +371,11 @@ func TestPathParameterInjection_SessionMethods(t *testing.T) {
 			return err
 		}},
 		{"Prompt", "/message", func(c *opencode.Client, ctx context.Context, id string) error {
-			_, err := c.Session.Prompt(ctx, id, &opencode.SessionPromptParams{})
+			_, err := c.Session.Prompt(ctx, id, &opencode.SessionPromptParams{
+				Parts: []opencode.SessionPromptParamsPartUnion{
+					opencode.TextPartInputParam{Type: opencode.TextPartInputTypeText, Text: "hello"},
+				},
+			})
 			return err
 		}},
 		{"Revert", "/revert", func(c *opencode.Client, ctx context.Context, id string) error {
@@ -470,7 +474,7 @@ func TestPathParameterInjection_SessionMethods_RejectsTraversalOrSeparators(t *t
 			return err
 		}},
 		{"Command", func(c *opencode.Client, ctx context.Context, id string) error {
-			_, err := c.Session.Command(ctx, id, &opencode.SessionCommandParams{Command: "/help"})
+			_, err := c.Session.Command(ctx, id, &opencode.SessionCommandParams{Command: "/help", Arguments: "about"})
 			return err
 		}},
 		{"Init", func(c *opencode.Client, ctx context.Context, id string) error {
@@ -482,7 +486,11 @@ func TestPathParameterInjection_SessionMethods_RejectsTraversalOrSeparators(t *t
 			return err
 		}},
 		{"Prompt", func(c *opencode.Client, ctx context.Context, id string) error {
-			_, err := c.Session.Prompt(ctx, id, &opencode.SessionPromptParams{})
+			_, err := c.Session.Prompt(ctx, id, &opencode.SessionPromptParams{
+				Parts: []opencode.SessionPromptParamsPartUnion{
+					opencode.TextPartInputParam{Type: opencode.TextPartInputTypeText, Text: "hello"},
+				},
+			})
 			return err
 		}},
 		{"Revert", func(c *opencode.Client, ctx context.Context, id string) error {

@@ -117,7 +117,7 @@ func (s *SessionService) Children(ctx context.Context, id string, params *Sessio
 }
 
 // Command executes a command in the session. Params must not be nil because
-// the endpoint requires a request body with at least the command field.
+// the endpoint requires a request body with both command and arguments fields.
 func (s *SessionService) Command(ctx context.Context, id string, params *SessionCommandParams) (*SessionCommandResponse, error) {
 	if strings.TrimSpace(id) == "" {
 		return nil, missingRequiredParameterError("id")
@@ -127,6 +127,9 @@ func (s *SessionService) Command(ctx context.Context, id string, params *Session
 	}
 	if strings.TrimSpace(params.Command) == "" {
 		return nil, missingRequiredParameterError("command")
+	}
+	if strings.TrimSpace(params.Arguments) == "" {
+		return nil, missingRequiredParameterError("arguments")
 	}
 	var result SessionCommandResponse
 	err := s.client.do(ctx, http.MethodPost, "session/"+url.PathEscape(id)+"/command", params, &result)
@@ -196,13 +199,16 @@ func (s *SessionService) Messages(ctx context.Context, id string, params *Sessio
 }
 
 // Prompt sends a message to the session. Params must not be nil because the
-// endpoint requires a request body.
+// endpoint requires a request body with at least one part.
 func (s *SessionService) Prompt(ctx context.Context, id string, params *SessionPromptParams) (*SessionPromptResponse, error) {
 	if strings.TrimSpace(id) == "" {
 		return nil, missingRequiredParameterError("id")
 	}
 	if params == nil {
 		return nil, ErrParamsRequired
+	}
+	if len(params.Parts) == 0 {
+		return nil, missingRequiredParameterError("parts")
 	}
 	var result SessionPromptResponse
 	err := s.client.do(ctx, http.MethodPost, "session/"+url.PathEscape(id)+"/message", params, &result)
