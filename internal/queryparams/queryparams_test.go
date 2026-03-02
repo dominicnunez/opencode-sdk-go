@@ -137,6 +137,21 @@ func TestMarshal_NilInput(t *testing.T) {
 	}
 }
 
+func TestMarshal_TypedNilPointerInput(t *testing.T) {
+	type params struct {
+		Query string `query:"query"`
+	}
+
+	var p *params
+	result, err := Marshal(p)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(result) != 0 {
+		t.Fatalf("expected empty params for typed nil input, got %v", result)
+	}
+}
+
 func TestMarshal_PointerToStruct(t *testing.T) {
 	type params struct {
 		Query string `query:"query"`

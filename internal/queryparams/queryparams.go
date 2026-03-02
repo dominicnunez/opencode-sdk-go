@@ -30,6 +30,9 @@ func Marshal(v interface{}) (url.Values, error) {
 
 	val := reflect.ValueOf(v)
 	if val.Kind() == reflect.Ptr {
+		if val.IsNil() {
+			return url.Values{}, nil
+		}
 		val = val.Elem()
 	}
 
