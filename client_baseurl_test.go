@@ -212,6 +212,37 @@ func TestWithBaseURL_RejectsSensitiveQueryKeys(t *testing.T) {
 	}
 }
 
+func TestWithBaseURL_RejectsUserInfoAndEmptyHost(t *testing.T) {
+	tests := []struct {
+		name   string
+		rawURL string
+		want   string
+	}{
+		{
+			name:   "reject userinfo credentials",
+			rawURL: "https://username@example.com",
+			want:   "must not include user info",
+		},
+		{
+			name:   "reject https URL with empty host",
+			rawURL: "https:///api",
+			want:   "must include a host",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := opencode.NewClient(opencode.WithBaseURL(tc.rawURL))
+			if err == nil {
+				t.Fatalf("expected error for invalid base URL: %s", tc.rawURL)
+			}
+			if !strings.Contains(err.Error(), tc.want) {
+				t.Fatalf("expected error containing %q, got: %v", tc.want, err)
+			}
+		})
+	}
+}
+
 func TestBuildURL_NoBaseQueryNoParams(t *testing.T) {
 	var receivedQuery string
 

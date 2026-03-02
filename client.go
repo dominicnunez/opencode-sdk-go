@@ -67,7 +67,14 @@ func parseBaseURL(rawURL string) (*url.URL, error) {
 	if parsed.Scheme != "http" && parsed.Scheme != "https" {
 		return nil, fmt.Errorf("base URL must use http or https scheme, got %q", parsed.Scheme)
 	}
-	if parsed.Scheme == "http" && !isLoopbackHost(parsed.Hostname()) {
+	host := parsed.Hostname()
+	if host == "" {
+		return nil, errors.New("base URL must include a host")
+	}
+	if parsed.User != nil {
+		return nil, errors.New("base URL must not include user info; configure authentication explicitly")
+	}
+	if parsed.Scheme == "http" && !isLoopbackHost(host) {
 		return nil, fmt.Errorf("base URL must use https for non-loopback hosts, got %q", parsed.Hostname())
 	}
 	if err := validateBaseURLQuery(parsed.Query()); err != nil {
