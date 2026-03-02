@@ -98,13 +98,6 @@
             "schema": {
               "type": "string"
             }
-          },
-          {
-            "in": "query",
-            "name": "directory",
-            "schema": {
-              "type": "string"
-            }
           }
         ],
         "description": "Update config",
@@ -296,13 +289,6 @@
             "schema": {
               "type": "string"
             }
-          },
-          {
-            "in": "query",
-            "name": "directory",
-            "schema": {
-              "type": "string"
-            }
           }
         ],
         "description": "Create a new session",
@@ -352,13 +338,6 @@
       "get": {
         "operationId": "session.get",
         "parameters": [
-          {
-            "in": "query",
-            "name": "directory",
-            "schema": {
-              "type": "string"
-            }
-          },
           {
             "in": "query",
             "name": "directory",
@@ -421,13 +400,6 @@
             }
           },
           {
-            "in": "query",
-            "name": "directory",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
             "in": "path",
             "name": "id",
             "schema": {
@@ -474,20 +446,6 @@
       "patch": {
         "operationId": "session.update",
         "parameters": [
-          {
-            "in": "query",
-            "name": "directory",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "directory",
-            "schema": {
-              "type": "string"
-            }
-          },
           {
             "in": "query",
             "name": "directory",
@@ -565,13 +523,6 @@
             }
           },
           {
-            "in": "query",
-            "name": "directory",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
             "in": "path",
             "name": "id",
             "schema": {
@@ -631,13 +582,6 @@
             }
           },
           {
-            "in": "query",
-            "name": "directory",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
             "in": "path",
             "name": "id",
             "schema": {
@@ -689,20 +633,6 @@
       "post": {
         "operationId": "session.init",
         "parameters": [
-          {
-            "in": "query",
-            "name": "directory",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "directory",
-            "schema": {
-              "type": "string"
-            }
-          },
           {
             "in": "query",
             "name": "directory",
@@ -793,20 +723,6 @@
             }
           },
           {
-            "in": "query",
-            "name": "directory",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "directory",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
             "in": "path",
             "name": "id",
             "schema": {
@@ -850,13 +766,6 @@
       "post": {
         "operationId": "session.abort",
         "parameters": [
-          {
-            "in": "query",
-            "name": "directory",
-            "schema": {
-              "type": "string"
-            }
-          },
           {
             "in": "query",
             "name": "directory",
@@ -920,13 +829,6 @@
             }
           },
           {
-            "in": "query",
-            "name": "directory",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
             "in": "path",
             "name": "id",
             "schema": {
@@ -972,13 +874,6 @@
       "delete": {
         "operationId": "session.unshare",
         "parameters": [
-          {
-            "in": "query",
-            "name": "directory",
-            "schema": {
-              "type": "string"
-            }
-          },
           {
             "in": "query",
             "name": "directory",
@@ -1043,20 +938,6 @@
             }
           },
           {
-            "in": "query",
-            "name": "directory",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "directory",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
             "in": "path",
             "name": "id",
             "schema": {
@@ -1096,20 +977,6 @@
       "post": {
         "operationId": "session.summarize",
         "parameters": [
-          {
-            "in": "query",
-            "name": "directory",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "directory",
-            "schema": {
-              "type": "string"
-            }
-          },
           {
             "in": "query",
             "name": "directory",
@@ -1195,13 +1062,6 @@
             }
           },
           {
-            "in": "query",
-            "name": "directory",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
             "in": "path",
             "name": "id",
             "schema": {
@@ -1266,20 +1126,6 @@
       "post": {
         "operationId": "session.prompt",
         "parameters": [
-          {
-            "in": "query",
-            "name": "directory",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "directory",
-            "schema": {
-              "type": "string"
-            }
-          },
           {
             "in": "query",
             "name": "directory",
@@ -1426,13 +1272,6 @@
             }
           },
           {
-            "in": "query",
-            "name": "directory",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
             "in": "path",
             "name": "id",
             "schema": {
@@ -1505,20 +1344,6 @@
       "post": {
         "operationId": "session.command",
         "parameters": [
-          {
-            "in": "query",
-            "name": "directory",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "directory",
-            "schema": {
-              "type": "string"
-            }
-          },
           {
             "in": "query",
             "name": "directory",
@@ -1629,20 +1454,6 @@
             }
           },
           {
-            "in": "query",
-            "name": "directory",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "directory",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
             "in": "path",
             "name": "id",
             "schema": {
@@ -1712,20 +1523,6 @@
       "post": {
         "operationId": "session.revert",
         "parameters": [
-          {
-            "in": "query",
-            "name": "directory",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "directory",
-            "schema": {
-              "type": "string"
-            }
-          },
           {
             "in": "query",
             "name": "directory",
@@ -1811,13 +1608,6 @@
             }
           },
           {
-            "in": "query",
-            "name": "directory",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
             "in": "path",
             "name": "id",
             "schema": {
@@ -1865,20 +1655,6 @@
       "post": {
         "operationId": "postSession:idPermissions:permissionID",
         "parameters": [
-          {
-            "in": "query",
-            "name": "directory",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "directory",
-            "schema": {
-              "type": "string"
-            }
-          },
           {
             "in": "query",
             "name": "directory",
@@ -2051,13 +1827,6 @@
           },
           {
             "in": "query",
-            "name": "directory",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
             "name": "pattern",
             "schema": {
               "type": "string"
@@ -2163,13 +1932,6 @@
           },
           {
             "in": "query",
-            "name": "directory",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
             "name": "query",
             "schema": {
               "type": "string"
@@ -2199,13 +1961,6 @@
       "get": {
         "operationId": "find.symbols",
         "parameters": [
-          {
-            "in": "query",
-            "name": "directory",
-            "schema": {
-              "type": "string"
-            }
-          },
           {
             "in": "query",
             "name": "directory",
@@ -2253,13 +2008,6 @@
           },
           {
             "in": "query",
-            "name": "directory",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
             "name": "path",
             "schema": {
               "type": "string"
@@ -2289,13 +2037,6 @@
       "get": {
         "operationId": "file.read",
         "parameters": [
-          {
-            "in": "query",
-            "name": "directory",
-            "schema": {
-              "type": "string"
-            }
-          },
           {
             "in": "query",
             "name": "directory",
@@ -2361,13 +2102,6 @@
       "post": {
         "operationId": "app.log",
         "parameters": [
-          {
-            "in": "query",
-            "name": "directory",
-            "schema": {
-              "type": "string"
-            }
-          },
           {
             "in": "query",
             "name": "directory",
@@ -2829,20 +2563,6 @@
       "put": {
         "operationId": "auth.set",
         "parameters": [
-          {
-            "in": "query",
-            "name": "directory",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "directory",
-            "schema": {
-              "type": "string"
-            }
-          },
           {
             "in": "query",
             "name": "directory",
