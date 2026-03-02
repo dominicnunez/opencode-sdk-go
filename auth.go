@@ -3,7 +3,6 @@ package opencode
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -20,13 +19,13 @@ type AuthService struct {
 // Endpoint: PUT /auth/{id}
 func (s *AuthService) Set(ctx context.Context, id string, params *AuthSetParams) (bool, error) {
 	if id == "" {
-		return false, errors.New("missing required id parameter")
+		return false, missingRequiredParameterError("id")
 	}
 	if params == nil {
-		return false, errors.New("params is required")
+		return false, ErrParamsRequired
 	}
 	if params.Auth == nil {
-		return false, errors.New("AuthSetParams: Auth field is required")
+		return false, requiredFieldError("AuthSetParams: Auth field")
 	}
 	if err := validateAuthCredentials(params.Auth); err != nil {
 		return false, err
@@ -120,21 +119,21 @@ func validateAuthCredentials(auth AuthSetParamsAuthUnion) error {
 	switch v := normalized.(type) {
 	case OAuth:
 		if strings.TrimSpace(v.Access) == "" {
-			return errors.New("oauth access is required")
+			return requiredFieldError("oauth access")
 		}
 		if strings.TrimSpace(v.Refresh) == "" {
-			return errors.New("oauth refresh is required")
+			return requiredFieldError("oauth refresh")
 		}
 	case ApiAuth:
 		if strings.TrimSpace(v.Key) == "" {
-			return errors.New("api auth key is required")
+			return requiredFieldError("api auth key")
 		}
 	case WellKnownAuth:
 		if strings.TrimSpace(v.Key) == "" {
-			return errors.New("well-known auth key is required")
+			return requiredFieldError("well-known auth key")
 		}
 		if strings.TrimSpace(v.Token) == "" {
-			return errors.New("well-known auth token is required")
+			return requiredFieldError("well-known auth token")
 		}
 	default:
 		return fmt.Errorf("auth type %T: %w", normalized, ErrUnknownAuthType)

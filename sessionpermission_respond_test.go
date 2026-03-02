@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"strings"
 	"testing"
 )
 
@@ -196,7 +195,7 @@ func TestSessionPermissionService_Respond_MissingSessionID(t *testing.T) {
 	if err == nil {
 		t.Error("Expected error for missing session ID, got nil")
 	}
-	if err.Error() != "missing required id parameter" {
+	if !errors.Is(err, &MissingRequiredParameterError{Parameter: "id"}) {
 		t.Errorf("Expected error message 'missing required id parameter', got %s", err.Error())
 	}
 }
@@ -218,7 +217,7 @@ func TestSessionPermissionService_Respond_MissingPermissionID(t *testing.T) {
 	if err == nil {
 		t.Error("Expected error for missing permission ID, got nil")
 	}
-	if err.Error() != "missing required permissionID parameter" {
+	if !errors.Is(err, &MissingRequiredParameterError{Parameter: "permissionID"}) {
 		t.Errorf("Expected error message 'missing required permissionID parameter', got %s", err.Error())
 	}
 }
@@ -238,7 +237,7 @@ func TestSessionPermissionService_Respond_NilParams(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for nil params, got nil")
 	}
-	if !strings.Contains(err.Error(), "params is required") {
+	if !errors.Is(err, ErrParamsRequired) {
 		t.Errorf("expected error containing %q, got %q", "params is required", err.Error())
 	}
 }

@@ -55,7 +55,7 @@ func TestSessionMessages_MissingID(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for missing ID, got nil")
 	}
-	if err.Error() != "missing required id parameter" {
+	if !errors.Is(err, &MissingRequiredParameterError{Parameter: "id"}) {
 		t.Errorf("expected 'missing required id parameter', got: %v", err)
 	}
 }

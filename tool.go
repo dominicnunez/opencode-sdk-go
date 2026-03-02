@@ -3,7 +3,6 @@ package opencode
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"net/http"
 	"net/url"
 
@@ -70,13 +69,13 @@ func (s *ToolService) IDs(ctx context.Context, params *ToolIDsParams) (*ToolIDs,
 // GET /experimental/tool
 func (s *ToolService) List(ctx context.Context, params *ToolListParams) (*ToolList, error) {
 	if params == nil {
-		return nil, errors.New("params is required")
+		return nil, ErrParamsRequired
 	}
 	if params.Provider == "" {
-		return nil, errors.New("missing required provider parameter")
+		return nil, missingRequiredParameterError("provider")
 	}
 	if params.Model == "" {
-		return nil, errors.New("missing required model parameter")
+		return nil, missingRequiredParameterError("model")
 	}
 
 	var result ToolList

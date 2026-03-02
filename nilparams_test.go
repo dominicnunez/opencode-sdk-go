@@ -3,7 +3,6 @@ package opencode_test
 import (
 	"context"
 	"errors"
-	"strings"
 	"testing"
 
 	"github.com/dominicnunez/opencode-sdk-go"
@@ -125,7 +124,7 @@ func TestNilParams_ReturnsError(t *testing.T) {
 			if err == nil {
 				t.Fatal("expected error for nil params, got nil")
 			}
-			if !strings.Contains(err.Error(), "params is required") {
+			if !errors.Is(err, opencode.ErrParamsRequired) {
 				t.Errorf("expected error containing %q, got %q", "params is required", err.Error())
 			}
 		})

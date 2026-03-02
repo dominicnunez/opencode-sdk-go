@@ -2,9 +2,9 @@ package opencode
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/dominicnunez/opencode-sdk-go/internal/queryparams"
 )
@@ -15,10 +15,10 @@ type FindService struct {
 
 func (s *FindService) Files(ctx context.Context, params *FindFilesParams) ([]string, error) {
 	if params == nil {
-		return nil, errors.New("params is required")
+		return nil, ErrParamsRequired
 	}
-	if params.Query == "" {
-		return nil, errors.New("missing required query parameter")
+	if strings.TrimSpace(params.Query) == "" {
+		return nil, missingRequiredParameterError("query")
 	}
 	var result []string
 	err := s.client.do(ctx, http.MethodGet, "find/file", params, &result)
@@ -30,10 +30,10 @@ func (s *FindService) Files(ctx context.Context, params *FindFilesParams) ([]str
 
 func (s *FindService) Symbols(ctx context.Context, params *FindSymbolsParams) ([]Symbol, error) {
 	if params == nil {
-		return nil, errors.New("params is required")
+		return nil, ErrParamsRequired
 	}
-	if params.Query == "" {
-		return nil, errors.New("missing required query parameter")
+	if strings.TrimSpace(params.Query) == "" {
+		return nil, missingRequiredParameterError("query")
 	}
 	var result []Symbol
 	err := s.client.do(ctx, http.MethodGet, "find/symbol", params, &result)
@@ -45,10 +45,10 @@ func (s *FindService) Symbols(ctx context.Context, params *FindSymbolsParams) ([
 
 func (s *FindService) Text(ctx context.Context, params *FindTextParams) ([]FindTextResponse, error) {
 	if params == nil {
-		return nil, errors.New("params is required")
+		return nil, ErrParamsRequired
 	}
-	if params.Pattern == "" {
-		return nil, errors.New("missing required pattern parameter")
+	if strings.TrimSpace(params.Pattern) == "" {
+		return nil, missingRequiredParameterError("pattern")
 	}
 	var result []FindTextResponse
 	err := s.client.do(ctx, http.MethodGet, "find", params, &result)

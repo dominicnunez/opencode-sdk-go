@@ -157,7 +157,7 @@ func TestSessionService_Shell_MissingID(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for missing ID, got nil")
 	}
-	if err.Error() != "missing required id parameter" {
+	if !errors.Is(err, &MissingRequiredParameterError{Parameter: "id"}) {
 		t.Errorf("unexpected error message: %s", err.Error())
 	}
 }
@@ -172,7 +172,7 @@ func TestSessionService_Shell_MissingParams(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for missing params, got nil")
 	}
-	if err.Error() != "params is required" {
+	if !errors.Is(err, ErrParamsRequired) {
 		t.Errorf("unexpected error message: %s", err.Error())
 	}
 }
@@ -189,7 +189,7 @@ func TestSessionService_Shell_MissingAgent(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for missing agent, got nil")
 	}
-	if err.Error() != "missing required agent parameter" {
+	if !errors.Is(err, &MissingRequiredParameterError{Parameter: "agent"}) {
 		t.Errorf("unexpected error message: %s", err.Error())
 	}
 }
@@ -206,7 +206,7 @@ func TestSessionService_Shell_MissingCommand(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for missing command, got nil")
 	}
-	if err.Error() != "missing required command parameter" {
+	if !errors.Is(err, &MissingRequiredParameterError{Parameter: "command"}) {
 		t.Errorf("unexpected error message: %s", err.Error())
 	}
 }

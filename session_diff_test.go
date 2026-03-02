@@ -170,7 +170,7 @@ func TestSessionDiff_MissingID(t *testing.T) {
 	if err == nil {
 		t.Fatal("Expected error for missing id, got nil")
 	}
-	if err.Error() != "missing required id parameter" {
+	if !errors.Is(err, &MissingRequiredParameterError{Parameter: "id"}) {
 		t.Errorf("Expected 'missing required id parameter' error, got: %v", err)
 	}
 }

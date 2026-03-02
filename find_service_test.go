@@ -173,3 +173,25 @@ func TestFindText_ServerError(t *testing.T) {
 		t.Errorf("expected status %d, got %d", http.StatusInternalServerError, apiErr.StatusCode)
 	}
 }
+
+func TestFindService_WhitespaceOnlyRequiredFieldsRejected(t *testing.T) {
+	client, err := NewClient()
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	_, err = client.Find.Files(context.Background(), &FindFilesParams{Query: "   "})
+	if !errors.Is(err, &MissingRequiredParameterError{Parameter: "query"}) {
+		t.Fatalf("expected missing required query error, got %v", err)
+	}
+
+	_, err = client.Find.Symbols(context.Background(), &FindSymbolsParams{Query: "\t\n"})
+	if !errors.Is(err, &MissingRequiredParameterError{Parameter: "query"}) {
+		t.Fatalf("expected missing required query error, got %v", err)
+	}
+
+	_, err = client.Find.Text(context.Background(), &FindTextParams{Pattern: "   "})
+	if !errors.Is(err, &MissingRequiredParameterError{Parameter: "pattern"}) {
+		t.Fatalf("expected missing required pattern error, got %v", err)
+	}
+}

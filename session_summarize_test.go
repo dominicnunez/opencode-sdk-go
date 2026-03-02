@@ -97,7 +97,7 @@ func TestSessionSummarize_MissingID(t *testing.T) {
 	if err == nil {
 		t.Fatal("Expected error for missing id, got nil")
 	}
-	if err.Error() != "missing required id parameter" {
+	if !errors.Is(err, &MissingRequiredParameterError{Parameter: "id"}) {
 		t.Errorf("Expected 'missing required id parameter', got %v", err)
 	}
 }
@@ -112,7 +112,7 @@ func TestSessionSummarize_MissingParams(t *testing.T) {
 	if err == nil {
 		t.Fatal("Expected error for missing params, got nil")
 	}
-	if err.Error() != "params is required" {
+	if !errors.Is(err, ErrParamsRequired) {
 		t.Errorf("Expected 'missing required params', got %v", err)
 	}
 }
@@ -129,7 +129,7 @@ func TestSessionSummarize_MissingModelID(t *testing.T) {
 	if err == nil {
 		t.Fatal("Expected error for missing modelID, got nil")
 	}
-	if err.Error() != "missing required modelID parameter" {
+	if !errors.Is(err, &MissingRequiredParameterError{Parameter: "modelID"}) {
 		t.Errorf("Expected missing modelID error, got %v", err)
 	}
 }
@@ -146,7 +146,7 @@ func TestSessionSummarize_MissingProviderID(t *testing.T) {
 	if err == nil {
 		t.Fatal("Expected error for missing providerID, got nil")
 	}
-	if err.Error() != "missing required providerID parameter" {
+	if !errors.Is(err, &MissingRequiredParameterError{Parameter: "providerID"}) {
 		t.Errorf("Expected missing providerID error, got %v", err)
 	}
 }

@@ -105,7 +105,7 @@ func TestSessionGet_MissingID(t *testing.T) {
 	if err == nil {
 		t.Fatal("Expected error for missing ID, got nil")
 	}
-	if err.Error() != "missing required id parameter" {
+	if !errors.Is(err, &MissingRequiredParameterError{Parameter: "id"}) {
 		t.Errorf("Expected 'missing required id parameter' error, got: %v", err)
 	}
 }
@@ -249,7 +249,7 @@ func TestSessionUpdate_MissingID(t *testing.T) {
 	if err == nil {
 		t.Fatal("Expected error for missing ID, got nil")
 	}
-	if err.Error() != "missing required id parameter" {
+	if !errors.Is(err, &MissingRequiredParameterError{Parameter: "id"}) {
 		t.Errorf("Expected 'missing required id parameter' error, got: %v", err)
 	}
 }
@@ -351,7 +351,7 @@ func TestSessionDelete_MissingID(t *testing.T) {
 	if err == nil {
 		t.Fatal("Expected error for missing ID, got nil")
 	}
-	if err.Error() != "missing required id parameter" {
+	if !errors.Is(err, &MissingRequiredParameterError{Parameter: "id"}) {
 		t.Errorf("Expected 'missing required id parameter' error, got: %v", err)
 	}
 }

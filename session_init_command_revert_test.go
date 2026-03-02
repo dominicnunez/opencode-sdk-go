@@ -3,6 +3,7 @@ package opencode
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -191,31 +192,31 @@ func TestSessionCommand_RequiresCommand(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for missing command")
 	}
-	if err.Error() != "missing required command parameter" {
+	if !errors.Is(err, &MissingRequiredParameterError{Parameter: "command"}) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
 
 func TestSessionInit_RequiresFields(t *testing.T) {
 	tests := []struct {
-		name    string
-		params  *SessionInitParams
-		wantErr string
+		name      string
+		params    *SessionInitParams
+		wantParam string
 	}{
 		{
-			name:    "missing message id",
-			params:  &SessionInitParams{ModelID: "gpt-4", ProviderID: "openai"},
-			wantErr: "missing required messageID parameter",
+			name:      "missing message id",
+			params:    &SessionInitParams{ModelID: "gpt-4", ProviderID: "openai"},
+			wantParam: "messageID",
 		},
 		{
-			name:    "missing model id",
-			params:  &SessionInitParams{MessageID: "msg_001", ProviderID: "openai"},
-			wantErr: "missing required modelID parameter",
+			name:      "missing model id",
+			params:    &SessionInitParams{MessageID: "msg_001", ProviderID: "openai"},
+			wantParam: "modelID",
 		},
 		{
-			name:    "missing provider id",
-			params:  &SessionInitParams{MessageID: "msg_001", ModelID: "gpt-4"},
-			wantErr: "missing required providerID parameter",
+			name:      "missing provider id",
+			params:    &SessionInitParams{MessageID: "msg_001", ModelID: "gpt-4"},
+			wantParam: "providerID",
 		},
 	}
 
@@ -230,8 +231,8 @@ func TestSessionInit_RequiresFields(t *testing.T) {
 			if err == nil {
 				t.Fatal("expected validation error")
 			}
-			if err.Error() != tt.wantErr {
-				t.Fatalf("expected %q, got %v", tt.wantErr, err)
+			if !errors.Is(err, &MissingRequiredParameterError{Parameter: tt.wantParam}) {
+				t.Fatalf("expected missing required %s error, got %v", tt.wantParam, err)
 			}
 		})
 	}
@@ -247,7 +248,7 @@ func TestSessionRevert_RequiresMessageID(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for missing messageID")
 	}
-	if err.Error() != "missing required messageID parameter" {
+	if !errors.Is(err, &MissingRequiredParameterError{Parameter: "messageID"}) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }

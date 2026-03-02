@@ -148,3 +148,20 @@ func TestFileStatus_ServerError(t *testing.T) {
 		t.Errorf("expected status %d, got %d", http.StatusInternalServerError, apiErr.StatusCode)
 	}
 }
+
+func TestFileService_WhitespaceOnlyPathRejected(t *testing.T) {
+	client, err := NewClient()
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	_, err = client.File.List(context.Background(), &FileListParams{Path: "   "})
+	if !errors.Is(err, &MissingRequiredParameterError{Parameter: "path"}) {
+		t.Fatalf("expected missing required path error for List, got %v", err)
+	}
+
+	_, err = client.File.Read(context.Background(), &FileReadParams{Path: "\t"})
+	if !errors.Is(err, &MissingRequiredParameterError{Parameter: "path"}) {
+		t.Fatalf("expected missing required path error for Read, got %v", err)
+	}
+}

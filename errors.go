@@ -13,6 +13,15 @@ var (
 	ErrForbidden      = errors.New("forbidden")
 	ErrRateLimited    = errors.New("rate limited")
 	ErrInvalidRequest = errors.New("invalid request")
+	// ErrMissingRequiredParameter matches input validation failures where a
+	// required API parameter is not provided.
+	ErrMissingRequiredParameter = errors.New("missing required parameter")
+	// ErrParamsRequired matches validation failures where a request params
+	// object is required but nil was passed.
+	ErrParamsRequired = errors.New("params is required")
+	// ErrRequiredField matches validation failures where a required field on a
+	// provided struct is empty.
+	ErrRequiredField = errors.New("required field missing")
 	// ErrContextRequired is returned when a nil context.Context is passed to
 	// an API method that performs HTTP requests.
 	ErrContextRequired = errors.New("context is required")
@@ -33,6 +42,52 @@ var (
 	// an Auth implementation that is not one of OAuth, ApiAuth, or WellKnownAuth.
 	ErrUnknownAuthType = errors.New("unknown auth union type")
 )
+
+type MissingRequiredParameterError struct {
+	Parameter string
+}
+
+func (e *MissingRequiredParameterError) Error() string {
+	return fmt.Sprintf("missing required %s parameter", e.Parameter)
+}
+
+func (e *MissingRequiredParameterError) Is(target error) bool {
+	if target == ErrMissingRequiredParameter {
+		return true
+	}
+	t, ok := target.(*MissingRequiredParameterError)
+	if !ok {
+		return false
+	}
+	return t.Parameter == "" || t.Parameter == e.Parameter
+}
+
+func missingRequiredParameterError(parameter string) error {
+	return &MissingRequiredParameterError{Parameter: parameter}
+}
+
+type RequiredFieldError struct {
+	Field string
+}
+
+func (e *RequiredFieldError) Error() string {
+	return fmt.Sprintf("%s is required", e.Field)
+}
+
+func (e *RequiredFieldError) Is(target error) bool {
+	if target == ErrRequiredField {
+		return true
+	}
+	t, ok := target.(*RequiredFieldError)
+	if !ok {
+		return false
+	}
+	return t.Field == "" || t.Field == e.Field
+}
+
+func requiredFieldError(field string) error {
+	return &RequiredFieldError{Field: field}
+}
 
 func wrongVariant(expected, actual string) error {
 	return fmt.Errorf("%s, got %s: %w", expected, actual, ErrWrongVariant)

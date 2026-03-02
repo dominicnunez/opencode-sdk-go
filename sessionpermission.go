@@ -3,7 +3,6 @@ package opencode
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"net/http"
 	"net/url"
 
@@ -16,13 +15,13 @@ type SessionPermissionService struct {
 
 func (s *SessionPermissionService) Respond(ctx context.Context, id string, permissionID string, params *SessionPermissionRespondParams) (bool, error) {
 	if id == "" {
-		return false, errors.New("missing required id parameter")
+		return false, missingRequiredParameterError("id")
 	}
 	if permissionID == "" {
-		return false, errors.New("missing required permissionID parameter")
+		return false, missingRequiredParameterError("permissionID")
 	}
 	if params == nil {
-		return false, errors.New("params is required")
+		return false, ErrParamsRequired
 	}
 	var result bool
 	err := s.client.do(ctx, http.MethodPost, "session/"+url.PathEscape(id)+"/permissions/"+url.PathEscape(permissionID), params, &result)

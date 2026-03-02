@@ -3,7 +3,6 @@ package opencode
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -32,7 +31,7 @@ func (s *SessionService) Create(ctx context.Context, params *SessionCreateParams
 
 func (s *SessionService) Update(ctx context.Context, id string, params *SessionUpdateParams) (*Session, error) {
 	if id == "" {
-		return nil, errors.New("missing required id parameter")
+		return nil, missingRequiredParameterError("id")
 	}
 	if params == nil {
 		params = &SessionUpdateParams{}
@@ -59,7 +58,7 @@ func (s *SessionService) List(ctx context.Context, params *SessionListParams) ([
 
 func (s *SessionService) Get(ctx context.Context, id string, params *SessionGetParams) (*Session, error) {
 	if id == "" {
-		return nil, errors.New("missing required id parameter")
+		return nil, missingRequiredParameterError("id")
 	}
 	if params == nil {
 		params = &SessionGetParams{}
@@ -74,7 +73,7 @@ func (s *SessionService) Get(ctx context.Context, id string, params *SessionGetP
 
 func (s *SessionService) Delete(ctx context.Context, id string, params *SessionDeleteParams) (bool, error) {
 	if id == "" {
-		return false, errors.New("missing required id parameter")
+		return false, missingRequiredParameterError("id")
 	}
 	if params == nil {
 		params = &SessionDeleteParams{}
@@ -89,7 +88,7 @@ func (s *SessionService) Delete(ctx context.Context, id string, params *SessionD
 
 func (s *SessionService) Abort(ctx context.Context, id string, params *SessionAbortParams) (bool, error) {
 	if id == "" {
-		return false, errors.New("missing required id parameter")
+		return false, missingRequiredParameterError("id")
 	}
 	if params == nil {
 		params = &SessionAbortParams{}
@@ -104,7 +103,7 @@ func (s *SessionService) Abort(ctx context.Context, id string, params *SessionAb
 
 func (s *SessionService) Children(ctx context.Context, id string, params *SessionChildrenParams) ([]Session, error) {
 	if id == "" {
-		return nil, errors.New("missing required id parameter")
+		return nil, missingRequiredParameterError("id")
 	}
 	if params == nil {
 		params = &SessionChildrenParams{}
@@ -121,13 +120,13 @@ func (s *SessionService) Children(ctx context.Context, id string, params *Sessio
 // the endpoint requires a request body with at least the command field.
 func (s *SessionService) Command(ctx context.Context, id string, params *SessionCommandParams) (*SessionCommandResponse, error) {
 	if id == "" {
-		return nil, errors.New("missing required id parameter")
+		return nil, missingRequiredParameterError("id")
 	}
 	if params == nil {
-		return nil, errors.New("params is required")
+		return nil, ErrParamsRequired
 	}
 	if strings.TrimSpace(params.Command) == "" {
-		return nil, errors.New("missing required command parameter")
+		return nil, missingRequiredParameterError("command")
 	}
 	var result SessionCommandResponse
 	err := s.client.do(ctx, http.MethodPost, "session/"+url.PathEscape(id)+"/command", params, &result)
@@ -141,19 +140,19 @@ func (s *SessionService) Command(ctx context.Context, id string, params *Session
 // requires a request body.
 func (s *SessionService) Init(ctx context.Context, id string, params *SessionInitParams) (bool, error) {
 	if id == "" {
-		return false, errors.New("missing required id parameter")
+		return false, missingRequiredParameterError("id")
 	}
 	if params == nil {
-		return false, errors.New("params is required")
+		return false, ErrParamsRequired
 	}
 	if strings.TrimSpace(params.MessageID) == "" {
-		return false, errors.New("missing required messageID parameter")
+		return false, missingRequiredParameterError("messageID")
 	}
 	if strings.TrimSpace(params.ModelID) == "" {
-		return false, errors.New("missing required modelID parameter")
+		return false, missingRequiredParameterError("modelID")
 	}
 	if strings.TrimSpace(params.ProviderID) == "" {
-		return false, errors.New("missing required providerID parameter")
+		return false, missingRequiredParameterError("providerID")
 	}
 	var result bool
 	err := s.client.do(ctx, http.MethodPost, "session/"+url.PathEscape(id)+"/init", params, &result)
@@ -165,10 +164,10 @@ func (s *SessionService) Init(ctx context.Context, id string, params *SessionIni
 
 func (s *SessionService) Message(ctx context.Context, id string, messageID string, params *SessionMessageParams) (*SessionMessageResponse, error) {
 	if id == "" {
-		return nil, errors.New("missing required id parameter")
+		return nil, missingRequiredParameterError("id")
 	}
 	if messageID == "" {
-		return nil, errors.New("missing required messageID parameter")
+		return nil, missingRequiredParameterError("messageID")
 	}
 	if params == nil {
 		params = &SessionMessageParams{}
@@ -183,7 +182,7 @@ func (s *SessionService) Message(ctx context.Context, id string, messageID strin
 
 func (s *SessionService) Messages(ctx context.Context, id string, params *SessionMessagesParams) ([]SessionMessagesResponse, error) {
 	if id == "" {
-		return nil, errors.New("missing required id parameter")
+		return nil, missingRequiredParameterError("id")
 	}
 	if params == nil {
 		params = &SessionMessagesParams{}
@@ -200,10 +199,10 @@ func (s *SessionService) Messages(ctx context.Context, id string, params *Sessio
 // endpoint requires a request body.
 func (s *SessionService) Prompt(ctx context.Context, id string, params *SessionPromptParams) (*SessionPromptResponse, error) {
 	if id == "" {
-		return nil, errors.New("missing required id parameter")
+		return nil, missingRequiredParameterError("id")
 	}
 	if params == nil {
-		return nil, errors.New("params is required")
+		return nil, ErrParamsRequired
 	}
 	var result SessionPromptResponse
 	err := s.client.do(ctx, http.MethodPost, "session/"+url.PathEscape(id)+"/message", params, &result)
@@ -217,13 +216,13 @@ func (s *SessionService) Prompt(ctx context.Context, id string, params *SessionP
 // the endpoint requires a request body with the target state.
 func (s *SessionService) Revert(ctx context.Context, id string, params *SessionRevertParams) (*Session, error) {
 	if id == "" {
-		return nil, errors.New("missing required id parameter")
+		return nil, missingRequiredParameterError("id")
 	}
 	if params == nil {
-		return nil, errors.New("params is required")
+		return nil, ErrParamsRequired
 	}
 	if strings.TrimSpace(params.MessageID) == "" {
-		return nil, errors.New("missing required messageID parameter")
+		return nil, missingRequiredParameterError("messageID")
 	}
 	var result Session
 	err := s.client.do(ctx, http.MethodPost, "session/"+url.PathEscape(id)+"/revert", params, &result)
@@ -235,7 +234,7 @@ func (s *SessionService) Revert(ctx context.Context, id string, params *SessionR
 
 func (s *SessionService) Share(ctx context.Context, id string, params *SessionShareParams) (*Session, error) {
 	if id == "" {
-		return nil, errors.New("missing required id parameter")
+		return nil, missingRequiredParameterError("id")
 	}
 	if params == nil {
 		params = &SessionShareParams{}
@@ -250,7 +249,7 @@ func (s *SessionService) Share(ctx context.Context, id string, params *SessionSh
 
 func (s *SessionService) Diff(ctx context.Context, id string, params *SessionDiffParams) ([]FileDiff, error) {
 	if id == "" {
-		return nil, errors.New("missing required id parameter")
+		return nil, missingRequiredParameterError("id")
 	}
 	if params == nil {
 		params = &SessionDiffParams{}
@@ -265,7 +264,7 @@ func (s *SessionService) Diff(ctx context.Context, id string, params *SessionDif
 
 func (s *SessionService) Fork(ctx context.Context, id string, params *SessionForkParams) (*Session, error) {
 	if id == "" {
-		return nil, errors.New("missing required id parameter")
+		return nil, missingRequiredParameterError("id")
 	}
 	if params == nil {
 		params = &SessionForkParams{}
@@ -282,16 +281,16 @@ func (s *SessionService) Fork(ctx context.Context, id string, params *SessionFor
 // the endpoint requires a request body with at least the shell command.
 func (s *SessionService) Shell(ctx context.Context, id string, params *SessionShellParams) (*AssistantMessage, error) {
 	if id == "" {
-		return nil, errors.New("missing required id parameter")
+		return nil, missingRequiredParameterError("id")
 	}
 	if params == nil {
-		return nil, errors.New("params is required")
+		return nil, ErrParamsRequired
 	}
 	if strings.TrimSpace(params.Agent) == "" {
-		return nil, errors.New("missing required agent parameter")
+		return nil, missingRequiredParameterError("agent")
 	}
 	if strings.TrimSpace(params.Command) == "" {
-		return nil, errors.New("missing required command parameter")
+		return nil, missingRequiredParameterError("command")
 	}
 	var result AssistantMessage
 	err := s.client.do(ctx, http.MethodPost, "session/"+url.PathEscape(id)+"/shell", params, &result)
@@ -305,16 +304,16 @@ func (s *SessionService) Shell(ctx context.Context, id string, params *SessionSh
 // because the endpoint requires a request body.
 func (s *SessionService) Summarize(ctx context.Context, id string, params *SessionSummarizeParams) (bool, error) {
 	if id == "" {
-		return false, errors.New("missing required id parameter")
+		return false, missingRequiredParameterError("id")
 	}
 	if params == nil {
-		return false, errors.New("params is required")
+		return false, ErrParamsRequired
 	}
 	if strings.TrimSpace(params.ModelID) == "" {
-		return false, errors.New("missing required modelID parameter")
+		return false, missingRequiredParameterError("modelID")
 	}
 	if strings.TrimSpace(params.ProviderID) == "" {
-		return false, errors.New("missing required providerID parameter")
+		return false, missingRequiredParameterError("providerID")
 	}
 	var result bool
 	err := s.client.do(ctx, http.MethodPost, "session/"+url.PathEscape(id)+"/summarize", params, &result)
@@ -326,7 +325,7 @@ func (s *SessionService) Summarize(ctx context.Context, id string, params *Sessi
 
 func (s *SessionService) Todo(ctx context.Context, id string, params *SessionTodoParams) ([]Todo, error) {
 	if id == "" {
-		return nil, errors.New("missing required id parameter")
+		return nil, missingRequiredParameterError("id")
 	}
 	if params == nil {
 		params = &SessionTodoParams{}
@@ -341,7 +340,7 @@ func (s *SessionService) Todo(ctx context.Context, id string, params *SessionTod
 
 func (s *SessionService) Unrevert(ctx context.Context, id string, params *SessionUnrevertParams) (*Session, error) {
 	if id == "" {
-		return nil, errors.New("missing required id parameter")
+		return nil, missingRequiredParameterError("id")
 	}
 	if params == nil {
 		params = &SessionUnrevertParams{}
@@ -356,7 +355,7 @@ func (s *SessionService) Unrevert(ctx context.Context, id string, params *Sessio
 
 func (s *SessionService) Unshare(ctx context.Context, id string, params *SessionUnshareParams) (*Session, error) {
 	if id == "" {
-		return nil, errors.New("missing required id parameter")
+		return nil, missingRequiredParameterError("id")
 	}
 	if params == nil {
 		params = &SessionUnshareParams{}

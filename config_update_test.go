@@ -124,7 +124,7 @@ func TestConfigUpdate_NilParams(t *testing.T) {
 	if err == nil {
 		t.Fatal("Expected error for nil params, got nil")
 	}
-	if err.Error() != "params is required" {
+	if !errors.Is(err, ErrParamsRequired) {
 		t.Errorf("Expected error 'params is required', got %s", err.Error())
 	}
 }

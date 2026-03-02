@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -30,7 +29,7 @@ func (s *ConfigService) Get(ctx context.Context, params *ConfigGetParams) (*Conf
 
 func (s *ConfigService) Update(ctx context.Context, params *ConfigUpdateParams) (*Config, error) {
 	if params == nil {
-		return nil, errors.New("params is required")
+		return nil, ErrParamsRequired
 	}
 	var result Config
 	err := s.client.do(ctx, http.MethodPatch, "config", params, &result)

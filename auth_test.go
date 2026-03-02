@@ -104,7 +104,7 @@ func TestAuthService_Set_MissingID(t *testing.T) {
 	if err == nil {
 		t.Fatal("Expected error for missing id, got nil")
 	}
-	if err.Error() != "missing required id parameter" {
+	if !errors.Is(err, &MissingRequiredParameterError{Parameter: "id"}) {
 		t.Errorf("Expected 'missing required id parameter' error, got %v", err)
 	}
 }
@@ -120,7 +120,7 @@ func TestAuthService_Set_MissingParams(t *testing.T) {
 	if err == nil {
 		t.Fatal("Expected error for nil params, got nil")
 	}
-	if err.Error() != "params is required" {
+	if !errors.Is(err, ErrParamsRequired) {
 		t.Errorf("Expected 'params is required' error, got %v", err)
 	}
 }
@@ -136,7 +136,7 @@ func TestAuthService_Set_MissingAuth(t *testing.T) {
 	if err == nil {
 		t.Fatal("Expected error for nil Auth, got nil")
 	}
-	if err.Error() != "AuthSetParams: Auth field is required" {
+	if !errors.Is(err, &RequiredFieldError{Field: "AuthSetParams: Auth field"}) {
 		t.Errorf("Expected 'AuthSetParams: Auth field is required' error, got %v", err)
 	}
 }
@@ -148,34 +148,34 @@ func TestAuthService_Set_MissingCredentialFields(t *testing.T) {
 	}
 
 	tests := []struct {
-		name    string
-		auth    AuthSetParamsAuthUnion
-		wantErr string
+		name      string
+		auth      AuthSetParamsAuthUnion
+		wantField string
 	}{
 		{
-			name: "oauth missing access",
-			auth: OAuth{Refresh: "refresh", Expires: 3600},
-			wantErr: "oauth access is required",
+			name:      "oauth missing access",
+			auth:      OAuth{Refresh: "refresh", Expires: 3600},
+			wantField: "oauth access",
 		},
 		{
-			name: "oauth missing refresh",
-			auth: OAuth{Access: "access", Expires: 3600},
-			wantErr: "oauth refresh is required",
+			name:      "oauth missing refresh",
+			auth:      OAuth{Access: "access", Expires: 3600},
+			wantField: "oauth refresh",
 		},
 		{
-			name: "api auth missing key",
-			auth: ApiAuth{},
-			wantErr: "api auth key is required",
+			name:      "api auth missing key",
+			auth:      ApiAuth{},
+			wantField: "api auth key",
 		},
 		{
-			name: "well known missing key",
-			auth: WellKnownAuth{Token: "token"},
-			wantErr: "well-known auth key is required",
+			name:      "well known missing key",
+			auth:      WellKnownAuth{Token: "token"},
+			wantField: "well-known auth key",
 		},
 		{
-			name: "well known missing token",
-			auth: WellKnownAuth{Key: "key"},
-			wantErr: "well-known auth token is required",
+			name:      "well known missing token",
+			auth:      WellKnownAuth{Key: "key"},
+			wantField: "well-known auth token",
 		},
 	}
 
@@ -185,8 +185,8 @@ func TestAuthService_Set_MissingCredentialFields(t *testing.T) {
 			if err == nil {
 				t.Fatal("expected error for missing credential field")
 			}
-			if err.Error() != tt.wantErr {
-				t.Fatalf("expected error %q, got %q", tt.wantErr, err.Error())
+			if !errors.Is(err, &RequiredFieldError{Field: tt.wantField}) {
+				t.Fatalf("expected missing required field %q, got %v", tt.wantField, err)
 			}
 		})
 	}
