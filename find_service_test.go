@@ -174,6 +174,72 @@ func TestFindText_ServerError(t *testing.T) {
 	}
 }
 
+func TestFindFiles_Success(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			t.Errorf("expected GET, got %s", r.Method)
+		}
+		if r.URL.Path != "/find/file" {
+			t.Errorf("expected path /find/file, got %s", r.URL.Path)
+		}
+		if q := r.URL.Query().Get("query"); q != "main" {
+			t.Errorf("expected query param 'main', got %s", q)
+		}
+
+		resp := []string{
+			"src/main.go",
+			"src/main_test.go",
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(resp)
+	}))
+	defer server.Close()
+
+	client, err := NewClient(WithBaseURL(server.URL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	files, err := client.Find.Files(context.Background(), &FindFilesParams{Query: "main"})
+	if err != nil {
+		t.Fatalf("Files failed: %v", err)
+	}
+	if len(files) != 2 {
+		t.Fatalf("expected 2 files, got %d", len(files))
+	}
+	if files[0] != "src/main.go" {
+		t.Fatalf("expected first file src/main.go, got %s", files[0])
+	}
+	if files[1] != "src/main_test.go" {
+		t.Fatalf("expected second file src/main_test.go, got %s", files[1])
+	}
+}
+
+func TestFindFiles_ServerError(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusBadGateway)
+		_, _ = w.Write([]byte(`{"error":"bad gateway"}`))
+	}))
+	defer server.Close()
+
+	client, err := NewClient(WithBaseURL(server.URL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	_, err = client.Find.Files(context.Background(), &FindFilesParams{Query: "main"})
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	var apiErr *APIError
+	if !errors.As(err, &apiErr) {
+		t.Fatalf("expected *APIError, got %T", err)
+	}
+	if apiErr.StatusCode != http.StatusBadGateway {
+		t.Errorf("expected status %d, got %d", http.StatusBadGateway, apiErr.StatusCode)
+	}
+}
+
 func TestFindService_WhitespaceOnlyRequiredFieldsRejected(t *testing.T) {
 	client, err := NewClient()
 	if err != nil {

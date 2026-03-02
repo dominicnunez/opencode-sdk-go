@@ -149,6 +149,80 @@ func TestFileStatus_ServerError(t *testing.T) {
 	}
 }
 
+func TestFileList_Success(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			t.Errorf("expected GET, got %s", r.Method)
+		}
+		if r.URL.Path != "/file" {
+			t.Errorf("expected path /file, got %s", r.URL.Path)
+		}
+		if q := r.URL.Query().Get("path"); q != "/src" {
+			t.Errorf("expected path query param /src, got %s", q)
+		}
+
+		resp := []FileNode{
+			{
+				Name: "main.go",
+				Type: FileNodeTypeFile,
+				Path: "/src/main.go",
+			},
+			{
+				Name: "pkg",
+				Type: FileNodeTypeDirectory,
+				Path: "/src/pkg",
+			},
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(resp)
+	}))
+	defer server.Close()
+
+	client, err := NewClient(WithBaseURL(server.URL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	nodes, err := client.File.List(context.Background(), &FileListParams{Path: "/src"})
+	if err != nil {
+		t.Fatalf("List failed: %v", err)
+	}
+	if len(nodes) != 2 {
+		t.Fatalf("expected 2 nodes, got %d", len(nodes))
+	}
+	if nodes[0].Path != "/src/main.go" || nodes[0].Type != FileNodeTypeFile {
+		t.Fatalf("unexpected first node: %+v", nodes[0])
+	}
+	if nodes[1].Path != "/src/pkg" || nodes[1].Type != FileNodeTypeDirectory {
+		t.Fatalf("unexpected second node: %+v", nodes[1])
+	}
+}
+
+func TestFileList_ServerError(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusForbidden)
+		_, _ = w.Write([]byte(`{"error":"forbidden"}`))
+	}))
+	defer server.Close()
+
+	client, err := NewClient(WithBaseURL(server.URL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	_, err = client.File.List(context.Background(), &FileListParams{Path: "/src"})
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	var apiErr *APIError
+	if !errors.As(err, &apiErr) {
+		t.Fatalf("expected *APIError, got %T", err)
+	}
+	if apiErr.StatusCode != http.StatusForbidden {
+		t.Errorf("expected status %d, got %d", http.StatusForbidden, apiErr.StatusCode)
+	}
+}
+
 func TestFileService_WhitespaceOnlyPathRejected(t *testing.T) {
 	client, err := NewClient()
 	if err != nil {
