@@ -217,6 +217,12 @@ func TestWithBaseURL_RejectsSensitiveQueryKeys(t *testing.T) {
 		"https://example.com?token=secret",
 		"https://example.com?api_key=secret",
 		"https://example.com?access_token=secret",
+		"https://example.com?Access-Token=secret",
+		"https://example.com?apikey=secret",
+		"https://example.com?auth=secret",
+		"https://example.com?key=secret",
+		"https://example.com?bearer=secret",
+		"https://example.com?authorization=secret",
 	}
 
 	for _, rawURL := range tests {

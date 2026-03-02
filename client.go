@@ -32,9 +32,14 @@ const (
 )
 
 var sensitiveBaseURLQueryKeys = map[string]struct{}{
-	"access_token": {},
-	"api_key":      {},
-	"token":        {},
+	"accesstoken":   {},
+	"apikey":        {},
+	"auth":          {},
+	"authorization": {},
+	"bearer":        {},
+	"clientsecret":  {},
+	"key":           {},
+	"token":         {},
 }
 
 var retryBackoffRandInt63n = rand.Int63n
@@ -94,11 +99,26 @@ func parseBaseURL(rawURL string) (*url.URL, error) {
 
 func validateBaseURLQuery(query url.Values) error {
 	for key := range query {
-		if _, blocked := sensitiveBaseURLQueryKeys[strings.ToLower(key)]; blocked {
+		if _, blocked := sensitiveBaseURLQueryKeys[normalizeQueryKey(key)]; blocked {
 			return fmt.Errorf("base URL must not include sensitive query parameter %q; use headers instead", key)
 		}
 	}
 	return nil
+}
+
+func normalizeQueryKey(key string) string {
+	var b strings.Builder
+	b.Grow(len(key))
+	for _, r := range key {
+		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') {
+			b.WriteRune(r)
+			continue
+		}
+		if r >= 'A' && r <= 'Z' {
+			b.WriteRune(r + ('a' - 'A'))
+		}
+	}
+	return b.String()
 }
 
 func isLoopbackHost(host string) bool {
