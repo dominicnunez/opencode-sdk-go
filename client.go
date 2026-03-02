@@ -232,6 +232,15 @@ func decodeSuccessBodyLimitExceeded(reader *countingReader, limit int64) bool {
 	return reader != nil && limit > 0 && reader.count > limit
 }
 
+func isMethodRetryable(method string) bool {
+	switch method {
+	case http.MethodGet, http.MethodHead, http.MethodPut, http.MethodDelete:
+		return true
+	default:
+		return false
+	}
+}
+
 func (c *Client) do(ctx context.Context, method, path string, params, result interface{}) error {
 	if ctx == nil {
 		return ErrContextRequired
@@ -285,14 +294,11 @@ func (c *Client) do(ctx context.Context, method, path string, params, result int
 	return nil
 }
 
-// buildURL resolves path against the base URL and merges query parameters from
-// the base URL and the params struct (if it implements URLQuery).
+// buildURL resolves path against the base URL and applies query parameters from
+// the params struct (if it implements URLQuery).
 func (c *Client) buildURL(path string, params interface{}) (*url.URL, error) {
 	fullURL := c.baseURL.ResolveReference(&url.URL{Path: path})
 	mergedQuery := fullURL.Query()
-	for k, vs := range c.baseURL.Query() {
-		mergedQuery[k] = vs
-	}
 
 	if params != nil {
 		if queryer, ok := params.(interface{ URLQuery() (url.Values, error) }); ok {
@@ -333,8 +339,12 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 	// Build request with retry loop
 	var resp *http.Response
 	var lastErr error
+	maxRequestRetries := c.maxRetries
+	if !isMethodRetryable(method) {
+		maxRequestRetries = 0
+	}
 
-	for attempt := 0; attempt <= c.maxRetries; attempt++ {
+	for attempt := 0; attempt <= maxRequestRetries; attempt++ {
 		var body io.Reader
 		if len(bodyBytes) > 0 {
 			body = bytes.NewReader(bodyBytes)
@@ -378,7 +388,7 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 		// Any non-2xx HTTP response is surfaced as an API error.
 		// Retry only retryable statuses (408, 429, 5xx).
 		if lastErr == nil {
-			if !isRetryableStatus(resp.StatusCode) || attempt >= c.maxRetries {
+			if !isRetryableStatus(resp.StatusCode) || attempt >= maxRequestRetries {
 				return nil, readAPIError(resp, maxErrorBodySize)
 			}
 
@@ -399,7 +409,7 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 		}
 
 		// No more retries — let the loop condition handle exit
-		if attempt >= c.maxRetries {
+		if attempt >= maxRequestRetries {
 			continue
 		}
 
@@ -407,7 +417,7 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 		// delay on the penultimate attempt because the final retry is
 		// best-effort — sleeping up to maxBackoff for a likely-unreachable
 		// host wastes wall-clock time without improving success odds.
-		skipDelay := lastErr != nil && attempt == c.maxRetries-1
+		skipDelay := lastErr != nil && attempt == maxRequestRetries-1
 		if !skipDelay {
 			delay := retryBackoffDelay(attempt)
 			timer := time.NewTimer(delay)
@@ -423,9 +433,9 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 	// All retries exhausted. HTTP errors return structured *APIError inside
 	// the loop, so this path should only occur for transport failures.
 	if lastErr != nil {
-		return nil, fmt.Errorf("%s %s request failed after %d retries: %w", method, path, c.maxRetries, lastErr)
+		return nil, fmt.Errorf("%s %s request failed after %d retries: %w", method, path, maxRequestRetries, lastErr)
 	}
-	return nil, fmt.Errorf("%s %s request failed after %d retries", method, path, c.maxRetries)
+	return nil, fmt.Errorf("%s %s request failed after %d retries", method, path, maxRequestRetries)
 }
 
 func retryBackoffDelay(attempt int) time.Duration {
@@ -453,13 +463,15 @@ func retryBackoffBaseDelay(attempt int) time.Duration {
 
 func retryDelayWithServerGuidance(attempt int, resp *http.Response, ctx context.Context, now time.Time) time.Duration {
 	delay := retryBackoffDelay(attempt)
+	serverGuided := false
 
 	if resp != nil {
 		if retryAfterDelay, ok := parseRetryAfterDelay(resp.Header.Get("Retry-After"), now); ok {
 			delay = retryAfterDelay
+			serverGuided = true
 		}
 	}
-	if delay > maxBackoff {
+	if !serverGuided && delay > maxBackoff {
 		delay = maxBackoff
 	}
 	if delay < 0 {

@@ -361,7 +361,7 @@ func TestClientDo_RetryAfterHeaderDelay(t *testing.T) {
 	}
 }
 
-func TestClientDo_PostBodyReencodedOnRetry(t *testing.T) {
+func TestClientDo_PostDoesNotRetryOnRetryableHTTPStatus(t *testing.T) {
 	var bodies []string
 	attempts := 0
 
@@ -370,16 +370,8 @@ func TestClientDo_PostBodyReencodedOnRetry(t *testing.T) {
 		body, _ := io.ReadAll(r.Body)
 		bodies = append(bodies, string(body))
 
-		if attempts < 2 {
-			w.WriteHeader(http.StatusInternalServerError)
-			_, _ = w.Write([]byte("server error"))
-			return
-		}
-		w.WriteHeader(http.StatusOK)
-		_ = json.NewEncoder(w).Encode(opencode.Session{
-			ID:   "sess_1",
-			Time: opencode.SessionTime{Created: 1, Updated: 1},
-		})
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = w.Write([]byte("server error"))
 	}))
 	defer server.Close()
 
@@ -394,30 +386,32 @@ func TestClientDo_PostBodyReencodedOnRetry(t *testing.T) {
 	_, err = client.Session.Create(context.Background(), &opencode.SessionCreateParams{
 		ParentID: opencode.Ptr("test-parent"),
 	})
-	if err != nil {
-		t.Fatalf("Session.Create failed: %v", err)
+	if err == nil {
+		t.Fatal("expected Session.Create to fail without retrying POST")
 	}
 
-	if attempts != 2 {
-		t.Fatalf("expected 2 attempts, got %d", attempts)
+	var apiErr *opencode.APIError
+	if !errors.As(err, &apiErr) {
+		t.Fatalf("expected *opencode.APIError, got %T: %v", err, err)
+	}
+	if apiErr.StatusCode != http.StatusInternalServerError {
+		t.Fatalf("expected status %d, got %d", http.StatusInternalServerError, apiErr.StatusCode)
 	}
 
-	if len(bodies) != 2 {
-		t.Fatalf("expected 2 request bodies, got %d", len(bodies))
+	if attempts != 1 {
+		t.Fatalf("expected 1 attempt for POST, got %d", attempts)
 	}
 
-	// Both attempts should receive the same non-empty body
-	for i, body := range bodies {
-		if body == "" {
-			t.Errorf("attempt %d: expected non-empty body", i+1)
-		}
-		if !strings.Contains(body, "test-parent") {
-			t.Errorf("attempt %d: expected body to contain 'test-parent', got %q", i+1, body)
-		}
+	if len(bodies) != 1 {
+		t.Fatalf("expected 1 request body, got %d", len(bodies))
 	}
 
-	if bodies[0] != bodies[1] {
-		t.Errorf("body mismatch between attempts:\n  attempt 1: %s\n  attempt 2: %s", bodies[0], bodies[1])
+	if bodies[0] == "" {
+		t.Fatal("expected non-empty request body")
+	}
+
+	if !strings.Contains(bodies[0], "test-parent") {
+		t.Fatalf("expected body to contain %q, got %q", "test-parent", bodies[0])
 	}
 }
 
@@ -462,6 +456,47 @@ func TestClientDo_TransportErrorRetryExhaustion(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "2 retries") {
 		t.Errorf("expected error to mention retry count, got: %v", err)
+	}
+}
+
+func TestClientDo_PostTransportErrorDoesNotRetry(t *testing.T) {
+	transportErr := errors.New("connection refused")
+	attempts := 0
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Fatal("should not reach server")
+	}))
+	defer server.Close()
+
+	client, err := opencode.NewClient(
+		opencode.WithBaseURL(server.URL),
+		opencode.WithMaxRetries(2),
+		opencode.WithHTTPClient(&http.Client{
+			Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+				attempts++
+				return nil, transportErr
+			}),
+		}),
+	)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	_, err = client.Session.Create(context.Background(), &opencode.SessionCreateParams{
+		ParentID: opencode.Ptr("test-parent"),
+	})
+	if err == nil {
+		t.Fatal("expected transport error for POST")
+	}
+
+	if attempts != 1 {
+		t.Fatalf("expected 1 attempt for POST transport error, got %d", attempts)
+	}
+	if !errors.Is(err, transportErr) {
+		t.Fatalf("expected error to wrap transport error, got: %v", err)
+	}
+	if !strings.Contains(err.Error(), "0 retries") {
+		t.Fatalf("expected error to mention zero retries, got: %v", err)
 	}
 }
 
