@@ -482,10 +482,8 @@ func TestIsRetryableError(t *testing.T) {
 	}
 }
 
-// TestReadAPIError_TruncatesMessage verifies that readAPIError truncates the
-// Message field for large response bodies while preserving the full Body.
-func TestReadAPIError_TruncatesMessage(t *testing.T) {
-	t.Run("small body is not truncated", func(t *testing.T) {
+func TestReadAPIError_MessageUsesBodyWhenAvailable(t *testing.T) {
+	t.Run("plain text body becomes message", func(t *testing.T) {
 		body := "short error"
 		resp := &http.Response{
 			StatusCode: http.StatusBadRequest,
@@ -493,40 +491,42 @@ func TestReadAPIError_TruncatesMessage(t *testing.T) {
 			Body:       io.NopCloser(strings.NewReader(body)),
 		}
 		apiErr := readAPIError(resp, 1<<20)
-		if apiErr.Message != http.StatusText(http.StatusBadRequest) {
-			t.Errorf("Message = %q, want %q", apiErr.Message, http.StatusText(http.StatusBadRequest))
+		if apiErr.Message != body {
+			t.Errorf("Message = %q, want %q", apiErr.Message, body)
 		}
 		if apiErr.Body != body {
 			t.Errorf("Body = %q, want %q", apiErr.Body, body)
 		}
 	})
 
-	t.Run("large body is truncated in Message but preserved in Body", func(t *testing.T) {
-		body := strings.Repeat("x", 6000)
+	t.Run("json error message field is preferred", func(t *testing.T) {
+		resp := &http.Response{
+			StatusCode: http.StatusBadRequest,
+			Header:     http.Header{},
+			Body:       io.NopCloser(strings.NewReader(`{"message":"specific message","error":"generic message"}`)),
+		}
+		apiErr := readAPIError(resp, 1<<20)
+		if apiErr.Message != "specific message" {
+			t.Errorf("Message = %q, want %q", apiErr.Message, "specific message")
+		}
+	})
+
+	t.Run("message is sanitized and truncated for readability", func(t *testing.T) {
+		body := strings.Repeat("x\n", 5000)
 		resp := &http.Response{
 			StatusCode: http.StatusInternalServerError,
 			Header:     http.Header{},
 			Body:       io.NopCloser(strings.NewReader(body)),
 		}
 		apiErr := readAPIError(resp, 1<<20)
+		if strings.Contains(apiErr.Message, "\n") {
+			t.Errorf("Message = %q, expected newlines to be removed", apiErr.Message)
+		}
+		if len(apiErr.Message) >= len(body) {
+			t.Errorf("Message length = %d, expected to be shorter than body length %d", len(apiErr.Message), len(body))
+		}
 		if apiErr.Body != body {
 			t.Errorf("Body length = %d, want %d", len(apiErr.Body), len(body))
-		}
-		if apiErr.Message != http.StatusText(http.StatusInternalServerError) {
-			t.Errorf("Message = %q, want %q", apiErr.Message, http.StatusText(http.StatusInternalServerError))
-		}
-	})
-
-	t.Run("exactly at limit is not truncated", func(t *testing.T) {
-		body := strings.Repeat("y", 4096)
-		resp := &http.Response{
-			StatusCode: http.StatusBadGateway,
-			Header:     http.Header{},
-			Body:       io.NopCloser(strings.NewReader(body)),
-		}
-		apiErr := readAPIError(resp, 1<<20)
-		if apiErr.Message != http.StatusText(http.StatusBadGateway) {
-			t.Errorf("Message = %q, want %q", apiErr.Message, http.StatusText(http.StatusBadGateway))
 		}
 	})
 }

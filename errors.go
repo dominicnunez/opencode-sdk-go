@@ -1,10 +1,14 @@
 package opencode
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
+	"unicode"
+	"unicode/utf8"
 )
 
 var (
@@ -42,6 +46,8 @@ var (
 	// an Auth implementation that is not one of OAuth, ApiAuth, or WellKnownAuth.
 	ErrUnknownAuthType = errors.New("unknown auth union type")
 )
+
+const maxAPIErrorMessageLength = 512
 
 type MissingRequiredParameterError struct {
 	Parameter string
@@ -182,10 +188,7 @@ func readAPIError(resp *http.Response, bodyLimit int64) *APIError {
 	}
 
 	body := string(bodyBytes)
-	msg := http.StatusText(resp.StatusCode)
-	if msg == "" {
-		msg = fmt.Sprintf("http %d", resp.StatusCode)
-	}
+	msg := apiErrorMessage(resp.StatusCode, body)
 
 	return &APIError{
 		StatusCode: resp.StatusCode,
@@ -195,6 +198,100 @@ func readAPIError(resp *http.Response, bodyLimit int64) *APIError {
 		Truncated:  truncated,
 		ReadErr:    readErr,
 	}
+}
+
+func apiErrorMessage(statusCode int, body string) string {
+	if candidate := apiErrorMessageFromBody(body); candidate != "" {
+		return candidate
+	}
+	return apiErrorStatusText(statusCode)
+}
+
+func apiErrorStatusText(statusCode int) string {
+	msg := http.StatusText(statusCode)
+	if msg == "" {
+		return fmt.Sprintf("http %d", statusCode)
+	}
+	return msg
+}
+
+func apiErrorMessageFromBody(body string) string {
+	trimmed := strings.TrimSpace(body)
+	if trimmed == "" {
+		return ""
+	}
+
+	if fromJSON := apiErrorMessageFromJSON(trimmed); fromJSON != "" {
+		return sanitizeAPIErrorMessage(fromJSON)
+	}
+
+	return sanitizeAPIErrorMessage(trimmed)
+}
+
+func apiErrorMessageFromJSON(raw string) string {
+	var payload any
+	if err := json.Unmarshal([]byte(raw), &payload); err != nil {
+		return ""
+	}
+	return findMessageString(payload)
+}
+
+func findMessageString(value any) string {
+	switch v := value.(type) {
+	case map[string]any:
+		keys := []string{"message", "error", "detail", "title", "reason", "description"}
+		for _, key := range keys {
+			if field, ok := v[key]; ok {
+				if msg := findMessageString(field); msg != "" {
+					return msg
+				}
+			}
+		}
+		for _, field := range v {
+			if msg := findMessageString(field); msg != "" {
+				return msg
+			}
+		}
+	case []any:
+		for _, item := range v {
+			if msg := findMessageString(item); msg != "" {
+				return msg
+			}
+		}
+	case string:
+		return strings.TrimSpace(v)
+	}
+
+	return ""
+}
+
+func sanitizeAPIErrorMessage(msg string) string {
+	if msg == "" {
+		return ""
+	}
+
+	var cleaned strings.Builder
+	for _, r := range msg {
+		if !unicode.IsPrint(r) {
+			continue
+		}
+		if unicode.IsSpace(r) {
+			cleaned.WriteByte(' ')
+			continue
+		}
+		cleaned.WriteRune(r)
+	}
+
+	normalized := strings.Join(strings.Fields(cleaned.String()), " ")
+	if normalized == "" {
+		return ""
+	}
+	if utf8.RuneCountInString(normalized) <= maxAPIErrorMessageLength {
+		return normalized
+	}
+
+	runes := []rune(normalized)
+	return string(runes[:maxAPIErrorMessageLength-3]) + "..."
 }
 
 // IsTimeoutError reports whether err matches an HTTP 408 (Request Timeout)
