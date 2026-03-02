@@ -3,8 +3,10 @@ package opencode
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/dominicnunez/opencode-sdk-go/internal/queryparams"
 )
@@ -14,14 +16,20 @@ type SessionPermissionService struct {
 }
 
 func (s *SessionPermissionService) Respond(ctx context.Context, id string, permissionID string, params *SessionPermissionRespondParams) (bool, error) {
-	if id == "" {
+	if strings.TrimSpace(id) == "" {
 		return false, missingRequiredParameterError("id")
 	}
-	if permissionID == "" {
+	if strings.TrimSpace(permissionID) == "" {
 		return false, missingRequiredParameterError("permissionID")
 	}
 	if params == nil {
 		return false, ErrParamsRequired
+	}
+	if strings.TrimSpace(string(params.Response)) == "" {
+		return false, requiredFieldError("response")
+	}
+	if !params.Response.IsKnown() {
+		return false, fmt.Errorf("invalid permission response %q: %w", params.Response, ErrInvalidRequest)
 	}
 	var result bool
 	err := s.client.do(ctx, http.MethodPost, "session/"+url.PathEscape(id)+"/permissions/"+url.PathEscape(permissionID), params, &result)

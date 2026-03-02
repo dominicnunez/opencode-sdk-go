@@ -30,7 +30,7 @@ func (s *SessionService) Create(ctx context.Context, params *SessionCreateParams
 }
 
 func (s *SessionService) Update(ctx context.Context, id string, params *SessionUpdateParams) (*Session, error) {
-	if id == "" {
+	if strings.TrimSpace(id) == "" {
 		return nil, missingRequiredParameterError("id")
 	}
 	if params == nil {
@@ -57,7 +57,7 @@ func (s *SessionService) List(ctx context.Context, params *SessionListParams) ([
 }
 
 func (s *SessionService) Get(ctx context.Context, id string, params *SessionGetParams) (*Session, error) {
-	if id == "" {
+	if strings.TrimSpace(id) == "" {
 		return nil, missingRequiredParameterError("id")
 	}
 	if params == nil {
@@ -72,7 +72,7 @@ func (s *SessionService) Get(ctx context.Context, id string, params *SessionGetP
 }
 
 func (s *SessionService) Delete(ctx context.Context, id string, params *SessionDeleteParams) (bool, error) {
-	if id == "" {
+	if strings.TrimSpace(id) == "" {
 		return false, missingRequiredParameterError("id")
 	}
 	if params == nil {
@@ -87,7 +87,7 @@ func (s *SessionService) Delete(ctx context.Context, id string, params *SessionD
 }
 
 func (s *SessionService) Abort(ctx context.Context, id string, params *SessionAbortParams) (bool, error) {
-	if id == "" {
+	if strings.TrimSpace(id) == "" {
 		return false, missingRequiredParameterError("id")
 	}
 	if params == nil {
@@ -102,7 +102,7 @@ func (s *SessionService) Abort(ctx context.Context, id string, params *SessionAb
 }
 
 func (s *SessionService) Children(ctx context.Context, id string, params *SessionChildrenParams) ([]Session, error) {
-	if id == "" {
+	if strings.TrimSpace(id) == "" {
 		return nil, missingRequiredParameterError("id")
 	}
 	if params == nil {
@@ -119,7 +119,7 @@ func (s *SessionService) Children(ctx context.Context, id string, params *Sessio
 // Command executes a command in the session. Params must not be nil because
 // the endpoint requires a request body with at least the command field.
 func (s *SessionService) Command(ctx context.Context, id string, params *SessionCommandParams) (*SessionCommandResponse, error) {
-	if id == "" {
+	if strings.TrimSpace(id) == "" {
 		return nil, missingRequiredParameterError("id")
 	}
 	if params == nil {
@@ -139,7 +139,7 @@ func (s *SessionService) Command(ctx context.Context, id string, params *Session
 // Init initializes a session. Params must not be nil because the endpoint
 // requires a request body.
 func (s *SessionService) Init(ctx context.Context, id string, params *SessionInitParams) (bool, error) {
-	if id == "" {
+	if strings.TrimSpace(id) == "" {
 		return false, missingRequiredParameterError("id")
 	}
 	if params == nil {
@@ -163,10 +163,10 @@ func (s *SessionService) Init(ctx context.Context, id string, params *SessionIni
 }
 
 func (s *SessionService) Message(ctx context.Context, id string, messageID string, params *SessionMessageParams) (*SessionMessageResponse, error) {
-	if id == "" {
+	if strings.TrimSpace(id) == "" {
 		return nil, missingRequiredParameterError("id")
 	}
-	if messageID == "" {
+	if strings.TrimSpace(messageID) == "" {
 		return nil, missingRequiredParameterError("messageID")
 	}
 	if params == nil {
@@ -181,7 +181,7 @@ func (s *SessionService) Message(ctx context.Context, id string, messageID strin
 }
 
 func (s *SessionService) Messages(ctx context.Context, id string, params *SessionMessagesParams) ([]SessionMessagesResponse, error) {
-	if id == "" {
+	if strings.TrimSpace(id) == "" {
 		return nil, missingRequiredParameterError("id")
 	}
 	if params == nil {
@@ -198,7 +198,7 @@ func (s *SessionService) Messages(ctx context.Context, id string, params *Sessio
 // Prompt sends a message to the session. Params must not be nil because the
 // endpoint requires a request body.
 func (s *SessionService) Prompt(ctx context.Context, id string, params *SessionPromptParams) (*SessionPromptResponse, error) {
-	if id == "" {
+	if strings.TrimSpace(id) == "" {
 		return nil, missingRequiredParameterError("id")
 	}
 	if params == nil {
@@ -215,7 +215,7 @@ func (s *SessionService) Prompt(ctx context.Context, id string, params *SessionP
 // Revert reverts a session to a previous state. Params must not be nil because
 // the endpoint requires a request body with the target state.
 func (s *SessionService) Revert(ctx context.Context, id string, params *SessionRevertParams) (*Session, error) {
-	if id == "" {
+	if strings.TrimSpace(id) == "" {
 		return nil, missingRequiredParameterError("id")
 	}
 	if params == nil {
@@ -233,7 +233,7 @@ func (s *SessionService) Revert(ctx context.Context, id string, params *SessionR
 }
 
 func (s *SessionService) Share(ctx context.Context, id string, params *SessionShareParams) (*Session, error) {
-	if id == "" {
+	if strings.TrimSpace(id) == "" {
 		return nil, missingRequiredParameterError("id")
 	}
 	if params == nil {
@@ -248,7 +248,7 @@ func (s *SessionService) Share(ctx context.Context, id string, params *SessionSh
 }
 
 func (s *SessionService) Diff(ctx context.Context, id string, params *SessionDiffParams) ([]FileDiff, error) {
-	if id == "" {
+	if strings.TrimSpace(id) == "" {
 		return nil, missingRequiredParameterError("id")
 	}
 	if params == nil {
@@ -263,7 +263,7 @@ func (s *SessionService) Diff(ctx context.Context, id string, params *SessionDif
 }
 
 func (s *SessionService) Fork(ctx context.Context, id string, params *SessionForkParams) (*Session, error) {
-	if id == "" {
+	if strings.TrimSpace(id) == "" {
 		return nil, missingRequiredParameterError("id")
 	}
 	if params == nil {
@@ -280,7 +280,7 @@ func (s *SessionService) Fork(ctx context.Context, id string, params *SessionFor
 // Shell runs a shell command in the session. Params must not be nil because
 // the endpoint requires a request body with at least the shell command.
 func (s *SessionService) Shell(ctx context.Context, id string, params *SessionShellParams) (*AssistantMessage, error) {
-	if id == "" {
+	if strings.TrimSpace(id) == "" {
 		return nil, missingRequiredParameterError("id")
 	}
 	if params == nil {
@@ -303,7 +303,7 @@ func (s *SessionService) Shell(ctx context.Context, id string, params *SessionSh
 // Summarize generates a summary for the session. Params must not be nil
 // because the endpoint requires a request body.
 func (s *SessionService) Summarize(ctx context.Context, id string, params *SessionSummarizeParams) (bool, error) {
-	if id == "" {
+	if strings.TrimSpace(id) == "" {
 		return false, missingRequiredParameterError("id")
 	}
 	if params == nil {
@@ -324,7 +324,7 @@ func (s *SessionService) Summarize(ctx context.Context, id string, params *Sessi
 }
 
 func (s *SessionService) Todo(ctx context.Context, id string, params *SessionTodoParams) ([]Todo, error) {
-	if id == "" {
+	if strings.TrimSpace(id) == "" {
 		return nil, missingRequiredParameterError("id")
 	}
 	if params == nil {
@@ -339,7 +339,7 @@ func (s *SessionService) Todo(ctx context.Context, id string, params *SessionTod
 }
 
 func (s *SessionService) Unrevert(ctx context.Context, id string, params *SessionUnrevertParams) (*Session, error) {
-	if id == "" {
+	if strings.TrimSpace(id) == "" {
 		return nil, missingRequiredParameterError("id")
 	}
 	if params == nil {
@@ -354,7 +354,7 @@ func (s *SessionService) Unrevert(ctx context.Context, id string, params *Sessio
 }
 
 func (s *SessionService) Unshare(ctx context.Context, id string, params *SessionUnshareParams) (*Session, error) {
-	if id == "" {
+	if strings.TrimSpace(id) == "" {
 		return nil, missingRequiredParameterError("id")
 	}
 	if params == nil {

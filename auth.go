@@ -18,7 +18,7 @@ type AuthService struct {
 // Set configures authentication credentials for a provider
 // Endpoint: PUT /auth/{id}
 func (s *AuthService) Set(ctx context.Context, id string, params *AuthSetParams) (bool, error) {
-	if id == "" {
+	if strings.TrimSpace(id) == "" {
 		return false, missingRequiredParameterError("id")
 	}
 	if params == nil {

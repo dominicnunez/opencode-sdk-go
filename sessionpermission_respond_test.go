@@ -242,6 +242,47 @@ func TestSessionPermissionService_Respond_NilParams(t *testing.T) {
 	}
 }
 
+func TestSessionPermissionService_Respond_InvalidResponseValidation(t *testing.T) {
+	client, err := NewClient(WithBaseURL("http://localhost:0"))
+	if err != nil {
+		t.Fatalf("Failed to create client: %v", err)
+	}
+
+	tests := []struct {
+		name     string
+		response PermissionResponse
+		wantErr  error
+	}{
+		{
+			name:     "missing response",
+			response: PermissionResponse(" \t "),
+			wantErr:  &RequiredFieldError{Field: "response"},
+		},
+		{
+			name:     "unknown response",
+			response: PermissionResponse("sometimes"),
+			wantErr:  ErrInvalidRequest,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := client.Session.Permissions.Respond(
+				context.Background(),
+				"sess-123",
+				"perm-456",
+				&SessionPermissionRespondParams{Response: tt.response},
+			)
+			if err == nil {
+				t.Fatal("expected validation error, got nil")
+			}
+			if !errors.Is(err, tt.wantErr) {
+				t.Fatalf("expected error matching %v, got %v", tt.wantErr, err)
+			}
+		})
+	}
+}
+
 func TestSessionPermissionService_Respond_ServerError(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
