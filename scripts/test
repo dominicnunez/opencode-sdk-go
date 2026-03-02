@@ -24,14 +24,28 @@ function prism_is_running() {
   [[ "$response" == *"$PRISM_NO_PATH_MATCHED_MARKER"* ]]
 }
 
-kill_server_on_port() {
-  mapfile -t pids < <(lsof -t -i tcp:"$1" 2>/dev/null | sort -u)
+kill_prism_process() {
+  pid_file="$1"
+  prism_port="$2"
 
-  if [ "${#pids[@]}" -gt 0 ]; then
-    for pid in "${pids[@]}"; do
+  if [ ! -f "$pid_file" ]; then
+    return
+  fi
+
+  pid="$(tr -d '[:space:]' < "$pid_file")"
+  rm -f "$pid_file"
+
+  if [[ ! "$pid" =~ ^[0-9]+$ ]]; then
+    return
+  fi
+
+  if kill -0 "$pid" 2>/dev/null; then
+    if lsof -a -p "$pid" -i tcp:"$prism_port" >/dev/null 2>&1; then
       kill "$pid" 2>/dev/null || true
-    done
-    echo "Stopped ${pids[*]}."
+      echo "Stopped prism process $pid."
+    else
+      echo "Skipping cleanup for pid $pid: process is not listening on port ${prism_port}."
+    fi
   fi
 }
 
@@ -41,7 +55,7 @@ function is_overriding_api_base_url() {
 
 if ! is_overriding_api_base_url && ! prism_is_running ; then
   # When we exit this script, make sure to kill the background mock server process
-  trap "kill_server_on_port ${PRISM_PORT}" EXIT
+  trap "kill_prism_process .prism.pid ${PRISM_PORT}" EXIT
 
   # Start the dev server
   ./scripts/mock --daemon
