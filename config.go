@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"reflect"
 
 	"github.com/dominicnunez/opencode-sdk-go/internal/queryparams"
 )
@@ -1748,7 +1749,56 @@ func (r ConfigUpdateParams) URLQuery() (url.Values, error) {
 
 // MarshalJSON marshals the Config field for the request body
 func (r ConfigUpdateParams) MarshalJSON() ([]byte, error) {
-	return json.Marshal(r.Config)
+	bodyBytes, err := json.Marshal(r.Config)
+	if err != nil {
+		return nil, err
+	}
+
+	var body map[string]interface{}
+	if err := json.Unmarshal(bodyBytes, &body); err != nil {
+		return nil, err
+	}
+
+	// Omit deprecated mode when it is unset in a PATCH request.
+	if reflect.ValueOf(r.Config.Mode).IsZero() {
+		delete(body, "mode")
+	}
+
+	pruneNilJSONValues(body)
+	return json.Marshal(body)
+}
+
+func pruneNilJSONValues(data map[string]interface{}) {
+	for key, value := range data {
+		pruned, keep := pruneNilJSONValue(value)
+		if !keep {
+			delete(data, key)
+			continue
+		}
+		data[key] = pruned
+	}
+}
+
+func pruneNilJSONValue(value interface{}) (interface{}, bool) {
+	switch v := value.(type) {
+	case nil:
+		return nil, false
+	case map[string]interface{}:
+		pruneNilJSONValues(v)
+		return v, true
+	case []interface{}:
+		for i, item := range v {
+			pruned, keep := pruneNilJSONValue(item)
+			if !keep {
+				v[i] = nil
+				continue
+			}
+			v[i] = pruned
+		}
+		return v, true
+	default:
+		return value, true
+	}
 }
 
 type ConfigProviderListParams struct {

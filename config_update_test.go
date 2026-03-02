@@ -313,6 +313,9 @@ func TestConfigUpdateParams_MarshalJSON_OmitsZeroValues(t *testing.T) {
 	if _, ok := raw["model"]; ok {
 		t.Error("Zero-value string 'model' should be omitted from PATCH body")
 	}
+	if _, ok := raw["mode"]; ok {
+		t.Error("Zero-value deprecated field 'mode' should be omitted from PATCH body")
+	}
 
 	// Nil pointer struct fields must be omitted from PATCH body to avoid
 	// the server interpreting zero-value sub-fields as intentional updates.
@@ -320,6 +323,42 @@ func TestConfigUpdateParams_MarshalJSON_OmitsZeroValues(t *testing.T) {
 		if _, ok := raw[key]; ok {
 			t.Errorf("Nil struct field %q should be omitted from PATCH body", key)
 		}
+	}
+}
+
+func TestConfigUpdateParams_MarshalJSON_OmitsUnsetPermissionBash(t *testing.T) {
+	params := ConfigUpdateParams{
+		Config: Config{
+			Permission: &ConfigPermission{
+				Edit:     ConfigPermissionEditAllow,
+				Webfetch: ConfigPermissionWebfetchAsk,
+			},
+		},
+	}
+
+	data, err := json.Marshal(params)
+	if err != nil {
+		t.Fatalf("MarshalJSON failed: %v", err)
+	}
+
+	var raw map[string]interface{}
+	if err := json.Unmarshal(data, &raw); err != nil {
+		t.Fatalf("Unmarshal into map failed: %v", err)
+	}
+
+	permissionRaw, ok := raw["permission"].(map[string]interface{})
+	if !ok {
+		t.Fatalf("Expected permission object, got %T", raw["permission"])
+	}
+
+	if _, ok := permissionRaw["bash"]; ok {
+		t.Error("Unset union field 'permission.bash' should be omitted from PATCH body")
+	}
+	if permissionRaw["edit"] != string(ConfigPermissionEditAllow) {
+		t.Errorf("Expected permission.edit=%q, got %v", ConfigPermissionEditAllow, permissionRaw["edit"])
+	}
+	if permissionRaw["webfetch"] != string(ConfigPermissionWebfetchAsk) {
+		t.Errorf("Expected permission.webfetch=%q, got %v", ConfigPermissionWebfetchAsk, permissionRaw["webfetch"])
 	}
 }
 
