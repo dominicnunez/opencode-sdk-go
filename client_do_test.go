@@ -550,6 +550,51 @@ func TestClientDo_DefaultClientDoesNotForwardBodyOn307(t *testing.T) {
 	}
 }
 
+func TestClientDo_WithHTTPClientStillDoesNotForwardBodyOn307(t *testing.T) {
+	redirectedRequestBodies := make(chan string, 1)
+	redirectTarget := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
+		redirectedRequestBodies <- string(body)
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer redirectTarget.Close()
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Location", redirectTarget.URL+"/capture")
+		w.WriteHeader(http.StatusTemporaryRedirect)
+		_, _ = w.Write([]byte("redirected"))
+	}))
+	defer server.Close()
+
+	client, err := opencode.NewClient(
+		opencode.WithBaseURL(server.URL),
+		opencode.WithHTTPClient(&http.Client{}),
+	)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	_, err = client.Auth.Set(context.Background(), "provider-id", &opencode.AuthSetParams{
+		Auth: opencode.ApiAuth{Key: "super-secret"},
+	})
+	if err == nil {
+		t.Fatal("expected error for 307 response")
+	}
+	var apiErr *opencode.APIError
+	if !errors.As(err, &apiErr) {
+		t.Fatalf("expected *opencode.APIError, got %T: %v", err, err)
+	}
+	if apiErr.StatusCode != http.StatusTemporaryRedirect {
+		t.Fatalf("expected status %d, got %d", http.StatusTemporaryRedirect, apiErr.StatusCode)
+	}
+
+	select {
+	case body := <-redirectedRequestBodies:
+		t.Fatalf("unexpected redirected request body: %q", body)
+	case <-time.After(150 * time.Millisecond):
+	}
+}
+
 func TestClientDo_ContextCancelledDuringBackoffDelay(t *testing.T) {
 	attempts := 0
 	firstAttemptDone := make(chan struct{}, 1)

@@ -44,6 +44,10 @@ var sensitiveBaseURLQueryKeys = map[string]struct{}{
 
 var retryBackoffRandInt63n = rand.Int63n
 
+func blockRedirects(*http.Request, []*http.Request) error {
+	return http.ErrUseLastResponse
+}
+
 type Client struct {
 	baseURL    *url.URL
 	httpClient *http.Client
@@ -137,7 +141,7 @@ func NewClient(opts ...ClientOption) (*Client, error) {
 
 	c := &Client{
 		baseURL:    defaultBaseURL,
-		httpClient: &http.Client{CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }},
+		httpClient: &http.Client{CheckRedirect: blockRedirects},
 		maxRetries: DefaultMaxRetries,
 		timeout:    DefaultTimeout,
 		userAgent:  "Opencode/Go " + internal.PackageVersion,
@@ -195,7 +199,9 @@ func WithHTTPClient(hc *http.Client) ClientOption {
 		if hc == nil {
 			return errors.New("http client cannot be nil")
 		}
-		c.httpClient = hc
+		clone := *hc
+		clone.CheckRedirect = blockRedirects
+		c.httpClient = &clone
 		return nil
 	}
 }
