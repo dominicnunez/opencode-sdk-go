@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/dominicnunez/opencode-sdk-go/internal/queryparams"
 )
@@ -26,6 +27,9 @@ func (s *AuthService) Set(ctx context.Context, id string, params *AuthSetParams)
 	}
 	if params.Auth == nil {
 		return false, errors.New("AuthSetParams: Auth field is required")
+	}
+	if err := validateAuthCredentials(params.Auth); err != nil {
+		return false, err
 	}
 
 	var result bool
@@ -55,31 +59,12 @@ func (r AuthSetParams) URLQuery() (url.Values, error) {
 // It sets the Type discriminator automatically based on the concrete type,
 // so callers don't need to set it manually.
 func (r AuthSetParams) MarshalJSON() ([]byte, error) {
-	if r.Auth == nil {
-		return nil, fmt.Errorf("AuthSetParams: Auth field is required: %w", ErrNilAuth)
+	auth, err := normalizeAuthSetParamsAuth(r.Auth)
+	if err != nil {
+		return nil, err
 	}
-
-	// Dereference pointers so the switch below only handles value types.
-	auth := r.Auth
-	switch v := auth.(type) {
-	case *OAuth:
-		if v == nil {
-			return nil, fmt.Errorf("AuthSetParams: Auth contains typed nil *OAuth: %w", ErrNilAuth)
-		}
-		copy := *v
-		auth = copy
-	case *ApiAuth:
-		if v == nil {
-			return nil, fmt.Errorf("AuthSetParams: Auth contains typed nil *ApiAuth: %w", ErrNilAuth)
-		}
-		copy := *v
-		auth = copy
-	case *WellKnownAuth:
-		if v == nil {
-			return nil, fmt.Errorf("AuthSetParams: Auth contains typed nil *WellKnownAuth: %w", ErrNilAuth)
-		}
-		copy := *v
-		auth = copy
+	if err := validateAuthCredentials(auth); err != nil {
+		return nil, err
 	}
 
 	switch v := auth.(type) {
@@ -95,4 +80,65 @@ func (r AuthSetParams) MarshalJSON() ([]byte, error) {
 	default:
 		return nil, fmt.Errorf("auth type %T: %w", r.Auth, ErrUnknownAuthType)
 	}
+}
+
+func normalizeAuthSetParamsAuth(auth AuthSetParamsAuthUnion) (AuthSetParamsAuthUnion, error) {
+	if auth == nil {
+		return nil, fmt.Errorf("AuthSetParams: Auth field is required: %w", ErrNilAuth)
+	}
+
+	switch v := auth.(type) {
+	case *OAuth:
+		if v == nil {
+			return nil, fmt.Errorf("AuthSetParams: Auth contains typed nil *OAuth: %w", ErrNilAuth)
+		}
+		copy := *v
+		return copy, nil
+	case *ApiAuth:
+		if v == nil {
+			return nil, fmt.Errorf("AuthSetParams: Auth contains typed nil *ApiAuth: %w", ErrNilAuth)
+		}
+		copy := *v
+		return copy, nil
+	case *WellKnownAuth:
+		if v == nil {
+			return nil, fmt.Errorf("AuthSetParams: Auth contains typed nil *WellKnownAuth: %w", ErrNilAuth)
+		}
+		copy := *v
+		return copy, nil
+	default:
+		return auth, nil
+	}
+}
+
+func validateAuthCredentials(auth AuthSetParamsAuthUnion) error {
+	normalized, err := normalizeAuthSetParamsAuth(auth)
+	if err != nil {
+		return err
+	}
+
+	switch v := normalized.(type) {
+	case OAuth:
+		if strings.TrimSpace(v.Access) == "" {
+			return errors.New("oauth access is required")
+		}
+		if strings.TrimSpace(v.Refresh) == "" {
+			return errors.New("oauth refresh is required")
+		}
+	case ApiAuth:
+		if strings.TrimSpace(v.Key) == "" {
+			return errors.New("api auth key is required")
+		}
+	case WellKnownAuth:
+		if strings.TrimSpace(v.Key) == "" {
+			return errors.New("well-known auth key is required")
+		}
+		if strings.TrimSpace(v.Token) == "" {
+			return errors.New("well-known auth token is required")
+		}
+	default:
+		return fmt.Errorf("auth type %T: %w", normalized, ErrUnknownAuthType)
+	}
+
+	return nil
 }

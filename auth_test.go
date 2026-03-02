@@ -141,6 +141,72 @@ func TestAuthService_Set_MissingAuth(t *testing.T) {
 	}
 }
 
+func TestAuthService_Set_MissingCredentialFields(t *testing.T) {
+	client, err := NewClient()
+	if err != nil {
+		t.Fatalf("Failed to create client: %v", err)
+	}
+
+	tests := []struct {
+		name    string
+		auth    AuthSetParamsAuthUnion
+		wantErr string
+	}{
+		{
+			name: "oauth missing access",
+			auth: OAuth{Refresh: "refresh", Expires: 3600},
+			wantErr: "oauth access is required",
+		},
+		{
+			name: "oauth missing refresh",
+			auth: OAuth{Access: "access", Expires: 3600},
+			wantErr: "oauth refresh is required",
+		},
+		{
+			name: "api auth missing key",
+			auth: ApiAuth{},
+			wantErr: "api auth key is required",
+		},
+		{
+			name: "well known missing key",
+			auth: WellKnownAuth{Token: "token"},
+			wantErr: "well-known auth key is required",
+		},
+		{
+			name: "well known missing token",
+			auth: WellKnownAuth{Key: "key"},
+			wantErr: "well-known auth token is required",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := client.Auth.Set(context.Background(), "provider-id", &AuthSetParams{Auth: tt.auth})
+			if err == nil {
+				t.Fatal("expected error for missing credential field")
+			}
+			if err.Error() != tt.wantErr {
+				t.Fatalf("expected error %q, got %q", tt.wantErr, err.Error())
+			}
+		})
+	}
+}
+
+func TestAuthService_Set_UnknownAuthType(t *testing.T) {
+	client, err := NewClient()
+	if err != nil {
+		t.Fatalf("Failed to create client: %v", err)
+	}
+
+	_, err = client.Auth.Set(context.Background(), "provider-id", &AuthSetParams{Auth: bogusAuth{}})
+	if err == nil {
+		t.Fatal("expected error for unknown auth type")
+	}
+	if !errors.Is(err, ErrUnknownAuthType) {
+		t.Fatalf("expected ErrUnknownAuthType, got %v", err)
+	}
+}
+
 func TestAuthService_Set_ServerError(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
