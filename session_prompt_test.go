@@ -95,6 +95,46 @@ func TestSessionPrompt_NilParams(t *testing.T) {
 	}
 }
 
+func TestSessionPrompt_RequiresParts(t *testing.T) {
+	requestCount := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requestCount++
+		t.Fatalf("unexpected request: %s %s", r.Method, r.URL.Path)
+	}))
+	defer server.Close()
+
+	client, err := NewClient(WithBaseURL(server.URL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	tests := []struct {
+		name  string
+		parts []SessionPromptParamsPartUnion
+	}{
+		{name: "nil parts", parts: nil},
+		{name: "empty parts", parts: []SessionPromptParamsPartUnion{}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := client.Session.Prompt(context.Background(), "sess_1", &SessionPromptParams{
+				Parts: tt.parts,
+			})
+			if err == nil {
+				t.Fatal("expected error for missing parts")
+			}
+			if !errors.Is(err, &MissingRequiredParameterError{Parameter: "parts"}) {
+				t.Fatalf("unexpected error: %v", err)
+			}
+		})
+	}
+
+	if requestCount != 0 {
+		t.Fatalf("expected no request, got %d", requestCount)
+	}
+}
+
 func TestSessionPrompt_ServerError(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)

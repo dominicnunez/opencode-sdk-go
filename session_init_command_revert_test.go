@@ -197,6 +197,47 @@ func TestSessionCommand_RequiresCommand(t *testing.T) {
 	}
 }
 
+func TestSessionCommand_RequiresArguments(t *testing.T) {
+	requestCount := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requestCount++
+		t.Fatalf("unexpected request: %s %s", r.Method, r.URL.Path)
+	}))
+	defer server.Close()
+
+	client, err := NewClient(WithBaseURL(server.URL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	tests := []struct {
+		name      string
+		arguments string
+	}{
+		{name: "empty", arguments: ""},
+		{name: "whitespace", arguments: " \t\n "},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := client.Session.Command(context.Background(), "sess_123", &SessionCommandParams{
+				Command:   "/ask",
+				Arguments: tt.arguments,
+			})
+			if err == nil {
+				t.Fatal("expected error for missing arguments")
+			}
+			if !errors.Is(err, &MissingRequiredParameterError{Parameter: "arguments"}) {
+				t.Fatalf("unexpected error: %v", err)
+			}
+		})
+	}
+
+	if requestCount != 0 {
+		t.Fatalf("expected no request, got %d", requestCount)
+	}
+}
+
 func TestSessionInit_RequiresFields(t *testing.T) {
 	tests := []struct {
 		name      string
