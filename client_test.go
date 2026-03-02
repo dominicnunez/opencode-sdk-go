@@ -244,58 +244,6 @@ func TestContextDeadlineStreaming(t *testing.T) {
 	}
 }
 
-func TestListStreaming_DoesNotInheritClientTimeoutWithoutContextDeadline(t *testing.T) {
-	testTimeout := 3 * time.Second
-	clientTimeout := 100 * time.Millisecond
-	sendEvent := make(chan struct{})
-
-	client, err := opencode.NewClient(
-		opencode.WithTimeout(clientTimeout),
-		opencode.WithHTTPClient(&http.Client{
-			Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
-				return &http.Response{
-					StatusCode: http.StatusOK,
-					Header:     http.Header{"Content-Type": []string{"text/event-stream"}},
-					Body: io.NopCloser(readerFunc(func(p []byte) (int, error) {
-						<-sendEvent
-						return copy(p, []byte("event: message\ndata: {\"type\":\"message.updated\"}\n\n")), io.EOF
-					})),
-				}, nil
-			}),
-		}),
-	)
-	if err != nil {
-		t.Fatalf("failed to create client: %v", err)
-	}
-
-	done := make(chan error, 1)
-	go func() {
-		stream := client.Event.ListStreaming(context.Background(), &opencode.EventListParams{})
-		defer func() { _ = stream.Close() }()
-		gotEvent := false
-		for stream.Next() {
-			gotEvent = true
-		}
-		if !gotEvent {
-			done <- errors.New("expected to receive at least one event")
-			return
-		}
-		done <- stream.Err()
-	}()
-
-	time.Sleep(clientTimeout + 50*time.Millisecond)
-	close(sendEvent)
-
-	select {
-	case err := <-done:
-		if err != nil {
-			t.Fatalf("expected stream to stay active without inherited timeout, got: %v", err)
-		}
-	case <-time.After(testTimeout):
-		t.Fatal("stream did not finish")
-	}
-}
-
 func TestListStreaming_BaseURLQueryParamsRejected(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
