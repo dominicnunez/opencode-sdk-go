@@ -493,8 +493,8 @@ func TestReadAPIError_TruncatesMessage(t *testing.T) {
 			Body:       io.NopCloser(strings.NewReader(body)),
 		}
 		apiErr := readAPIError(resp, 1<<20)
-		if apiErr.Message != body {
-			t.Errorf("Message = %q, want %q", apiErr.Message, body)
+		if apiErr.Message != http.StatusText(http.StatusBadRequest) {
+			t.Errorf("Message = %q, want %q", apiErr.Message, http.StatusText(http.StatusBadRequest))
 		}
 		if apiErr.Body != body {
 			t.Errorf("Body = %q, want %q", apiErr.Body, body)
@@ -502,7 +502,7 @@ func TestReadAPIError_TruncatesMessage(t *testing.T) {
 	})
 
 	t.Run("large body is truncated in Message but preserved in Body", func(t *testing.T) {
-		body := strings.Repeat("x", maxMessageDisplaySize+1000)
+		body := strings.Repeat("x", 6000)
 		resp := &http.Response{
 			StatusCode: http.StatusInternalServerError,
 			Header:     http.Header{},
@@ -512,26 +512,39 @@ func TestReadAPIError_TruncatesMessage(t *testing.T) {
 		if apiErr.Body != body {
 			t.Errorf("Body length = %d, want %d", len(apiErr.Body), len(body))
 		}
-		if len(apiErr.Message) >= len(body) {
-			t.Errorf("Message should be truncated, got length %d", len(apiErr.Message))
-		}
-		if !strings.HasSuffix(apiErr.Message, "... (truncated)") {
-			t.Errorf("Message should end with truncation marker, got %q", apiErr.Message[len(apiErr.Message)-30:])
+		if apiErr.Message != http.StatusText(http.StatusInternalServerError) {
+			t.Errorf("Message = %q, want %q", apiErr.Message, http.StatusText(http.StatusInternalServerError))
 		}
 	})
 
 	t.Run("exactly at limit is not truncated", func(t *testing.T) {
-		body := strings.Repeat("y", maxMessageDisplaySize)
+		body := strings.Repeat("y", 4096)
 		resp := &http.Response{
 			StatusCode: http.StatusBadGateway,
 			Header:     http.Header{},
 			Body:       io.NopCloser(strings.NewReader(body)),
 		}
 		apiErr := readAPIError(resp, 1<<20)
-		if apiErr.Message != body {
-			t.Errorf("Message at exact limit should not be truncated")
+		if apiErr.Message != http.StatusText(http.StatusBadGateway) {
+			t.Errorf("Message = %q, want %q", apiErr.Message, http.StatusText(http.StatusBadGateway))
 		}
 	})
+}
+
+func TestReadAPIError_EmptyBodyUsesStatusTextForBody(t *testing.T) {
+	resp := &http.Response{
+		StatusCode: http.StatusTooManyRequests,
+		Header:     http.Header{},
+		Body:       io.NopCloser(strings.NewReader("")),
+	}
+
+	apiErr := readAPIError(resp, 1<<20)
+	if apiErr.Message != http.StatusText(http.StatusTooManyRequests) {
+		t.Fatalf("Message = %q, want %q", apiErr.Message, http.StatusText(http.StatusTooManyRequests))
+	}
+	if apiErr.Body != "" {
+		t.Fatalf("Body = %q, want empty string", apiErr.Body)
+	}
 }
 
 func TestReadAPIError_PartialReadError(t *testing.T) {

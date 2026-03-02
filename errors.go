@@ -114,11 +114,6 @@ func IsRetryableError(err error) bool {
 	return false
 }
 
-// maxMessageDisplaySize caps the Message field to avoid large error bodies
-// appearing in log lines and error wrapping chains. The full body is always
-// available in the Body field.
-const maxMessageDisplaySize = 4096
-
 // readAPIError reads the response body (up to limit bytes), constructs an
 // *APIError, and closes the body. The caller should not use resp.Body after.
 func readAPIError(resp *http.Response, bodyLimit int64) *APIError {
@@ -132,13 +127,9 @@ func readAPIError(resp *http.Response, bodyLimit int64) *APIError {
 	}
 
 	body := string(bodyBytes)
-	if body == "" {
-		body = http.StatusText(resp.StatusCode)
-	}
-
-	msg := body
-	if len(msg) > maxMessageDisplaySize {
-		msg = msg[:maxMessageDisplaySize] + "... (truncated)"
+	msg := http.StatusText(resp.StatusCode)
+	if msg == "" {
+		msg = fmt.Sprintf("http %d", resp.StatusCode)
 	}
 
 	return &APIError{
