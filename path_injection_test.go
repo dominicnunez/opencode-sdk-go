@@ -244,22 +244,32 @@ func TestPathParameterInjection_SessionMethods(t *testing.T) {
 			_, _ = c.Session.Unshare(ctx, id, nil)
 		}},
 		{"Command", func(c *opencode.Client, ctx context.Context, id string) {
-			_, _ = c.Session.Command(ctx, id, &opencode.SessionCommandParams{})
+			_, _ = c.Session.Command(ctx, id, &opencode.SessionCommandParams{Command: "/help"})
 		}},
 		{"Init", func(c *opencode.Client, ctx context.Context, id string) {
-			_, _ = c.Session.Init(ctx, id, &opencode.SessionInitParams{})
+			_, _ = c.Session.Init(ctx, id, &opencode.SessionInitParams{
+				MessageID:  "msg_1",
+				ModelID:    "model_1",
+				ProviderID: "provider_1",
+			})
 		}},
 		{"Prompt", func(c *opencode.Client, ctx context.Context, id string) {
 			_, _ = c.Session.Prompt(ctx, id, &opencode.SessionPromptParams{})
 		}},
 		{"Revert", func(c *opencode.Client, ctx context.Context, id string) {
-			_, _ = c.Session.Revert(ctx, id, &opencode.SessionRevertParams{})
+			_, _ = c.Session.Revert(ctx, id, &opencode.SessionRevertParams{MessageID: "msg_1"})
 		}},
 		{"Shell", func(c *opencode.Client, ctx context.Context, id string) {
-			_, _ = c.Session.Shell(ctx, id, &opencode.SessionShellParams{})
+			_, _ = c.Session.Shell(ctx, id, &opencode.SessionShellParams{
+				Agent:   "bash",
+				Command: "pwd",
+			})
 		}},
 		{"Summarize", func(c *opencode.Client, ctx context.Context, id string) {
-			_, _ = c.Session.Summarize(ctx, id, &opencode.SessionSummarizeParams{})
+			_, _ = c.Session.Summarize(ctx, id, &opencode.SessionSummarizeParams{
+				ModelID:    "model_1",
+				ProviderID: "provider_1",
+			})
 		}},
 	}
 

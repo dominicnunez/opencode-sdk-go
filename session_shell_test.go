@@ -177,6 +177,40 @@ func TestSessionService_Shell_MissingParams(t *testing.T) {
 	}
 }
 
+func TestSessionService_Shell_MissingAgent(t *testing.T) {
+	client, err := NewClient()
+	if err != nil {
+		t.Fatalf("NewClient error: %v", err)
+	}
+
+	_, err = client.Session.Shell(context.Background(), "sess123", &SessionShellParams{
+		Command: "ls",
+	})
+	if err == nil {
+		t.Fatal("expected error for missing agent, got nil")
+	}
+	if err.Error() != "missing required agent parameter" {
+		t.Errorf("unexpected error message: %s", err.Error())
+	}
+}
+
+func TestSessionService_Shell_MissingCommand(t *testing.T) {
+	client, err := NewClient()
+	if err != nil {
+		t.Fatalf("NewClient error: %v", err)
+	}
+
+	_, err = client.Session.Shell(context.Background(), "sess123", &SessionShellParams{
+		Agent: "bash",
+	})
+	if err == nil {
+		t.Fatal("expected error for missing command, got nil")
+	}
+	if err.Error() != "missing required command parameter" {
+		t.Errorf("unexpected error message: %s", err.Error())
+	}
+}
+
 func TestSessionService_Shell_ServerError(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)

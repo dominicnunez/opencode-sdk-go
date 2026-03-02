@@ -117,6 +117,40 @@ func TestSessionSummarize_MissingParams(t *testing.T) {
 	}
 }
 
+func TestSessionSummarize_MissingModelID(t *testing.T) {
+	client, err := NewClient()
+	if err != nil {
+		t.Fatalf("Failed to create client: %v", err)
+	}
+
+	_, err = client.Session.Summarize(context.Background(), "sess_123", &SessionSummarizeParams{
+		ProviderID: "anthropic",
+	})
+	if err == nil {
+		t.Fatal("Expected error for missing modelID, got nil")
+	}
+	if err.Error() != "missing required modelID parameter" {
+		t.Errorf("Expected missing modelID error, got %v", err)
+	}
+}
+
+func TestSessionSummarize_MissingProviderID(t *testing.T) {
+	client, err := NewClient()
+	if err != nil {
+		t.Fatalf("Failed to create client: %v", err)
+	}
+
+	_, err = client.Session.Summarize(context.Background(), "sess_123", &SessionSummarizeParams{
+		ModelID: "claude-sonnet-4-5",
+	})
+	if err == nil {
+		t.Fatal("Expected error for missing providerID, got nil")
+	}
+	if err.Error() != "missing required providerID parameter" {
+		t.Errorf("Expected missing providerID error, got %v", err)
+	}
+}
+
 func TestSessionSummarize_ServerError(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)

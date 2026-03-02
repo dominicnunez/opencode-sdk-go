@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/dominicnunez/opencode-sdk-go/internal/queryparams"
 	"github.com/dominicnunez/opencode-sdk-go/shared"
@@ -125,6 +126,9 @@ func (s *SessionService) Command(ctx context.Context, id string, params *Session
 	if params == nil {
 		return nil, errors.New("params is required")
 	}
+	if strings.TrimSpace(params.Command) == "" {
+		return nil, errors.New("missing required command parameter")
+	}
 	var result SessionCommandResponse
 	err := s.client.do(ctx, http.MethodPost, "session/"+url.PathEscape(id)+"/command", params, &result)
 	if err != nil {
@@ -141,6 +145,15 @@ func (s *SessionService) Init(ctx context.Context, id string, params *SessionIni
 	}
 	if params == nil {
 		return false, errors.New("params is required")
+	}
+	if strings.TrimSpace(params.MessageID) == "" {
+		return false, errors.New("missing required messageID parameter")
+	}
+	if strings.TrimSpace(params.ModelID) == "" {
+		return false, errors.New("missing required modelID parameter")
+	}
+	if strings.TrimSpace(params.ProviderID) == "" {
+		return false, errors.New("missing required providerID parameter")
 	}
 	var result bool
 	err := s.client.do(ctx, http.MethodPost, "session/"+url.PathEscape(id)+"/init", params, &result)
@@ -184,7 +197,7 @@ func (s *SessionService) Messages(ctx context.Context, id string, params *Sessio
 }
 
 // Prompt sends a message to the session. Params must not be nil because the
-// endpoint requires a request body with at least the message content.
+// endpoint requires a request body.
 func (s *SessionService) Prompt(ctx context.Context, id string, params *SessionPromptParams) (*SessionPromptResponse, error) {
 	if id == "" {
 		return nil, errors.New("missing required id parameter")
@@ -208,6 +221,9 @@ func (s *SessionService) Revert(ctx context.Context, id string, params *SessionR
 	}
 	if params == nil {
 		return nil, errors.New("params is required")
+	}
+	if strings.TrimSpace(params.MessageID) == "" {
+		return nil, errors.New("missing required messageID parameter")
 	}
 	var result Session
 	err := s.client.do(ctx, http.MethodPost, "session/"+url.PathEscape(id)+"/revert", params, &result)
@@ -271,6 +287,12 @@ func (s *SessionService) Shell(ctx context.Context, id string, params *SessionSh
 	if params == nil {
 		return nil, errors.New("params is required")
 	}
+	if strings.TrimSpace(params.Agent) == "" {
+		return nil, errors.New("missing required agent parameter")
+	}
+	if strings.TrimSpace(params.Command) == "" {
+		return nil, errors.New("missing required command parameter")
+	}
 	var result AssistantMessage
 	err := s.client.do(ctx, http.MethodPost, "session/"+url.PathEscape(id)+"/shell", params, &result)
 	if err != nil {
@@ -287,6 +309,12 @@ func (s *SessionService) Summarize(ctx context.Context, id string, params *Sessi
 	}
 	if params == nil {
 		return false, errors.New("params is required")
+	}
+	if strings.TrimSpace(params.ModelID) == "" {
+		return false, errors.New("missing required modelID parameter")
+	}
+	if strings.TrimSpace(params.ProviderID) == "" {
+		return false, errors.New("missing required providerID parameter")
 	}
 	var result bool
 	err := s.client.do(ctx, http.MethodPost, "session/"+url.PathEscape(id)+"/summarize", params, &result)

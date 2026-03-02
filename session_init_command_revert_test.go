@@ -180,3 +180,74 @@ func TestSessionRevert_Success(t *testing.T) {
 		t.Errorf("expected projectID proj_456, got %s", session.ProjectID)
 	}
 }
+
+func TestSessionCommand_RequiresCommand(t *testing.T) {
+	client, err := NewClient()
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	_, err = client.Session.Command(context.Background(), "sess_123", &SessionCommandParams{})
+	if err == nil {
+		t.Fatal("expected error for missing command")
+	}
+	if err.Error() != "missing required command parameter" {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestSessionInit_RequiresFields(t *testing.T) {
+	tests := []struct {
+		name    string
+		params  *SessionInitParams
+		wantErr string
+	}{
+		{
+			name:    "missing message id",
+			params:  &SessionInitParams{ModelID: "gpt-4", ProviderID: "openai"},
+			wantErr: "missing required messageID parameter",
+		},
+		{
+			name:    "missing model id",
+			params:  &SessionInitParams{MessageID: "msg_001", ProviderID: "openai"},
+			wantErr: "missing required modelID parameter",
+		},
+		{
+			name:    "missing provider id",
+			params:  &SessionInitParams{MessageID: "msg_001", ModelID: "gpt-4"},
+			wantErr: "missing required providerID parameter",
+		},
+	}
+
+	client, err := NewClient()
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := client.Session.Init(context.Background(), "sess_123", tt.params)
+			if err == nil {
+				t.Fatal("expected validation error")
+			}
+			if err.Error() != tt.wantErr {
+				t.Fatalf("expected %q, got %v", tt.wantErr, err)
+			}
+		})
+	}
+}
+
+func TestSessionRevert_RequiresMessageID(t *testing.T) {
+	client, err := NewClient()
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	_, err = client.Session.Revert(context.Background(), "sess_123", &SessionRevertParams{})
+	if err == nil {
+		t.Fatal("expected error for missing messageID")
+	}
+	if err.Error() != "missing required messageID parameter" {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
