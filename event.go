@@ -7,6 +7,7 @@ import (
 	"mime"
 	"net/http"
 	"net/url"
+	"sync"
 
 	"github.com/dominicnunez/opencode-sdk-go/internal/queryparams"
 	"github.com/dominicnunez/opencode-sdk-go/packages/ssestream"
@@ -36,6 +37,12 @@ func (s *EventService) ListStreaming(ctx context.Context, params *EventListParam
 		return ssestream.NewStream[Event](nil, ErrContextRequired)
 	}
 
+	streamCtx := ctx
+	var cancel context.CancelFunc
+	if _, ok := ctx.Deadline(); !ok {
+		streamCtx, cancel = context.WithTimeout(ctx, s.client.timeout)
+	}
+
 	if params == nil {
 		params = &EventListParams{}
 	}
@@ -46,8 +53,11 @@ func (s *EventService) ListStreaming(ctx context.Context, params *EventListParam
 	}
 
 	// Create request with SSE headers
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fullURL.String(), nil)
+	req, err := http.NewRequestWithContext(streamCtx, http.MethodGet, fullURL.String(), nil)
 	if err != nil {
+		if cancel != nil {
+			cancel()
+		}
 		return ssestream.NewStream[Event](nil, err)
 	}
 
@@ -57,21 +67,57 @@ func (s *EventService) ListStreaming(ctx context.Context, params *EventListParam
 	// Execute request
 	resp, err := s.client.httpClient.Do(req)
 	if err != nil {
+		if cancel != nil {
+			cancel()
+		}
 		return ssestream.NewStream[Event](nil, fmt.Errorf("event stream request: %w", err))
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		if cancel != nil {
+			cancel()
+		}
 		return ssestream.NewStream[Event](nil, readAPIError(resp, maxErrorBodySize))
 	}
 
 	mediaType, _, _ := mime.ParseMediaType(resp.Header.Get("Content-Type"))
 	if mediaType != "" && mediaType != "text/event-stream" {
 		_ = resp.Body.Close()
+		if cancel != nil {
+			cancel()
+		}
 		return ssestream.NewStream[Event](nil, fmt.Errorf(
 			"event stream: unexpected content type %q, expected text/event-stream", mediaType))
 	}
 
-	return ssestream.NewStream[Event](ssestream.NewDecoder(resp), nil)
+	decoder := ssestream.NewDecoder(resp)
+	if cancel != nil {
+		decoder = &cancelingDecoder{
+			Decoder: decoder,
+			cancel:  cancel,
+		}
+	}
+	return ssestream.NewStream[Event](decoder, nil)
+}
+
+type cancelingDecoder struct {
+	ssestream.Decoder
+	cancel context.CancelFunc
+	once   sync.Once
+}
+
+func (d *cancelingDecoder) Next() bool {
+	ok := d.Decoder.Next()
+	if !ok {
+		d.once.Do(d.cancel)
+	}
+	return ok
+}
+
+func (d *cancelingDecoder) Close() error {
+	err := d.Decoder.Close()
+	d.once.Do(d.cancel)
+	return err
 }
 
 type Event struct {

@@ -243,6 +243,50 @@ func TestContextDeadlineStreaming(t *testing.T) {
 	}
 }
 
+func TestListStreaming_InheritsClientTimeoutWithoutContextDeadline(t *testing.T) {
+	testTimeout := 3 * time.Second
+	clientTimeout := 100 * time.Millisecond
+	start := time.Now()
+
+	client, err := opencode.NewClient(
+		opencode.WithTimeout(clientTimeout),
+		opencode.WithHTTPClient(&http.Client{
+			Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+				<-req.Context().Done()
+				return nil, req.Context().Err()
+			}),
+		}),
+	)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	done := make(chan error, 1)
+	go func() {
+		stream := client.Event.ListStreaming(context.Background(), &opencode.EventListParams{})
+		for stream.Next() {
+			_ = stream.Current()
+		}
+		done <- stream.Err()
+	}()
+
+	select {
+	case err := <-done:
+		if err == nil {
+			t.Fatal("expected timeout error from stream")
+		}
+		if !errors.Is(err, context.DeadlineExceeded) {
+			t.Fatalf("expected context.DeadlineExceeded, got: %v", err)
+		}
+		elapsed := time.Since(start)
+		if elapsed < clientTimeout-30*time.Millisecond || elapsed > clientTimeout+150*time.Millisecond {
+			t.Fatalf("expected stream to end around %s, got %s", clientTimeout, elapsed)
+		}
+	case <-time.After(testTimeout):
+		t.Fatal("stream did not respect client timeout")
+	}
+}
+
 func TestListStreaming_BaseURLQueryParamsPreservedWithMethodParams(t *testing.T) {
 	var receivedQuery string
 
