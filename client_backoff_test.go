@@ -89,11 +89,11 @@ func TestRetryDelayWithServerGuidance(t *testing.T) {
 		}
 	})
 
-	t.Run("caps retry-after at max backoff", func(t *testing.T) {
+	t.Run("honors retry-after longer than max backoff", func(t *testing.T) {
 		resp := &http.Response{Header: http.Header{"Retry-After": []string{"999"}}}
 		delay := retryDelayWithServerGuidance(0, resp, ctx, now)
-		if delay != 8*time.Second {
-			t.Fatalf("delay=%v, want %v", delay, 8*time.Second)
+		if delay != 999*time.Second {
+			t.Fatalf("delay=%v, want %v", delay, 999*time.Second)
 		}
 	})
 

@@ -463,13 +463,15 @@ func retryBackoffBaseDelay(attempt int) time.Duration {
 
 func retryDelayWithServerGuidance(attempt int, resp *http.Response, ctx context.Context, now time.Time) time.Duration {
 	delay := retryBackoffDelay(attempt)
+	fromServer := false
 
 	if resp != nil {
 		if retryAfterDelay, ok := parseRetryAfterDelay(resp.Header.Get("Retry-After"), now); ok {
 			delay = retryAfterDelay
+			fromServer = true
 		}
 	}
-	if delay > maxBackoff {
+	if !fromServer && delay > maxBackoff {
 		delay = maxBackoff
 	}
 	if delay < 0 {
