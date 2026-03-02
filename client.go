@@ -33,6 +33,11 @@ const (
 	defaultMaxSuccessBodySize int64 = 8 << 20 // 8 MB
 )
 
+const (
+	dotPathSegment       = "."
+	doubleDotPathSegment = ".."
+)
+
 var retryBackoffRandInt63n = rand.Int63n
 
 func blockRedirects(*http.Request, []*http.Request) error {
@@ -294,10 +299,16 @@ func (c *Client) do(ctx context.Context, method, path string, params, result int
 	return nil
 }
 
-// buildURL resolves path against the base URL and applies query parameters from
-// the params struct (if it implements URLQuery).
+// buildURL joins a validated endpoint path to the base URL and applies query
+// parameters from the params struct (if it implements URLQuery).
 func (c *Client) buildURL(path string, params interface{}) (*url.URL, error) {
-	fullURL := c.baseURL.ResolveReference(&url.URL{Path: path})
+	if err := validateEndpointPath(path); err != nil {
+		return nil, err
+	}
+
+	fullURL := *c.baseURL
+	fullURL.Path = joinEndpointPath(c.baseURL.Path, path)
+	fullURL.RawPath = ""
 	mergedQuery := fullURL.Query()
 
 	if params != nil {
@@ -312,7 +323,45 @@ func (c *Client) buildURL(path string, params interface{}) (*url.URL, error) {
 		}
 	}
 	fullURL.RawQuery = mergedQuery.Encode()
-	return fullURL, nil
+	return &fullURL, nil
+}
+
+func validateEndpointPath(endpointPath string) error {
+	for _, segment := range strings.Split(endpointPath, "/") {
+		if segment == "" {
+			continue
+		}
+		if isDotPathSegment(segment) {
+			return fmt.Errorf("endpoint path contains forbidden dot-segment %q", segment)
+		}
+
+		decoded, err := url.PathUnescape(segment)
+		if err == nil && isDotPathSegment(decoded) {
+			return fmt.Errorf("endpoint path contains forbidden dot-segment %q", decoded)
+		}
+	}
+
+	return nil
+}
+
+func isDotPathSegment(segment string) bool {
+	return segment == dotPathSegment || segment == doubleDotPathSegment
+}
+
+func joinEndpointPath(basePath, endpointPath string) string {
+	trimmedBase := strings.TrimSuffix(basePath, "/")
+	trimmedEndpoint := strings.TrimPrefix(endpointPath, "/")
+
+	if trimmedBase == "" {
+		if trimmedEndpoint == "" {
+			return "/"
+		}
+		return "/" + trimmedEndpoint
+	}
+	if trimmedEndpoint == "" {
+		return trimmedBase + "/"
+	}
+	return trimmedBase + "/" + trimmedEndpoint
 }
 
 func (c *Client) doRaw(ctx context.Context, method, path string, params interface{}) (*http.Response, error) {
