@@ -2,8 +2,10 @@ package opencode
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/dominicnunez/opencode-sdk-go/internal/queryparams"
 )
@@ -39,6 +41,9 @@ func (s *TuiService) ClearPrompt(ctx context.Context, params *TuiClearPromptPara
 func (s *TuiService) ExecuteCommand(ctx context.Context, params *TuiExecuteCommandParams) (bool, error) {
 	if params == nil {
 		return false, ErrParamsRequired
+	}
+	if strings.TrimSpace(params.Command) == "" {
+		return false, missingRequiredParameterError("command")
 	}
 	var result bool
 	err := s.client.do(ctx, http.MethodPost, "tui/execute-command", params, &result)
@@ -99,6 +104,12 @@ func (s *TuiService) OpenThemes(ctx context.Context, params *TuiOpenThemesParams
 func (s *TuiService) ShowToast(ctx context.Context, params *TuiShowToastParams) (bool, error) {
 	if params == nil {
 		return false, ErrParamsRequired
+	}
+	if strings.TrimSpace(params.Message) == "" {
+		return false, requiredFieldError("message")
+	}
+	if !params.Variant.IsKnown() {
+		return false, fmt.Errorf("invalid toast variant %q: %w", params.Variant, ErrInvalidRequest)
 	}
 	var result bool
 	err := s.client.do(ctx, http.MethodPost, "tui/show-toast", params, &result)

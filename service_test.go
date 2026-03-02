@@ -332,6 +332,35 @@ func TestTuiService_ExecuteCommand(t *testing.T) {
 	}
 }
 
+func TestTuiService_ExecuteCommand_EmptyCommand(t *testing.T) {
+	client, err := opencode.NewClient()
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	testCases := []struct {
+		name    string
+		command string
+	}{
+		{name: "empty", command: ""},
+		{name: "whitespace", command: "   \t\n"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := client.Tui.ExecuteCommand(context.Background(), &opencode.TuiExecuteCommandParams{
+				Command: tc.command,
+			})
+			if err == nil {
+				t.Fatal("expected validation error")
+			}
+			if !errors.Is(err, opencode.ErrMissingRequiredParameter) {
+				t.Fatalf("expected ErrMissingRequiredParameter, got %v", err)
+			}
+		})
+	}
+}
+
 func TestTuiService_OpenHelp(t *testing.T) {
 	h := &serviceTestHandler{t: t, responseBody: true}
 	server := httptest.NewServer(h)
@@ -457,6 +486,56 @@ func TestTuiService_ShowToast(t *testing.T) {
 	}
 	if !result {
 		t.Error("expected true result")
+	}
+}
+
+func TestTuiService_ShowToast_ValidationErrors(t *testing.T) {
+	client, err := opencode.NewClient()
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	testCases := []struct {
+		name    string
+		params  *opencode.TuiShowToastParams
+		wantErr error
+	}{
+		{
+			name: "empty message",
+			params: &opencode.TuiShowToastParams{
+				Message: "",
+				Variant: opencode.ToastVariantInfo,
+			},
+			wantErr: opencode.ErrRequiredField,
+		},
+		{
+			name: "whitespace message",
+			params: &opencode.TuiShowToastParams{
+				Message: "   \t\n",
+				Variant: opencode.ToastVariantWarning,
+			},
+			wantErr: opencode.ErrRequiredField,
+		},
+		{
+			name: "invalid variant",
+			params: &opencode.TuiShowToastParams{
+				Message: "ok",
+				Variant: opencode.ToastVariant("notice"),
+			},
+			wantErr: opencode.ErrInvalidRequest,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := client.Tui.ShowToast(context.Background(), tc.params)
+			if err == nil {
+				t.Fatal("expected validation error")
+			}
+			if !errors.Is(err, tc.wantErr) {
+				t.Fatalf("expected %v, got %v", tc.wantErr, err)
+			}
+		})
 	}
 }
 
