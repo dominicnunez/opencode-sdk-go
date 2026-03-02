@@ -36,6 +36,7 @@ const (
 const (
 	dotPathSegment       = "."
 	doubleDotPathSegment = ".."
+	maxRetryAfterSeconds = int64(1<<63-1) / int64(time.Second)
 )
 
 var retryBackoffRandInt63n = rand.Int63n
@@ -335,9 +336,15 @@ func validateEndpointPath(endpointPath string) error {
 			return fmt.Errorf("endpoint path contains forbidden dot-segment %q", segment)
 		}
 
-		decoded, err := url.PathUnescape(segment)
-		if err == nil && isDotPathSegment(decoded) {
-			return fmt.Errorf("endpoint path contains forbidden dot-segment %q", decoded)
+		decodedSegment, err := url.PathUnescape(segment)
+		if err != nil {
+			continue
+		}
+		if isDotPathSegment(decodedSegment) {
+			return fmt.Errorf("endpoint path contains forbidden dot-segment %q", decodedSegment)
+		}
+		if strings.Contains(decodedSegment, "/") || strings.Contains(decodedSegment, "\\") {
+			return fmt.Errorf("endpoint path contains forbidden separator in segment %q", decodedSegment)
 		}
 	}
 
@@ -546,8 +553,9 @@ func parseRetryAfterDelay(headerValue string, now time.Time) (time.Duration, boo
 		return 0, false
 	}
 
-	if seconds, err := strconv.Atoi(value); err == nil {
-		if seconds < 0 {
+	seconds, err := strconv.ParseInt(value, 10, 64)
+	if err == nil {
+		if seconds < 0 || seconds > maxRetryAfterSeconds {
 			return 0, false
 		}
 		return time.Duration(seconds) * time.Second, true

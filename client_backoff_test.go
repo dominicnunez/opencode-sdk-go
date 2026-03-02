@@ -57,6 +57,8 @@ func TestParseRetryAfterDelay(t *testing.T) {
 		{name: "past date clamps to zero", header: "Mon, 02 Mar 2026 11:59:00 GMT", want: 0, ok: true},
 		{name: "invalid value", header: "soon", want: 0, ok: false},
 		{name: "negative value", header: "-1", want: 0, ok: false},
+		{name: "int64 overflow value", header: "9223372036854775808", want: 0, ok: false},
+		{name: "duration overflow value", header: "9223372037", want: 0, ok: false},
 	}
 
 	for _, tt := range tests {
@@ -99,6 +101,14 @@ func TestRetryDelayWithServerGuidance(t *testing.T) {
 
 	t.Run("falls back to exponential backoff for invalid header", func(t *testing.T) {
 		resp := &http.Response{Header: http.Header{"Retry-After": []string{"invalid"}}}
+		delay := retryDelayWithServerGuidance(2, resp, ctx, now)
+		if delay != 1*time.Second {
+			t.Fatalf("delay=%v, want %v", delay, 1*time.Second)
+		}
+	})
+
+	t.Run("falls back to exponential backoff for overflow header", func(t *testing.T) {
+		resp := &http.Response{Header: http.Header{"Retry-After": []string{"9223372037"}}}
 		delay := retryDelayWithServerGuidance(2, resp, ctx, now)
 		if delay != 1*time.Second {
 			t.Fatalf("delay=%v, want %v", delay, 1*time.Second)

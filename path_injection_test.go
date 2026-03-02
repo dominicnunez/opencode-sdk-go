@@ -10,42 +10,39 @@ import (
 	"github.com/dominicnunez/opencode-sdk-go"
 )
 
-// escapedInjectionPayloads are path parameter values that attempt traversal,
-// query injection, or encoded trickery. url.PathEscape protects separators and
-// query delimiters, but dot-segment payloads require explicit validation.
-// These cases assert exact paths for allowed payloads.
-var escapedInjectionPayloads = []struct {
+// allowedPathPayloads are inputs that should remain within a single path
+// segment after escaping and decoding by net/http.
+var allowedPathPayloads = []struct {
 	name string
 	id   string
 }{
-	{"path traversal is escaped", "../config"},
-	{"slash in id is escaped", "foo/bar"},
+	{"simple id", "safe-id"},
 	{"query injection is escaped", "id?x=1"},
-	{"url-encoded traversal is double-escaped", "%2e%2e%2fconfig"},
+	{"encoded traversal string stays literal", "%2e%2e%2fconfig"},
 }
 
-var dotSegmentPayloads = []string{".", ".."}
+var rejectedPathPayloads = []string{".", "..", "../config", "foo/bar", "..\\config", "foo\\bar"}
 
 type requestCapture struct {
-	path  string
-	calls int
+	path    string
+	rawPath string
+	calls   int
 }
 
 // newInjectionServer returns a test server that captures the request path.
 func newInjectionServer(capture *requestCapture) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		capture.calls++
-		capture.path = r.URL.RawPath
-		if capture.path == "" {
+		decodedPath, err := url.PathUnescape(r.URL.Path)
+		if err != nil {
 			capture.path = r.URL.Path
+		} else {
+			capture.path = decodedPath
 		}
+		capture.rawPath = r.URL.RawPath
 		w.WriteHeader(http.StatusNotFound)
 		_, _ = w.Write([]byte(`"not found"`))
 	}))
-}
-
-func escapedPath(segment string) string {
-	return url.PathEscape(segment)
 }
 
 func assertRequestPath(t *testing.T, capture requestCapture, want string) {
@@ -61,15 +58,15 @@ func assertRequestPath(t *testing.T, capture requestCapture, want string) {
 func assertDotSegmentRejected(t *testing.T, err error, capture requestCapture, id string) {
 	t.Helper()
 	if err == nil {
-		t.Fatalf("expected error for dot-segment payload %q", id)
+		t.Fatalf("expected error for traversal/separator payload %q", id)
 	}
 	if capture.calls != 0 {
-		t.Fatalf("expected no outbound request for dot-segment payload %q, got %d", id, capture.calls)
+		t.Fatalf("expected no outbound request for traversal/separator payload %q, got %d", id, capture.calls)
 	}
 }
 
 func TestPathParameterInjection_SessionGet(t *testing.T) {
-	for _, tt := range escapedInjectionPayloads {
+	for _, tt := range allowedPathPayloads {
 		t.Run(tt.name, func(t *testing.T) {
 			capture := requestCapture{}
 			server := newInjectionServer(&capture)
@@ -82,13 +79,13 @@ func TestPathParameterInjection_SessionGet(t *testing.T) {
 
 			_, _ = client.Session.Get(context.Background(), tt.id, nil)
 
-			assertRequestPath(t, capture, "/session/"+escapedPath(tt.id))
+			assertRequestPath(t, capture, "/session/"+tt.id)
 		})
 	}
 }
 
-func TestPathParameterInjection_SessionGet_RejectsDotSegments(t *testing.T) {
-	for _, id := range dotSegmentPayloads {
+func TestPathParameterInjection_SessionGet_RejectsTraversalOrSeparators(t *testing.T) {
+	for _, id := range rejectedPathPayloads {
 		t.Run(id, func(t *testing.T) {
 			capture := requestCapture{}
 			server := newInjectionServer(&capture)
@@ -106,7 +103,7 @@ func TestPathParameterInjection_SessionGet_RejectsDotSegments(t *testing.T) {
 }
 
 func TestPathParameterInjection_AuthSet(t *testing.T) {
-	for _, tt := range append(escapedInjectionPayloads, struct {
+	for _, tt := range append(allowedPathPayloads, struct {
 		name string
 		id   string
 	}{name: "simple id is unchanged", id: "anthropic"}) {
@@ -124,13 +121,13 @@ func TestPathParameterInjection_AuthSet(t *testing.T) {
 				Auth: opencode.ApiAuth{Key: "k"},
 			})
 
-			assertRequestPath(t, capture, "/auth/"+escapedPath(tt.id))
+			assertRequestPath(t, capture, "/auth/"+tt.id)
 		})
 	}
 }
 
-func TestPathParameterInjection_AuthSet_RejectsDotSegments(t *testing.T) {
-	for _, id := range dotSegmentPayloads {
+func TestPathParameterInjection_AuthSet_RejectsTraversalOrSeparators(t *testing.T) {
+	for _, id := range rejectedPathPayloads {
 		t.Run(id, func(t *testing.T) {
 			capture := requestCapture{}
 			server := newInjectionServer(&capture)
@@ -150,7 +147,7 @@ func TestPathParameterInjection_AuthSet_RejectsDotSegments(t *testing.T) {
 }
 
 func TestPathParameterInjection_SessionPermissionRespond(t *testing.T) {
-	for _, tt := range escapedInjectionPayloads {
+	for _, tt := range allowedPathPayloads {
 		t.Run("sessionID/"+tt.name, func(t *testing.T) {
 			capture := requestCapture{}
 			server := newInjectionServer(&capture)
@@ -169,7 +166,7 @@ func TestPathParameterInjection_SessionPermissionRespond(t *testing.T) {
 			assertRequestPath(
 				t,
 				capture,
-				"/session/"+escapedPath(tt.id)+"/permissions/safe-perm-id",
+				"/session/"+tt.id+"/permissions/safe-perm-id",
 			)
 		})
 
@@ -191,14 +188,14 @@ func TestPathParameterInjection_SessionPermissionRespond(t *testing.T) {
 			assertRequestPath(
 				t,
 				capture,
-				"/session/safe-session-id/permissions/"+escapedPath(tt.id),
+				"/session/safe-session-id/permissions/"+tt.id,
 			)
 		})
 	}
 }
 
-func TestPathParameterInjection_SessionPermissionRespond_RejectsDotSegments(t *testing.T) {
-	for _, id := range dotSegmentPayloads {
+func TestPathParameterInjection_SessionPermissionRespond_RejectsTraversalOrSeparators(t *testing.T) {
+	for _, id := range rejectedPathPayloads {
 		t.Run("sessionID/"+id, func(t *testing.T) {
 			capture := requestCapture{}
 			server := newInjectionServer(&capture)
@@ -236,7 +233,7 @@ func TestPathParameterInjection_SessionPermissionRespond_RejectsDotSegments(t *t
 }
 
 func TestPathParameterInjection_SessionMessage(t *testing.T) {
-	for _, tt := range escapedInjectionPayloads {
+	for _, tt := range allowedPathPayloads {
 		t.Run("sessionID/"+tt.name, func(t *testing.T) {
 			capture := requestCapture{}
 			server := newInjectionServer(&capture)
@@ -251,7 +248,7 @@ func TestPathParameterInjection_SessionMessage(t *testing.T) {
 				context.Background(), tt.id, "safe-message-id", nil,
 			)
 
-			assertRequestPath(t, capture, "/session/"+escapedPath(tt.id)+"/message/safe-message-id")
+			assertRequestPath(t, capture, "/session/"+tt.id+"/message/safe-message-id")
 		})
 
 		t.Run("messageID/"+tt.name, func(t *testing.T) {
@@ -268,13 +265,13 @@ func TestPathParameterInjection_SessionMessage(t *testing.T) {
 				context.Background(), "safe-session-id", tt.id, nil,
 			)
 
-			assertRequestPath(t, capture, "/session/safe-session-id/message/"+escapedPath(tt.id))
+			assertRequestPath(t, capture, "/session/safe-session-id/message/"+tt.id)
 		})
 	}
 }
 
-func TestPathParameterInjection_SessionMessage_RejectsDotSegments(t *testing.T) {
-	for _, id := range dotSegmentPayloads {
+func TestPathParameterInjection_SessionMessage_RejectsTraversalOrSeparators(t *testing.T) {
+	for _, id := range rejectedPathPayloads {
 		t.Run("sessionID/"+id, func(t *testing.T) {
 			capture := requestCapture{}
 			server := newInjectionServer(&capture)
@@ -398,7 +395,7 @@ func TestPathParameterInjection_SessionMethods(t *testing.T) {
 	}
 
 	for _, method := range methods {
-		for _, tt := range escapedInjectionPayloads {
+		for _, tt := range allowedPathPayloads {
 			t.Run(method.name+"/"+tt.name, func(t *testing.T) {
 				capture := requestCapture{}
 				server := newInjectionServer(&capture)
@@ -414,14 +411,14 @@ func TestPathParameterInjection_SessionMethods(t *testing.T) {
 				assertRequestPath(
 					t,
 					capture,
-					"/session/"+escapedPath(tt.id)+method.suffixPath,
+					"/session/"+tt.id+method.suffixPath,
 				)
 			})
 		}
 	}
 }
 
-func TestPathParameterInjection_SessionMethods_RejectsDotSegments(t *testing.T) {
+func TestPathParameterInjection_SessionMethods_RejectsTraversalOrSeparators(t *testing.T) {
 	type callFunc func(client *opencode.Client, ctx context.Context, id string) error
 
 	methods := []struct {
@@ -509,7 +506,7 @@ func TestPathParameterInjection_SessionMethods_RejectsDotSegments(t *testing.T) 
 	}
 
 	for _, method := range methods {
-		for _, id := range dotSegmentPayloads {
+		for _, id := range rejectedPathPayloads {
 			t.Run(method.name+"/"+id, func(t *testing.T) {
 				capture := requestCapture{}
 				server := newInjectionServer(&capture)
