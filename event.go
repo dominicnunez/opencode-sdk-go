@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"mime"
+	"net"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/dominicnunez/opencode-sdk-go/internal/queryparams"
 	"github.com/dominicnunez/opencode-sdk-go/packages/ssestream"
@@ -54,8 +56,10 @@ func (s *EventService) ListStreaming(ctx context.Context, params *EventListParam
 	req.Header.Set("Accept", "text/event-stream")
 	req.Header.Set("User-Agent", s.client.userAgent)
 
-	// Execute request
-	resp, err := s.client.httpClient.Do(req)
+	// Execute request. For contexts without deadlines, enforce the client's
+	// timeout only while connecting/awaiting response headers so active streams
+	// are not interrupted by timeout cancellation.
+	resp, err := s.doStreamingRequest(ctx, req)
 	if err != nil {
 		return ssestream.NewStream[Event](nil, fmt.Errorf("event stream request: %w", err))
 	}
@@ -75,6 +79,69 @@ func (s *EventService) ListStreaming(ctx context.Context, params *EventListParam
 			"event stream: unexpected content type %q, expected text/event-stream", mediaType))
 	}
 	return ssestream.NewStream[Event](ssestream.NewDecoder(resp), nil)
+}
+
+func (s *EventService) doStreamingRequest(ctx context.Context, req *http.Request) (*http.Response, error) {
+	if _, hasDeadline := ctx.Deadline(); hasDeadline {
+		return s.client.httpClient.Do(req)
+	}
+
+	connectTimeout := s.client.timeout
+	if connectTimeout <= 0 {
+		return s.client.httpClient.Do(req)
+	}
+
+	baseClient := s.client.httpClient
+	baseTransport := resolveHTTPTransport(baseClient.Transport)
+	if baseTransport == nil {
+		return baseClient.Do(req)
+	}
+
+	clientForConnect := *baseClient
+	transportForConnect := baseTransport.Clone()
+	transportForConnect.ResponseHeaderTimeout = minDuration(
+		transportForConnect.ResponseHeaderTimeout,
+		connectTimeout,
+	)
+
+	baseDialContext := transportForConnect.DialContext
+	if baseDialContext == nil {
+		baseDialContext = (&net.Dialer{Timeout: connectTimeout}).DialContext
+	}
+	transportForConnect.DialContext = func(dialCtx context.Context, network, address string) (net.Conn, error) {
+		if _, hasDeadline := dialCtx.Deadline(); !hasDeadline {
+			var cancel context.CancelFunc
+			dialCtx, cancel = context.WithTimeout(dialCtx, connectTimeout)
+			defer cancel()
+		}
+		return baseDialContext(dialCtx, network, address)
+	}
+
+	clientForConnect.Transport = transportForConnect
+	return clientForConnect.Do(req)
+}
+
+func resolveHTTPTransport(rt http.RoundTripper) *http.Transport {
+	if rt == nil {
+		defaultTransport, ok := http.DefaultTransport.(*http.Transport)
+		if !ok {
+			return nil
+		}
+		return defaultTransport
+	}
+
+	transport, ok := rt.(*http.Transport)
+	if !ok {
+		return nil
+	}
+	return transport
+}
+
+func minDuration(existing, limit time.Duration) time.Duration {
+	if existing > 0 && existing < limit {
+		return existing
+	}
+	return limit
 }
 
 type Event struct {

@@ -260,6 +260,57 @@ func TestListStreaming_NoDeadlineStaysOpenPastClientTimeout(t *testing.T) {
 	}
 }
 
+func TestListStreaming_NoDeadlineUsesClientTimeoutDuringConnect(t *testing.T) {
+	const clientTimeout = 50 * time.Millisecond
+	const waitForResult = 250 * time.Millisecond
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		time.Sleep(500 * time.Millisecond)
+		w.Header().Set("Content-Type", "text/event-stream")
+		_, _ = w.Write([]byte("event: message\ndata: {\"type\":\"message.updated\"}\n\n"))
+	}))
+	defer server.Close()
+
+	client, err := opencode.NewClient(
+		opencode.WithBaseURL(server.URL),
+		opencode.WithTimeout(clientTimeout),
+	)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	done := make(chan string, 1)
+	go func() {
+		stream := client.Event.ListStreaming(context.Background(), nil)
+		defer func() { _ = stream.Close() }()
+
+		if stream.Next() {
+			done <- "expected Next() to return false when connect deadline is exceeded"
+			return
+		}
+
+		streamErr := stream.Err()
+		if streamErr == nil {
+			done <- "expected non-nil error when connect deadline is exceeded"
+			return
+		}
+		if !strings.Contains(streamErr.Error(), "timeout") {
+			done <- "expected timeout-related error when waiting for initial response headers"
+			return
+		}
+		done <- ""
+	}()
+
+	select {
+	case result := <-done:
+		if result != "" {
+			t.Fatal(result)
+		}
+	case <-time.After(waitForResult):
+		t.Fatalf("expected ListStreaming to apply client timeout during connect and return within %s", waitForResult)
+	}
+}
+
 type blockedSSEBody struct {
 	ready <-chan struct{}
 	data  []byte
