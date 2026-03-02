@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -322,9 +323,20 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 				return nil, readAPIError(resp, maxErrorBodySize)
 			}
 
+			retryDelay := retryDelayWithServerGuidance(attempt, resp, ctx, time.Now())
+
 			// Drain and close body before retry to enable connection reuse
 			_, _ = io.Copy(io.Discard, resp.Body)
 			_ = resp.Body.Close()
+
+			timer := time.NewTimer(retryDelay)
+			select {
+			case <-timer.C:
+			case <-ctx.Done():
+				timer.Stop()
+				return nil, ctx.Err()
+			}
+			continue
 		}
 
 		// No more retries — let the loop condition handle exit
@@ -366,4 +378,56 @@ func retryBackoffDelay(attempt int) time.Duration {
 		return maxBackoff
 	}
 	return delay
+}
+
+func retryDelayWithServerGuidance(attempt int, resp *http.Response, ctx context.Context, now time.Time) time.Duration {
+	delay := retryBackoffDelay(attempt)
+
+	if resp != nil {
+		if retryAfterDelay, ok := parseRetryAfterDelay(resp.Header.Get("Retry-After"), now); ok {
+			delay = retryAfterDelay
+		}
+	}
+	if delay > maxBackoff {
+		delay = maxBackoff
+	}
+	if delay < 0 {
+		delay = 0
+	}
+
+	if deadline, ok := ctx.Deadline(); ok {
+		remaining := time.Until(deadline)
+		if remaining <= 0 {
+			return 0
+		}
+		if delay > remaining {
+			delay = remaining
+		}
+	}
+
+	return delay
+}
+
+func parseRetryAfterDelay(headerValue string, now time.Time) (time.Duration, bool) {
+	value := strings.TrimSpace(headerValue)
+	if value == "" {
+		return 0, false
+	}
+
+	if seconds, err := strconv.Atoi(value); err == nil {
+		if seconds < 0 {
+			return 0, false
+		}
+		return time.Duration(seconds) * time.Second, true
+	}
+
+	retryAt, err := http.ParseTime(value)
+	if err != nil {
+		return 0, false
+	}
+	delay := retryAt.Sub(now)
+	if delay < 0 {
+		return 0, true
+	}
+	return delay, true
 }

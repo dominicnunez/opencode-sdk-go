@@ -329,8 +329,51 @@ func TestClientDo_ErrorHandlingContract_AsAPIError(t *testing.T) {
 	if apiErr.RequestID != "req_123" {
 		t.Fatalf("expected request ID %q, got %q", "req_123", apiErr.RequestID)
 	}
-	if apiErr.Message != "slow down" {
-		t.Fatalf("expected message %q, got %q", "slow down", apiErr.Message)
+	if apiErr.Body != "slow down" {
+		t.Fatalf("expected body %q, got %q", "slow down", apiErr.Body)
+	}
+}
+
+func TestClientDo_RetryAfterHeaderDelay(t *testing.T) {
+	attempts := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		attempts++
+		if attempts == 1 {
+			w.Header().Set("Retry-After", "1")
+			w.WriteHeader(http.StatusTooManyRequests)
+			_, _ = w.Write([]byte("slow down"))
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+		_ = json.NewEncoder(w).Encode([]opencode.Session{{
+			ID:    "sess_1",
+			Title: "Recovered",
+			Time:  opencode.SessionTime{Created: 1, Updated: 1},
+		}})
+	}))
+	defer server.Close()
+
+	client, err := opencode.NewClient(
+		opencode.WithBaseURL(server.URL),
+		opencode.WithMaxRetries(1),
+	)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	start := time.Now()
+	_, err = client.Session.List(context.Background(), nil)
+	if err != nil {
+		t.Fatalf("Session.List failed: %v", err)
+	}
+
+	elapsed := time.Since(start)
+	if elapsed < 900*time.Millisecond {
+		t.Fatalf("expected retry delay to honor Retry-After header, elapsed %v", elapsed)
+	}
+	if attempts != 2 {
+		t.Fatalf("expected two attempts, got %d", attempts)
 	}
 }
 
