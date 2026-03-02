@@ -30,7 +30,7 @@ const (
 	backoffJitterDiv = 2
 	maxErrorBodySize = 1 << 20 // 1 MB
 
-	defaultMaxSuccessBodySize int64 = 0 // unlimited
+	defaultMaxSuccessBodySize int64 = 8 << 20 // 8 MB
 )
 
 var retryBackoffRandInt63n = rand.Int63n

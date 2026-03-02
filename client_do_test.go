@@ -704,9 +704,9 @@ func TestClientDo_JSONDecodeRejectsTrailingBytes(t *testing.T) {
 	}
 }
 
-func TestClientDo_SuccessResponseExceedsSizeLimit(t *testing.T) {
-	const maxSuccessBodySize = 1 << 20
-	oversizedBody := strings.Repeat("a", maxSuccessBodySize+1)
+func TestClientDo_SuccessResponseExceedsDefaultSizeLimit(t *testing.T) {
+	const defaultLimitExceededBodySize = 16 << 20
+	oversizedBody := strings.Repeat("a", defaultLimitExceededBodySize)
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -720,8 +720,11 @@ func TestClientDo_SuccessResponseExceedsSizeLimit(t *testing.T) {
 	}
 
 	_, err = client.Session.Get(context.Background(), "sess_1", nil)
-	if err != nil {
-		t.Fatalf("expected oversized successful response body to decode without explicit limit: %v", err)
+	if err == nil {
+		t.Fatal("expected size limit error for oversized successful response body")
+	}
+	if !strings.Contains(err.Error(), "response body exceeds") {
+		t.Fatalf("expected body limit error, got: %v", err)
 	}
 }
 
