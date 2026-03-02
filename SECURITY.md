@@ -8,7 +8,9 @@ For security issues related to the OpenCode platform itself, please follow [Anom
 
 ## Scope
 
-This SDK communicates with a local or remote OpenCode server over HTTP. It does not handle authentication credentials directly — the OpenCode server manages auth. However, if you find issues related to request construction, response handling, or data exposure, please report them.
+This SDK communicates with a local or remote OpenCode server over HTTP. It can transmit authentication credentials through `Auth.Set` request payloads, while the OpenCode server manages credential validation and storage.
+
+If you use `Auth.Set`, treat request bodies as sensitive data and avoid logging raw payloads that may include API keys or tokens. If you find issues related to request construction, response handling, or data exposure, please report them.
 
 ## Responsible Disclosure
 
