@@ -547,6 +547,17 @@ func TestReadAPIError_EmptyBodyUsesStatusTextForBody(t *testing.T) {
 	}
 }
 
+func TestAPIErrorMessageFromJSON_FallbackIsDeterministic(t *testing.T) {
+	raw := `{"zeta":"last","alpha":"first","nested":{"beta":"second"}}`
+
+	for i := 0; i < 50; i++ {
+		got := apiErrorMessageFromJSON(raw)
+		if got != "first" {
+			t.Fatalf("apiErrorMessageFromJSON() = %q, want %q", got, "first")
+		}
+	}
+}
+
 func TestReadAPIError_PartialReadError(t *testing.T) {
 	partialErr := errors.New("connection reset by peer")
 
