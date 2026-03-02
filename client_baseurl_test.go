@@ -3,8 +3,10 @@ package opencode_test
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 
@@ -113,15 +115,44 @@ func TestWithBaseURL_HTTPRemoteHostRejected(t *testing.T) {
 
 func TestNewClient_EnvBaseURL_FallbackToDefault(t *testing.T) {
 	t.Setenv("OPENCODE_BASE_URL", "")
+	var capturedURL *url.URL
 
-	client, err := opencode.NewClient()
+	client, err := opencode.NewClient(opencode.WithHTTPClient(&http.Client{
+		Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+			capturedURL = req.URL
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Header:     http.Header{"Content-Type": []string{"application/json"}},
+				Body:       io.NopCloser(strings.NewReader(`[]`)),
+			}, nil
+		}),
+	}))
 	if err != nil {
 		t.Fatalf("NewClient: %v", err)
 	}
 
-	// Should have fallen back to DefaultBaseURL — just verify it was created
-	if client == nil {
-		t.Fatal("expected non-nil client")
+	_, err = client.Session.List(context.Background(), nil)
+	if err != nil {
+		t.Fatalf("Session.List: %v", err)
+	}
+
+	if capturedURL == nil {
+		t.Fatal("expected request URL to be captured")
+	}
+
+	base, err := url.Parse(opencode.DefaultBaseURL)
+	if err != nil {
+		t.Fatalf("parse default base URL: %v", err)
+	}
+
+	if capturedURL.Scheme != base.Scheme {
+		t.Fatalf("expected scheme %q, got %q", base.Scheme, capturedURL.Scheme)
+	}
+	if capturedURL.Host != base.Host {
+		t.Fatalf("expected host %q, got %q", base.Host, capturedURL.Host)
+	}
+	if capturedURL.Path != "/session" {
+		t.Fatalf("expected path %q, got %q", "/session", capturedURL.Path)
 	}
 }
 
