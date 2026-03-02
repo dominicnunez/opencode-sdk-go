@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math/rand"
 	"net"
 	"net/http"
 	"net/url"
@@ -26,6 +27,7 @@ const (
 	maxRetryCap      = 10
 	initialBackoff   = 500 * time.Millisecond
 	maxBackoff       = 8 * time.Second
+	backoffJitterDiv = 2
 	maxErrorBodySize = 1 << 20 // 1 MB
 )
 
@@ -35,12 +37,15 @@ var sensitiveBaseURLQueryKeys = map[string]struct{}{
 	"token":        {},
 }
 
+var retryBackoffRandInt63n = rand.Int63n
+
 type Client struct {
 	baseURL    *url.URL
 	httpClient *http.Client
 	maxRetries int
 	timeout    time.Duration
 	userAgent  string
+	baseURLSet bool
 
 	Session *SessionService
 	Event   *EventService
@@ -105,18 +110,14 @@ func isLoopbackHost(host string) bool {
 }
 
 func NewClient(opts ...ClientOption) (*Client, error) {
-	rawURL := os.Getenv("OPENCODE_BASE_URL")
-	if rawURL == "" {
-		rawURL = DefaultBaseURL
-	}
-	parsed, err := parseBaseURL(rawURL)
+	defaultBaseURL, err := parseBaseURL(DefaultBaseURL)
 	if err != nil {
 		return nil, err
 	}
 
 	c := &Client{
-		baseURL:    parsed,
-		httpClient: &http.Client{},
+		baseURL:    defaultBaseURL,
+		httpClient: &http.Client{CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }},
 		maxRetries: DefaultMaxRetries,
 		timeout:    DefaultTimeout,
 		userAgent:  "Opencode/Go " + internal.PackageVersion,
@@ -125,6 +126,15 @@ func NewClient(opts ...ClientOption) (*Client, error) {
 	for _, opt := range opts {
 		if err := opt(c); err != nil {
 			return nil, err
+		}
+	}
+	if !c.baseURLSet {
+		if rawURL := os.Getenv("OPENCODE_BASE_URL"); rawURL != "" {
+			parsed, err := parseBaseURL(rawURL)
+			if err != nil {
+				return nil, err
+			}
+			c.baseURL = parsed
 		}
 	}
 
@@ -155,6 +165,7 @@ func WithBaseURL(rawURL string) ClientOption {
 			return err
 		}
 		c.baseURL = u
+		c.baseURLSet = true
 		return nil
 	}
 }
@@ -367,6 +378,15 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 }
 
 func retryBackoffDelay(attempt int) time.Duration {
+	delay := retryBackoffBaseDelay(attempt)
+	jitterSpan := delay / backoffJitterDiv
+	if jitterSpan <= 0 {
+		return delay
+	}
+	return delay - jitterSpan + time.Duration(retryBackoffRandInt63n(int64(jitterSpan)+1))
+}
+
+func retryBackoffBaseDelay(attempt int) time.Duration {
 	delay := initialBackoff
 	for i := 0; i < attempt; i++ {
 		if delay >= maxBackoff || delay > maxBackoff/2 {

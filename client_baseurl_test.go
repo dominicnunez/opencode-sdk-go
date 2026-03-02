@@ -40,6 +40,26 @@ func TestNewClient_EnvBaseURL_InvalidURL(t *testing.T) {
 	}
 }
 
+func TestNewClient_WithBaseURLOverridesInvalidEnvBaseURL(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode([]opencode.Session{})
+	}))
+	defer server.Close()
+
+	t.Setenv("OPENCODE_BASE_URL", "://bad")
+
+	client, err := opencode.NewClient(opencode.WithBaseURL(server.URL))
+	if err != nil {
+		t.Fatalf("NewClient: %v", err)
+	}
+
+	_, err = client.Session.List(context.Background(), nil)
+	if err != nil {
+		t.Fatalf("Session.List: %v", err)
+	}
+}
+
 func TestNewClient_EnvBaseURL_BadScheme(t *testing.T) {
 	t.Setenv("OPENCODE_BASE_URL", "ftp://localhost:8080")
 
