@@ -52,6 +52,45 @@ func TestNewClient_EnvBaseURL_BadScheme(t *testing.T) {
 	}
 }
 
+func TestNewClient_EnvBaseURL_HTTPRemoteHostRejected(t *testing.T) {
+	t.Setenv("OPENCODE_BASE_URL", "http://example.com:8080")
+
+	_, err := opencode.NewClient()
+	if err == nil {
+		t.Fatal("expected error for insecure remote http base URL")
+	}
+	if !strings.Contains(err.Error(), "https for non-loopback hosts") {
+		t.Errorf("expected insecure transport error, got: %v", err)
+	}
+}
+
+func TestWithBaseURL_HTTPLoopbackHostsAllowed(t *testing.T) {
+	tests := []string{
+		"http://localhost:54321",
+		"http://127.0.0.1:54321",
+		"http://[::1]:54321",
+	}
+
+	for _, rawURL := range tests {
+		t.Run(rawURL, func(t *testing.T) {
+			_, err := opencode.NewClient(opencode.WithBaseURL(rawURL))
+			if err != nil {
+				t.Fatalf("expected loopback URL to be accepted, got: %v", err)
+			}
+		})
+	}
+}
+
+func TestWithBaseURL_HTTPRemoteHostRejected(t *testing.T) {
+	_, err := opencode.NewClient(opencode.WithBaseURL("http://example.com"))
+	if err == nil {
+		t.Fatal("expected error for insecure remote http base URL")
+	}
+	if !strings.Contains(err.Error(), "https for non-loopback hosts") {
+		t.Errorf("expected insecure transport error, got: %v", err)
+	}
+}
+
 func TestNewClient_EnvBaseURL_FallbackToDefault(t *testing.T) {
 	t.Setenv("OPENCODE_BASE_URL", "")
 
