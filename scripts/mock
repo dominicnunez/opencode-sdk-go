@@ -4,7 +4,7 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-if [[ -n "$1" && "$1" != '--'* ]]; then
+if [[ -n "${1:-}" && "${1:-}" != '--'* ]]; then
   URL="$1"
   shift
 else
@@ -14,7 +14,7 @@ fi
 echo "==> Starting mock server with URL ${URL}"
 
 # Run prism mock on the given spec
-if [ "$1" == "--daemon" ]; then
+if [ "${1:-}" == "--daemon" ]; then
   npm exec --package=@stainless-api/prism-cli@5.15.0 -- prism mock "$URL" &> .prism.log &
 
   # Wait for server to come online (timeout after 30s)
