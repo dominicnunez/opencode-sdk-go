@@ -344,19 +344,13 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 		}
 
 		// Success — only 2xx responses are valid JSON API results.
-		// 3xx responses indicate a misconfigured redirect policy and should
-		// surface as errors rather than produce confusing decode failures.
 		if lastErr == nil && resp.StatusCode >= 200 && resp.StatusCode < 300 {
 			return resp, nil
 		}
 
-		// 3xx responses indicate a misconfigured redirect policy — never retry.
-		if lastErr == nil && resp.StatusCode >= 300 && resp.StatusCode < 400 {
-			return nil, readAPIError(resp, maxErrorBodySize)
-		}
-
-		// 4xx/5xx responses: retry only retryable status codes (408, 429, 5xx).
-		if lastErr == nil && resp.StatusCode >= 400 {
+		// Any non-2xx HTTP response is surfaced as an API error.
+		// Retry only retryable statuses (408, 429, 5xx).
+		if lastErr == nil {
 			if !isRetryableStatus(resp.StatusCode) || attempt >= c.maxRetries {
 				return nil, readAPIError(resp, maxErrorBodySize)
 			}
@@ -399,9 +393,12 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 		}
 	}
 
-	// All retries exhausted — only reachable via transport errors (lastErr != nil).
-	// HTTP errors return structured *APIError inside the loop.
-	return nil, fmt.Errorf("%s %s request failed after %d retries: %w", method, path, c.maxRetries, lastErr)
+	// All retries exhausted. HTTP errors return structured *APIError inside
+	// the loop, so this path should only occur for transport failures.
+	if lastErr != nil {
+		return nil, fmt.Errorf("%s %s request failed after %d retries: %w", method, path, c.maxRetries, lastErr)
+	}
+	return nil, fmt.Errorf("%s %s request failed after %d retries", method, path, c.maxRetries)
 }
 
 func retryBackoffDelay(attempt int) time.Duration {

@@ -680,3 +680,58 @@ type roundTripFunc func(req *http.Request) (*http.Response, error)
 func (f roundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
 	return f(req)
 }
+
+type trackedReadCloser struct {
+	reader io.Reader
+	closed bool
+}
+
+func (t *trackedReadCloser) Read(p []byte) (int, error) {
+	return t.reader.Read(p)
+}
+
+func (t *trackedReadCloser) Close() error {
+	t.closed = true
+	return nil
+}
+
+func TestClientDo_Unexpected1xxReturnsAPIErrorAndClosesBody(t *testing.T) {
+	trackedBody := &trackedReadCloser{reader: strings.NewReader("switching protocols")}
+
+	client, err := opencode.NewClient(
+		opencode.WithBaseURL("http://localhost"),
+		opencode.WithMaxRetries(0),
+		opencode.WithHTTPClient(&http.Client{
+			Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+				return &http.Response{
+					StatusCode: http.StatusSwitchingProtocols,
+					Header:     make(http.Header),
+					Body:       trackedBody,
+					Request:    req,
+				}, nil
+			}),
+		}),
+	)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	_, err = client.Session.List(context.Background(), nil)
+	if err == nil {
+		t.Fatal("expected error for 1xx status")
+	}
+
+	var apiErr *opencode.APIError
+	if !errors.As(err, &apiErr) {
+		t.Fatalf("expected *opencode.APIError, got %T: %v", err, err)
+	}
+	if apiErr.StatusCode != http.StatusSwitchingProtocols {
+		t.Fatalf("expected status %d, got %d", http.StatusSwitchingProtocols, apiErr.StatusCode)
+	}
+	if strings.Contains(err.Error(), "%!w(<nil>)") {
+		t.Fatalf("unexpected nil-wrap formatting in error: %v", err)
+	}
+	if !trackedBody.closed {
+		t.Fatal("expected 1xx response body to be closed")
+	}
+}
