@@ -77,9 +77,12 @@ func TestRegisterDecoderConcurrent(t *testing.T) {
 			if i%2 == 0 {
 				contentType = "application/x-alt-stream"
 			}
-			RegisterDecoder(contentType, func(rc io.ReadCloser) Decoder {
+			err := RegisterDecoder(contentType, func(rc io.ReadCloser) Decoder {
 				return &mockDecoder{}
 			})
+			if err != nil {
+				t.Errorf("RegisterDecoder returned error: %v", err)
+			}
 		}(i)
 	}
 	wg.Wait()
@@ -98,9 +101,12 @@ func TestRegisterDecoderConcurrentReadWrite(t *testing.T) {
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()
-			RegisterDecoder("application/x-race-stream", func(rc io.ReadCloser) Decoder {
+			err := RegisterDecoder("application/x-race-stream", func(rc io.ReadCloser) Decoder {
 				return &mockDecoder{}
 			})
+			if err != nil {
+				t.Errorf("RegisterDecoder returned error: %v", err)
+			}
 		}(i)
 	}
 
@@ -124,20 +130,16 @@ func TestRegisterDecoderConcurrentReadWrite(t *testing.T) {
 	wg.Wait()
 }
 
-func TestRegisterDecoder_NilFactoryPanics(t *testing.T) {
+func TestRegisterDecoder_NilFactoryReturnsError(t *testing.T) {
 	saveAndRestoreDecoders(t)
 
-	defer func() {
-		recovered := recover()
-		if recovered == nil {
-			t.Fatal("expected panic for nil decoder factory")
-		}
-	}()
-
-	RegisterDecoder("application/x-test-stream", nil)
+	err := RegisterDecoder("application/x-test-stream", nil)
+	if err == nil {
+		t.Fatal("expected error for nil decoder factory")
+	}
 }
 
-func TestRegisterDecoder_InvalidContentTypePanics(t *testing.T) {
+func TestRegisterDecoder_InvalidContentTypeReturnsError(t *testing.T) {
 	tests := []struct {
 		name        string
 		contentType string
@@ -149,14 +151,11 @@ func TestRegisterDecoder_InvalidContentTypePanics(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			saveAndRestoreDecoders(t)
-			defer func() {
-				recovered := recover()
-				if recovered == nil {
-					t.Fatalf("expected panic for content type %q", tt.contentType)
-				}
-			}()
 
-			RegisterDecoder(tt.contentType, func(rc io.ReadCloser) Decoder { return &mockDecoder{} })
+			err := RegisterDecoder(tt.contentType, func(rc io.ReadCloser) Decoder { return &mockDecoder{} })
+			if err == nil {
+				t.Fatalf("expected error for content type %q", tt.contentType)
+			}
 		})
 	}
 }
@@ -164,9 +163,12 @@ func TestRegisterDecoder_InvalidContentTypePanics(t *testing.T) {
 func TestRegisterDecoder_CanonicalizesContentType(t *testing.T) {
 	saveAndRestoreDecoders(t)
 
-	RegisterDecoder("Application/JSON; charset=utf-8", func(rc io.ReadCloser) Decoder {
+	err := RegisterDecoder("Application/JSON; charset=utf-8", func(rc io.ReadCloser) Decoder {
 		return &mockDecoder{}
 	})
+	if err != nil {
+		t.Fatalf("RegisterDecoder returned error: %v", err)
+	}
 
 	decoderTypesMu.RLock()
 	defer decoderTypesMu.RUnlock()
@@ -178,7 +180,10 @@ func TestRegisterDecoder_CanonicalizesContentType(t *testing.T) {
 func TestNewDecoder_RegisteredDecoderReturningNilFallsBackToDefault(t *testing.T) {
 	saveAndRestoreDecoders(t)
 
-	RegisterDecoder("application/json", func(rc io.ReadCloser) Decoder { return nil })
+	err := RegisterDecoder("application/json", func(rc io.ReadCloser) Decoder { return nil })
+	if err != nil {
+		t.Fatalf("RegisterDecoder returned error: %v", err)
+	}
 
 	resp := &http.Response{
 		StatusCode: http.StatusOK,
@@ -461,10 +466,13 @@ func TestRegisterDecoder_LookupByContentType(t *testing.T) {
 	customType := "application/x-custom-stream"
 	called := false
 
-	RegisterDecoder(customType, func(rc io.ReadCloser) Decoder {
+	err := RegisterDecoder(customType, func(rc io.ReadCloser) Decoder {
 		called = true
 		return &mockDecoder{}
 	})
+	if err != nil {
+		t.Fatalf("RegisterDecoder returned error: %v", err)
+	}
 
 	resp := &http.Response{
 		StatusCode: http.StatusOK,

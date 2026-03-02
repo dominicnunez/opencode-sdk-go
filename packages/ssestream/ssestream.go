@@ -68,20 +68,21 @@ var (
 	decoderTypesMu sync.RWMutex
 )
 
-func RegisterDecoder(contentType string, decoder func(io.ReadCloser) Decoder) {
+func RegisterDecoder(contentType string, decoder func(io.ReadCloser) Decoder) error {
 	if decoder == nil {
-		panic("ssestream: RegisterDecoder decoder cannot be nil")
+		return errors.New("ssestream: RegisterDecoder decoder cannot be nil")
 	}
 
 	mediaType, _, err := mime.ParseMediaType(contentType)
 	if err != nil || mediaType == "" {
-		panic(fmt.Sprintf("ssestream: RegisterDecoder invalid content type %q", contentType))
+		return fmt.Errorf("ssestream: RegisterDecoder invalid content type %q", contentType)
 	}
 	mediaType = strings.ToLower(mediaType)
 
 	decoderTypesMu.Lock()
 	decoderTypes[mediaType] = decoder
 	decoderTypesMu.Unlock()
+	return nil
 }
 
 type Event struct {
