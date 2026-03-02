@@ -115,7 +115,7 @@ func TestBuildURL_BaseURLQueryMergedWithParams(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client, err := opencode.NewClient(opencode.WithBaseURL(server.URL + "?token=abc"))
+	client, err := opencode.NewClient(opencode.WithBaseURL(server.URL + "?workspace=abc"))
 	if err != nil {
 		t.Fatalf("NewClient: %v", err)
 	}
@@ -127,7 +127,7 @@ func TestBuildURL_BaseURLQueryMergedWithParams(t *testing.T) {
 		t.Fatalf("Session.List: %v", err)
 	}
 
-	if !strings.Contains(receivedQuery, "token=abc") {
+	if !strings.Contains(receivedQuery, "workspace=abc") {
 		t.Errorf("expected base URL query param preserved, got %q", receivedQuery)
 	}
 	if !strings.Contains(receivedQuery, "directory=") {
@@ -177,7 +177,7 @@ func TestBuildURL_NilParams(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client, err := opencode.NewClient(opencode.WithBaseURL(server.URL + "?token=abc"))
+	client, err := opencode.NewClient(opencode.WithBaseURL(server.URL + "?workspace=abc"))
 	if err != nil {
 		t.Fatalf("NewClient: %v", err)
 	}
@@ -187,8 +187,28 @@ func TestBuildURL_NilParams(t *testing.T) {
 		t.Fatalf("Session.List: %v", err)
 	}
 
-	if receivedQuery != "token=abc" {
+	if receivedQuery != "workspace=abc" {
 		t.Errorf("expected only base URL query params, got %q", receivedQuery)
+	}
+}
+
+func TestWithBaseURL_RejectsSensitiveQueryKeys(t *testing.T) {
+	tests := []string{
+		"https://example.com?token=secret",
+		"https://example.com?api_key=secret",
+		"https://example.com?access_token=secret",
+	}
+
+	for _, rawURL := range tests {
+		t.Run(rawURL, func(t *testing.T) {
+			_, err := opencode.NewClient(opencode.WithBaseURL(rawURL))
+			if err == nil {
+				t.Fatal("expected error for sensitive query parameter in base URL")
+			}
+			if !strings.Contains(err.Error(), "sensitive query parameter") {
+				t.Fatalf("expected sensitive query parameter error, got: %v", err)
+			}
+		})
 	}
 }
 

@@ -28,6 +28,12 @@ const (
 	maxErrorBodySize = 1 << 20 // 1 MB
 )
 
+var sensitiveBaseURLQueryKeys = map[string]struct{}{
+	"access_token": {},
+	"api_key":      {},
+	"token":        {},
+}
+
 type Client struct {
 	baseURL    *url.URL
 	httpClient *http.Client
@@ -64,10 +70,22 @@ func parseBaseURL(rawURL string) (*url.URL, error) {
 	if parsed.Scheme == "http" && !isLoopbackHost(parsed.Hostname()) {
 		return nil, fmt.Errorf("base URL must use https for non-loopback hosts, got %q", parsed.Hostname())
 	}
+	if err := validateBaseURLQuery(parsed.Query()); err != nil {
+		return nil, err
+	}
 	if !strings.HasSuffix(parsed.Path, "/") {
 		parsed.Path += "/"
 	}
 	return parsed, nil
+}
+
+func validateBaseURLQuery(query url.Values) error {
+	for key := range query {
+		if _, blocked := sensitiveBaseURLQueryKeys[strings.ToLower(key)]; blocked {
+			return fmt.Errorf("base URL must not include sensitive query parameter %q; use headers instead", key)
+		}
+	}
+	return nil
 }
 
 func isLoopbackHost(host string) bool {
@@ -228,15 +246,15 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 		return nil, err
 	}
 
-	var body io.Reader
+	var bodyBytes []byte
 
 	// Handle JSON body for POST/PATCH/PUT
 	if params != nil && method != http.MethodGet && method != http.MethodDelete {
-		var buf bytes.Buffer
-		if err := json.NewEncoder(&buf).Encode(params); err != nil {
+		var err error
+		bodyBytes, err = json.Marshal(params)
+		if err != nil {
 			return nil, fmt.Errorf("marshal request body: %w", err)
 		}
-		body = &buf
 	}
 
 	// Build request with retry loop
@@ -244,6 +262,11 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 	var lastErr error
 
 	for attempt := 0; attempt <= c.maxRetries; attempt++ {
+		var body io.Reader
+		if len(bodyBytes) > 0 {
+			body = bytes.NewReader(bodyBytes)
+		}
+
 		req, err := http.NewRequestWithContext(ctx, method, fullURL.String(), body)
 		if err != nil {
 			return nil, fmt.Errorf("create request: %w", err)
@@ -308,10 +331,7 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 		// host wastes wall-clock time without improving success odds.
 		skipDelay := lastErr != nil && attempt == c.maxRetries-1
 		if !skipDelay {
-			delay := initialBackoff * (1 << attempt)
-			if delay <= 0 || delay > maxBackoff {
-				delay = maxBackoff
-			}
+			delay := retryBackoffDelay(attempt)
 			timer := time.NewTimer(delay)
 			select {
 			case <-timer.C:
@@ -320,18 +340,23 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 				return nil, ctx.Err()
 			}
 		}
-
-		// Reset body for retry if needed
-		if params != nil && method != http.MethodGet && method != http.MethodDelete {
-			var buf bytes.Buffer
-			if err := json.NewEncoder(&buf).Encode(params); err != nil {
-				return nil, fmt.Errorf("marshal request body for retry: %w", err)
-			}
-			body = &buf
-		}
 	}
 
 	// All retries exhausted — only reachable via transport errors (lastErr != nil).
 	// HTTP errors return structured *APIError inside the loop.
-	return nil, fmt.Errorf("request failed after %d retries: %w", c.maxRetries, lastErr)
+	return nil, fmt.Errorf("%s %s request failed after %d retries: %w", method, path, c.maxRetries, lastErr)
+}
+
+func retryBackoffDelay(attempt int) time.Duration {
+	delay := initialBackoff
+	for i := 0; i < attempt; i++ {
+		if delay >= maxBackoff || delay > maxBackoff/2 {
+			return maxBackoff
+		}
+		delay *= 2
+	}
+	if delay <= 0 || delay > maxBackoff {
+		return maxBackoff
+	}
+	return delay
 }

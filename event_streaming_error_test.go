@@ -3,10 +3,12 @@ package opencode_test
 import (
 	"context"
 	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/dominicnunez/opencode-sdk-go"
 )
@@ -199,3 +201,83 @@ func TestListStreaming_UnexpectedContentType(t *testing.T) {
 		t.Errorf("expected error to mention actual content type, got: %v", err)
 	}
 }
+
+func TestListStreaming_MissingContentType(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("event: message\ndata: {\"type\":\"message.updated\"}\n\n"))
+	}))
+	defer server.Close()
+
+	client, err := opencode.NewClient(opencode.WithBaseURL(server.URL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	stream := client.Event.ListStreaming(context.Background(), nil)
+	defer func() { _ = stream.Close() }()
+	if stream.Next() {
+		t.Fatal("expected Next() to return false when Content-Type is missing")
+	}
+
+	err = stream.Err()
+	if err == nil {
+		t.Fatal("expected non-nil error for missing content type")
+	}
+	if !strings.Contains(err.Error(), "unexpected content type") {
+		t.Errorf("expected error about unexpected content type, got: %v", err)
+	}
+}
+
+func TestListStreaming_NoDeadlineStaysOpenPastClientTimeout(t *testing.T) {
+	const clientTimeout = 50 * time.Millisecond
+	sendEvent := make(chan struct{})
+
+	client, err := opencode.NewClient(
+		opencode.WithTimeout(clientTimeout),
+		opencode.WithHTTPClient(&http.Client{
+			Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+				return &http.Response{
+					StatusCode: http.StatusOK,
+					Header:     http.Header{"Content-Type": []string{"text/event-stream"}},
+					Body:       newBlockedSSEBody(sendEvent, []byte("event: message\ndata: {\"type\":\"message.updated\"}\n\n")),
+				}, nil
+			}),
+		}),
+	)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	stream := client.Event.ListStreaming(context.Background(), nil)
+	defer func() { _ = stream.Close() }()
+
+	time.Sleep(clientTimeout + 20*time.Millisecond)
+	close(sendEvent)
+
+	if !stream.Next() {
+		t.Fatalf("expected event after waiting longer than client timeout, got err: %v", stream.Err())
+	}
+}
+
+type blockedSSEBody struct {
+	ready <-chan struct{}
+	data  []byte
+	sent  bool
+}
+
+func newBlockedSSEBody(ready <-chan struct{}, data []byte) *blockedSSEBody {
+	return &blockedSSEBody{ready: ready, data: data}
+}
+
+func (b *blockedSSEBody) Read(p []byte) (int, error) {
+	if b.sent {
+		return 0, io.EOF
+	}
+	<-b.ready
+	b.sent = true
+	n := copy(p, b.data)
+	return n, nil
+}
+
+func (b *blockedSSEBody) Close() error { return nil }

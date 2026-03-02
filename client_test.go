@@ -208,6 +208,7 @@ func TestContextDeadlineStreaming(t *testing.T) {
 					return &http.Response{
 						StatusCode: 200,
 						Status:     "200 OK",
+						Header:     http.Header{"Content-Type": []string{"text/event-stream"}},
 						Body: io.NopCloser(
 							readerFunc(func([]byte) (int, error) {
 								<-req.Context().Done()
@@ -243,17 +244,23 @@ func TestContextDeadlineStreaming(t *testing.T) {
 	}
 }
 
-func TestListStreaming_InheritsClientTimeoutWithoutContextDeadline(t *testing.T) {
+func TestListStreaming_DoesNotInheritClientTimeoutWithoutContextDeadline(t *testing.T) {
 	testTimeout := 3 * time.Second
 	clientTimeout := 100 * time.Millisecond
-	start := time.Now()
+	sendEvent := make(chan struct{})
 
 	client, err := opencode.NewClient(
 		opencode.WithTimeout(clientTimeout),
 		opencode.WithHTTPClient(&http.Client{
 			Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
-				<-req.Context().Done()
-				return nil, req.Context().Err()
+				return &http.Response{
+					StatusCode: http.StatusOK,
+					Header:     http.Header{"Content-Type": []string{"text/event-stream"}},
+					Body: io.NopCloser(readerFunc(func(p []byte) (int, error) {
+						<-sendEvent
+						return copy(p, []byte("event: message\ndata: {\"type\":\"message.updated\"}\n\n")), io.EOF
+					})),
+				}, nil
 			}),
 		}),
 	)
@@ -264,26 +271,28 @@ func TestListStreaming_InheritsClientTimeoutWithoutContextDeadline(t *testing.T)
 	done := make(chan error, 1)
 	go func() {
 		stream := client.Event.ListStreaming(context.Background(), &opencode.EventListParams{})
+		defer func() { _ = stream.Close() }()
+		gotEvent := false
 		for stream.Next() {
-			_ = stream.Current()
+			gotEvent = true
+		}
+		if !gotEvent {
+			done <- errors.New("expected to receive at least one event")
+			return
 		}
 		done <- stream.Err()
 	}()
 
+	time.Sleep(clientTimeout + 50*time.Millisecond)
+	close(sendEvent)
+
 	select {
 	case err := <-done:
-		if err == nil {
-			t.Fatal("expected timeout error from stream")
-		}
-		if !errors.Is(err, context.DeadlineExceeded) {
-			t.Fatalf("expected context.DeadlineExceeded, got: %v", err)
-		}
-		elapsed := time.Since(start)
-		if elapsed < clientTimeout-30*time.Millisecond || elapsed > clientTimeout+150*time.Millisecond {
-			t.Fatalf("expected stream to end around %s, got %s", clientTimeout, elapsed)
+		if err != nil {
+			t.Fatalf("expected stream to stay active without inherited timeout, got: %v", err)
 		}
 	case <-time.After(testTimeout):
-		t.Fatal("stream did not respect client timeout")
+		t.Fatal("stream did not finish")
 	}
 }
 
@@ -298,7 +307,7 @@ func TestListStreaming_BaseURLQueryParamsPreservedWithMethodParams(t *testing.T)
 	defer server.Close()
 
 	client, err := opencode.NewClient(
-		opencode.WithBaseURL(server.URL+"?token=abc"),
+		opencode.WithBaseURL(server.URL+"?workspace=abc"),
 		opencode.WithHTTPClient(server.Client()),
 	)
 	if err != nil {
@@ -313,8 +322,8 @@ func TestListStreaming_BaseURLQueryParamsPreservedWithMethodParams(t *testing.T)
 	}
 	_ = stream.Close()
 
-	if !strings.Contains(receivedQuery, "token=abc") {
-		t.Errorf("expected query to contain token=abc, got %q", receivedQuery)
+	if !strings.Contains(receivedQuery, "workspace=abc") {
+		t.Errorf("expected query to contain workspace=abc, got %q", receivedQuery)
 	}
 	if !strings.Contains(receivedQuery, "directory=%2Ftest") {
 		t.Errorf("expected query to contain directory=%%2Ftest, got %q", receivedQuery)
@@ -331,7 +340,7 @@ func TestListStreaming_BaseURLQueryParamsPreservedWithNoMethodParams(t *testing.
 	defer server.Close()
 
 	client, err := opencode.NewClient(
-		opencode.WithBaseURL(server.URL+"?token=abc"),
+		opencode.WithBaseURL(server.URL+"?workspace=abc"),
 		opencode.WithHTTPClient(server.Client()),
 	)
 	if err != nil {
@@ -343,8 +352,8 @@ func TestListStreaming_BaseURLQueryParamsPreservedWithNoMethodParams(t *testing.
 	}
 	_ = stream.Close()
 
-	if receivedQuery != "token=abc" {
-		t.Errorf("expected query to be %q, got %q", "token=abc", receivedQuery)
+	if receivedQuery != "workspace=abc" {
+		t.Errorf("expected query to be %q, got %q", "workspace=abc", receivedQuery)
 	}
 }
 

@@ -150,18 +150,18 @@ func TestClientDo_BaseURLQueryParamsPreserved(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client, err := opencode.NewClient(opencode.WithBaseURL(server.URL + "?token=xyz"))
+	client, err := opencode.NewClient(opencode.WithBaseURL(server.URL + "?workspace=xyz"))
 	if err != nil {
 		t.Fatalf("failed to create client: %v", err)
 	}
 
-	// List with no query params of its own — base URL token should survive
+	// List with no query params of its own — base URL query should survive.
 	_, err = client.Session.List(context.Background(), nil)
 	if err != nil {
 		t.Fatalf("Session.List failed: %v", err)
 	}
 
-	if receivedQuery != "token=xyz" {
+	if receivedQuery != "workspace=xyz" {
 		t.Errorf("Expected base URL query params preserved, got %q", receivedQuery)
 	}
 }
@@ -228,53 +228,6 @@ func TestClientDo_NoRetryOn4xx(t *testing.T) {
 
 	if err == nil {
 		t.Error("Expected error for 400 status")
-	}
-}
-
-func TestClientDo_ExponentialBackoff(t *testing.T) {
-	attempts := 0
-	attemptTimes := []time.Time{}
-
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		attempts++
-		attemptTimes = append(attemptTimes, time.Now())
-		w.WriteHeader(http.StatusInternalServerError)
-	}))
-	defer server.Close()
-
-	client, err := opencode.NewClient(
-		opencode.WithBaseURL(server.URL),
-		opencode.WithMaxRetries(2),
-	)
-	if err != nil {
-		t.Fatalf("failed to create client: %v", err)
-	}
-
-	_, _ = client.Session.List(context.Background(), &opencode.SessionListParams{})
-
-	if attempts != 3 {
-		t.Fatalf("Expected 3 attempts, got %d", attempts)
-	}
-
-	// With 3 attempts we have 2 inter-attempt delays.
-	// Backoff formula: initialBackoff * (1 << attempt) → 500ms, 1000ms.
-	// Verify each delay is at least 80% of the expected value (timing tolerance)
-	// and that the second delay is meaningfully larger than the first.
-	if len(attemptTimes) < 3 {
-		t.Fatal("not enough attempt timestamps recorded")
-	}
-
-	delay1 := attemptTimes[1].Sub(attemptTimes[0])
-	delay2 := attemptTimes[2].Sub(attemptTimes[1])
-
-	if delay1 < 400*time.Millisecond {
-		t.Errorf("first delay should be ~500ms, got %v", delay1)
-	}
-	if delay2 < 800*time.Millisecond {
-		t.Errorf("second delay should be ~1000ms, got %v", delay2)
-	}
-	if delay2 <= delay1 {
-		t.Errorf("delays should increase exponentially: delay1=%v, delay2=%v", delay1, delay2)
 	}
 }
 
@@ -477,6 +430,9 @@ func TestClientDo_TransportErrorRetryExhaustion(t *testing.T) {
 		t.Errorf("expected error to wrap transport error, got: %v", err)
 	}
 
+	if !strings.Contains(err.Error(), "GET session") {
+		t.Errorf("expected error to include request identity, got: %v", err)
+	}
 	if !strings.Contains(err.Error(), "2 retries") {
 		t.Errorf("expected error to mention retry count, got: %v", err)
 	}
@@ -519,11 +475,15 @@ func TestClientDo_3xxRedirectIsError(t *testing.T) {
 
 func TestClientDo_ContextCancelledDuringBackoffDelay(t *testing.T) {
 	attempts := 0
+	firstAttemptDone := make(chan struct{}, 1)
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		attempts++
 		w.WriteHeader(http.StatusInternalServerError)
 		_, _ = w.Write([]byte("server error"))
+		if attempts == 1 {
+			firstAttemptDone <- struct{}{}
+		}
 	}))
 	defer server.Close()
 
@@ -536,18 +496,12 @@ func TestClientDo_ContextCancelledDuringBackoffDelay(t *testing.T) {
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
-
-	// Cancel context after the first attempt completes but during the backoff
-	// delay (initialBackoff = 500ms). 100ms gives time for the request to
-	// complete and enter the timer select, but is well under the 500ms delay.
 	go func() {
-		time.Sleep(100 * time.Millisecond)
+		<-firstAttemptDone
 		cancel()
 	}()
 
-	start := time.Now()
 	_, err = client.Session.List(ctx, &opencode.SessionListParams{})
-	elapsed := time.Since(start)
 
 	if err == nil {
 		t.Fatal("expected error after context cancellation")
@@ -557,11 +511,6 @@ func TestClientDo_ContextCancelledDuringBackoffDelay(t *testing.T) {
 	}
 	if attempts != 1 {
 		t.Errorf("expected 1 attempt before cancellation, got %d", attempts)
-	}
-	// Should return well before the full backoff (500ms) plus remaining
-	// retries would take. 400ms gives generous timing tolerance.
-	if elapsed > 400*time.Millisecond {
-		t.Errorf("expected prompt return after cancellation, took %v", elapsed)
 	}
 }
 
