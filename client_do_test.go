@@ -345,6 +345,42 @@ func TestClientDo_MaxRetriesZero_ExactlyOneAttempt(t *testing.T) {
 	}
 }
 
+func TestClientDo_ErrorHandlingContract_AsAPIError(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-Request-Id", "req_123")
+		w.WriteHeader(http.StatusTooManyRequests)
+		_, _ = w.Write([]byte("slow down"))
+	}))
+	defer server.Close()
+
+	client, err := opencode.NewClient(
+		opencode.WithBaseURL(server.URL),
+		opencode.WithMaxRetries(0),
+	)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	_, err = client.Session.List(context.Background(), &opencode.SessionListParams{})
+	if err == nil {
+		t.Fatal("expected error for 429 response")
+	}
+
+	var apiErr *opencode.APIError
+	if !errors.As(err, &apiErr) {
+		t.Fatalf("expected errors.As(err, *APIError) to match, got %T: %v", err, err)
+	}
+	if apiErr.StatusCode != http.StatusTooManyRequests {
+		t.Fatalf("expected status %d, got %d", http.StatusTooManyRequests, apiErr.StatusCode)
+	}
+	if apiErr.RequestID != "req_123" {
+		t.Fatalf("expected request ID %q, got %q", "req_123", apiErr.RequestID)
+	}
+	if apiErr.Message != "slow down" {
+		t.Fatalf("expected message %q, got %q", "slow down", apiErr.Message)
+	}
+}
+
 func TestClientDo_PostBodyReencodedOnRetry(t *testing.T) {
 	var bodies []string
 	attempts := 0

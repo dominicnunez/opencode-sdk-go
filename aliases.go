@@ -1,11 +1,8 @@
 package opencode
 
 import (
-	"github.com/dominicnunez/opencode-sdk-go/internal/apierror"
 	"github.com/dominicnunez/opencode-sdk-go/shared"
 )
-
-type Error = apierror.Error
 
 // This is an alias to an internal type.
 type MessageAbortedError = shared.MessageAbortedError

@@ -45,14 +45,14 @@ func main() {
 	}
 
 	// List all sessions
-	sessions, err := client.Session.List(context.TODO(), opencode.SessionListParams{})
+	sessions, err := client.Session.List(context.Background(), &opencode.SessionListParams{})
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Printf("Found %d sessions\n", len(sessions))
 
 	// Create a new session
-	session, err := client.Session.New(context.TODO(), opencode.SessionNewParams{
+	session, err := client.Session.Create(context.Background(), &opencode.SessionCreateParams{
 		Agent: "general-purpose",
 		Contents: []opencode.MessageUnionParam{
 			opencode.UserMessageParam{
@@ -116,10 +116,7 @@ for _, msg := range messages {
 ### Streaming Events (SSE)
 
 ```go
-stream, err := client.Event.ListStreaming(context.TODO(), opencode.EventListStreamingParams{})
-if err != nil {
-	log.Fatal(err)
-}
+stream := client.Event.ListStreaming(context.Background(), &opencode.EventListParams{})
 defer stream.Close()
 
 for stream.Next() {
@@ -138,12 +135,11 @@ if err := stream.Err(); err != nil {
 Typed errors with `errors.As`:
 
 ```go
-_, err := client.Session.List(context.TODO(), opencode.SessionListParams{})
+_, err := client.Session.List(context.Background(), &opencode.SessionListParams{})
 if err != nil {
-	var apierr *opencode.Error
+	var apierr *opencode.APIError
 	if errors.As(err, &apierr) {
-		println(string(apierr.DumpRequest(true)))
-		println(string(apierr.DumpResponse(true)))
+		fmt.Printf("status=%d request_id=%s message=%s\n", apierr.StatusCode, apierr.RequestID, apierr.Message)
 	}
 	panic(err)
 }
@@ -165,4 +161,3 @@ This package follows [SemVer](https://semver.org/spec/v2.0.0.html). Minor versio
 ## Contributing
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md).
-
