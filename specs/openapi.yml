@@ -191,13 +191,6 @@
           },
           {
             "in": "query",
-            "name": "directory",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
             "name": "provider",
             "schema": {
               "type": "string"
@@ -2515,13 +2508,6 @@
             "schema": {
               "type": "string"
             }
-          },
-          {
-            "in": "query",
-            "name": "directory",
-            "schema": {
-              "type": "string"
-            }
           }
         ],
         "description": "Append prompt to the TUI",
@@ -2738,13 +2724,6 @@
             "schema": {
               "type": "string"
             }
-          },
-          {
-            "in": "query",
-            "name": "directory",
-            "schema": {
-              "type": "string"
-            }
           }
         ],
         "description": "Execute a TUI command (e.g. agent_cycle)",
@@ -2793,13 +2772,6 @@
       "post": {
         "operationId": "tui.showToast",
         "parameters": [
-          {
-            "in": "query",
-            "name": "directory",
-            "schema": {
-              "type": "string"
-            }
-          },
           {
             "in": "query",
             "name": "directory",
