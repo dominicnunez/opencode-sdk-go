@@ -55,7 +55,8 @@ func NewDecoder(res *http.Response) Decoder {
 	decoderTypesMu.RUnlock()
 	if ok {
 		decoder = t(res.Body)
-	} else {
+	}
+	if decoder == nil {
 		reader := bufio.NewReaderSize(res.Body, defaultSSEReaderSize)
 		decoder = &eventStreamDecoder{rc: res.Body, reader: reader}
 	}
@@ -68,10 +69,16 @@ var (
 )
 
 func RegisterDecoder(contentType string, decoder func(io.ReadCloser) Decoder) {
-	mediaType, _, _ := mime.ParseMediaType(contentType)
-	if mediaType == "" {
-		mediaType = strings.ToLower(contentType)
+	if decoder == nil {
+		panic("ssestream: RegisterDecoder decoder cannot be nil")
 	}
+
+	mediaType, _, err := mime.ParseMediaType(contentType)
+	if err != nil || mediaType == "" {
+		panic(fmt.Sprintf("ssestream: RegisterDecoder invalid content type %q", contentType))
+	}
+	mediaType = strings.ToLower(mediaType)
+
 	decoderTypesMu.Lock()
 	decoderTypes[mediaType] = decoder
 	decoderTypesMu.Unlock()

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"net/textproto"
 	"strings"
 	"sync"
 	"testing"
@@ -121,6 +122,77 @@ func TestRegisterDecoderConcurrentReadWrite(t *testing.T) {
 	}
 
 	wg.Wait()
+}
+
+func TestRegisterDecoder_NilFactoryPanics(t *testing.T) {
+	saveAndRestoreDecoders(t)
+
+	defer func() {
+		recovered := recover()
+		if recovered == nil {
+			t.Fatal("expected panic for nil decoder factory")
+		}
+	}()
+
+	RegisterDecoder("application/x-test-stream", nil)
+}
+
+func TestRegisterDecoder_InvalidContentTypePanics(t *testing.T) {
+	tests := []struct {
+		name        string
+		contentType string
+	}{
+		{name: "empty", contentType: ""},
+		{name: "invalid token", contentType: "application /json"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			saveAndRestoreDecoders(t)
+			defer func() {
+				recovered := recover()
+				if recovered == nil {
+					t.Fatalf("expected panic for content type %q", tt.contentType)
+				}
+			}()
+
+			RegisterDecoder(tt.contentType, func(rc io.ReadCloser) Decoder { return &mockDecoder{} })
+		})
+	}
+}
+
+func TestRegisterDecoder_CanonicalizesContentType(t *testing.T) {
+	saveAndRestoreDecoders(t)
+
+	RegisterDecoder("Application/JSON; charset=utf-8", func(rc io.ReadCloser) Decoder {
+		return &mockDecoder{}
+	})
+
+	decoderTypesMu.RLock()
+	defer decoderTypesMu.RUnlock()
+	if _, ok := decoderTypes["application/json"]; !ok {
+		t.Fatal("expected canonical media type key application/json")
+	}
+}
+
+func TestNewDecoder_RegisteredDecoderReturningNilFallsBackToDefault(t *testing.T) {
+	saveAndRestoreDecoders(t)
+
+	RegisterDecoder("application/json", func(rc io.ReadCloser) Decoder { return nil })
+
+	resp := &http.Response{
+		StatusCode: http.StatusOK,
+		Header:     http.Header{textproto.CanonicalMIMEHeaderKey("content-type"): []string{"application/json"}},
+		Body:       io.NopCloser(strings.NewReader("event: ping\ndata: ok\n\n")),
+	}
+
+	dec := NewDecoder(resp)
+	if dec == nil {
+		t.Fatal("expected non-nil decoder")
+	}
+	if _, ok := dec.(*eventStreamDecoder); !ok {
+		t.Fatalf("expected fallback eventStreamDecoder, got %T", dec)
+	}
 }
 
 // newSSEDecoder creates an SSE decoder backed by a test response.
