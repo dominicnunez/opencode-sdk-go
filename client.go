@@ -247,6 +247,15 @@ func isMethodRetryable(method string) bool {
 	}
 }
 
+func methodAllowsRequestBody(method string) bool {
+	switch method {
+	case http.MethodPost, http.MethodPut, http.MethodPatch:
+		return true
+	default:
+		return false
+	}
+}
+
 func (c *Client) do(ctx context.Context, method, path string, params, result interface{}) error {
 	if ctx == nil {
 		return ErrContextRequired
@@ -383,8 +392,8 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 
 	var bodyBytes []byte
 
-	// Marshal params for methods that send a request body (all except GET/DELETE).
-	if params != nil && method != http.MethodGet && method != http.MethodDelete {
+	// Marshal params for methods that send a request body.
+	if params != nil && methodAllowsRequestBody(method) {
 		var err error
 		bodyBytes, err = json.Marshal(params)
 		if err != nil {
@@ -412,7 +421,7 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 		}
 
 		// Set headers
-		if method != http.MethodGet && method != http.MethodDelete {
+		if methodAllowsRequestBody(method) {
 			req.Header.Set("Content-Type", "application/json")
 		}
 		req.Header.Set("Accept", "application/json")
