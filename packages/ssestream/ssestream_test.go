@@ -544,21 +544,22 @@ func TestEventStreamDecoder_CommentBetweenDataLines(t *testing.T) {
 }
 
 func TestEventStreamDecoder_TokenExceedsBufferLimit(t *testing.T) {
-	// A single line exceeding the scanner buffer causes a scanner error.
-	// Use a small custom scanner to avoid allocating 32MB in tests.
+	// A single line exceeding maxLineBytes should return a bounded-size error.
 	const smallLimit = 256
 	body := "data: " + strings.Repeat("x", smallLimit+1) + "\n\n"
 	r := io.NopCloser(strings.NewReader(body))
 
-	scn := bufio.NewScanner(r)
-	scn.Buffer(nil, smallLimit)
-	dec := &eventStreamDecoder{rc: r, scn: scn}
+	dec := &eventStreamDecoder{
+		rc:           r,
+		reader:       bufio.NewReaderSize(r, 16),
+		maxLineBytes: smallLimit,
+	}
 
 	if dec.Next() {
 		t.Fatal("expected Next() to return false when token exceeds buffer")
 	}
 	if dec.Err() == nil {
-		t.Fatal("expected scanner error for oversized token")
+		t.Fatal("expected error for oversized token")
 	}
 }
 
@@ -576,9 +577,11 @@ func TestEventStreamDecoder_DataAccumulationExceedsLimit(t *testing.T) {
 	// No blank line terminator — accumulation hits the limit before EOF.
 
 	r := io.NopCloser(strings.NewReader(raw.String()))
-	scn := bufio.NewScanner(r)
-	scn.Buffer(nil, dataLimit*10)
-	dec := &eventStreamDecoder{rc: r, scn: scn, maxDataBytes: dataLimit}
+	dec := &eventStreamDecoder{
+		rc:           r,
+		reader:       bufio.NewReaderSize(r, 32),
+		maxDataBytes: dataLimit,
+	}
 
 	if dec.Next() {
 		t.Fatal("expected Next() to return false when accumulated data exceeds limit")

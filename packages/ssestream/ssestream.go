@@ -13,10 +13,15 @@ import (
 	"sync"
 )
 
-// maxSSETokenSize is the maximum size for a single SSE event token.
-// Large events (e.g. tool outputs, base64 file contents) can exceed
-// bufio's default 64KB limit, so we allow up to 32MB per token.
-const maxSSETokenSize = 32 * 1024 * 1024
+const (
+	// maxSSEDataSize is the maximum accumulated data payload per SSE event.
+	maxSSEDataSize = 32 * 1024 * 1024
+	// maxSSELineSize bounds any single SSE line to avoid large transient
+	// allocations from oversized data lines.
+	maxSSELineSize = 256 * 1024
+	// defaultSSEReaderSize keeps internal read buffering small and stable.
+	defaultSSEReaderSize = 4 * 1024
+)
 
 // ErrNilDecoder is returned by Stream.Next when the SSE decoder is nil,
 // indicating the response body was not available.
@@ -51,9 +56,8 @@ func NewDecoder(res *http.Response) Decoder {
 	if ok {
 		decoder = t(res.Body)
 	} else {
-		scn := bufio.NewScanner(res.Body)
-		scn.Buffer(nil, maxSSETokenSize)
-		decoder = &eventStreamDecoder{rc: res.Body, scn: scn}
+		reader := bufio.NewReaderSize(res.Body, defaultSSEReaderSize)
+		decoder = &eventStreamDecoder{rc: res.Body, reader: reader}
 	}
 	return decoder
 }
@@ -82,9 +86,60 @@ type Event struct {
 type eventStreamDecoder struct {
 	evt          Event
 	rc           io.ReadCloser
-	scn          *bufio.Scanner
+	reader       *bufio.Reader
 	err          error
-	maxDataBytes int // max accumulated data size per event; 0 uses maxSSETokenSize
+	maxDataBytes int // max accumulated data size per event; 0 uses maxSSEDataSize
+	maxLineBytes int // max bytes in a single SSE line; 0 uses maxSSELineSize
+}
+
+func (s *eventStreamDecoder) readLine(dst *bytes.Buffer) ([]byte, bool, error) {
+	if s.reader == nil {
+		return nil, false, ErrNilDecoder
+	}
+
+	lineLimit := s.maxLineBytes
+	if lineLimit == 0 {
+		lineLimit = maxSSELineSize
+	}
+
+	dst.Reset()
+
+	for {
+		fragment, readErr := s.reader.ReadSlice('\n')
+		if len(fragment) > 0 {
+			if dst.Len()+len(fragment) > lineLimit {
+				return nil, false, fmt.Errorf("event line exceeds %d bytes", lineLimit)
+			}
+			if _, err := dst.Write(fragment); err != nil {
+				return nil, false, err
+			}
+		}
+
+		switch {
+		case readErr == nil:
+			line := dst.Bytes()
+			if len(line) > 0 && line[len(line)-1] == '\n' {
+				line = line[:len(line)-1]
+			}
+			if len(line) > 0 && line[len(line)-1] == '\r' {
+				line = line[:len(line)-1]
+			}
+			return line, false, nil
+		case errors.Is(readErr, bufio.ErrBufferFull):
+			continue
+		case errors.Is(readErr, io.EOF):
+			if dst.Len() == 0 {
+				return nil, true, nil
+			}
+			line := dst.Bytes()
+			if len(line) > 0 && line[len(line)-1] == '\r' {
+				line = line[:len(line)-1]
+			}
+			return line, false, nil
+		default:
+			return nil, false, readErr
+		}
+	}
 }
 
 func (s *eventStreamDecoder) Next() bool {
@@ -96,8 +151,16 @@ func (s *eventStreamDecoder) Next() bool {
 	data := bytes.NewBuffer(nil)
 	hasData := false
 
-	for s.scn.Scan() {
-		txt := s.scn.Bytes()
+	var lineBuf bytes.Buffer
+	for {
+		txt, eof, err := s.readLine(&lineBuf)
+		if err != nil {
+			s.err = err
+			return false
+		}
+		if eof {
+			break
+		}
 
 		// Per SSE spec §9.2.6: on a blank line, dispatch only if data
 		// was received. Otherwise reset the event type and continue.
@@ -140,18 +203,13 @@ func (s *eventStreamDecoder) Next() bool {
 			}
 			limit := s.maxDataBytes
 			if limit == 0 {
-				limit = maxSSETokenSize
+				limit = maxSSEDataSize
 			}
 			if data.Len() > limit {
 				s.err = fmt.Errorf("event data exceeds %d bytes", limit)
 				return false
 			}
 		}
-	}
-
-	if s.scn.Err() != nil {
-		s.err = s.scn.Err()
-		return false
 	}
 
 	// Per the SSE spec, dispatch any buffered event when the connection
