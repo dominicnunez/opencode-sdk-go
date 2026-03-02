@@ -720,6 +720,30 @@ func TestClientDo_JSONDecodeRejectsTrailingBytes(t *testing.T) {
 	}
 }
 
+func TestClientDo_SuccessResponseExceedsSizeLimit(t *testing.T) {
+	const maxSuccessBodySize = 1 << 20
+	oversizedBody := strings.Repeat("a", maxSuccessBodySize+1)
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"id":"sess_1","title":"` + oversizedBody + `","time":{"created":1,"updated":1}}`))
+	}))
+	defer server.Close()
+
+	client, err := opencode.NewClient(opencode.WithBaseURL(server.URL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	_, err = client.Session.Get(context.Background(), "sess_1", nil)
+	if err == nil {
+		t.Fatal("expected size limit error for oversized successful response body")
+	}
+	if !strings.Contains(err.Error(), "response body exceeds") {
+		t.Fatalf("expected body limit error, got: %v", err)
+	}
+}
+
 type roundTripFunc func(req *http.Request) (*http.Response, error)
 
 func (f roundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {

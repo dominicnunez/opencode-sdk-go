@@ -29,6 +29,7 @@ const (
 	maxBackoff       = 8 * time.Second
 	backoffJitterDiv = 2
 	maxErrorBodySize = 1 << 20 // 1 MB
+	maxSuccessBodySize = 1 << 20 // 1 MB
 )
 
 var sensitiveBaseURLQueryKeys = map[string]struct{}{
@@ -251,7 +252,15 @@ func (c *Client) do(ctx context.Context, method, path string, params, result int
 		return nil
 	}
 
-	dec := json.NewDecoder(resp.Body)
+	bodyBytes, err := io.ReadAll(io.LimitReader(resp.Body, maxSuccessBodySize+1))
+	if err != nil {
+		return fmt.Errorf("read %s %s response: %w", method, path, err)
+	}
+	if int64(len(bodyBytes)) > maxSuccessBodySize {
+		return fmt.Errorf("decode %s %s response: response body exceeds %d bytes limit", method, path, maxSuccessBodySize)
+	}
+
+	dec := json.NewDecoder(bytes.NewReader(bodyBytes))
 	if err := dec.Decode(result); err != nil {
 		return fmt.Errorf("decode %s %s response: %w", method, path, err)
 	}
