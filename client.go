@@ -117,11 +117,11 @@ func NewClient(opts ...ClientOption) (*Client, error) {
 	}
 
 	c := &Client{
-		baseURL:    defaultBaseURL,
-		httpClient: &http.Client{CheckRedirect: blockRedirects},
-		maxRetries: DefaultMaxRetries,
-		timeout:    DefaultTimeout,
-		userAgent:  "Opencode/Go " + internal.PackageVersion,
+		baseURL:            defaultBaseURL,
+		httpClient:         &http.Client{CheckRedirect: blockRedirects},
+		maxRetries:         DefaultMaxRetries,
+		timeout:            DefaultTimeout,
+		userAgent:          "Opencode/Go " + internal.PackageVersion,
 		maxSuccessBodySize: defaultMaxSuccessBodySize,
 	}
 
@@ -463,15 +463,13 @@ func retryBackoffBaseDelay(attempt int) time.Duration {
 
 func retryDelayWithServerGuidance(attempt int, resp *http.Response, ctx context.Context, now time.Time) time.Duration {
 	delay := retryBackoffDelay(attempt)
-	serverGuided := false
 
 	if resp != nil {
 		if retryAfterDelay, ok := parseRetryAfterDelay(resp.Header.Get("Retry-After"), now); ok {
 			delay = retryAfterDelay
-			serverGuided = true
 		}
 	}
-	if !serverGuided && delay > maxBackoff {
+	if delay > maxBackoff {
 		delay = maxBackoff
 	}
 	if delay < 0 {
