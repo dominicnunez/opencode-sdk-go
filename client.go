@@ -225,7 +225,14 @@ func (c *Client) do(ctx context.Context, method, path string, params, result int
 		return nil
 	}
 
-	if err := json.NewDecoder(resp.Body).Decode(result); err != nil {
+	dec := json.NewDecoder(resp.Body)
+	if err := dec.Decode(result); err != nil {
+		return fmt.Errorf("decode %s %s response: %w", method, path, err)
+	}
+	if err := dec.Decode(&struct{}{}); !errors.Is(err, io.EOF) {
+		if err == nil {
+			return fmt.Errorf("decode %s %s response: unexpected trailing JSON value", method, path)
+		}
 		return fmt.Errorf("decode %s %s response: %w", method, path, err)
 	}
 	return nil

@@ -654,6 +654,27 @@ func TestClientDo_JSONDecodeFailureOnSuccessResponse(t *testing.T) {
 	}
 }
 
+func TestClientDo_JSONDecodeRejectsTrailingBytes(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"id":"sess_1","title":"ok","time":{"created":1,"updated":1}}TRAILING`))
+	}))
+	defer server.Close()
+
+	client, err := opencode.NewClient(opencode.WithBaseURL(server.URL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	_, err = client.Session.Get(context.Background(), "sess_1", nil)
+	if err == nil {
+		t.Fatal("expected error for JSON response with trailing bytes")
+	}
+	if !strings.Contains(err.Error(), "decode") {
+		t.Fatalf("expected decode error, got: %v", err)
+	}
+}
+
 type roundTripFunc func(req *http.Request) (*http.Response, error)
 
 func (f roundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
