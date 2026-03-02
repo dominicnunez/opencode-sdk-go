@@ -105,9 +105,9 @@ Discriminated unions with `As*()` methods:
 
 ```go
 for _, msg := range messages {
-	if user, ok := msg.AsUser(); ok {
+	if user, err := msg.AsUser(); err == nil {
 		fmt.Printf("User: %s\n", user.Parts[0].AsText().Text)
-	} else if assistant, ok := msg.AsAssistant(); ok {
+	} else if assistant, err := msg.AsAssistant(); err == nil {
 		fmt.Printf("Assistant: %s\n", assistant.Parts[0].AsText().Text)
 	}
 }
@@ -121,7 +121,7 @@ defer stream.Close()
 
 for stream.Next() {
 	event := stream.Current()
-	if msgUpdated, ok := event.AsMessageUpdated(); ok {
+	if msgUpdated, err := event.AsMessageUpdated(); err == nil {
 		fmt.Printf("Message updated: %s\n", msgUpdated.Data.Info.ID)
 	}
 }
