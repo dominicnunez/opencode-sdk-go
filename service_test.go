@@ -3,6 +3,7 @@ package opencode_test
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -108,6 +109,59 @@ func TestAppService_Log(t *testing.T) {
 	}
 	if !result {
 		t.Error("expected true result")
+	}
+}
+
+func TestAppService_Log_ValidationErrors(t *testing.T) {
+	client, err := opencode.NewClient(opencode.WithBaseURL("http://localhost:0"))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	tests := []struct {
+		name    string
+		params  *opencode.AppLogParams
+		wantErr error
+	}{
+		{
+			name: "invalid level",
+			params: &opencode.AppLogParams{
+				Level:   opencode.LogLevel("trace"),
+				Message: "ok",
+				Service: "sdk",
+			},
+			wantErr: opencode.ErrInvalidRequest,
+		},
+		{
+			name: "missing message",
+			params: &opencode.AppLogParams{
+				Level:   opencode.LogLevelInfo,
+				Message: " \t ",
+				Service: "sdk",
+			},
+			wantErr: &opencode.RequiredFieldError{Field: "message"},
+		},
+		{
+			name: "missing service",
+			params: &opencode.AppLogParams{
+				Level:   opencode.LogLevelInfo,
+				Message: "ok",
+				Service: " \n ",
+			},
+			wantErr: &opencode.RequiredFieldError{Field: "service"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := client.App.Log(context.Background(), tt.params)
+			if err == nil {
+				t.Fatal("expected validation error, got nil")
+			}
+			if !errors.Is(err, tt.wantErr) {
+				t.Fatalf("expected error matching %v, got %v", tt.wantErr, err)
+			}
+		})
 	}
 }
 

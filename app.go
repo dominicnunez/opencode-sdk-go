@@ -2,8 +2,10 @@ package opencode
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/dominicnunez/opencode-sdk-go/internal/queryparams"
 )
@@ -15,6 +17,15 @@ type AppService struct {
 func (s *AppService) Log(ctx context.Context, params *AppLogParams) (bool, error) {
 	if params == nil {
 		return false, ErrParamsRequired
+	}
+	if !params.Level.IsKnown() {
+		return false, fmt.Errorf("invalid log level %q: %w", params.Level, ErrInvalidRequest)
+	}
+	if strings.TrimSpace(params.Message) == "" {
+		return false, requiredFieldError("message")
+	}
+	if strings.TrimSpace(params.Service) == "" {
+		return false, requiredFieldError("service")
 	}
 	var result bool
 	err := s.client.do(ctx, http.MethodPost, "log", params, &result)
