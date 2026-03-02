@@ -39,8 +39,15 @@ func (s *EventService) ListStreaming(ctx context.Context, params *EventListParam
 
 	streamCtx := ctx
 	var cancel context.CancelFunc
+	releaseCancel := false
 	if _, ok := ctx.Deadline(); !ok {
 		streamCtx, cancel = context.WithTimeout(ctx, s.client.timeout)
+		releaseCancel = true
+		defer func() {
+			if releaseCancel {
+				cancel()
+			}
+		}()
 	}
 
 	if params == nil {
@@ -55,9 +62,6 @@ func (s *EventService) ListStreaming(ctx context.Context, params *EventListParam
 	// Create request with SSE headers
 	req, err := http.NewRequestWithContext(streamCtx, http.MethodGet, fullURL.String(), nil)
 	if err != nil {
-		if cancel != nil {
-			cancel()
-		}
 		return ssestream.NewStream[Event](nil, err)
 	}
 
@@ -67,31 +71,23 @@ func (s *EventService) ListStreaming(ctx context.Context, params *EventListParam
 	// Execute request
 	resp, err := s.client.httpClient.Do(req)
 	if err != nil {
-		if cancel != nil {
-			cancel()
-		}
 		return ssestream.NewStream[Event](nil, fmt.Errorf("event stream request: %w", err))
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		if cancel != nil {
-			cancel()
-		}
 		return ssestream.NewStream[Event](nil, readAPIError(resp, maxErrorBodySize))
 	}
 
 	mediaType, _, _ := mime.ParseMediaType(resp.Header.Get("Content-Type"))
 	if mediaType != "" && mediaType != "text/event-stream" {
 		_ = resp.Body.Close()
-		if cancel != nil {
-			cancel()
-		}
 		return ssestream.NewStream[Event](nil, fmt.Errorf(
 			"event stream: unexpected content type %q, expected text/event-stream", mediaType))
 	}
 
 	decoder := ssestream.NewDecoder(resp)
 	if cancel != nil {
+		releaseCancel = false
 		decoder = &cancelingDecoder{
 			Decoder: decoder,
 			cancel:  cancel,

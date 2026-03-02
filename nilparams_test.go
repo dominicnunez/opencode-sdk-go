@@ -145,6 +145,7 @@ func TestNilContext_ReturnsError(t *testing.T) {
 		{
 			name: "SessionService.List",
 			call: func() error {
+				//nolint:staticcheck // Intentional nil context regression test.
 				_, err := client.Session.List(nil, &opencode.SessionListParams{})
 				return err
 			},
@@ -152,6 +153,7 @@ func TestNilContext_ReturnsError(t *testing.T) {
 		{
 			name: "SessionService.Create",
 			call: func() error {
+				//nolint:staticcheck // Intentional nil context regression test.
 				_, err := client.Session.Create(nil, &opencode.SessionCreateParams{})
 				return err
 			},
@@ -159,6 +161,7 @@ func TestNilContext_ReturnsError(t *testing.T) {
 		{
 			name: "EventService.ListStreaming",
 			call: func() error {
+				//nolint:staticcheck // Intentional nil context regression test.
 				stream := client.Event.ListStreaming(nil, &opencode.EventListParams{})
 				defer func() { _ = stream.Close() }()
 				return stream.Err()
