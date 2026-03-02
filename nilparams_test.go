@@ -2,6 +2,7 @@ package opencode_test
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"testing"
 
@@ -126,6 +127,59 @@ func TestNilParams_ReturnsError(t *testing.T) {
 			}
 			if !strings.Contains(err.Error(), "params is required") {
 				t.Errorf("expected error containing %q, got %q", "params is required", err.Error())
+			}
+		})
+	}
+}
+
+func TestNilContext_ReturnsError(t *testing.T) {
+	client, err := opencode.NewClient(opencode.WithBaseURL("http://localhost:0"))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	tests := []struct {
+		name string
+		call func() error
+	}{
+		{
+			name: "SessionService.List",
+			call: func() error {
+				_, err := client.Session.List(nil, &opencode.SessionListParams{})
+				return err
+			},
+		},
+		{
+			name: "SessionService.Create",
+			call: func() error {
+				_, err := client.Session.Create(nil, &opencode.SessionCreateParams{})
+				return err
+			},
+		},
+		{
+			name: "EventService.ListStreaming",
+			call: func() error {
+				stream := client.Event.ListStreaming(nil, &opencode.EventListParams{})
+				defer func() { _ = stream.Close() }()
+				return stream.Err()
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			defer func() {
+				if recovered := recover(); recovered != nil {
+					t.Fatalf("expected error return, got panic: %v", recovered)
+				}
+			}()
+
+			err := tt.call()
+			if err == nil {
+				t.Fatal("expected error for nil context, got nil")
+			}
+			if !errors.Is(err, opencode.ErrContextRequired) {
+				t.Fatalf("expected ErrContextRequired, got %v", err)
 			}
 		})
 	}

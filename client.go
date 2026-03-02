@@ -155,6 +155,10 @@ func WithMaxRetries(n int) ClientOption {
 }
 
 func (c *Client) do(ctx context.Context, method, path string, params, result interface{}) error {
+	if ctx == nil {
+		return ErrContextRequired
+	}
+
 	if _, ok := ctx.Deadline(); !ok {
 		var cancel context.CancelFunc
 		ctx, cancel = context.WithTimeout(ctx, c.timeout)
@@ -203,6 +207,10 @@ func (c *Client) buildURL(path string, params interface{}) (*url.URL, error) {
 }
 
 func (c *Client) doRaw(ctx context.Context, method, path string, params interface{}) (*http.Response, error) {
+	if ctx == nil {
+		return nil, ErrContextRequired
+	}
+
 	fullURL, err := c.buildURL(path, params)
 	if err != nil {
 		return nil, err

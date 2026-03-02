@@ -32,6 +32,10 @@ type EventService struct {
 //	    // handle error
 //	}
 func (s *EventService) ListStreaming(ctx context.Context, params *EventListParams) *ssestream.Stream[Event] {
+	if ctx == nil {
+		return ssestream.NewStream[Event](nil, ErrContextRequired)
+	}
+
 	if params == nil {
 		params = &EventListParams{}
 	}

@@ -13,6 +13,9 @@ var (
 	ErrForbidden      = errors.New("forbidden")
 	ErrRateLimited    = errors.New("rate limited")
 	ErrInvalidRequest = errors.New("invalid request")
+	// ErrContextRequired is returned when a nil context.Context is passed to
+	// an API method that performs HTTP requests.
+	ErrContextRequired = errors.New("context is required")
 	// ErrTimeout matches HTTP 408 (Request Timeout) responses from the server.
 	// Client-side timeouts from context.WithTimeout or context.WithDeadline
 	// surface as context.DeadlineExceeded and are NOT matched by this sentinel.
