@@ -4,12 +4,6 @@
 - **Details**: `SessionService.Command` rejects empty or whitespace-only `Arguments`, but the OpenAPI contract only requires the `arguments` field to be present and typed as string (`specs/openapi.yml:1428` and `specs/openapi.yml:1436`) with no `minLength` constraint.
 - **Suggested fix**: Remove the `strings.TrimSpace(params.Arguments) == ""` validation and require only `params != nil` plus non-empty `Command`.
 
-### [Testing] Tests enforce behavior that conflicts with API contract
-- **Severity**: Medium
-- **File**: session_init_command_revert_test.go:200
-- **Details**: `TestSessionCommand_RequiresArguments` asserts that empty `Arguments` must fail and that no request should be sent. This codifies behavior that contradicts the OpenAPI schema for `/session/{id}/command`.
-- **Suggested fix**: Replace this test with one that sends `Arguments: ""` and asserts request serialization includes `"arguments":""`.
-
 ### [Configuration] Spec check script declares an unused dependency
 - **Severity**: Low
 - **File**: scripts/check-spec-update.sh:74

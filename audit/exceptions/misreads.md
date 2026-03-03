@@ -1594,3 +1594,10 @@ actually cause same-repo PRs to run CI twice — once from push, once from pull_
 **Date:** 2026-03-03
 
 **Reason:** This is a false positive on Go 1.22 (the version in `go.mod`). The package-level `math/rand` generator is auto-seeded at startup, so retries are not process-deterministic in normal operation. Empirical check in this repo showed different `rand.Int63n` outputs across separate process runs without calling `rand.Seed`.
+
+### Tests enforce rejection of empty command arguments for session command
+
+**Location:** `session_init_command_revert_test.go:200` — `TestSessionCommand_AllowsEmptyArguments`
+**Date:** 2026-03-03
+
+**Reason:** The audit says tests require empty `Arguments` to fail, but the current test at this location does the opposite: it posts `Arguments: ""`, verifies the request serializes `"arguments": ""`, and fails if `Session.Command` returns an error. The claimed test (`TestSessionCommand_RequiresArguments`) is not present in this file, so the finding misreads current test behavior.
