@@ -2,11 +2,14 @@ package opencode_test
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"io"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -358,6 +361,58 @@ func TestListStreaming_NoDeadlineUsesClientTimeoutDuringConnect(t *testing.T) {
 	}
 }
 
+func TestListStreaming_NoDeadlineUsesClientTimeoutDuringTLSHandshake(t *testing.T) {
+	const clientTimeout = 50 * time.Millisecond
+	const waitForResult = 300 * time.Millisecond
+
+	baseURL, cleanup := startStalledTLSHandshakeEndpoint(t)
+	defer cleanup()
+
+	client, err := opencode.NewClient(
+		opencode.WithBaseURL(baseURL),
+		opencode.WithTimeout(clientTimeout),
+		opencode.WithHTTPClient(&http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec // controlled test endpoint
+			},
+		}),
+	)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	done := make(chan string, 1)
+	go func() {
+		stream := client.Event.ListStreaming(context.Background(), nil)
+		defer func() { _ = stream.Close() }()
+
+		if stream.Next() {
+			done <- "expected Next() to return false when TLS handshake exceeds client timeout"
+			return
+		}
+
+		streamErr := stream.Err()
+		if streamErr == nil {
+			done <- "expected non-nil error when TLS handshake exceeds client timeout"
+			return
+		}
+		if !strings.Contains(streamErr.Error(), "timeout") {
+			done <- "expected timeout-related error when TLS handshake exceeds client timeout"
+			return
+		}
+		done <- ""
+	}()
+
+	select {
+	case result := <-done:
+		if result != "" {
+			t.Fatal(result)
+		}
+	case <-time.After(waitForResult):
+		t.Fatalf("expected ListStreaming to apply client timeout during TLS handshake and return within %s", waitForResult)
+	}
+}
+
 func TestListStreaming_CustomTransportWithExplicitDeadline(t *testing.T) {
 	client, err := opencode.NewClient(
 		opencode.WithHTTPClient(&http.Client{
@@ -436,4 +491,60 @@ func TestListStreaming_NoDeadlineWithCustomTransportFailsFast(t *testing.T) {
 	if atomic.LoadInt32(&calls) != 0 {
 		t.Fatalf("expected transport not to be called, got %d calls", calls)
 	}
+}
+
+func startStalledTLSHandshakeEndpoint(t *testing.T) (string, func()) {
+	t.Helper()
+
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("failed to start listener: %v", err)
+	}
+
+	done := make(chan struct{})
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+	var connections []net.Conn
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for {
+			conn, acceptErr := listener.Accept()
+			if acceptErr != nil {
+				select {
+				case <-done:
+					return
+				default:
+					return
+				}
+			}
+
+			mu.Lock()
+			connections = append(connections, conn)
+			mu.Unlock()
+
+			wg.Add(1)
+			go func(c net.Conn) {
+				defer wg.Done()
+				<-done
+				_ = c.Close()
+			}(conn)
+		}
+	}()
+
+	cleanup := func() {
+		close(done)
+		_ = listener.Close()
+
+		mu.Lock()
+		for _, c := range connections {
+			_ = c.Close()
+		}
+		mu.Unlock()
+
+		wg.Wait()
+	}
+
+	return "https://" + listener.Addr().String(), cleanup
 }

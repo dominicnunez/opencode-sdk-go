@@ -111,6 +111,10 @@ func (s *EventService) doStreamingRequest(ctx context.Context, req *http.Request
 		transportForConnect.ResponseHeaderTimeout,
 		connectTimeout,
 	)
+	transportForConnect.TLSHandshakeTimeout = minDuration(
+		transportForConnect.TLSHandshakeTimeout,
+		connectTimeout,
+	)
 
 	baseDialContext := transportForConnect.DialContext
 	if baseDialContext == nil {
