@@ -35,6 +35,7 @@ func TestScriptsLint_MissingGolangciLintShowsInstallMessage(t *testing.T) {
 		t.Fatalf("chmod fake dirname: %v", err)
 	}
 
+	// #nosec G204 -- test runs a repository-local script from a controlled path.
 	cmd := exec.Command("bash", filepath.Join(repoRoot, "scripts/lint"))
 	cmd.Env = append(os.Environ(), "PATH="+fakeBinDir+":/usr/bin:/bin")
 	out, err := cmd.CombinedOutput()

@@ -26,6 +26,7 @@ func TestScriptsMock_NoArgsUsesDefaultSpecPath(t *testing.T) {
 		t.Fatalf("chmod fake npm: %v", err)
 	}
 
+	// #nosec G204 -- test runs a repository-local script from a controlled path.
 	cmd := exec.Command("bash", filepath.Join(repoRoot, "scripts/mock"))
 	cmd.Env = append(os.Environ(),
 		"PATH="+fakeBinDir+string(os.PathListSeparator)+os.Getenv("PATH"),
