@@ -107,6 +107,12 @@ func (s *EventService) doStreamingRequest(ctx context.Context, req *http.Request
 
 		resp, err := baseClient.Do(req.WithContext(connectCtx)) //nolint:gosec // request URL comes from validated baseURL and endpoint path composition
 		timedOut := !timer.Stop() && errors.Is(context.Cause(connectCtx), context.DeadlineExceeded)
+		if timedOut {
+			if resp != nil {
+				_ = resp.Body.Close()
+			}
+			return nil, fmt.Errorf("stream connect timeout after %s: %w", connectTimeout, context.DeadlineExceeded)
+		}
 		if err == nil && resp != nil {
 			return resp, nil
 		}

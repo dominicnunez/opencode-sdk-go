@@ -517,7 +517,7 @@ func TestListStreaming_NoDeadlineWithCustomTransportUsesClientTimeoutDuringConne
 	}
 }
 
-func TestListStreaming_CustomTransportTimeoutRaceReturnsStreamAndClosesBody(t *testing.T) {
+func TestListStreaming_CustomTransportTimeoutRaceReturnsTimeoutAndClosesBody(t *testing.T) {
 	const clientTimeout = 30 * time.Millisecond
 	const connectDelay = 75 * time.Millisecond
 
@@ -546,13 +546,16 @@ func TestListStreaming_CustomTransportTimeoutRaceReturnsStreamAndClosesBody(t *t
 	}
 
 	stream := client.Event.ListStreaming(context.Background(), nil)
-	if !stream.Next() {
+	if stream.Next() {
 		_ = stream.Close()
-		t.Fatalf("expected event stream to succeed after delayed transport response, got err: %v", stream.Err())
+		t.Fatal("expected stream connect timeout when delayed response exceeds client timeout")
 	}
-
-	if err := stream.Close(); err != nil {
-		t.Fatalf("expected stream close to succeed: %v", err)
+	streamErr := stream.Err()
+	if streamErr == nil {
+		t.Fatal("expected timeout error when delayed response exceeds client timeout")
+	}
+	if !errors.Is(streamErr, context.DeadlineExceeded) {
+		t.Fatalf("expected deadline exceeded error, got: %v", streamErr)
 	}
 	if got := atomic.LoadInt32(&closedCount); got != 1 {
 		t.Fatalf("expected response body to be closed exactly once, got %d", got)
