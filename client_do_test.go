@@ -534,6 +534,37 @@ func TestClientDo_TransportErrorRetryExhaustion(t *testing.T) {
 	}
 }
 
+func TestClientDo_NilResponseWithoutErrorFromTransport(t *testing.T) {
+	attempts := 0
+
+	client, err := opencode.NewClient(
+		opencode.WithBaseURL("http://127.0.0.1"),
+		opencode.WithMaxRetries(2),
+		opencode.WithHTTPClient(&http.Client{
+			Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+				attempts++
+				return nil, nil
+			}),
+		}),
+	)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	_, err = client.Session.List(context.Background(), &opencode.SessionListParams{})
+	if err == nil {
+		t.Fatal("expected error when transport returns nil response and nil error")
+	}
+
+	if attempts != 3 {
+		t.Fatalf("expected 3 attempts (1 initial + 2 retries), got %d", attempts)
+	}
+
+	if !strings.Contains(err.Error(), "nil *Response with a nil error") {
+		t.Fatalf("expected nil-response transport error, got: %v", err)
+	}
+}
+
 func TestClientDo_PostTransportErrorDoesNotRetry(t *testing.T) {
 	transportErr := errors.New("connection refused")
 	attempts := 0
