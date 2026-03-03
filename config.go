@@ -1789,8 +1789,58 @@ func (r ConfigGetParams) URLQuery() (url.Values, error) {
 type ConfigUpdateParams struct {
 	// Config is the request body. The json:"-" tag prevents double-encoding
 	// because MarshalJSON serializes this field as the top-level JSON object.
-	Config    Config  `json:"-"`
+	Config    ConfigPatch `json:"-"`
 	Directory *string `json:"-" query:"directory,omitempty"`
+}
+
+// ConfigPatch represents mutable configuration fields for PATCH /config.
+// Pointer-backed scalar fields distinguish omitted values (nil) from explicit
+// updates (including false/zero/empty string values).
+type ConfigPatch struct {
+	// JSON schema reference for configuration validation
+	Schema *string `json:"$schema,omitempty"`
+	// Agent configuration, see https://opencode.ai/docs/agent
+	Agent *ConfigAgent `json:"agent,omitempty"`
+	// Deprecated: Use Share instead. Share newly created sessions automatically.
+	Autoshare *bool `json:"autoshare,omitempty"`
+	// Automatically update to the latest version
+	Autoupdate *bool `json:"autoupdate,omitempty"`
+	// Command configuration, see https://opencode.ai/docs/commands
+	Command map[string]ConfigCommand `json:"command,omitempty"`
+	// Disable providers that are loaded automatically
+	DisabledProviders []string                   `json:"disabled_providers,omitempty"`
+	Experimental      *ConfigExperimental        `json:"experimental,omitempty"`
+	Formatter         map[string]ConfigFormatter `json:"formatter,omitempty"`
+	// Additional instruction files or patterns to include
+	Instructions []string `json:"instructions,omitempty"`
+	// Custom keybind configurations
+	Keybinds *KeybindsConfig `json:"keybinds,omitempty"`
+	// Deprecated: Always uses stretch layout.
+	Layout *ConfigLayout `json:"layout,omitempty"`
+	Lsp    map[string]ConfigLsp `json:"lsp,omitempty"`
+	// MCP (Model Context Protocol) server configurations
+	Mcp map[string]ConfigMcp `json:"mcp,omitempty"`
+	// Model to use in the format of provider/model, eg anthropic/claude-2
+	Model      *string           `json:"model,omitempty"`
+	Permission *ConfigPermission `json:"permission,omitempty"`
+	Plugin     []string          `json:"plugin,omitempty"`
+	// Custom provider configurations and model overrides
+	Provider map[string]ConfigProvider `json:"provider,omitempty"`
+	// Control sharing behavior:'manual' allows manual sharing via commands, 'auto'
+	// enables automatic sharing, 'disabled' disables all sharing
+	Share *ConfigShare `json:"share,omitempty"`
+	// Small model to use for tasks like title generation in the format of
+	// provider/model
+	SmallModel *string `json:"small_model,omitempty"`
+	Snapshot   *bool   `json:"snapshot,omitempty"`
+	// Theme name to use for the interface
+	Theme *string         `json:"theme,omitempty"`
+	Tools map[string]bool `json:"tools,omitempty"`
+	// TUI specific settings
+	Tui *ConfigTui `json:"tui,omitempty"`
+	// Custom username to display in conversations instead of system username
+	Username *string        `json:"username,omitempty"`
+	Watcher  *ConfigWatcher `json:"watcher,omitempty"`
 }
 
 // URLQuery serializes [ConfigUpdateParams]'s query parameters as `url.Values`.
@@ -1800,211 +1850,164 @@ func (r ConfigUpdateParams) URLQuery() (url.Values, error) {
 
 // MarshalJSON marshals the Config field for the request body
 func (r ConfigUpdateParams) MarshalJSON() ([]byte, error) {
-	body, err := configToPatchObject(reflect.ValueOf(r.Config))
+	payload, keep, err := buildConfigUpdateJSONValue(reflect.ValueOf(r.Config), "config")
 	if err != nil {
-		return nil, err
-	}
-	return json.Marshal(body)
-}
-
-func configToPatchObject(configValue reflect.Value) (map[string]interface{}, error) {
-	encoded, keep, err := encodePatchJSONValue(configValue)
-	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("marshal config update payload: %w", err)
 	}
 	if !keep {
-		return map[string]interface{}{}, nil
+		return []byte("{}"), nil
 	}
-	body, ok := encoded.(map[string]interface{})
-	if !ok {
-		return nil, fmt.Errorf("encode config patch object: expected map, got %T", encoded)
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return nil, fmt.Errorf("marshal config update payload: %w", err)
 	}
-	delete(body, "mode")
 	return body, nil
 }
 
-func encodePatchJSONValue(value reflect.Value) (interface{}, bool, error) {
+func buildConfigUpdateJSONValue(value reflect.Value, path string) (interface{}, bool, error) {
 	if !value.IsValid() {
 		return nil, false, nil
 	}
 
-	if value.Kind() == reflect.Pointer {
+	for value.Kind() == reflect.Interface || value.Kind() == reflect.Pointer {
 		if value.IsNil() {
 			return nil, false, nil
 		}
-		return encodePatchJSONValue(value.Elem())
+		value = value.Elem()
 	}
 
-	if value.Kind() == reflect.Interface {
-		if value.IsNil() {
-			return nil, false, nil
-		}
-		return encodePatchJSONValue(value.Elem())
-	}
-
-	if value.Kind() == reflect.Struct {
-		rawField := value.FieldByName("raw")
-		if rawField.IsValid() && rawField.Type() == reflect.TypeOf(json.RawMessage{}) {
-			if rawField.Len() == 0 {
-				return nil, false, nil
+	if value.CanInterface() {
+		if marshaler, ok := value.Interface().(json.Marshaler); ok {
+			raw, err := marshaler.MarshalJSON()
+			if err != nil {
+				return nil, false, fmt.Errorf("%s: %w", path, err)
 			}
-
 			var decoded interface{}
-			if err := json.Unmarshal(rawField.Bytes(), &decoded); err != nil {
-				return nil, false, err
+			if err := json.Unmarshal(raw, &decoded); err != nil {
+				return nil, false, fmt.Errorf("%s: decode marshaled JSON: %w", path, err)
 			}
-			pruned, keep := pruneNilJSONValue(decoded)
-			return pruned, keep, nil
+			return buildConfigUpdateJSONValue(reflect.ValueOf(decoded), path)
 		}
-	}
-
-	if marshaled, marshalerFound, err := encodeWithJSONMarshaler(value); marshalerFound || err != nil {
-		return marshaled, marshalerFound, err
 	}
 
 	switch value.Kind() {
+	case reflect.Map:
+		if value.Len() == 0 {
+			return nil, false, nil
+		}
+		result := make(map[string]interface{}, value.Len())
+		iter := value.MapRange()
+		for iter.Next() {
+			key := iter.Key()
+			if key.Kind() != reflect.String {
+				return nil, false, fmt.Errorf("%s: unsupported map key type %s", path, key.Type())
+			}
+			itemPath := fmt.Sprintf("%s.%s", path, key.String())
+			item, keep, err := buildConfigUpdateJSONValue(iter.Value(), itemPath)
+			if err != nil {
+				return nil, false, err
+			}
+			if keep {
+				result[key.String()] = item
+			}
+		}
+		if len(result) == 0 {
+			return nil, false, nil
+		}
+		return result, true, nil
+	case reflect.Slice, reflect.Array:
+		if value.Len() == 0 {
+			return nil, false, nil
+		}
+		result := make([]interface{}, value.Len())
+		for i := 0; i < value.Len(); i++ {
+			itemPath := fmt.Sprintf("%s[%d]", path, i)
+			item, keep, err := buildConfigUpdateJSONValue(value.Index(i), itemPath)
+			if err != nil {
+				return nil, false, err
+			}
+			if keep {
+				result[i] = item
+			}
+		}
+		return result, true, nil
 	case reflect.Struct:
-		out := make(map[string]interface{})
-		valueType := value.Type()
+		result := make(map[string]interface{})
+		typ := value.Type()
 		for i := 0; i < value.NumField(); i++ {
-			fieldType := valueType.Field(i)
+			fieldType := typ.Field(i)
 			if fieldType.PkgPath != "" {
 				continue
 			}
-			fieldName, omitEmpty, include := parseJSONTag(fieldType)
-			if !include {
+			fieldName, omitEmpty, skip := parseJSONTag(fieldType)
+			if skip {
 				continue
 			}
 			fieldValue := value.Field(i)
-			if omitEmpty && fieldValue.IsZero() {
+			if omitEmpty && isJSONOmitEmptyValue(fieldValue) {
 				continue
 			}
-			encodedField, keep, err := encodePatchJSONValue(fieldValue)
+			itemPath := fmt.Sprintf("%s.%s", path, fieldName)
+			item, keep, err := buildConfigUpdateJSONValue(fieldValue, itemPath)
 			if err != nil {
 				return nil, false, err
 			}
 			if !keep {
 				continue
 			}
-			out[fieldName] = encodedField
+			result[fieldName] = item
 		}
-		return out, true, nil
-	case reflect.Map:
-		if value.IsNil() {
+		if len(result) == 0 {
 			return nil, false, nil
 		}
-		out := make(map[string]interface{}, value.Len())
-		iter := value.MapRange()
-		for iter.Next() {
-			mapKey := fmt.Sprintf("%v", iter.Key().Interface())
-			encodedItem, keep, err := encodePatchJSONValue(iter.Value())
-			if err != nil {
-				return nil, false, err
-			}
-			if !keep {
-				continue
-			}
-			out[mapKey] = encodedItem
-		}
-		return out, true, nil
-	case reflect.Slice, reflect.Array:
-		if value.Kind() == reflect.Slice && value.IsNil() {
-			return nil, false, nil
-		}
-		out := make([]interface{}, value.Len())
-		for i := 0; i < value.Len(); i++ {
-			encodedItem, keep, err := encodePatchJSONValue(value.Index(i))
-			if err != nil {
-				return nil, false, err
-			}
-			if !keep {
-				out[i] = nil
-				continue
-			}
-			out[i] = encodedItem
-		}
-		return out, true, nil
+		return result, true, nil
 	default:
-		return value.Interface(), true, nil
+		if value.CanInterface() {
+			return value.Interface(), true, nil
+		}
+		return nil, false, fmt.Errorf("%s: unsupported value", path)
 	}
 }
 
-var jsonMarshalerType = reflect.TypeOf((*json.Marshaler)(nil)).Elem()
-
-func encodeWithJSONMarshaler(value reflect.Value) (interface{}, bool, error) {
-	var marshaler json.Marshaler
-	if value.Type().Implements(jsonMarshalerType) && value.CanInterface() {
-		marshaler = value.Interface().(json.Marshaler)
-	} else if value.CanAddr() && value.Addr().Type().Implements(jsonMarshalerType) {
-		marshaler = value.Addr().Interface().(json.Marshaler)
-	}
-	if marshaler == nil {
-		return nil, false, nil
-	}
-
-	jsonBytes, err := marshaler.MarshalJSON()
-	if err != nil {
-		return nil, false, err
-	}
-
-	var decoded interface{}
-	if err := json.Unmarshal(jsonBytes, &decoded); err != nil {
-		return nil, false, err
-	}
-	pruned, keep := pruneNilJSONValue(decoded)
-	return pruned, keep, nil
-}
-
-func parseJSONTag(field reflect.StructField) (name string, omitEmpty, include bool) {
+func parseJSONTag(field reflect.StructField) (name string, omitEmpty bool, skip bool) {
 	tag := field.Tag.Get("json")
 	if tag == "-" {
-		return "", false, false
+		return "", false, true
 	}
 	if tag == "" {
-		return field.Name, false, true
+		return field.Name, false, false
 	}
 
 	parts := strings.Split(tag, ",")
-	if parts[0] == "" {
+	name = parts[0]
+	if name == "" {
 		name = field.Name
-	} else {
-		name = parts[0]
 	}
 	for _, option := range parts[1:] {
 		if option == "omitempty" {
 			omitEmpty = true
+			break
 		}
 	}
-	return name, omitEmpty, true
+	return name, omitEmpty, false
 }
 
-func pruneNilJSONValue(value interface{}) (interface{}, bool) {
-	switch v := value.(type) {
-	case nil:
-		return nil, false
-	case map[string]interface{}:
-		for key, item := range v {
-			pruned, keep := pruneNilJSONValue(item)
-			if !keep {
-				delete(v, key)
-				continue
-			}
-			v[key] = pruned
-		}
-		return v, true
-	case []interface{}:
-		for i, item := range v {
-			pruned, keep := pruneNilJSONValue(item)
-			if !keep {
-				v[i] = nil
-				continue
-			}
-			v[i] = pruned
-		}
-		return v, true
-	default:
-		return value, true
+func isJSONOmitEmptyValue(value reflect.Value) bool {
+	switch value.Kind() {
+	case reflect.Array, reflect.Map, reflect.Slice, reflect.String:
+		return value.Len() == 0
+	case reflect.Bool:
+		return !value.Bool()
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return value.Int() == 0
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		return value.Uint() == 0
+	case reflect.Float32, reflect.Float64:
+		return value.Float() == 0
+	case reflect.Interface, reflect.Pointer:
+		return value.IsNil()
 	}
+	return false
 }
 
 type ConfigProviderListParams struct {

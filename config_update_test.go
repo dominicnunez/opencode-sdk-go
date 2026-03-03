@@ -45,9 +45,9 @@ func TestConfigUpdate_Success(t *testing.T) {
 	}
 
 	params := &ConfigUpdateParams{
-		Config: Config{
-			Model: "anthropic/claude-sonnet-4",
-			Theme: "dark",
+		Config: ConfigPatch{
+			Model: strPtr("anthropic/claude-sonnet-4"),
+			Theme: strPtr("dark"),
 		},
 	}
 
@@ -98,8 +98,8 @@ func TestConfigUpdate_WithDirectoryQueryParam(t *testing.T) {
 
 	dir := "/workspace/project"
 	params := &ConfigUpdateParams{
-		Config: Config{
-			Model: "openai/gpt-4",
+		Config: ConfigPatch{
+			Model: strPtr("openai/gpt-4"),
 		},
 		Directory: &dir,
 	}
@@ -142,8 +142,8 @@ func TestConfigUpdate_ServerError(t *testing.T) {
 	}
 
 	params := &ConfigUpdateParams{
-		Config: Config{
-			Model: "anthropic/claude-sonnet-4",
+		Config: ConfigPatch{
+			Model: strPtr("anthropic/claude-sonnet-4"),
 		},
 	}
 
@@ -173,8 +173,8 @@ func TestConfigUpdate_InvalidJSON(t *testing.T) {
 	}
 
 	params := &ConfigUpdateParams{
-		Config: Config{
-			Model: "anthropic/claude-sonnet-4",
+		Config: ConfigPatch{
+			Model: strPtr("anthropic/claude-sonnet-4"),
 		},
 	}
 
@@ -237,7 +237,7 @@ func TestConfigUpdate_UnionTypeRoundTrip(t *testing.T) {
 	}
 
 	params := &ConfigUpdateParams{
-		Config: Config{
+		Config: ConfigPatch{
 			Mcp: map[string]ConfigMcp{
 				"test-server": mcp,
 			},
@@ -252,10 +252,10 @@ func TestConfigUpdate_UnionTypeRoundTrip(t *testing.T) {
 
 func TestConfigUpdateParams_MarshalJSON(t *testing.T) {
 	params := ConfigUpdateParams{
-		Config: Config{
-			Model:      "anthropic/claude-sonnet-4",
-			Theme:      "dark",
-			Autoupdate: true,
+		Config: ConfigPatch{
+			Model:      strPtr("anthropic/claude-sonnet-4"),
+			Theme:      strPtr("dark"),
+			Autoupdate: boolPtr(true),
 		},
 		Directory: nil,
 	}
@@ -265,26 +265,26 @@ func TestConfigUpdateParams_MarshalJSON(t *testing.T) {
 		t.Fatalf("MarshalJSON failed: %v", err)
 	}
 
-	var decoded Config
+	var decoded map[string]any
 	if err := json.Unmarshal(data, &decoded); err != nil {
 		t.Fatalf("Unmarshal failed: %v", err)
 	}
 
-	if decoded.Model != "anthropic/claude-sonnet-4" {
-		t.Errorf("Expected model anthropic/claude-sonnet-4, got %s", decoded.Model)
+	if decoded["model"] != "anthropic/claude-sonnet-4" {
+		t.Errorf("Expected model anthropic/claude-sonnet-4, got %v", decoded["model"])
 	}
-	if decoded.Theme != "dark" {
-		t.Errorf("Expected theme dark, got %s", decoded.Theme)
+	if decoded["theme"] != "dark" {
+		t.Errorf("Expected theme dark, got %v", decoded["theme"])
 	}
-	if !decoded.Autoupdate {
-		t.Error("Expected autoupdate true, got false")
+	if decoded["autoupdate"] != true {
+		t.Errorf("Expected autoupdate true, got %v", decoded["autoupdate"])
 	}
 }
 
-func TestConfigUpdateParams_MarshalJSON_OmitsZeroValues(t *testing.T) {
+func TestConfigUpdateParams_MarshalJSON_OmitsUnsetFields(t *testing.T) {
 	params := ConfigUpdateParams{
-		Config: Config{
-			Theme: "dark",
+		Config: ConfigPatch{
+			Theme: strPtr("dark"),
 		},
 	}
 
@@ -302,19 +302,19 @@ func TestConfigUpdateParams_MarshalJSON_OmitsZeroValues(t *testing.T) {
 		t.Errorf("Expected theme=dark, got %v", raw["theme"])
 	}
 	if _, ok := raw["autoshare"]; ok {
-		t.Error("Zero-value bool 'autoshare' should be omitted from PATCH body")
+		t.Error("Unset bool 'autoshare' should be omitted from PATCH body")
 	}
 	if _, ok := raw["autoupdate"]; ok {
-		t.Error("Zero-value bool 'autoupdate' should be omitted from PATCH body")
+		t.Error("Unset bool 'autoupdate' should be omitted from PATCH body")
 	}
 	if _, ok := raw["snapshot"]; ok {
-		t.Error("Zero-value bool 'snapshot' should be omitted from PATCH body")
+		t.Error("Unset bool 'snapshot' should be omitted from PATCH body")
 	}
 	if _, ok := raw["model"]; ok {
-		t.Error("Zero-value string 'model' should be omitted from PATCH body")
+		t.Error("Unset string 'model' should be omitted from PATCH body")
 	}
 	if _, ok := raw["mode"]; ok {
-		t.Error("Zero-value deprecated field 'mode' should be omitted from PATCH body")
+		t.Error("Deprecated field 'mode' should be omitted from PATCH body")
 	}
 
 	// Nil pointer struct fields must be omitted from PATCH body to avoid
@@ -328,7 +328,7 @@ func TestConfigUpdateParams_MarshalJSON_OmitsZeroValues(t *testing.T) {
 
 func TestConfigUpdateParams_MarshalJSON_OmitsUnsetPermissionBash(t *testing.T) {
 	params := ConfigUpdateParams{
-		Config: Config{
+		Config: ConfigPatch{
 			Permission: &ConfigPermission{
 				Edit:     ConfigPermissionEditAllow,
 				Webfetch: ConfigPermissionWebfetchAsk,
@@ -362,6 +362,84 @@ func TestConfigUpdateParams_MarshalJSON_OmitsUnsetPermissionBash(t *testing.T) {
 	}
 }
 
+func TestConfigUpdateParams_MarshalJSON_OmitsEmptyMcpMapAfterPruning(t *testing.T) {
+	params := ConfigUpdateParams{
+		Config: ConfigPatch{
+			Mcp: map[string]ConfigMcp{
+				"srv": {},
+			},
+		},
+	}
+
+	data, err := json.Marshal(params)
+	if err != nil {
+		t.Fatalf("MarshalJSON failed: %v", err)
+	}
+
+	var raw map[string]interface{}
+	if err := json.Unmarshal(data, &raw); err != nil {
+		t.Fatalf("Unmarshal into map failed: %v", err)
+	}
+
+	if _, ok := raw["mcp"]; ok {
+		t.Fatalf("Expected mcp to be omitted when all entries are pruned, got %v", raw["mcp"])
+	}
+}
+
+func TestConfigUpdateParams_MarshalJSON_OmitsEmptyLspMapAfterPruning(t *testing.T) {
+	params := ConfigUpdateParams{
+		Config: ConfigPatch{
+			Lsp: map[string]ConfigLsp{
+				"tsserver": {},
+			},
+		},
+	}
+
+	data, err := json.Marshal(params)
+	if err != nil {
+		t.Fatalf("MarshalJSON failed: %v", err)
+	}
+
+	var raw map[string]interface{}
+	if err := json.Unmarshal(data, &raw); err != nil {
+		t.Fatalf("Unmarshal into map failed: %v", err)
+	}
+
+	if _, ok := raw["lsp"]; ok {
+		t.Fatalf("Expected lsp to be omitted when all entries are pruned, got %v", raw["lsp"])
+	}
+}
+
+func TestConfigUpdateParams_MarshalJSON_IncludesExplicitFalseValues(t *testing.T) {
+	params := ConfigUpdateParams{
+		Config: ConfigPatch{
+			Autoshare:  boolPtr(false),
+			Autoupdate: boolPtr(false),
+			Snapshot:   boolPtr(false),
+		},
+	}
+
+	data, err := json.Marshal(params)
+	if err != nil {
+		t.Fatalf("MarshalJSON failed: %v", err)
+	}
+
+	var raw map[string]interface{}
+	if err := json.Unmarshal(data, &raw); err != nil {
+		t.Fatalf("Unmarshal into map failed: %v", err)
+	}
+
+	if value, ok := raw["autoshare"]; !ok || value != false {
+		t.Fatalf("Expected autoshare=false in payload, got %v", raw["autoshare"])
+	}
+	if value, ok := raw["autoupdate"]; !ok || value != false {
+		t.Fatalf("Expected autoupdate=false in payload, got %v", raw["autoupdate"])
+	}
+	if value, ok := raw["snapshot"]; !ok || value != false {
+		t.Fatalf("Expected snapshot=false in payload, got %v", raw["snapshot"])
+	}
+}
+
 func TestConfigUpdateParams_URLQuery(t *testing.T) {
 	tests := []struct {
 		name      string
@@ -372,7 +450,7 @@ func TestConfigUpdateParams_URLQuery(t *testing.T) {
 		{
 			name: "with directory",
 			params: ConfigUpdateParams{
-				Config:    Config{Model: "test"},
+				Config:    ConfigPatch{Model: strPtr("test")},
 				Directory: ptrString("/test/dir"),
 			},
 			expectDir: "/test/dir",
@@ -381,7 +459,7 @@ func TestConfigUpdateParams_URLQuery(t *testing.T) {
 		{
 			name: "without directory",
 			params: ConfigUpdateParams{
-				Config:    Config{Model: "test"},
+				Config:    ConfigPatch{Model: strPtr("test")},
 				Directory: nil,
 			},
 			hasDir: false,
@@ -407,3 +485,7 @@ func TestConfigUpdateParams_URLQuery(t *testing.T) {
 		})
 	}
 }
+
+func boolPtr(v bool) *bool { return &v }
+
+func strPtr(v string) *string { return &v }
