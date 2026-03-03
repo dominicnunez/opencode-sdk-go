@@ -517,6 +517,48 @@ func TestListStreaming_NoDeadlineWithCustomTransportUsesClientTimeoutDuringConne
 	}
 }
 
+func TestListStreaming_CustomTransportTimeoutRaceReturnsStreamAndClosesBody(t *testing.T) {
+	const clientTimeout = 30 * time.Millisecond
+	const connectDelay = 75 * time.Millisecond
+
+	var closedCount int32
+	body := &closeTrackedBody{
+		reader: strings.NewReader("event: message\ndata: {\"type\":\"message.updated\"}\n\n"),
+		closed: &closedCount,
+	}
+
+	client, err := opencode.NewClient(
+		opencode.WithTimeout(clientTimeout),
+		opencode.WithHTTPClient(&http.Client{
+			Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+				time.Sleep(connectDelay)
+				return &http.Response{
+					StatusCode: http.StatusOK,
+					Header:     http.Header{"Content-Type": []string{"text/event-stream"}},
+					Body:       body,
+					Request:    req,
+				}, nil
+			}),
+		}),
+	)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	stream := client.Event.ListStreaming(context.Background(), nil)
+	if !stream.Next() {
+		_ = stream.Close()
+		t.Fatalf("expected event stream to succeed after delayed transport response, got err: %v", stream.Err())
+	}
+
+	if err := stream.Close(); err != nil {
+		t.Fatalf("expected stream close to succeed: %v", err)
+	}
+	if got := atomic.LoadInt32(&closedCount); got != 1 {
+		t.Fatalf("expected response body to be closed exactly once, got %d", got)
+	}
+}
+
 func startStalledTLSHandshakeEndpoint(t *testing.T) (string, func()) {
 	t.Helper()
 
@@ -571,4 +613,18 @@ func startStalledTLSHandshakeEndpoint(t *testing.T) (string, func()) {
 	}
 
 	return "https://" + listener.Addr().String(), cleanup
+}
+
+type closeTrackedBody struct {
+	reader io.Reader
+	closed *int32
+}
+
+func (b *closeTrackedBody) Read(p []byte) (int, error) {
+	return b.reader.Read(p)
+}
+
+func (b *closeTrackedBody) Close() error {
+	atomic.AddInt32(b.closed, 1)
+	return nil
 }

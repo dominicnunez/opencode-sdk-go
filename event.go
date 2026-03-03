@@ -100,26 +100,36 @@ func (s *EventService) doStreamingRequest(ctx context.Context, req *http.Request
 	baseTransport := resolveHTTPTransport(baseClient.Transport)
 	if baseTransport == nil {
 		connectCtx, cancelConnect := context.WithCancelCause(ctx)
+		defer cancelConnect(nil)
 		timer := time.AfterFunc(connectTimeout, func() {
 			cancelConnect(context.DeadlineExceeded)
 		})
 
 		resp, err := baseClient.Do(req.WithContext(connectCtx)) //nolint:gosec // request URL comes from validated baseURL and endpoint path composition
-		if !timer.Stop() {
-			if cause := context.Cause(connectCtx); errors.Is(cause, context.DeadlineExceeded) {
-				return nil, fmt.Errorf("stream connect timeout after %s: %w", connectTimeout, context.DeadlineExceeded)
-			}
+		timedOut := !timer.Stop() && errors.Is(context.Cause(connectCtx), context.DeadlineExceeded)
+		if err == nil && resp != nil {
+			return resp, nil
 		}
+		if resp != nil {
+			_ = resp.Body.Close()
+		}
+
 		if err != nil {
 			if ctxErr := ctx.Err(); ctxErr != nil {
 				return nil, ctxErr
 			}
-			if cause := context.Cause(connectCtx); errors.Is(cause, context.DeadlineExceeded) {
+			if timedOut {
 				return nil, fmt.Errorf("stream connect timeout after %s: %w", connectTimeout, context.DeadlineExceeded)
 			}
 			return nil, err
 		}
-		return resp, nil
+		if timedOut {
+			return nil, fmt.Errorf("stream connect timeout after %s: %w", connectTimeout, context.DeadlineExceeded)
+		}
+		if cause := context.Cause(connectCtx); cause != nil {
+			return nil, cause
+		}
+		return nil, errors.New("stream connect failed without response")
 	}
 
 	clientForConnect := *baseClient
