@@ -45,6 +45,9 @@ func TestListStreaming_JSONErrorBody(t *testing.T) {
 	if !errors.As(err, &apiErr) {
 		t.Fatalf("expected *opencode.APIError, got %T: %v", err, err)
 	}
+	if got := err.Error(); !strings.Contains(got, "GET event:") {
+		t.Fatalf("expected operation context in error string, got %q", got)
+	}
 	if apiErr.StatusCode != http.StatusTooManyRequests {
 		t.Errorf("status: got %d, want %d", apiErr.StatusCode, http.StatusTooManyRequests)
 	}
@@ -167,6 +170,9 @@ func TestListStreaming_ErrorStatus(t *testing.T) {
 			var apiErr *opencode.APIError
 			if !errors.As(err, &apiErr) {
 				t.Fatalf("expected *opencode.APIError, got %T: %v", err, err)
+			}
+			if got := err.Error(); !strings.Contains(got, "GET event:") {
+				t.Fatalf("expected operation context in error string, got %q", got)
 			}
 			if apiErr.StatusCode != tt.wantStatus {
 				t.Errorf("expected status %d, got %d", tt.wantStatus, apiErr.StatusCode)

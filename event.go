@@ -69,7 +69,7 @@ func (s *EventService) ListStreaming(ctx context.Context, params *EventListParam
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return ssestream.NewStream[Event](nil, readAPIError(resp, maxErrorBodySize))
+		return ssestream.NewStream[Event](nil, fmt.Errorf("GET event: %w", readAPIError(resp, maxErrorBodySize)))
 	}
 
 	mediaType, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
