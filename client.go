@@ -15,6 +15,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/dominicnunez/opencode-sdk-go/internal"
@@ -30,6 +31,7 @@ const (
 	maxBackoff                     = 8 * time.Second
 	backoffJitterDiv               = 2
 	maxErrorBodySize               = 1 << 20 // 1 MB
+	maxRetryBodyDrainSize          = 64 << 10
 	maxConfigurableSuccessBodySize = int64(1<<63 - 2)
 
 	defaultMaxSuccessBodySize int64 = 8 << 20 // 8 MB
@@ -38,11 +40,13 @@ const (
 const (
 	dotPathSegment       = "."
 	doubleDotPathSegment = ".."
+	maxPathDecodePasses  = 8
 	maxRetryAfterSeconds = int64(1<<63-1) / int64(time.Second)
 )
 
 var retryBackoffRandInt63n = rand.Int63n
 var emptyJSONObjectBytes = []byte("{}")
+var requestBodyFieldCache sync.Map
 
 func blockRedirects(*http.Request, []*http.Request) error {
 	return http.ErrUseLastResponse
@@ -143,7 +147,7 @@ func NewClient(opts ...ClientOption) (*Client, error) {
 		if rawURL := os.Getenv("OPENCODE_BASE_URL"); rawURL != "" {
 			parsed, err := parseBaseURL(rawURL)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("parse OPENCODE_BASE_URL: %w", err)
 			}
 			c.baseURL = parsed
 		}
@@ -245,6 +249,14 @@ func decodeSuccessBodyLimitExceeded(reader *countingReader, limit int64) bool {
 	return reader != nil && limit > 0 && reader.count > limit
 }
 
+func drainSuccessBody(body io.Reader, limit int64) (int64, error) {
+	if limit <= 0 {
+		return io.Copy(io.Discard, body)
+	}
+
+	return io.Copy(io.Discard, io.LimitReader(body, limit+1))
+}
+
 func isMethodRetryable(method string) bool {
 	switch method {
 	case http.MethodGet, http.MethodHead, http.MethodPut, http.MethodDelete:
@@ -281,7 +293,13 @@ func (c *Client) do(ctx context.Context, method, path string, params, result int
 	defer func() { _ = resp.Body.Close() }()
 
 	if result == nil {
-		_, _ = io.Copy(io.Discard, resp.Body)
+		bytesDiscarded, err := drainSuccessBody(resp.Body, c.maxSuccessBodySize)
+		if err != nil {
+			return fmt.Errorf("discard %s %s response: %w", method, path, err)
+		}
+		if c.maxSuccessBodySize > 0 && bytesDiscarded > c.maxSuccessBodySize {
+			return fmt.Errorf("discard %s %s response: response body exceeds %d bytes limit", method, path, c.maxSuccessBodySize)
+		}
 		return nil
 	}
 
@@ -352,9 +370,9 @@ func validateEndpointPath(endpointPath string) error {
 			return fmt.Errorf("endpoint path contains forbidden dot-segment %q", segment)
 		}
 
-		decodedSegment, err := url.PathUnescape(segment)
+		decodedSegment, err := decodePathSegmentUntilStable(segment)
 		if err != nil {
-			continue
+			return err
 		}
 		if isDotPathSegment(decodedSegment) {
 			return fmt.Errorf("endpoint path contains forbidden dot-segment %q", decodedSegment)
@@ -365,6 +383,21 @@ func validateEndpointPath(endpointPath string) error {
 	}
 
 	return nil
+}
+
+func decodePathSegmentUntilStable(segment string) (string, error) {
+	decodedSegment := segment
+	for i := 0; i < maxPathDecodePasses; i++ {
+		nextDecoded, err := url.PathUnescape(decodedSegment)
+		if err != nil {
+			return "", fmt.Errorf("endpoint path contains invalid percent-encoding in segment %q: %w", decodedSegment, err)
+		}
+		if nextDecoded == decodedSegment {
+			return decodedSegment, nil
+		}
+		decodedSegment = nextDecoded
+	}
+	return "", fmt.Errorf("endpoint path segment exceeds %d decode passes", maxPathDecodePasses)
 }
 
 func isDotPathSegment(segment string) bool {
@@ -452,7 +485,7 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 			if resp != nil {
 				_ = resp.Body.Close()
 			}
-			return nil, ctx.Err()
+			return nil, fmt.Errorf("%s %s: %w", method, path, ctx.Err())
 		}
 
 		// Success — only 2xx responses are valid JSON API results.
@@ -471,7 +504,7 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 			retryDelay := retryDelayWithServerGuidance(attempt, resp, ctx, time.Now())
 
 			// Drain and close body before retry to enable connection reuse
-			_, _ = io.Copy(io.Discard, resp.Body)
+			_, _ = io.CopyN(io.Discard, resp.Body, maxRetryBodyDrainSize)
 			_ = resp.Body.Close()
 
 			timer := time.NewTimer(retryDelay)
@@ -479,7 +512,7 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 			case <-timer.C:
 			case <-ctx.Done():
 				timer.Stop()
-				return nil, ctx.Err()
+				return nil, fmt.Errorf("%s %s: %w", method, path, ctx.Err())
 			}
 			continue
 		}
@@ -501,7 +534,7 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 			case <-timer.C:
 			case <-ctx.Done():
 				timer.Stop()
-				return nil, ctx.Err()
+				return nil, fmt.Errorf("%s %s: %w", method, path, ctx.Err())
 			}
 		}
 	}
@@ -581,7 +614,17 @@ func shouldMarshalRequestBody(params interface{}) bool {
 		return true
 	}
 
-	return structHasJSONBodyFields(paramType)
+	return structHasJSONBodyFieldsCached(paramType)
+}
+
+func structHasJSONBodyFieldsCached(structType reflect.Type) bool {
+	if cachedValue, ok := requestBodyFieldCache.Load(structType); ok {
+		return cachedValue.(bool)
+	}
+
+	hasBodyFields := structHasJSONBodyFields(structType)
+	requestBodyFieldCache.Store(structType, hasBodyFields)
+	return hasBodyFields
 }
 
 func structHasJSONBodyFields(structType reflect.Type) bool {

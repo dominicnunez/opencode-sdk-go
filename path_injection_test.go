@@ -18,10 +18,24 @@ var allowedPathPayloads = []struct {
 }{
 	{"simple id", "safe-id"},
 	{"query injection is escaped", "id?x=1"},
-	{"encoded traversal string stays literal", "%2e%2e%2fconfig"},
 }
 
-var rejectedPathPayloads = []string{".", "..", "../config", "foo/bar", "..\\config", "foo\\bar"}
+var rejectedPathPayloads = []string{
+	".",
+	"..",
+	"../config",
+	"foo/bar",
+	"..\\config",
+	"foo\\bar",
+	"%2e%2e%2fconfig",
+	"%2e%2e%5cconfig",
+	"%252e%252e%252fconfig",
+	"%252e%252e%255cconfig",
+	"%2e%2e%2fconfig%ZZ",
+	"%2e%2e%5cconfig%ZZ",
+	"%252e%252e%252fconfig%ZZ",
+	"%252e%252e%255cconfig%ZZ",
+}
 
 type requestCapture struct {
 	path    string

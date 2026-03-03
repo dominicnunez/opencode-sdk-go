@@ -40,6 +40,9 @@ func TestNewClient_EnvBaseURL_InvalidURL(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for invalid URL")
 	}
+	if !strings.Contains(err.Error(), "OPENCODE_BASE_URL") {
+		t.Fatalf("expected env var context in error, got: %v", err)
+	}
 }
 
 func TestNewClient_WithBaseURLOverridesInvalidEnvBaseURL(t *testing.T) {
