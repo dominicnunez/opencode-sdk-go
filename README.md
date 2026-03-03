@@ -81,6 +81,7 @@ Idiomatic Go types — required fields are direct types, optional fields use poi
 ```go
 params := opencode.SessionCommandParams{
 	Command:   "list-files",              // required: direct type
+	Arguments: "--recursive",             // required: direct type
 	Directory: opencode.Ptr("./src"),     // optional: pointer
 	Agent:     nil,                       // optional: nil = omit
 }
