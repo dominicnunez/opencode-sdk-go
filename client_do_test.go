@@ -108,6 +108,9 @@ func TestClientDo_ContextCancellation(t *testing.T) {
 	if !errors.Is(err, context.Canceled) {
 		t.Errorf("expected context.Canceled, got: %v", err)
 	}
+	if !strings.Contains(err.Error(), "GET session") {
+		t.Errorf("expected error to include request context, got: %v", err)
+	}
 }
 
 func TestClientDo_QueryParams(t *testing.T) {
@@ -756,6 +759,9 @@ func TestClientDo_ContextCancelledDuringBackoffDelay(t *testing.T) {
 	if !errors.Is(err, context.Canceled) {
 		t.Errorf("expected context.Canceled, got: %v", err)
 	}
+	if !strings.Contains(err.Error(), "GET session") {
+		t.Errorf("expected error to include request context, got: %v", err)
+	}
 	if attempts != 1 {
 		t.Errorf("expected 1 attempt before cancellation, got %d", attempts)
 	}
@@ -793,6 +799,9 @@ func TestClientDo_ContextCancelledDuringInFlightRequest(t *testing.T) {
 	}
 	if !errors.Is(err, context.Canceled) {
 		t.Errorf("expected context.Canceled, got: %v", err)
+	}
+	if !strings.Contains(err.Error(), "GET session") {
+		t.Errorf("expected error to include request context, got: %v", err)
 	}
 }
 

@@ -32,6 +32,21 @@ extract_stats_value() {
     echo "$value"
 }
 
+validate_upstream_spec_url() {
+    local url="$1"
+    local trusted_prefix="https://raw.githubusercontent.com/$UPSTREAM_REPO/"
+
+    case "$url" in
+        "$trusted_prefix"*)
+            ;;
+        *)
+            echo "ERROR: untrusted upstream spec URL: $url" >&2
+            echo "ERROR: expected URL to start with $trusted_prefix" >&2
+            exit 1
+            ;;
+    esac
+}
+
 decode_base64() {
     local input="$1"
     local decoded
@@ -71,6 +86,7 @@ fi
 
 UPSTREAM_HASH=$(extract_stats_value "openapi_spec_hash")
 UPSTREAM_URL=$(extract_stats_value "openapi_spec_url")
+validate_upstream_spec_url "$UPSTREAM_URL"
 UPSTREAM_ENDPOINTS=$(extract_stats_value "configured_endpoints")
 
 # Hash our local spec

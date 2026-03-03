@@ -197,11 +197,45 @@ func TestSessionCommand_RequiresCommand(t *testing.T) {
 	}
 }
 
-func TestSessionCommand_RequiresArguments(t *testing.T) {
-	requestCount := 0
+func TestSessionCommand_AllowsEmptyArguments(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		requestCount++
-		t.Fatalf("unexpected request: %s %s", r.Method, r.URL.Path)
+		if r.Method != http.MethodPost {
+			t.Errorf("expected POST, got %s", r.Method)
+		}
+		if r.URL.Path != "/session/sess_123/command" {
+			t.Errorf("expected path /session/sess_123/command, got %s", r.URL.Path)
+		}
+
+		body, _ := io.ReadAll(r.Body)
+		var parsed map[string]interface{}
+		if err := json.Unmarshal(body, &parsed); err != nil {
+			t.Fatalf("failed to unmarshal request body: %v", err)
+		}
+		if parsed["command"] != "/ask" {
+			t.Errorf("expected command /ask, got %v", parsed["command"])
+		}
+		if parsed["arguments"] != "" {
+			t.Errorf("expected empty arguments string, got %v", parsed["arguments"])
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
+			"info": map[string]interface{}{
+				"id":         "msg_001",
+				"sessionID":  "sess_123",
+				"role":       "assistant",
+				"cost":       0.0,
+				"mode":       "",
+				"modelID":    "",
+				"parentID":   "",
+				"path":       map[string]interface{}{"cwd": "", "root": ""},
+				"providerID": "",
+				"system":     []string{},
+				"time":       map[string]interface{}{"created": 0.0, "completed": 0.0},
+				"tokens":     map[string]interface{}{"input": 0, "output": 0, "reasoning": 0, "cache": map[string]interface{}{"read": 0, "write": 0}},
+			},
+			"parts": []interface{}{},
+		})
 	}))
 	defer server.Close()
 
@@ -210,31 +244,15 @@ func TestSessionCommand_RequiresArguments(t *testing.T) {
 		t.Fatalf("failed to create client: %v", err)
 	}
 
-	tests := []struct {
-		name      string
-		arguments string
-	}{
-		{name: "empty", arguments: ""},
-		{name: "whitespace", arguments: " \t\n "},
+	resp, err := client.Session.Command(context.Background(), "sess_123", &SessionCommandParams{
+		Command:   "/ask",
+		Arguments: "",
+	})
+	if err != nil {
+		t.Fatalf("expected empty arguments to be accepted, got %v", err)
 	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			_, err := client.Session.Command(context.Background(), "sess_123", &SessionCommandParams{
-				Command:   "/ask",
-				Arguments: tt.arguments,
-			})
-			if err == nil {
-				t.Fatal("expected error for missing arguments")
-			}
-			if !errors.Is(err, &MissingRequiredParameterError{Parameter: "arguments"}) {
-				t.Fatalf("unexpected error: %v", err)
-			}
-		})
-	}
-
-	if requestCount != 0 {
-		t.Fatalf("expected no request, got %d", requestCount)
+	if resp.Info.ID != "msg_001" {
+		t.Errorf("expected info ID msg_001, got %s", resp.Info.ID)
 	}
 }
 

@@ -258,6 +258,27 @@ actually cause same-repo PRs to run CI twice — once from push, once from pull_
 
 **Reason:** The finding claims "several other services with required params use the same `params is required` message but their nil-params tests only verify the error is non-nil, not the message content." This is factually wrong. `nilparams_test.go` covers all the named services (App.Log, File.List, File.Read, Find.Files, Find.Symbols, Find.Text, Tui.AppendPrompt, Tui.ExecuteCommand, Tui.ShowToast) and asserts `strings.Contains(err.Error(), "params is required")` at line 127. Additional dedicated tests (`config_update_test.go:126`, `auth_test.go:122`, `session_shell_test.go:174`, `session_summarize_test.go:114`, `sessionpermission_respond_test.go:240`) also check the error message. The error message format is consistent across all services and tested everywhere.
 
+### golangci-lint gosec exclusion is mis-targeted because G117 is not the right rule
+
+**Location:** `.golangci.yml:20-23` — gosec exclusion for config APIKey handling
+**Date:** 2026-03-03
+
+**Reason:** `G117` is a valid gosec rule ("Potential exposure of secrets via JSON marshaling"), so excluding it for the `ConfigProviderOptions.APIKey` pattern is consistent with the comment's intent. This was verified by running gosec directly with `-include=G117`, which accepted the rule and analyzer without error. The finding's premise that the exclusion text is inherently mismatched is incorrect.
+
+### APIError formatting path lacks direct coverage
+
+**Location:** `errors.go:116-127` — `APIError.Error()` formatting
+**Date:** 2026-03-03
+
+**Reason:** This is a false positive. `errors_test.go` already has direct, table-driven coverage in `TestAPIError_Error_Format` (line 17) that calls `APIError.Error()` and checks formatting with and without request ID, with a read error, and with nil `ReadErr`.
+
+### Retry jitter is process-deterministic by default
+
+**Location:** `client.go:43` — retryBackoffRandInt63n assignment
+**Date:** 2026-03-03
+
+**Reason:** The finding claims package-level `math/rand.Int63n` is deterministic across processes unless explicitly seeded. In Go 1.22 (this repo's `go.mod` version), the package-level generator is auto-seeded at startup by default, so retries are not process-deterministic in normal operation. The audit misstates current Go runtime behavior.
+
 ### ListStreaming bypasses client timeout on SSE connections
 
 **Location:** `event.go:51` — uses httpClient.Do directly
@@ -1518,6 +1539,13 @@ actually cause same-repo PRs to run CI twice — once from push, once from pull_
 
 **Reason:** The SDK does not implement `Retry-After` header support — 429 responses use the same exponential backoff as 5xx. Describing a missing feature as a testing gap is a misread. `TestClientDo_ExponentialBackoff` (client_do_test.go:234) already tests backoff timing with wall-clock measurements, verifying delays of ~500ms and ~1000ms and that delays increase exponentially. The `delay <= 0` overflow path is already classified in known exception "Backoff overflow guard is unreachable with current constants." The `maxBackoff` cap is not explicitly tested, but the finding's primary claim about Retry-After and jitter describes a non-existent feature.
 
+### Runtime HTTP trace log is committed to the repository
+
+**Location:** `.prism.log:5`
+**Date:** 2026-03-03
+
+**Reason:** The finding says `.prism.log` is committed, but the file is not tracked by git (`git ls-files --error-unmatch .prism.log` fails) and is explicitly ignored in `.gitignore` line 1. This is a local untracked artifact, not repository-committed runtime data.
+
 ### apierror.Error tested but never constructed in production
 
 **Location:** `internal/apierror/apierror_test.go:1` — tests for dead code
@@ -1545,3 +1573,24 @@ actually cause same-repo PRs to run CI twice — once from push, once from pull_
 **Date:** 2026-03-01
 
 **Reason:** The audit claims `FileService.List` and `FileService.Read` rely on `query:"path,required"` struct tags instead of explicit validation. This was fixed in commit `8f53a52`. `List` validates `Path` at line 20 and `Read` validates `Path` at line 35 — both before calling `client.do`. The audit was written against pre-fix code.
+
+### Append prompt is missing required text validation for empty or whitespace values
+
+**Location:** `tui.go:17` — `TuiService.AppendPrompt`
+**Date:** 2026-03-02
+
+**Reason:** `TuiService.AppendPrompt` does not validate empty or whitespace-only `Text`, but the audit's rationale is factually incorrect: the referenced OpenAPI schema at `specs/openapi.yml:2274-2282` marks `text` as required (field must be present) and does not define `minLength` or any non-whitespace constraint. Sending `{"text": ""}` still satisfies the documented schema requirement. The finding treats "required" as "non-empty", which the spec does not state.
+
+### Tests are missing a negative case for append prompt empty or whitespace text
+
+**Location:** `service_test.go:256` — `TestTuiService_AppendPrompt`
+**Date:** 2026-03-02
+
+**Reason:** It is true that no test currently asserts empty/whitespace `Text` is rejected, but this is not a factual bug in coverage because there is no documented client-side rule requiring such rejection. The finding depends on the same schema misread above: OpenAPI requires `text` to be present, not non-empty. Marking this as a testing gap assumes behavior that is not part of the current contract.
+
+### Retry jitter uses deterministic RNG sequence
+
+**Location:** `client.go:47` — `retryBackoffRandInt63n = rand.Int63n`
+**Date:** 2026-03-03
+
+**Reason:** This is a false positive on Go 1.22 (the version in `go.mod`). The package-level `math/rand` generator is auto-seeded at startup, so retries are not process-deterministic in normal operation. Empirical check in this repo showed different `rand.Int63n` outputs across separate process runs without calling `rand.Seed`.

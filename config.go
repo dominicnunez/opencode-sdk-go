@@ -1790,7 +1790,7 @@ type ConfigUpdateParams struct {
 	// Config is the request body. The json:"-" tag prevents double-encoding
 	// because MarshalJSON serializes this field as the top-level JSON object.
 	Config    ConfigPatch `json:"-"`
-	Directory *string `json:"-" query:"directory,omitempty"`
+	Directory *string     `json:"-" query:"directory,omitempty"`
 }
 
 // ConfigPatch represents mutable configuration fields for PATCH /config.
@@ -1816,7 +1816,7 @@ type ConfigPatch struct {
 	// Custom keybind configurations
 	Keybinds *KeybindsConfig `json:"keybinds,omitempty"`
 	// Deprecated: Always uses stretch layout.
-	Layout *ConfigLayout `json:"layout,omitempty"`
+	Layout *ConfigLayout        `json:"layout,omitempty"`
 	Lsp    map[string]ConfigLsp `json:"lsp,omitempty"`
 	// MCP (Model Context Protocol) server configurations
 	Mcp map[string]ConfigMcp `json:"mcp,omitempty"`

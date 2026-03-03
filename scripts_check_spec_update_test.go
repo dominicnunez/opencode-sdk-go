@@ -28,7 +28,7 @@ func TestCheckSpecUpdate_MissingGHShowsInstallError(t *testing.T) {
 
 func TestCheckSpecUpdate_UpdateFailsWhenDownloadFails(t *testing.T) {
 	const localSpec = "old-spec"
-	const upstreamURL = "https://example.com/spec.yml"
+	upstreamURL := trustedSpecURL()
 	scriptPath, specPath, fakeBin := setupCheckSpecUpdateWorkspace(t, localSpec)
 
 	stats := makeStatsYAML(sha256Hex("new-spec"), upstreamURL, "42")
@@ -59,7 +59,7 @@ func TestCheckSpecUpdate_UpdateFailsWhenDownloadFails(t *testing.T) {
 
 func TestCheckSpecUpdate_UpdateFailsOnHashMismatch(t *testing.T) {
 	const localSpec = "old-spec"
-	const upstreamURL = "https://example.com/spec.yml"
+	upstreamURL := trustedSpecURL()
 	const downloadedSpec = "downloaded-spec"
 	const expectedSpec = "different-spec"
 	scriptPath, specPath, fakeBin := setupCheckSpecUpdateWorkspace(t, localSpec)
@@ -93,7 +93,7 @@ func TestCheckSpecUpdate_UpdateFailsOnHashMismatch(t *testing.T) {
 
 func TestCheckSpecUpdate_UpdateReplacesSpecOnMatchingHash(t *testing.T) {
 	const localSpec = "old-spec"
-	const upstreamURL = "https://example.com/spec.yml"
+	upstreamURL := trustedSpecURL()
 	const downloadedSpec = "new-spec"
 	scriptPath, specPath, fakeBin := setupCheckSpecUpdateWorkspace(t, localSpec)
 
@@ -126,7 +126,7 @@ func TestCheckSpecUpdate_UpdateReplacesSpecOnMatchingHash(t *testing.T) {
 
 func TestCheckSpecUpdate_Base64DecodeFallsBackToBSDFlag(t *testing.T) {
 	const localSpec = "stable-spec"
-	const upstreamURL = "https://example.com/spec.yml"
+	upstreamURL := trustedSpecURL()
 
 	scriptPath, _, fakeBin := setupCheckSpecUpdateWorkspace(t, localSpec)
 
@@ -152,6 +152,39 @@ func TestCheckSpecUpdate_Base64DecodeFallsBackToBSDFlag(t *testing.T) {
 	}
 	if !strings.Contains(string(out), "Spec is up to date") {
 		t.Fatalf("expected up-to-date message, got output:\n%s", string(out))
+	}
+}
+
+func TestCheckSpecUpdate_UpdateRejectsUntrustedSpecURL(t *testing.T) {
+	const localSpec = "old-spec"
+	const upstreamURL = "https://example.com/spec.yml"
+	const downloadedSpec = "new-spec"
+	scriptPath, specPath, fakeBin := setupCheckSpecUpdateWorkspace(t, localSpec)
+
+	stats := makeStatsYAML(sha256Hex(downloadedSpec), upstreamURL, "42")
+	writeExecutable(t, fakeBin, "gh", "#!/usr/bin/env bash\nset -euo pipefail\nprintf '%s' \"$TEST_STATS_B64\"\n")
+	writeExecutable(t, fakeBin, "curl", curlWriteBodyScript())
+
+	cmd := exec.Command("bash", scriptPath, "--update")
+	cmd.Env = append(os.Environ(),
+		"PATH="+fakeBin+string(os.PathListSeparator)+os.Getenv("PATH"),
+		"TEST_STATS_B64="+base64.StdEncoding.EncodeToString([]byte(stats)),
+		"TEST_CURL_BODY="+downloadedSpec,
+	)
+	out, err := cmd.CombinedOutput()
+	if err == nil {
+		t.Fatalf("expected update to fail for untrusted spec URL, output:\n%s", string(out))
+	}
+	if !strings.Contains(string(out), "untrusted upstream spec URL") {
+		t.Fatalf("expected untrusted URL rejection message, got output:\n%s", string(out))
+	}
+
+	unchanged, readErr := os.ReadFile(specPath)
+	if readErr != nil {
+		t.Fatalf("read spec after untrusted URL rejection: %v", readErr)
+	}
+	if string(unchanged) != localSpec {
+		t.Fatalf("spec changed after untrusted URL rejection, got %q", string(unchanged))
 	}
 }
 
@@ -236,4 +269,8 @@ func curlWriteBodyScript() string {
 		"  exit 2\n" +
 		"fi\n" +
 		"printf '%s' \"$TEST_CURL_BODY\" > \"$out\"\n"
+}
+
+func trustedSpecURL() string {
+	return "https://raw.githubusercontent.com/anomalyco/opencode-sdk-go/main/specs/openapi.yml"
 }
