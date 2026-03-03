@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -102,7 +103,10 @@ func TestListStreaming_TransportErrorWrapped(t *testing.T) {
 		t.Fatalf("failed to create client: %v", err)
 	}
 
-	stream := client.Event.ListStreaming(context.Background(), nil)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	stream := client.Event.ListStreaming(ctx, nil)
 	defer func() { _ = stream.Close() }()
 	if stream.Next() {
 		t.Fatal("expected Next() to return false on transport error")
@@ -229,7 +233,7 @@ func TestListStreaming_MissingContentType(t *testing.T) {
 	}
 }
 
-func TestListStreaming_NoDeadlineStaysOpenPastClientTimeout(t *testing.T) {
+func TestListStreaming_ExplicitDeadlineStaysOpenPastClientTimeout(t *testing.T) {
 	const clientTimeout = 50 * time.Millisecond
 	sendEvent := make(chan struct{})
 
@@ -249,7 +253,10 @@ func TestListStreaming_NoDeadlineStaysOpenPastClientTimeout(t *testing.T) {
 		t.Fatalf("failed to create client: %v", err)
 	}
 
-	stream := client.Event.ListStreaming(context.Background(), nil)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	stream := client.Event.ListStreaming(ctx, nil)
 	defer func() { _ = stream.Close() }()
 
 	time.Sleep(clientTimeout + 20*time.Millisecond)
@@ -257,6 +264,40 @@ func TestListStreaming_NoDeadlineStaysOpenPastClientTimeout(t *testing.T) {
 
 	if !stream.Next() {
 		t.Fatalf("expected event after waiting longer than client timeout, got err: %v", stream.Err())
+	}
+}
+
+func TestListStreaming_NoDeadlineIgnoresHTTPClientTimeoutAfterConnect(t *testing.T) {
+	const httpClientTimeout = 50 * time.Millisecond
+	const eventDelay = httpClientTimeout + 50*time.Millisecond
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/event-stream")
+		flusher, ok := w.(http.Flusher)
+		if !ok {
+			t.Fatal("response writer does not support flushing")
+		}
+		flusher.Flush()
+
+		time.Sleep(eventDelay)
+		_, _ = w.Write([]byte("event: message\ndata: {\"type\":\"message.updated\"}\n\n"))
+		flusher.Flush()
+	}))
+	defer server.Close()
+
+	client, err := opencode.NewClient(
+		opencode.WithBaseURL(server.URL),
+		opencode.WithHTTPClient(&http.Client{Timeout: httpClientTimeout}),
+	)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	stream := client.Event.ListStreaming(context.Background(), nil)
+	defer func() { _ = stream.Close() }()
+
+	if !stream.Next() {
+		t.Fatalf("expected event after waiting longer than http client timeout, got err: %v", stream.Err())
 	}
 }
 
@@ -311,6 +352,33 @@ func TestListStreaming_NoDeadlineUsesClientTimeoutDuringConnect(t *testing.T) {
 	}
 }
 
+func TestListStreaming_CustomTransportWithExplicitDeadline(t *testing.T) {
+	client, err := opencode.NewClient(
+		opencode.WithHTTPClient(&http.Client{
+			Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+				<-req.Context().Done()
+				return nil, req.Context().Err()
+			}),
+		}),
+	)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
+	defer cancel()
+
+	stream := client.Event.ListStreaming(ctx, nil)
+	defer func() { _ = stream.Close() }()
+
+	if stream.Next() {
+		t.Fatal("expected Next() to return false when connect deadline is exceeded")
+	}
+	if !errors.Is(stream.Err(), context.DeadlineExceeded) {
+		t.Fatalf("expected context deadline exceeded, got: %v", stream.Err())
+	}
+}
+
 type blockedSSEBody struct {
 	ready <-chan struct{}
 	data  []byte
@@ -332,3 +400,34 @@ func (b *blockedSSEBody) Read(p []byte) (int, error) {
 }
 
 func (b *blockedSSEBody) Close() error { return nil }
+
+func TestListStreaming_NoDeadlineWithCustomTransportFailsFast(t *testing.T) {
+	var calls int32
+	client, err := opencode.NewClient(
+		opencode.WithHTTPClient(&http.Client{
+			Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+				atomic.AddInt32(&calls, 1)
+				select {}
+			}),
+		}),
+	)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	stream := client.Event.ListStreaming(context.Background(), nil)
+	defer func() { _ = stream.Close() }()
+
+	if stream.Next() {
+		t.Fatal("expected Next() to return false for unsupported custom transport connect timeout behavior")
+	}
+	if stream.Err() == nil {
+		t.Fatal("expected non-nil error for unsupported custom transport connect timeout behavior")
+	}
+	if !strings.Contains(stream.Err().Error(), "explicit context deadline") {
+		t.Fatalf("expected explicit context deadline guidance, got: %v", stream.Err())
+	}
+	if atomic.LoadInt32(&calls) != 0 {
+		t.Fatalf("expected transport not to be called, got %d calls", calls)
+	}
+}

@@ -3,6 +3,7 @@ package opencode
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"mime"
 	"net"
@@ -18,6 +19,9 @@ import (
 type EventService struct {
 	client *Client
 }
+
+var errStreamingCustomTransportRequiresDeadline = errors.New(
+	"streaming with custom transport requires explicit context deadline")
 
 // ListStreaming opens an SSE connection and returns a stream of events.
 // The returned stream is never nil. Callers must defer stream.Close() to
@@ -57,8 +61,8 @@ func (s *EventService) ListStreaming(ctx context.Context, params *EventListParam
 	req.Header.Set("User-Agent", s.client.userAgent)
 
 	// Execute request. For contexts without deadlines, enforce the client's
-	// timeout only while connecting/awaiting response headers so active streams
-	// are not interrupted by timeout cancellation.
+	// timeout while connecting/awaiting response headers, not while reading an
+	// active stream body.
 	resp, err := s.doStreamingRequest(ctx, req)
 	if err != nil {
 		return ssestream.NewStream[Event](nil, fmt.Errorf("event stream request: %w", err))
@@ -82,6 +86,10 @@ func (s *EventService) ListStreaming(ctx context.Context, params *EventListParam
 }
 
 func (s *EventService) doStreamingRequest(ctx context.Context, req *http.Request) (*http.Response, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+
 	if _, hasDeadline := ctx.Deadline(); hasDeadline {
 		return s.client.httpClient.Do(req)
 	}
@@ -94,7 +102,7 @@ func (s *EventService) doStreamingRequest(ctx context.Context, req *http.Request
 	baseClient := s.client.httpClient
 	baseTransport := resolveHTTPTransport(baseClient.Transport)
 	if baseTransport == nil {
-		return baseClient.Do(req)
+		return nil, errStreamingCustomTransportRequiresDeadline
 	}
 
 	clientForConnect := *baseClient

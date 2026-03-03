@@ -279,7 +279,10 @@ func TestListStreaming_EmptyBody502_ReturnsAPIErrorWithStatusText(t *testing.T) 
 		t.Fatalf("failed to create client: %v", err)
 	}
 
-	stream := client.Event.ListStreaming(context.Background(), nil)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	stream := client.Event.ListStreaming(ctx, nil)
 	for stream.Next() {
 	}
 
