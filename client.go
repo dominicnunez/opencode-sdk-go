@@ -425,7 +425,7 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 			body = bytes.NewReader(bodyBytes)
 		}
 
-		req, err := http.NewRequestWithContext(ctx, method, fullURL.String(), body)
+		req, err := http.NewRequestWithContext(ctx, method, fullURL.String(), body) //nolint:gosec // fullURL is assembled from validated baseURL and endpoint path
 		if err != nil {
 			return nil, fmt.Errorf("create request: %w", err)
 		}
@@ -438,7 +438,7 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 		req.Header.Set("User-Agent", c.userAgent)
 
 		// Execute request
-		resp, lastErr = c.httpClient.Do(req)
+		resp, lastErr = c.httpClient.Do(req) //nolint:gosec // request URL comes from validated baseURL and endpoint path composition
 
 		// Close body from transport errors that still return a response
 		// (e.g., custom HTTP clients that don't follow stdlib's contract)
