@@ -547,14 +547,17 @@ func TestReadAPIError_EmptyBodyUsesStatusTextForBody(t *testing.T) {
 	}
 }
 
-func TestAPIErrorMessageFromJSON_FallbackIsDeterministic(t *testing.T) {
-	raw := `{"zeta":"last","alpha":"first","nested":{"beta":"second"}}`
+func TestAPIErrorMessageFromJSON_IgnoresUnknownFields(t *testing.T) {
+	raw := `{"token":"super-secret-token","apiKey":"key-123","nested":{"password":"hunter2"}}`
+	if got := apiErrorMessageFromJSON(raw); got != "" {
+		t.Fatalf("apiErrorMessageFromJSON() = %q, want empty string", got)
+	}
+}
 
-	for i := 0; i < 50; i++ {
-		got := apiErrorMessageFromJSON(raw)
-		if got != "first" {
-			t.Fatalf("apiErrorMessageFromJSON() = %q, want %q", got, "first")
-		}
+func TestAPIErrorMessageFromJSON_UsesNestedAllowedFields(t *testing.T) {
+	raw := `{"request_id":"req-123","error":{"type":"invalid_request","message":"specific error"}}`
+	if got := apiErrorMessageFromJSON(raw); got != "specific error" {
+		t.Fatalf("apiErrorMessageFromJSON() = %q, want %q", got, "specific error")
 	}
 }
 

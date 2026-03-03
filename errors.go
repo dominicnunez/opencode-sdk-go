@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"sort"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -240,28 +239,11 @@ func apiErrorMessageFromJSON(raw string) string {
 func findMessageString(value any) string {
 	switch v := value.(type) {
 	case map[string]any:
-		keys := []string{"message", "error", "detail", "title", "reason", "description"}
-		checkedKeys := make(map[string]struct{}, len(keys))
-		for _, key := range keys {
-			checkedKeys[key] = struct{}{}
+		for _, key := range []string{"message", "error", "detail", "title", "reason", "description"} {
 			if field, ok := v[key]; ok {
 				if msg := findMessageString(field); msg != "" {
 					return msg
 				}
-			}
-		}
-
-		fallbackKeys := make([]string, 0, len(v))
-		for key := range v {
-			if _, isPreferred := checkedKeys[key]; !isPreferred {
-				fallbackKeys = append(fallbackKeys, key)
-			}
-		}
-		sort.Strings(fallbackKeys)
-
-		for _, key := range fallbackKeys {
-			if msg := findMessageString(v[key]); msg != "" {
-				return msg
 			}
 		}
 	case []any:
