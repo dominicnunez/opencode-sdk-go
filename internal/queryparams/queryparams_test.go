@@ -1,6 +1,7 @@
 package queryparams
 
 import (
+	"net/url"
 	"strings"
 	"testing"
 )
@@ -60,6 +61,43 @@ func TestMarshal_EmptyString(t *testing.T) {
 	// Empty strings should be omitted
 	if got := result.Get("query"); got != "" {
 		t.Errorf("expected query to be omitted for empty string, got %q", got)
+	}
+}
+
+func TestMarshal_EmptyStringPointer(t *testing.T) {
+	type params struct {
+		Query *string `query:"query,omitempty"`
+	}
+
+	empty := ""
+	result, err := Marshal(params{Query: &empty})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	values, ok := result["query"]
+	if !ok {
+		t.Fatal("expected query key to be present for empty string pointer")
+	}
+	if len(values) != 1 {
+		t.Fatalf("expected one query value, got %d", len(values))
+	}
+	if values[0] != "" {
+		t.Fatalf("expected explicit empty query value, got %q", values[0])
+	}
+
+	encoded := result.Encode()
+	if !strings.Contains(encoded, "query=") {
+		t.Fatalf("expected encoded query to include empty value, got %q", encoded)
+	}
+
+	decoded, parseErr := url.ParseQuery(encoded)
+	if parseErr != nil {
+		t.Fatalf("failed to parse encoded query: %v", parseErr)
+	}
+	decodedValues, exists := decoded["query"]
+	if !exists || len(decodedValues) != 1 || decodedValues[0] != "" {
+		t.Fatalf("expected parsed encoded query to contain explicit empty value, got %v", decoded["query"])
 	}
 }
 

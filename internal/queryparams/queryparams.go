@@ -141,6 +141,10 @@ func addFieldValue(params url.Values, name string, field reflect.Value, required
 	case reflect.String:
 		s := field.String()
 		if s == "" {
+			if isPtr {
+				params.Add(name, "")
+				return nil
+			}
 			if required {
 				return fmt.Errorf("required query parameter %q is empty", name)
 			}
