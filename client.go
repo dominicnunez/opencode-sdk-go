@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -41,6 +42,7 @@ const (
 )
 
 var retryBackoffRandInt63n = rand.Int63n
+var emptyJSONObjectBytes = []byte("{}")
 
 func blockRedirects(*http.Request, []*http.Request) error {
 	return http.ErrUseLastResponse
@@ -186,6 +188,7 @@ func WithHTTPClient(hc *http.Client) ClientOption {
 		}
 		clone := *hc
 		clone.CheckRedirect = blockRedirects
+		clone.Timeout = 0
 		c.httpClient = &clone
 		return nil
 	}
@@ -397,11 +400,14 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 	var bodyBytes []byte
 
 	// Marshal params for methods that send a request body.
-	if params != nil && methodAllowsRequestBody(method) {
+	if params != nil && methodAllowsRequestBody(method) && shouldMarshalRequestBody(params) {
 		var err error
 		bodyBytes, err = json.Marshal(params)
 		if err != nil {
 			return nil, fmt.Errorf("marshal request body: %w", err)
+		}
+		if bytes.Equal(bodyBytes, emptyJSONObjectBytes) {
+			bodyBytes = nil
 		}
 	}
 
@@ -425,7 +431,7 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 		}
 
 		// Set headers
-		if methodAllowsRequestBody(method) {
+		if methodAllowsRequestBody(method) && len(bodyBytes) > 0 {
 			req.Header.Set("Content-Type", "application/json")
 		}
 		req.Header.Set("Accept", "application/json")
@@ -533,15 +539,13 @@ func retryBackoffBaseDelay(attempt int) time.Duration {
 
 func retryDelayWithServerGuidance(attempt int, resp *http.Response, ctx context.Context, now time.Time) time.Duration {
 	delay := retryBackoffDelay(attempt)
-	fromServer := false
 
 	if resp != nil {
 		if retryAfterDelay, ok := parseRetryAfterDelay(resp.Header.Get("Retry-After"), now); ok {
 			delay = retryAfterDelay
-			fromServer = true
 		}
 	}
-	if !fromServer && delay > maxBackoff {
+	if delay > maxBackoff {
 		delay = maxBackoff
 	}
 	if delay < 0 {
@@ -559,6 +563,59 @@ func retryDelayWithServerGuidance(attempt int, resp *http.Response, ctx context.
 	}
 
 	return delay
+}
+
+func shouldMarshalRequestBody(params interface{}) bool {
+	if params == nil {
+		return false
+	}
+	if _, ok := params.(json.Marshaler); ok {
+		return true
+	}
+
+	paramType := reflect.TypeOf(params)
+	for paramType.Kind() == reflect.Pointer {
+		paramType = paramType.Elem()
+	}
+	if paramType.Kind() != reflect.Struct {
+		return true
+	}
+
+	return structHasJSONBodyFields(paramType)
+}
+
+func structHasJSONBodyFields(structType reflect.Type) bool {
+	for i := 0; i < structType.NumField(); i++ {
+		field := structType.Field(i)
+		if field.PkgPath != "" && !field.Anonymous {
+			continue
+		}
+
+		jsonTag, hasTag := field.Tag.Lookup("json")
+		if hasTag {
+			if strings.Split(jsonTag, ",")[0] == "-" {
+				continue
+			}
+			return true
+		}
+
+		if field.Anonymous {
+			embeddedType := field.Type
+			for embeddedType.Kind() == reflect.Pointer {
+				embeddedType = embeddedType.Elem()
+			}
+			if embeddedType.Kind() == reflect.Struct && structHasJSONBodyFields(embeddedType) {
+				return true
+			}
+			continue
+		}
+
+		if field.PkgPath == "" {
+			return true
+		}
+	}
+
+	return false
 }
 
 func parseRetryAfterDelay(headerValue string, now time.Time) (time.Duration, bool) {

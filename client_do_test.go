@@ -187,6 +187,48 @@ func TestClientDo_PostWithBody(t *testing.T) {
 	}
 }
 
+func TestClientDo_QueryOnlyPostParamsDoNotSendJSONBody(t *testing.T) {
+	const workspaceDir = "/workspace"
+
+	var receivedBody string
+	var receivedContentType string
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			t.Errorf("Expected POST, got %s", r.Method)
+		}
+		receivedContentType = r.Header.Get("Content-Type")
+		body, _ := io.ReadAll(r.Body)
+		receivedBody = string(body)
+		if got := r.URL.Query().Get("directory"); got != workspaceDir {
+			t.Errorf("expected directory query %q, got %q", workspaceDir, got)
+		}
+
+		w.WriteHeader(http.StatusOK)
+		_ = json.NewEncoder(w).Encode(true)
+	}))
+	defer server.Close()
+
+	client, err := opencode.NewClient(opencode.WithBaseURL(server.URL))
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	_, err = client.Tui.OpenHelp(context.Background(), &opencode.TuiOpenHelpParams{
+		Directory: opencode.Ptr(workspaceDir),
+	})
+	if err != nil {
+		t.Fatalf("Tui.OpenHelp failed: %v", err)
+	}
+
+	if receivedBody != "" {
+		t.Fatalf("expected empty request body, got %q", receivedBody)
+	}
+	if receivedContentType != "" {
+		t.Fatalf("expected empty Content-Type for query-only POST, got %q", receivedContentType)
+	}
+}
+
 func TestClientDo_NoRetryOn4xx(t *testing.T) {
 	attempts := 0
 
