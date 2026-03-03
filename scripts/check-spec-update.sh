@@ -32,6 +32,26 @@ extract_stats_value() {
     echo "$value"
 }
 
+decode_base64() {
+    local input="$1"
+    local decoded
+
+    if decoded=$(printf '%s' "$input" | base64 --decode 2>/dev/null); then
+        printf '%s' "$decoded"
+        return 0
+    fi
+    if decoded=$(printf '%s' "$input" | base64 -d 2>/dev/null); then
+        printf '%s' "$decoded"
+        return 0
+    fi
+    if decoded=$(printf '%s' "$input" | base64 -D 2>/dev/null); then
+        printf '%s' "$decoded"
+        return 0
+    fi
+
+    return 1
+}
+
 require_command gh
 require_command base64
 require_command shasum
@@ -44,7 +64,7 @@ if ! STATS_B64=$(gh api "repos/$UPSTREAM_REPO/contents/.stats.yml" --jq '.conten
     echo "ERROR: failed to fetch upstream .stats.yml from GitHub API" >&2
     exit 1
 fi
-if ! STATS=$(echo "$STATS_B64" | base64 -d); then
+if ! STATS=$(decode_base64 "$STATS_B64"); then
     echo "ERROR: failed to decode upstream .stats.yml content" >&2
     exit 1
 fi

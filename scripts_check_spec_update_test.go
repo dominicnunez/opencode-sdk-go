@@ -124,6 +124,37 @@ func TestCheckSpecUpdate_UpdateReplacesSpecOnMatchingHash(t *testing.T) {
 	}
 }
 
+func TestCheckSpecUpdate_Base64DecodeFallsBackToBSDFlag(t *testing.T) {
+	const localSpec = "stable-spec"
+	const upstreamURL = "https://example.com/spec.yml"
+
+	scriptPath, _, fakeBin := setupCheckSpecUpdateWorkspace(t, localSpec)
+
+	stats := makeStatsYAML(sha256Hex(localSpec), upstreamURL, "42")
+	writeExecutable(t, fakeBin, "gh", "#!/usr/bin/env bash\nset -euo pipefail\nprintf '%s' \"$TEST_STATS_B64\"\n")
+
+	realBase64Path, err := exec.LookPath("base64")
+	if err != nil {
+		t.Fatalf("failed to locate real base64 binary: %v", err)
+	}
+
+	writeExecutable(t, fakeBin, "base64", "#!/usr/bin/env bash\nset -euo pipefail\nmode=\"${1:-}\"\ninput=\"$(cat)\"\ncase \"$mode\" in\n  --decode|-d)\n    exit 2\n    ;;\n  -D)\n    printf '%s' \"$input\" | \"$REAL_BASE64\" --decode\n    ;;\n  *)\n    exit 2\n    ;;\nesac\n")
+
+	cmd := exec.Command("bash", scriptPath)
+	cmd.Env = append(os.Environ(),
+		"PATH="+fakeBin+string(os.PathListSeparator)+os.Getenv("PATH"),
+		"TEST_STATS_B64="+base64.StdEncoding.EncodeToString([]byte(stats)),
+		"REAL_BASE64="+realBase64Path,
+	)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("expected script to succeed using BSD base64 decode flag fallback, err=%v output:\n%s", err, string(out))
+	}
+	if !strings.Contains(string(out), "Spec is up to date") {
+		t.Fatalf("expected up-to-date message, got output:\n%s", string(out))
+	}
+}
+
 func setupCheckSpecUpdateWorkspace(t *testing.T, initialSpec string) (scriptPath, specPath, fakeBin string) {
 	t.Helper()
 	const testDirPerms = 0o750
