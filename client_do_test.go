@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"math"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -787,6 +788,40 @@ func TestClientDo_SuccessResponseExceedsConfiguredSizeLimit(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "response body exceeds") {
 		t.Fatalf("expected body limit error, got: %v", err)
+	}
+}
+
+func TestWithMaxSuccessBodySize_RejectsMaxInt64(t *testing.T) {
+	_, err := opencode.NewClient(opencode.WithMaxSuccessBodySize(math.MaxInt64))
+	if err == nil {
+		t.Fatal("expected error when max success body size cannot be represented safely")
+	}
+	if !strings.Contains(err.Error(), "must be at most") {
+		t.Fatalf("expected max size validation error, got: %v", err)
+	}
+}
+
+func TestClientDo_SuccessResponseWithNearMaxConfiguredSize(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("[]"))
+	}))
+	defer server.Close()
+
+	client, err := opencode.NewClient(
+		opencode.WithBaseURL(server.URL),
+		opencode.WithMaxSuccessBodySize(math.MaxInt64-1),
+	)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	sessions, err := client.Session.List(context.Background(), nil)
+	if err != nil {
+		t.Fatalf("expected response decode to succeed near int64 boundary, got: %v", err)
+	}
+	if len(sessions) != 0 {
+		t.Fatalf("expected no sessions, got %d", len(sessions))
 	}
 }
 

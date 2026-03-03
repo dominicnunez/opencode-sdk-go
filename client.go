@@ -24,11 +24,12 @@ const (
 	DefaultTimeout    = 30 * time.Second
 	DefaultMaxRetries = 2
 
-	maxRetryCap      = 10
-	initialBackoff   = 500 * time.Millisecond
-	maxBackoff       = 8 * time.Second
-	backoffJitterDiv = 2
-	maxErrorBodySize = 1 << 20 // 1 MB
+	maxRetryCap                    = 10
+	initialBackoff                 = 500 * time.Millisecond
+	maxBackoff                     = 8 * time.Second
+	backoffJitterDiv               = 2
+	maxErrorBodySize               = 1 << 20 // 1 MB
+	maxConfigurableSuccessBodySize = int64(1<<63 - 2)
 
 	defaultMaxSuccessBodySize int64 = 8 << 20 // 8 MB
 )
@@ -217,6 +218,9 @@ func WithMaxSuccessBodySize(n int64) ClientOption {
 	return func(c *Client) error {
 		if n < 0 {
 			return errors.New("max success body size cannot be negative")
+		}
+		if n > maxConfigurableSuccessBodySize {
+			return fmt.Errorf("max success body size must be at most %d", maxConfigurableSuccessBodySize)
 		}
 		c.maxSuccessBodySize = n
 		return nil
