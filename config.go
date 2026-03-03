@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
+	"strings"
 
 	"github.com/dominicnunez/opencode-sdk-go/internal/queryparams"
 )
@@ -1314,6 +1315,17 @@ func (o ConfigProviderOptions) String() string {
 // GoString returns a Go-syntax representation with the APIKey redacted.
 func (o ConfigProviderOptions) GoString() string { return o.String() }
 
+// Redacted returns a copy safe for logs/telemetry by replacing APIKey.
+func (o ConfigProviderOptions) Redacted() ConfigProviderOptions {
+	o.APIKey = redacted
+	return o
+}
+
+// MarshalRedactedJSON encodes a redacted copy for safe structured logging.
+func (o ConfigProviderOptions) MarshalRedactedJSON() ([]byte, error) {
+	return marshalRedactedJSON(o.Redacted())
+}
+
 // ConfigProviderOptionsTimeoutUnion can be either an int64 or a bool.
 // Use AsInt() or AsBool() to access the value.
 type ConfigProviderOptionsTimeoutUnion struct {
@@ -1681,6 +1693,10 @@ type OAuth struct {
 
 const redacted = "[REDACTED]"
 
+func marshalRedactedJSON(v interface{}) ([]byte, error) {
+	return json.Marshal(v)
+}
+
 // String returns a human-readable representation with credential fields redacted.
 func (o OAuth) String() string {
 	return fmt.Sprintf("OAuth{Type:%s, Access:%s, Refresh:%s, Expires:%g}", o.Type, redacted, redacted, o.Expires)
@@ -1688,6 +1704,18 @@ func (o OAuth) String() string {
 
 // GoString returns a Go-syntax representation with credential fields redacted.
 func (o OAuth) GoString() string { return o.String() }
+
+// Redacted returns a copy safe for logs/telemetry by replacing credentials.
+func (o OAuth) Redacted() OAuth {
+	o.Access = redacted
+	o.Refresh = redacted
+	return o
+}
+
+// MarshalRedactedJSON encodes a redacted copy for safe structured logging.
+func (o OAuth) MarshalRedactedJSON() ([]byte, error) {
+	return marshalRedactedJSON(o.Redacted())
+}
 
 func (OAuth) implementsAuthSetParamsAuthUnion() {}
 
@@ -1706,6 +1734,17 @@ func (a ApiAuth) String() string {
 // GoString returns a Go-syntax representation with the key redacted.
 func (a ApiAuth) GoString() string { return a.String() }
 
+// Redacted returns a copy safe for logs/telemetry by replacing key credentials.
+func (a ApiAuth) Redacted() ApiAuth {
+	a.Key = redacted
+	return a
+}
+
+// MarshalRedactedJSON encodes a redacted copy for safe structured logging.
+func (a ApiAuth) MarshalRedactedJSON() ([]byte, error) {
+	return marshalRedactedJSON(a.Redacted())
+}
+
 func (ApiAuth) implementsAuthSetParamsAuthUnion() {}
 
 // WellKnownAuth represents well-known authentication.
@@ -1723,6 +1762,18 @@ func (w WellKnownAuth) String() string {
 
 // GoString returns a Go-syntax representation with credential fields redacted.
 func (w WellKnownAuth) GoString() string { return w.String() }
+
+// Redacted returns a copy safe for logs/telemetry by replacing credentials.
+func (w WellKnownAuth) Redacted() WellKnownAuth {
+	w.Key = redacted
+	w.Token = redacted
+	return w
+}
+
+// MarshalRedactedJSON encodes a redacted copy for safe structured logging.
+func (w WellKnownAuth) MarshalRedactedJSON() ([]byte, error) {
+	return marshalRedactedJSON(w.Redacted())
+}
 
 func (WellKnownAuth) implementsAuthSetParamsAuthUnion() {}
 
@@ -1749,34 +1800,182 @@ func (r ConfigUpdateParams) URLQuery() (url.Values, error) {
 
 // MarshalJSON marshals the Config field for the request body
 func (r ConfigUpdateParams) MarshalJSON() ([]byte, error) {
-	bodyBytes, err := json.Marshal(r.Config)
+	body, err := configToPatchObject(reflect.ValueOf(r.Config))
 	if err != nil {
 		return nil, err
 	}
-
-	var body map[string]interface{}
-	if err := json.Unmarshal(bodyBytes, &body); err != nil {
-		return nil, err
-	}
-
-	// Omit deprecated mode when it is unset in a PATCH request.
-	if reflect.ValueOf(r.Config.Mode).IsZero() {
-		delete(body, "mode")
-	}
-
-	pruneNilJSONValues(body)
 	return json.Marshal(body)
 }
 
-func pruneNilJSONValues(data map[string]interface{}) {
-	for key, value := range data {
-		pruned, keep := pruneNilJSONValue(value)
-		if !keep {
-			delete(data, key)
-			continue
-		}
-		data[key] = pruned
+func configToPatchObject(configValue reflect.Value) (map[string]interface{}, error) {
+	encoded, keep, err := encodePatchJSONValue(configValue)
+	if err != nil {
+		return nil, err
 	}
+	if !keep {
+		return map[string]interface{}{}, nil
+	}
+	body, ok := encoded.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("encode config patch object: expected map, got %T", encoded)
+	}
+	delete(body, "mode")
+	return body, nil
+}
+
+func encodePatchJSONValue(value reflect.Value) (interface{}, bool, error) {
+	if !value.IsValid() {
+		return nil, false, nil
+	}
+
+	if value.Kind() == reflect.Pointer {
+		if value.IsNil() {
+			return nil, false, nil
+		}
+		return encodePatchJSONValue(value.Elem())
+	}
+
+	if value.Kind() == reflect.Interface {
+		if value.IsNil() {
+			return nil, false, nil
+		}
+		return encodePatchJSONValue(value.Elem())
+	}
+
+	if value.Kind() == reflect.Struct {
+		rawField := value.FieldByName("raw")
+		if rawField.IsValid() && rawField.Type() == reflect.TypeOf(json.RawMessage{}) {
+			if rawField.Len() == 0 {
+				return nil, false, nil
+			}
+
+			var decoded interface{}
+			if err := json.Unmarshal(rawField.Bytes(), &decoded); err != nil {
+				return nil, false, err
+			}
+			pruned, keep := pruneNilJSONValue(decoded)
+			return pruned, keep, nil
+		}
+	}
+
+	if marshaled, marshalerFound, err := encodeWithJSONMarshaler(value); marshalerFound || err != nil {
+		return marshaled, marshalerFound, err
+	}
+
+	switch value.Kind() {
+	case reflect.Struct:
+		out := make(map[string]interface{})
+		valueType := value.Type()
+		for i := 0; i < value.NumField(); i++ {
+			fieldType := valueType.Field(i)
+			if fieldType.PkgPath != "" {
+				continue
+			}
+			fieldName, omitEmpty, include := parseJSONTag(fieldType)
+			if !include {
+				continue
+			}
+			fieldValue := value.Field(i)
+			if omitEmpty && fieldValue.IsZero() {
+				continue
+			}
+			encodedField, keep, err := encodePatchJSONValue(fieldValue)
+			if err != nil {
+				return nil, false, err
+			}
+			if !keep {
+				continue
+			}
+			out[fieldName] = encodedField
+		}
+		return out, true, nil
+	case reflect.Map:
+		if value.IsNil() {
+			return nil, false, nil
+		}
+		out := make(map[string]interface{}, value.Len())
+		iter := value.MapRange()
+		for iter.Next() {
+			mapKey := fmt.Sprintf("%v", iter.Key().Interface())
+			encodedItem, keep, err := encodePatchJSONValue(iter.Value())
+			if err != nil {
+				return nil, false, err
+			}
+			if !keep {
+				continue
+			}
+			out[mapKey] = encodedItem
+		}
+		return out, true, nil
+	case reflect.Slice, reflect.Array:
+		if value.Kind() == reflect.Slice && value.IsNil() {
+			return nil, false, nil
+		}
+		out := make([]interface{}, value.Len())
+		for i := 0; i < value.Len(); i++ {
+			encodedItem, keep, err := encodePatchJSONValue(value.Index(i))
+			if err != nil {
+				return nil, false, err
+			}
+			if !keep {
+				out[i] = nil
+				continue
+			}
+			out[i] = encodedItem
+		}
+		return out, true, nil
+	default:
+		return value.Interface(), true, nil
+	}
+}
+
+var jsonMarshalerType = reflect.TypeOf((*json.Marshaler)(nil)).Elem()
+
+func encodeWithJSONMarshaler(value reflect.Value) (interface{}, bool, error) {
+	var marshaler json.Marshaler
+	if value.Type().Implements(jsonMarshalerType) && value.CanInterface() {
+		marshaler = value.Interface().(json.Marshaler)
+	} else if value.CanAddr() && value.Addr().Type().Implements(jsonMarshalerType) {
+		marshaler = value.Addr().Interface().(json.Marshaler)
+	}
+	if marshaler == nil {
+		return nil, false, nil
+	}
+
+	jsonBytes, err := marshaler.MarshalJSON()
+	if err != nil {
+		return nil, false, err
+	}
+
+	var decoded interface{}
+	if err := json.Unmarshal(jsonBytes, &decoded); err != nil {
+		return nil, false, err
+	}
+	pruned, keep := pruneNilJSONValue(decoded)
+	return pruned, keep, nil
+}
+
+func parseJSONTag(field reflect.StructField) (name string, omitEmpty, include bool) {
+	tag := field.Tag.Get("json")
+	if tag == "-" {
+		return "", false, false
+	}
+	if tag == "" {
+		return field.Name, false, true
+	}
+
+	parts := strings.Split(tag, ",")
+	if parts[0] == "" {
+		name = field.Name
+	} else {
+		name = parts[0]
+	}
+	for _, option := range parts[1:] {
+		if option == "omitempty" {
+			omitEmpty = true
+		}
+	}
+	return name, omitEmpty, true
 }
 
 func pruneNilJSONValue(value interface{}) (interface{}, bool) {
@@ -1784,7 +1983,14 @@ func pruneNilJSONValue(value interface{}) (interface{}, bool) {
 	case nil:
 		return nil, false
 	case map[string]interface{}:
-		pruneNilJSONValues(v)
+		for key, item := range v {
+			pruned, keep := pruneNilJSONValue(item)
+			if !keep {
+				delete(v, key)
+				continue
+			}
+			v[key] = pruned
+		}
 		return v, true
 	case []interface{}:
 		for i, item := range v {

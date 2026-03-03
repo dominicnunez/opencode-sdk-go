@@ -1,6 +1,7 @@
 package opencode
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"testing"
@@ -81,6 +82,84 @@ func TestWellKnownAuth_GoString_RedactsCredentials(t *testing.T) {
 	s := fmt.Sprintf("%#v", w)
 	if strings.Contains(s, "secret-key") || strings.Contains(s, "secret-token") {
 		t.Error("GoString() leaked credentials via fmt #v")
+	}
+}
+
+func TestCredentialTypes_MarshalRedactedJSON_RedactsSecrets(t *testing.T) {
+	tests := []struct {
+		name             string
+		input            interface{ MarshalRedactedJSON() ([]byte, error) }
+		unsafeInput      interface{}
+		sensitiveValues  []string
+		expectedRedacted []string
+	}{
+		{
+			name: "oauth",
+			input: OAuth{
+				Type:    AuthTypeOAuth,
+				Access:  "secret_access_token",
+				Refresh: "secret_refresh_token",
+				Expires: 3600,
+			},
+			unsafeInput:      OAuth{Type: AuthTypeOAuth, Access: "secret_access_token", Refresh: "secret_refresh_token", Expires: 3600},
+			sensitiveValues:  []string{"secret_access_token", "secret_refresh_token"},
+			expectedRedacted: []string{redacted},
+		},
+		{
+			name:             "api auth",
+			input:            ApiAuth{Type: AuthTypeAPI, Key: "sk-secret-key"},
+			unsafeInput:      ApiAuth{Type: AuthTypeAPI, Key: "sk-secret-key"},
+			sensitiveValues:  []string{"sk-secret-key"},
+			expectedRedacted: []string{redacted},
+		},
+		{
+			name:             "well known auth",
+			input:            WellKnownAuth{Type: AuthTypeWellKnown, Key: "secret-key", Token: "secret-token"},
+			unsafeInput:      WellKnownAuth{Type: AuthTypeWellKnown, Key: "secret-key", Token: "secret-token"},
+			sensitiveValues:  []string{"secret-key", "secret-token"},
+			expectedRedacted: []string{redacted},
+		},
+		{
+			name: "provider options",
+			input: ConfigProviderOptions{
+				APIKey:  "sk-super-secret",
+				BaseURL: "https://api.example.com",
+			},
+			unsafeInput:      ConfigProviderOptions{APIKey: "sk-super-secret", BaseURL: "https://api.example.com"},
+			sensitiveValues:  []string{"sk-super-secret"},
+			expectedRedacted: []string{redacted},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			unsafeJSON, err := json.Marshal(tt.unsafeInput)
+			if err != nil {
+				t.Fatalf("marshal unsafe input: %v", err)
+			}
+			unsafeStr := string(unsafeJSON)
+			for _, secret := range tt.sensitiveValues {
+				if !strings.Contains(unsafeStr, secret) {
+					t.Fatalf("expected unsafe json to contain secret %q, got %s", secret, unsafeStr)
+				}
+			}
+
+			redactedJSON, err := tt.input.MarshalRedactedJSON()
+			if err != nil {
+				t.Fatalf("marshal redacted input: %v", err)
+			}
+			redactedStr := string(redactedJSON)
+			for _, secret := range tt.sensitiveValues {
+				if strings.Contains(redactedStr, secret) {
+					t.Fatalf("redacted json leaked secret %q: %s", secret, redactedStr)
+				}
+			}
+			for _, redactedToken := range tt.expectedRedacted {
+				if !strings.Contains(redactedStr, redactedToken) {
+					t.Fatalf("redacted json missing redaction token %q: %s", redactedToken, redactedStr)
+				}
+			}
+		})
 	}
 }
 
