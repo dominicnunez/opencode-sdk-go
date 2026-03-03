@@ -105,16 +105,22 @@ func (s *EventService) doStreamingRequest(ctx context.Context, req *http.Request
 			cancelConnect(context.DeadlineExceeded)
 		})
 
+		start := time.Now()
 		resp, err := baseClient.Do(req.WithContext(connectCtx)) //nolint:gosec // request URL comes from validated baseURL and endpoint path composition
+		elapsed := time.Since(start)
 		timedOut := !timer.Stop() && errors.Is(context.Cause(connectCtx), context.DeadlineExceeded)
+		if err == nil && resp != nil {
+			if timedOut && elapsed > connectTimeout {
+				_ = resp.Body.Close()
+				return nil, fmt.Errorf("stream connect timeout after %s: %w", connectTimeout, context.DeadlineExceeded)
+			}
+			return resp, nil
+		}
 		if timedOut {
 			if resp != nil {
 				_ = resp.Body.Close()
 			}
 			return nil, fmt.Errorf("stream connect timeout after %s: %w", connectTimeout, context.DeadlineExceeded)
-		}
-		if err == nil && resp != nil {
-			return resp, nil
 		}
 		if resp != nil {
 			_ = resp.Body.Close()
