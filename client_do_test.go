@@ -319,6 +319,38 @@ func TestClientDo_ErrorHandlingContract_AsAPIError(t *testing.T) {
 	}
 }
 
+func TestClientDo_APIErrorIncludesOperationContext(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = w.Write([]byte("invalid input"))
+	}))
+	defer server.Close()
+
+	client, err := opencode.NewClient(
+		opencode.WithBaseURL(server.URL),
+		opencode.WithMaxRetries(0),
+	)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	_, err = client.Session.List(context.Background(), &opencode.SessionListParams{})
+	if err == nil {
+		t.Fatal("expected error for 400 response")
+	}
+	if got := err.Error(); !strings.Contains(got, "GET session:") {
+		t.Fatalf("expected operation context in error string, got %q", got)
+	}
+
+	var apiErr *opencode.APIError
+	if !errors.As(err, &apiErr) {
+		t.Fatalf("expected wrapped *opencode.APIError, got %T: %v", err, err)
+	}
+	if apiErr.StatusCode != http.StatusBadRequest {
+		t.Fatalf("expected status %d, got %d", http.StatusBadRequest, apiErr.StatusCode)
+	}
+}
+
 func TestClientDo_RetryAfterHeaderDelay(t *testing.T) {
 	attempts := 0
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

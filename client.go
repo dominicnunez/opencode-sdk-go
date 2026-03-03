@@ -458,7 +458,8 @@ func (c *Client) doRaw(ctx context.Context, method, path string, params interfac
 		// Retry only retryable statuses (408, 429, 5xx).
 		if lastErr == nil {
 			if !isRetryableStatus(resp.StatusCode) || attempt >= maxRequestRetries {
-				return nil, readAPIError(resp, maxErrorBodySize)
+				apiErr := readAPIError(resp, maxErrorBodySize)
+				return nil, fmt.Errorf("%s %s: %w", method, path, apiErr)
 			}
 
 			retryDelay := retryDelayWithServerGuidance(attempt, resp, ctx, time.Now())
