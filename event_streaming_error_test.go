@@ -462,13 +462,18 @@ func (b *blockedSSEBody) Read(p []byte) (int, error) {
 
 func (b *blockedSSEBody) Close() error { return nil }
 
-func TestListStreaming_NoDeadlineWithCustomTransportFailsFast(t *testing.T) {
+func TestListStreaming_NoDeadlineWithCustomTransportUsesClientTimeoutDuringConnect(t *testing.T) {
+	const clientTimeout = 50 * time.Millisecond
+	const waitForResult = 250 * time.Millisecond
+
 	var calls int32
 	client, err := opencode.NewClient(
+		opencode.WithTimeout(clientTimeout),
 		opencode.WithHTTPClient(&http.Client{
 			Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
 				atomic.AddInt32(&calls, 1)
-				select {}
+				<-req.Context().Done()
+				return nil, req.Context().Err()
 			}),
 		}),
 	)
@@ -476,20 +481,39 @@ func TestListStreaming_NoDeadlineWithCustomTransportFailsFast(t *testing.T) {
 		t.Fatalf("failed to create client: %v", err)
 	}
 
-	stream := client.Event.ListStreaming(context.Background(), nil)
-	defer func() { _ = stream.Close() }()
+	done := make(chan string, 1)
+	go func() {
+		stream := client.Event.ListStreaming(context.Background(), nil)
+		defer func() { _ = stream.Close() }()
 
-	if stream.Next() {
-		t.Fatal("expected Next() to return false for unsupported custom transport connect timeout behavior")
+		if stream.Next() {
+			done <- "expected Next() to return false when connect deadline is exceeded"
+			return
+		}
+
+		streamErr := stream.Err()
+		if streamErr == nil {
+			done <- "expected non-nil error when connect deadline is exceeded"
+			return
+		}
+		if !strings.Contains(streamErr.Error(), "timeout") && !errors.Is(streamErr, context.Canceled) {
+			done <- "expected timeout-related error when waiting for custom transport connect"
+			return
+		}
+		done <- ""
+	}()
+
+	select {
+	case result := <-done:
+		if result != "" {
+			t.Fatal(result)
+		}
+	case <-time.After(waitForResult):
+		t.Fatalf("expected ListStreaming to apply client timeout during custom transport connect and return within %s", waitForResult)
 	}
-	if stream.Err() == nil {
-		t.Fatal("expected non-nil error for unsupported custom transport connect timeout behavior")
-	}
-	if !strings.Contains(stream.Err().Error(), "explicit context deadline") {
-		t.Fatalf("expected explicit context deadline guidance, got: %v", stream.Err())
-	}
-	if atomic.LoadInt32(&calls) != 0 {
-		t.Fatalf("expected transport not to be called, got %d calls", calls)
+
+	if atomic.LoadInt32(&calls) != 1 {
+		t.Fatalf("expected transport to be called once, got %d calls", calls)
 	}
 }
 

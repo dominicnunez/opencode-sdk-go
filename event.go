@@ -20,9 +20,6 @@ type EventService struct {
 	client *Client
 }
 
-var errStreamingCustomTransportRequiresDeadline = errors.New(
-	"streaming with custom transport requires explicit context deadline")
-
 // ListStreaming opens an SSE connection and returns a stream of events.
 // The returned stream is never nil. Callers must defer stream.Close() to
 // release the underlying HTTP response body, and check stream.Err() after
@@ -52,7 +49,7 @@ func (s *EventService) ListStreaming(ctx context.Context, params *EventListParam
 	}
 
 	// Create request with SSE headers
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fullURL.String(), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fullURL.String(), nil) //nolint:gosec // fullURL is assembled from validated baseURL and endpoint path
 	if err != nil {
 		return ssestream.NewStream[Event](nil, err)
 	}
@@ -91,18 +88,38 @@ func (s *EventService) doStreamingRequest(ctx context.Context, req *http.Request
 	}
 
 	if _, hasDeadline := ctx.Deadline(); hasDeadline {
-		return s.client.httpClient.Do(req)
+		return s.client.httpClient.Do(req) //nolint:gosec // request URL comes from validated baseURL and endpoint path composition
 	}
 
 	connectTimeout := s.client.timeout
 	if connectTimeout <= 0 {
-		return s.client.httpClient.Do(req)
+		return s.client.httpClient.Do(req) //nolint:gosec // request URL comes from validated baseURL and endpoint path composition
 	}
 
 	baseClient := s.client.httpClient
 	baseTransport := resolveHTTPTransport(baseClient.Transport)
 	if baseTransport == nil {
-		return nil, errStreamingCustomTransportRequiresDeadline
+		connectCtx, cancelConnect := context.WithCancelCause(ctx)
+		timer := time.AfterFunc(connectTimeout, func() {
+			cancelConnect(context.DeadlineExceeded)
+		})
+
+		resp, err := baseClient.Do(req.WithContext(connectCtx)) //nolint:gosec // request URL comes from validated baseURL and endpoint path composition
+		if !timer.Stop() {
+			if cause := context.Cause(connectCtx); errors.Is(cause, context.DeadlineExceeded) {
+				return nil, fmt.Errorf("stream connect timeout after %s: %w", connectTimeout, context.DeadlineExceeded)
+			}
+		}
+		if err != nil {
+			if ctxErr := ctx.Err(); ctxErr != nil {
+				return nil, ctxErr
+			}
+			if cause := context.Cause(connectCtx); errors.Is(cause, context.DeadlineExceeded) {
+				return nil, fmt.Errorf("stream connect timeout after %s: %w", connectTimeout, context.DeadlineExceeded)
+			}
+			return nil, err
+		}
+		return resp, nil
 	}
 
 	clientForConnect := *baseClient
@@ -130,7 +147,7 @@ func (s *EventService) doStreamingRequest(ctx context.Context, req *http.Request
 	}
 
 	clientForConnect.Transport = transportForConnect
-	return clientForConnect.Do(req)
+	return clientForConnect.Do(req) //nolint:gosec // request URL comes from validated baseURL and endpoint path composition
 }
 
 func resolveHTTPTransport(rt http.RoundTripper) *http.Transport {
