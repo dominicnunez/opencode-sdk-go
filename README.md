@@ -147,7 +147,7 @@ if err != nil {
 
 ### Automatic Retries
 
-Exponential backoff (default: 2 retries) for connection errors, 408, 429, and 5xx responses. Backoff schedule: 500ms → 1s → 2s → 4s → 8s (capped).
+Exponential backoff (default: 2 retries) for connection errors, 408, 429, and 5xx responses. Base schedule is 500ms → 1s → 2s → 4s → 8s (capped), with jitter applied so each retry sleeps within 50%-100% of that step.
 
 ## Origin & Compatibility
 
