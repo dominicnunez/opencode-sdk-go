@@ -5,6 +5,9 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 PRISM_PID_FILE=".prism.pid"
+STARTUP_POLL_INTERVAL_SECONDS="0.1"
+STARTUP_TIMEOUT_SECONDS=30
+STARTUP_MAX_ATTEMPTS=$((STARTUP_TIMEOUT_SECONDS * 10))
 
 if [[ -n "${1:-}" && "${1:-}" != '--'* ]]; then
   URL="$1"
@@ -24,18 +27,18 @@ if [ "${1:-}" == "--daemon" ]; then
 
   # Wait for server to come online (timeout after 30s)
   echo -n "Waiting for server"
-  iterations=0 # 300 iterations * 0.1s = 30s timeout
+  iterations=0
   while ! grep -q "✖  fatal\|Prism is listening" ".prism.log" ; do
-    if [ "$iterations" -ge 300 ]; then
+    if [ "$iterations" -ge "$STARTUP_MAX_ATTEMPTS" ]; then
       echo
-      echo "Error: mock server failed to start within 30 seconds"
+      echo "Error: mock server failed to start within ${STARTUP_TIMEOUT_SECONDS} seconds"
       cat .prism.log
       kill "$prism_pid" 2>/dev/null || true
       rm -f "$PRISM_PID_FILE"
       exit 1
     fi
     echo -n "."
-    sleep 0.1
+    sleep "$STARTUP_POLL_INTERVAL_SECONDS"
     iterations=$((iterations + 1))
   done
 
