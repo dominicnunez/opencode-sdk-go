@@ -126,6 +126,7 @@ func TestCheckSpecUpdate_UpdateReplacesSpecOnMatchingHash(t *testing.T) {
 
 func setupCheckSpecUpdateWorkspace(t *testing.T, initialSpec string) (scriptPath, specPath, fakeBin string) {
 	t.Helper()
+	const testDirPerms = 0o750
 
 	repoRoot, err := os.Getwd()
 	if err != nil {
@@ -141,13 +142,13 @@ func setupCheckSpecUpdateWorkspace(t *testing.T, initialSpec string) (scriptPath
 	scriptsDir := filepath.Join(projectDir, "scripts")
 	specsDir := filepath.Join(projectDir, "specs")
 	fakeBin = filepath.Join(projectDir, "fakebin")
-	if err := os.MkdirAll(scriptsDir, 0o755); err != nil {
+	if err := os.MkdirAll(scriptsDir, testDirPerms); err != nil {
 		t.Fatalf("mkdir scripts dir: %v", err)
 	}
-	if err := os.MkdirAll(specsDir, 0o755); err != nil {
+	if err := os.MkdirAll(specsDir, testDirPerms); err != nil {
 		t.Fatalf("mkdir specs dir: %v", err)
 	}
-	if err := os.MkdirAll(fakeBin, 0o755); err != nil {
+	if err := os.MkdirAll(fakeBin, testDirPerms); err != nil {
 		t.Fatalf("mkdir fakebin: %v", err)
 	}
 
