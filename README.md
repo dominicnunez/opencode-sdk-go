@@ -107,9 +107,17 @@ Discriminated unions with `As*()` methods:
 ```go
 for _, msg := range messages {
 	if user, err := msg.AsUser(); err == nil {
-		fmt.Printf("User: %s\n", user.Parts[0].AsText().Text)
+		textPart, textErr := user.Parts[0].AsText()
+		if textErr != nil {
+			continue
+		}
+		fmt.Printf("User: %s\n", textPart.Text)
 	} else if assistant, err := msg.AsAssistant(); err == nil {
-		fmt.Printf("Assistant: %s\n", assistant.Parts[0].AsText().Text)
+		textPart, textErr := assistant.Parts[0].AsText()
+		if textErr != nil {
+			continue
+		}
+		fmt.Printf("Assistant: %s\n", textPart.Text)
 	}
 }
 ```
