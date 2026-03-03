@@ -12,13 +12,46 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 
 cd "$PROJECT_DIR"
 
+require_command() {
+    if ! command -v "$1" >/dev/null 2>&1; then
+        echo "ERROR: $1 is required but not installed" >&2
+        exit 1
+    fi
+}
+
+extract_stats_value() {
+    local key="$1"
+    local value
+    value=$(echo "$STATS" | awk -F': ' -v key="$key" '$1 == key {print $2; exit}')
+    value=${value#\"}
+    value=${value%\"}
+    if [ -z "$value" ]; then
+        echo "ERROR: missing $key in upstream .stats.yml" >&2
+        exit 1
+    fi
+    echo "$value"
+}
+
+require_command gh
+require_command base64
+require_command shasum
+require_command awk
+require_command grep
+
 # Fetch upstream .stats.yml
 echo "Checking upstream spec..."
-STATS=$(gh api "repos/$UPSTREAM_REPO/contents/.stats.yml" --jq '.content' | base64 -d)
+if ! STATS_B64=$(gh api "repos/$UPSTREAM_REPO/contents/.stats.yml" --jq '.content'); then
+    echo "ERROR: failed to fetch upstream .stats.yml from GitHub API" >&2
+    exit 1
+fi
+if ! STATS=$(echo "$STATS_B64" | base64 -d); then
+    echo "ERROR: failed to decode upstream .stats.yml content" >&2
+    exit 1
+fi
 
-UPSTREAM_HASH=$(echo "$STATS" | grep 'openapi_spec_hash' | awk '{print $2}')
-UPSTREAM_URL=$(echo "$STATS" | grep 'openapi_spec_url' | awk '{print $2}')
-UPSTREAM_ENDPOINTS=$(echo "$STATS" | grep 'configured_endpoints' | awk '{print $2}')
+UPSTREAM_HASH=$(extract_stats_value "openapi_spec_hash")
+UPSTREAM_URL=$(extract_stats_value "openapi_spec_url")
+UPSTREAM_ENDPOINTS=$(extract_stats_value "configured_endpoints")
 
 # Hash our local spec
 LOCAL_HASH=$(shasum -a 256 "$LOCAL_SPEC" | awk '{print $1}')
@@ -38,10 +71,14 @@ echo "Upstream URL: $UPSTREAM_URL"
 echo ""
 
 if [ "${1:-}" = "--update" ]; then
+    require_command curl
     echo "Downloading updated spec..."
     TMPFILE=$(mktemp)
     trap 'rm -f "$TMPFILE"' EXIT
-    curl -sL "$UPSTREAM_URL" -o "$TMPFILE"
+    if ! curl -fsSL "$UPSTREAM_URL" -o "$TMPFILE"; then
+        echo "ERROR: failed to download upstream spec from $UPSTREAM_URL" >&2
+        exit 1
+    fi
     NEW_HASH=$(shasum -a 256 "$TMPFILE" | awk '{print $1}')
     echo "New local hash: $NEW_HASH"
     if [ "$NEW_HASH" != "$UPSTREAM_HASH" ]; then
@@ -56,6 +93,7 @@ if [ "${1:-}" = "--update" ]; then
     echo "  2. Update SDK methods/types to match"
     echo "  3. Run tests: go test -race ./..."
     echo "  4. Commit: git add specs/openapi.yml && git commit -m 'chore: update OpenAPI spec'"
+    exit 0
 else
     echo "Run with --update to download the new spec:"
     echo "  $0 --update"
